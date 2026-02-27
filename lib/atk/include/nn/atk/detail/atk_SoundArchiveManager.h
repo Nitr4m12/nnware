@@ -29,7 +29,7 @@ class SoundArchiveManager {
 public:
     using ContainerList = IntrusiveList<AddonSoundArchiveContainer>;
 
-    class Snapshot {
+    class SnapShot {
     public:
     private:
         SoundArchive* m_MainSoundArchive;
