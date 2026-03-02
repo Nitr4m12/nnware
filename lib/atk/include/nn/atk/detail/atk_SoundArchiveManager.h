@@ -71,7 +71,8 @@ public:
     AddonSoundArchiveContainer* GetAddonSoundArchiveContainer(s32);
 
     void SetParametersHook(SoundArchiveParametersHook*);
-
+    SoundArchiveParametersHook* GetParametersHook() const;
+    
 private:
     SoundArchive* m_pMainSoundArchive;
     SoundDataManager* m_pMainSoundDataManager;
