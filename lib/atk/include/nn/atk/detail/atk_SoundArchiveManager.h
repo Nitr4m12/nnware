@@ -25,6 +25,7 @@ class AddonSoundArchiveContainer;
 >>>>>>> b0607f0 (atk: Redefine `detail::SoundArchiveManager`):include/nn/atk/detail/atk_SoundArchiveManager.h
 
 namespace nn::atk::detail {
+
 class SoundArchiveManager {
 public:
     using ContainerList = IntrusiveList<AddonSoundArchiveContainer>;
@@ -72,7 +73,7 @@ public:
 
     void SetParametersHook(SoundArchiveParametersHook*);
     SoundArchiveParametersHook* GetParametersHook() const;
-    
+
 private:
     SoundArchive* m_pMainSoundArchive;
     SoundDataManager* m_pMainSoundDataManager;
@@ -82,5 +83,6 @@ private:
     SoundArchiveParametersHook* m_pParametersHook;
 };
 static_assert(sizeof(SoundArchiveManager) == 0x38);
+
 }  // namespace nn::atk::detail
 >>>>>>> b0607f0 (atk: Redefine `detail::SoundArchiveManager`):include/nn/atk/detail/atk_SoundArchiveManager.h
