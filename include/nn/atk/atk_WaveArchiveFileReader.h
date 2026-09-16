@@ -6,8 +6,8 @@ namespace nn::atk::detail {
 
 class WaveArchiveFileReader {
 public:
-    static const u32 SignatureFile = 0x52415746;       // FWAR
-    static const u32 SignatureWarcTable = 0x54415746;  // FWAT
+    static const u32 SignatureFile;
+    static const u32 SignatureWarcTable;
 
     WaveArchiveFileReader(const void* pWaveArchiveFile, bool isIndividual);
     WaveArchiveFileReader();
