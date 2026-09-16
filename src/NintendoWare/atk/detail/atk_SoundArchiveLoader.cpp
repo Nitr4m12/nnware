@@ -1,7 +1,10 @@
 #include <nn/atk/atk_SoundArchiveLoader.h>
 
+#include <cstring>
+
 #include <nn/atk/atk_BankFileReader.h>
 #include <nn/atk/atk_HardwareManager.h>
+#include <nn/atk/atk_WaveArchiveFileReader.h>
 #include <nn/atk/atk_WaveSoundFileReader.h>
 
 namespace nn::atk::detail {
@@ -365,6 +368,56 @@ bool SoundArchiveLoader::LoadWaveArchiveImpl(SoundArchive::ItemId warcId, u32 wa
     } else {
         if (!LoadWaveArchive(warcId, pAllocator, loadFlag, loadBlockSize))
             return false;
+    }
+
+    return true;
+}
+
+bool SoundArchiveLoader::LoadIndividualWave(SoundArchive::ItemId warcId, u32 waveIndex,
+                                            SoundMemoryAllocatable* pAllocator,
+                                            size_t loadBlockSize) {
+    u32 fileId{m_pSoundArchive->GetItemFileId(warcId)};
+    const void* pWaveArchiveFile{GetFileAddressImpl(fileId)};
+
+    if (pWaveArchiveFile == nullptr) {
+        pWaveArchiveFile = LoadWaveArchiveTable(warcId, pAllocator, loadBlockSize);
+
+        if (pWaveArchiveFile == nullptr)
+            return false;
+    }
+
+    WaveArchiveFileReader reader{pWaveArchiveFile, true};
+
+    if (reader.IsLoaded(waveIndex))
+        return true;
+
+    const size_t WaveFileSize{reader.GetWaveFileSize(waveIndex)};
+    const size_t RequiredSize{
+        util::align_up(WaveFileSize + sizeof(IndividualWaveInfo) + WaveBufferAlignSize,
+                       fnd::Thread::StackAlignment)};
+
+    void* buffer{pAllocator->Allocate(RequiredSize)};
+    if (buffer == nullptr)
+        return false;
+
+    u8* pAlignedBuffer{util::BytePtr(buffer).AlignUp(WaveBufferAlignSize).Get<u8>()};
+    {
+        IndividualWaveInfo iWavInfo{fileId, waveIndex};
+        std::memcpy(pAlignedBuffer, &iWavInfo, sizeof(IndividualWaveInfo));
+    }
+
+    {
+        void* loadingAddress{pAlignedBuffer + sizeof(IndividualWaveInfo)};
+
+        size_t readSize{ReadFile(fileId, loadingAddress, WaveFileSize,
+                                 static_cast<int>(reader.GetWaveFileOffsetFromFileHead(waveIndex)),
+                                 loadBlockSize)};
+
+        if (readSize != WaveFileSize)
+            return false;
+
+        reader.SetWaveFile(waveIndex, loadingAddress);
+        driver::HardwareManager::FlushDataCache(loadingAddress, WaveFileSize);
     }
 
     return true;
