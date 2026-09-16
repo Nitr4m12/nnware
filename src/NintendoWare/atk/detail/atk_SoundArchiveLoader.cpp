@@ -423,4 +423,66 @@ bool SoundArchiveLoader::LoadIndividualWave(SoundArchive::ItemId warcId, u32 wav
     return true;
 }
 
+const void* SoundArchiveLoader::LoadWaveArchiveTable(SoundArchive::ItemId warcId,
+                                                     SoundMemoryAllocatable* pAllocator,
+                                                     size_t loadBlockSize) {
+    u32 fileId{m_pSoundArchive->GetItemFileId(warcId)};
+
+    const void* pWaveArchiveFile{GetFileAddressImpl(fileId)};
+    if (pWaveArchiveFile != nullptr)
+        return pWaveArchiveFile;
+
+    u32 waveCount;
+    {
+        SoundArchive::WaveArchiveInfo info;
+        if (!m_pSoundArchive->ReadWaveArchiveInfo(warcId, &info))
+            return nullptr;
+
+        if (info.waveCount == 0)
+            return nullptr;
+
+        waveCount = info.waveCount;
+    }
+
+    position_t fileBlockOffset;
+    {
+        char pBuffer[sizeof(WaveArchiveFile::FileHeader)];
+        size_t readSize{
+            ReadFile(fileId, pBuffer, sizeof(WaveArchiveFile::FileHeader), 0, loadBlockSize)};
+
+        if (readSize != sizeof(WaveArchiveFile::FileHeader))
+            return nullptr;
+
+        const WaveArchiveFile::FileHeader* pHeader{
+            reinterpret_cast<const WaveArchiveFile::FileHeader*>(pBuffer)};
+
+        fileBlockOffset = pHeader->GetFileBlockOffset();
+        position_t infoBlockOffset{pHeader->GetInfoBlockOffset()};
+
+        if (infoBlockOffset > fileBlockOffset)
+            return nullptr;
+    }
+
+    const size_t RequiredSize{fileBlockOffset + static_cast<size_t>(waveCount) * 8 + 4};
+
+    void* buffer{pAllocator->Allocate(RequiredSize)};
+    if (buffer == nullptr)
+        return nullptr;
+
+    {
+        size_t readSize{ReadFile(fileId, buffer, fileBlockOffset, 0, loadBlockSize)};
+        if (readSize != static_cast<size_t>(fileBlockOffset))
+            return nullptr;
+    }
+
+    u32* pFileBlock{reinterpret_cast<u32*>(static_cast<u8*>(buffer) + fileBlockOffset)};
+    *pFileBlock = WaveArchiveFileReader::SignatureWarcTable;
+
+    WaveArchiveFileReader reader{buffer, true};
+    reader.InitializeFileTable();
+
+    SetFileAddressToTable(fileId, buffer);
+    return buffer;
+}
+
 }  // namespace nn::atk::detail

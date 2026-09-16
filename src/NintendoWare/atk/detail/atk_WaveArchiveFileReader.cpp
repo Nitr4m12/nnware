@@ -2,6 +2,9 @@
 
 namespace nn::atk::detail {
 
+const u32 WaveArchiveFileReader::SignatureFile{0x52415746};       // FWAR
+const u32 WaveArchiveFileReader::SignatureWarcTable{0x54415746};  // FWAT
+
 namespace {
 
 const u32 SupportedFileVersionWar{0x10000};
@@ -40,10 +43,11 @@ void WaveArchiveFileReader::Initialize(const void* pWaveArchiveFile, bool isIndi
     if (!isIndividual || !HasIndividualLoadTable())
         return;
 
-    m_pLoadTable = util::BytePtr(const_cast<void*>(pWaveArchiveFile))
-                       .Advance(m_pHeader->GetFileBlockOffset() +
-                                sizeof(WaveArchiveFileReader::SignatureWarcTable))
-                       .Get<IndividualLoadTable>();
+    m_pLoadTable =
+        util::BytePtr(const_cast<void*>(pWaveArchiveFile))
+            .Advance(static_cast<ptrdiff_t>(m_pHeader->GetFileBlockOffset() +
+                                            sizeof(WaveArchiveFileReader::SignatureWarcTable)))
+            .Get<IndividualLoadTable>();
 }
 
 void WaveArchiveFileReader::Finalize() {
