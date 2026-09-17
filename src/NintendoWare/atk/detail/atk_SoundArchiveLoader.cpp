@@ -618,7 +618,8 @@ void SoundArchiveLoader::SetWaveArchiveTableInEmbeddedGroupImpl(
     u32 fileBlockOffset{
         static_cast<const WaveArchiveFile::FileHeader*>(warcFile)->GetFileBlockOffset()};
 
-    const u32 RequiredTableSize{fileBlockOffset + info.waveCount * 4 + 4};
+    const u32 RequiredTableSize{
+        static_cast<u32>(fileBlockOffset + info.waveCount * sizeof(u32) + sizeof(int))};
 
     void* buffer{pAllocator->Allocate(RequiredTableSize)};
     if (buffer == nullptr)
@@ -635,6 +636,50 @@ void SoundArchiveLoader::SetWaveArchiveTableInEmbeddedGroupImpl(
         reader.SetWaveFile(i, loadedFileReader.GetWaveFile(i));
 
     SetFileAddressToTable(info.fileId, buffer);
+}
+
+bool SoundArchiveLoader::IsDataLoaded(const char* pItemName, u32 loadFlag) const {
+    SoundArchive::ItemId id{m_pSoundArchive->GetItemId(pItemName)};
+    return IsDataLoaded(id, loadFlag);
+}
+
+bool SoundArchiveLoader::IsDataLoaded(SoundArchive::ItemId itemId, u32 loadFlag) const {
+    if (!IsAvailable())
+        return false;
+
+    if (itemId == SoundArchive::InvalidId)
+        return false;
+
+    switch (Util::GetItemType(itemId)) {
+    case ItemType_Sound:
+        switch (m_pSoundArchive->GetSoundType(itemId)) {
+        case SoundArchive::SoundType_Sequence:
+            return IsSequenceSoundDataLoaded(itemId, loadFlag);
+
+        case SoundArchive::SoundType_Wave:
+            return IsWaveSoundDataLoaded(itemId, loadFlag);
+
+        default:
+            return false;
+        }
+        break;
+    case ItemType_SoundGroup:
+        return IsSoundGroupDataLoaded(itemId, loadFlag);
+
+    case ItemType_Bank:
+        return IsBankDataLoaded(itemId, loadFlag);
+
+    case ItemType_Player:
+        return false;
+
+    case ItemType_WaveArchive:
+        return IsWaveArchiveDataLoaded(itemId, SoundArchive::InvalidId);
+
+    case ItemType_Group:
+        return IsGroupDataLoaded(itemId);
+    }
+
+    return false;
 }
 
 bool SoundArchiveLoader::IsGroupDataLoaded(SoundArchive::ItemId itemId) const {
