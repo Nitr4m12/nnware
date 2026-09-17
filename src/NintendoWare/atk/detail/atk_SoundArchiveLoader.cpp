@@ -539,7 +539,8 @@ size_t SoundArchiveLoader::ReadFile(SoundArchive::FileId fileId, void* buffer, s
     return 0;
 }
 
-void SoundArchiveLoader::SetWaveArchiveTableWithSeqInEmbeddedGroup(SoundArchive::ItemId seqId, SoundMemoryAllocatable* pAllocator) {
+void SoundArchiveLoader::SetWaveArchiveTableWithSeqInEmbeddedGroup(
+    SoundArchive::ItemId seqId, SoundMemoryAllocatable* pAllocator) {
     SoundArchive::SequenceSoundInfo info;
     if (!m_pSoundArchive->ReadSequenceSoundInfo(&info, seqId))
         return;
@@ -574,6 +575,29 @@ void SoundArchiveLoader::SetWaveArchiveTableWithBankInEmbeddedGroup(
     SetWaveArchiveTableInEmbeddedGroupImpl(warcId, pAllocator);
 }
 
+void SoundArchiveLoader::SetWaveArchiveTableWithWsdInEmbeddedGroup(
+    SoundArchive::ItemId wsdId, SoundMemoryAllocatable* pAllocator) {
+    if (wsdId == SoundArchive::InvalidId)
+        return;
 
+    SoundArchive::SoundInfo soundInfo;
+    if (!m_pSoundArchive->ReadSoundInfo(&soundInfo, wsdId))
+        return;
+
+    SoundArchive::WaveSoundInfo wsdInfo;
+    if (!m_pSoundArchive->detail_ReadWaveSoundInfo(wsdId, &wsdInfo))
+        return;
+
+    const void* wsdFile{GetFileAddressImpl(soundInfo.fileId)};
+    if (wsdFile == nullptr)
+        return;
+
+    WaveSoundFileReader reader{wsdFile};
+    WaveSoundNoteInfo noteInfo;
+    if (!reader.ReadNoteInfo(&noteInfo, wsdInfo.index, 0))
+        return;
+
+    SetWaveArchiveTableInEmbeddedGroupImpl(noteInfo.waveArchiveId, pAllocator);
+}
 
 }  // namespace nn::atk::detail
