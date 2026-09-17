@@ -8,6 +8,7 @@
 #include <nn/atk/atk_HardwareManager.h>
 #include <nn/atk/atk_WaveArchiveFileReader.h>
 #include <nn/atk/atk_WaveSoundFileReader.h>
+#include "nn/util/util_BytePtr.h"
 
 namespace nn::atk::detail {
 
@@ -493,8 +494,8 @@ const void* SoundArchiveLoader::LoadWaveArchiveTable(SoundArchive::ItemId warcId
             return nullptr;
     }
 
-    u32* pFileBlock{reinterpret_cast<u32*>(static_cast<u8*>(buffer) + fileBlockOffset)};
-    *pFileBlock = WaveArchiveFileReader::SignatureWarcTable;
+    util::BytePtr(buffer, fileBlockOffset).Get<WaveArchiveFile::FileBlock>()->header.kind =
+        static_cast<int>(WaveArchiveFileReader::SignatureWarcTable);
 
     WaveArchiveFileReader reader{buffer, true};
     reader.InitializeFileTable();
@@ -598,6 +599,42 @@ void SoundArchiveLoader::SetWaveArchiveTableWithWsdInEmbeddedGroup(
         return;
 
     SetWaveArchiveTableInEmbeddedGroupImpl(noteInfo.waveArchiveId, pAllocator);
+}
+
+void SoundArchiveLoader::SetWaveArchiveTableInEmbeddedGroupImpl(
+    SoundArchive::ItemId warcId, SoundMemoryAllocatable* pAllocator) {
+    SoundArchive::WaveArchiveInfo info;
+    if (!m_pSoundArchive->ReadWaveArchiveInfo(warcId, &info))
+        return;
+
+    if (!info.isLoadIndividual)
+        return;
+
+    const void* warcFile{GetFileAddressImpl(info.fileId)};
+    WaveArchiveFileReader loadedFileReader{warcFile, false};
+    if (loadedFileReader.HasIndividualLoadTable())
+        return;
+
+    u32 fileBlockOffset{
+        static_cast<const WaveArchiveFile::FileHeader*>(warcFile)->GetFileBlockOffset()};
+
+    const u32 RequiredTableSize{fileBlockOffset + info.waveCount * 4 + 4};
+
+    void* buffer{pAllocator->Allocate(RequiredTableSize)};
+    if (buffer == nullptr)
+        return;
+
+    std::memcpy(buffer, warcFile, fileBlockOffset);
+    util::BytePtr(buffer, fileBlockOffset).Get<WaveArchiveFile::FileBlock>()->header.kind =
+        static_cast<int>(WaveArchiveFileReader::SignatureWarcTable);
+
+    WaveArchiveFileReader reader{buffer, true};
+    reader.InitializeFileTable();
+
+    for (u32 i{0}; i < info.waveCount; ++i)
+        reader.SetWaveFile(i, loadedFileReader.GetWaveFile(i));
+
+    SetFileAddressToTable(info.fileId, buffer);
 }
 
 }  // namespace nn::atk::detail
