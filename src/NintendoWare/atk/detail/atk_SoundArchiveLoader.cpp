@@ -539,6 +539,15 @@ size_t SoundArchiveLoader::ReadFile(SoundArchive::FileId fileId, void* buffer, s
     return 0;
 }
 
+void SoundArchiveLoader::SetWaveArchiveTableWithSeqInEmbeddedGroup(SoundArchive::ItemId seqId, SoundMemoryAllocatable* pAllocator) {
+    SoundArchive::SequenceSoundInfo info;
+    if (!m_pSoundArchive->ReadSequenceSoundInfo(&info, seqId))
+        return;
+
+    for (int i{0}; i < static_cast<int>(SoundArchive::SequenceBankMax); ++i)
+        SetWaveArchiveTableWithBankInEmbeddedGroup(info.bankIds[i], pAllocator);
+}
+
 void SoundArchiveLoader::SetWaveArchiveTableWithBankInEmbeddedGroup(
     SoundArchive::ItemId bankId, SoundMemoryAllocatable* pAllocator) {
     if (bankId == SoundArchive::InvalidId)
@@ -564,5 +573,7 @@ void SoundArchiveLoader::SetWaveArchiveTableWithBankInEmbeddedGroup(
     SoundArchive::ItemId warcId{pWaveId->waveArchiveId};
     SetWaveArchiveTableInEmbeddedGroupImpl(warcId, pAllocator);
 }
+
+
 
 }  // namespace nn::atk::detail
