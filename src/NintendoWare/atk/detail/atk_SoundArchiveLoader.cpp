@@ -1,13 +1,31 @@
 #include <nn/atk/atk_SoundArchiveLoader.h>
 
+#include <algorithm>
 #include <cstring>
 
 #include <nn/atk/atk_BankFileReader.h>
+#include <nn/atk/atk_GroupFileReader.h>
 #include <nn/atk/atk_HardwareManager.h>
 #include <nn/atk/atk_WaveArchiveFileReader.h>
 #include <nn/atk/atk_WaveSoundFileReader.h>
 
 namespace nn::atk::detail {
+
+namespace {
+
+class FileStreamHandle {
+public:
+    explicit FileStreamHandle(fnd::FileStream* pStream) : m_pStream(pStream) {};
+    ~FileStreamHandle() = default;
+
+    fnd::FileStream* operator->() { return m_pStream; }
+    operator bool() const { return m_pStream != nullptr; }
+
+private:
+    fnd::FileStream* m_pStream;
+};
+
+}  // anonymous namespace
 
 SoundArchiveLoader::SoundArchiveLoader() = default;
 
@@ -483,6 +501,68 @@ const void* SoundArchiveLoader::LoadWaveArchiveTable(SoundArchive::ItemId warcId
 
     SetFileAddressToTable(fileId, buffer);
     return buffer;
+}
+
+// NON_MATCHING: something is wrong with they way ptr and restSize are checked and modified
+size_t SoundArchiveLoader::ReadFile(SoundArchive::FileId fileId, void* buffer, size_t size,
+                                    int offset, size_t loadBlockSize) {
+    FileStreamHandle stream{m_pSoundArchive->detail_OpenFileStream(
+        fileId, m_StreamArea, sizeof(m_StreamArea), nullptr, 0)};
+
+    if (stream && stream->CanSeek() && stream->CanRead()) {
+        stream->Seek(offset, fnd::FileStream::SeekOrigin_Begin);
+
+        if (loadBlockSize != 0) {
+            u8* ptr{static_cast<u8*>(buffer)};
+            size_t restSize{size};
+
+            while (restSize != 0) {
+                fnd::FndResult result;
+                size_t curReadingSize{std::min(loadBlockSize, restSize)};
+                size_t readByte{stream->Read(ptr, curReadingSize, &result)};
+                if (result.IsFailed())
+                    return 0;
+
+                ptr += readByte;
+                restSize -= readByte;
+                if (restSize + readByte <= readByte || restSize - readByte == 0)
+                    return restSize;
+            }
+        } else {
+            fnd::FndResult result;
+            stream->Read(buffer, size, &result);
+            if (!result.IsFailed())
+                return size;
+        }
+    }
+
+    return 0;
+}
+
+void SoundArchiveLoader::SetWaveArchiveTableWithBankInEmbeddedGroup(
+    SoundArchive::ItemId bankId, SoundMemoryAllocatable* pAllocator) {
+    if (bankId == SoundArchive::InvalidId)
+        return;
+
+    SoundArchive::BankInfo bankInfo;
+    if (!m_pSoundArchive->ReadBankInfo(&bankInfo, bankId))
+        return;
+
+    const void* bankFile{GetFileAddressImpl(bankInfo.fileId)};
+    if (bankFile == nullptr)
+        return;
+
+    BankFileReader reader{bankFile};
+    const Util::WaveIdTable* table{reader.GetWaveIdTable()};
+    if (table == nullptr)
+        return;
+
+    const Util::WaveId* pWaveId{table->GetWaveId(0)};
+    if (pWaveId == nullptr)
+        return;
+
+    SoundArchive::ItemId warcId{pWaveId->waveArchiveId};
+    SetWaveArchiveTableInEmbeddedGroupImpl(warcId, pAllocator);
 }
 
 }  // namespace nn::atk::detail
