@@ -637,4 +637,9 @@ void SoundArchiveLoader::SetWaveArchiveTableInEmbeddedGroupImpl(
     SetFileAddressToTable(info.fileId, buffer);
 }
 
+bool SoundArchiveLoader::IsGroupDataLoaded(SoundArchive::ItemId itemId) const {
+    u32 fileId{m_pSoundArchive->GetItemFileId(itemId)};
+    return GetFileAddressImpl(fileId) != nullptr;
+}
+
 }  // namespace nn::atk::detail
