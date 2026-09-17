@@ -682,6 +682,30 @@ bool SoundArchiveLoader::IsDataLoaded(SoundArchive::ItemId itemId, u32 loadFlag)
     return false;
 }
 
+bool SoundArchiveLoader::IsSequenceSoundDataLoaded(SoundArchive::ItemId itemId,
+                                                   u32 loadFlag) const {
+    if ((loadFlag & LoadFlag_Seq) != 0) {
+        u32 fileId{m_pSoundArchive->GetItemFileId(itemId)};
+
+        if (GetFileAddressImpl(fileId) == nullptr)
+            return false;
+    }
+
+    if ((loadFlag & (LoadFlag_Warc | LoadFlag_Bank)) != 0) {
+        SoundArchive::SequenceSoundInfo info;
+        if (!m_pSoundArchive->ReadSequenceSoundInfo(&info, itemId))
+            return false;
+
+        for (int i{0}; i < static_cast<int>(SoundArchive::SequenceBankMax); ++i) {
+            u32 bankId{info.bankIds[i]};
+            if (bankId != SoundArchive::InvalidId && !IsBankDataLoaded(bankId, loadFlag))
+                return false;
+        }
+    }
+
+    return true;
+}
+
 bool SoundArchiveLoader::IsGroupDataLoaded(SoundArchive::ItemId itemId) const {
     u32 fileId{m_pSoundArchive->GetItemFileId(itemId)};
     return GetFileAddressImpl(fileId) != nullptr;
