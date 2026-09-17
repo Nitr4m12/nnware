@@ -151,7 +151,7 @@ public:
     static_assert(sizeof(AdvancedWaveSoundInfo) == 0x4);
 
     struct BankInfo {
-        FileId fileId;
+        FileId fileId{InvalidId};
 
         BankInfo() = default;
     };
