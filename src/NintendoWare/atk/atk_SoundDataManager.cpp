@@ -121,4 +121,23 @@ const void* SoundDataManager::detail_GetFileAddress(SoundArchive::FileId fileId)
     return GetFileAddressImpl(fileId);
 }
 
+const void* SoundDataManager::GetFileAddressImpl(SoundArchive::FileId fileId) const {
+    if (m_pFileManager != nullptr) {
+        const void* addr{m_pFileManager->GetFileAddressImpl(fileId)};
+        if (addr != nullptr)
+            return addr;
+    }
+
+    {
+        const void* addr{GetFileAddressFromSoundArchive(fileId)};
+        if (addr != nullptr)
+            return addr;
+    }
+
+    {
+        const void* fileData{GetFileAddressFromTable(fileId)};
+        return fileData;
+    }
+}
+
 }  // namespace nn::atk
