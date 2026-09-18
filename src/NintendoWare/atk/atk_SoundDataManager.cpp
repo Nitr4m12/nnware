@@ -2,6 +2,7 @@
 
 #include <nn/atk/atk_DriverCommand.h>
 #include <nn/atk/atk_WaveArchiveFileReader.h>
+#include "nn/atk/atk_GroupFileReader.h"
 
 namespace nn::atk {
 
@@ -175,6 +176,28 @@ SoundArchive::FileId SoundDataManager::detail_GetFileIdFromTable(const void* add
     }
 
     return SoundArchive::InvalidId;
+}
+
+bool SoundDataManager::SetFileAddressInGroupFile(const void* address,
+                                                 [[maybe_unused]] size_t size) {
+    if (address == nullptr)
+        return false;
+
+    detail::GroupFileReader reader{address};
+    u32 groupItemCount{reader.GetGroupItemCount()};
+
+    for (u32 i{0}; i < groupItemCount; ++i) {
+        detail::GroupItemLocationInfo info;
+        if (!reader.ReadGroupItemLocationInfo(&info, i))
+            return false;
+
+        if (info.address == nullptr)
+            return false;
+
+        SetFileAddressToTable(info.fileId, info.address);
+    }
+
+    return true;
 }
 
 }  // namespace nn::atk
