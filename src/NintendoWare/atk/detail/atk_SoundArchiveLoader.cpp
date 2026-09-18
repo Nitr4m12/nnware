@@ -706,6 +706,47 @@ bool SoundArchiveLoader::IsSequenceSoundDataLoaded(SoundArchive::ItemId itemId,
     return true;
 }
 
+bool SoundArchiveLoader::IsWaveSoundDataLoaded(SoundArchive::ItemId itemId, u32 loadFlag) const {
+    const void* pWsdFile;
+    {
+        u32 wsdFileId{m_pSoundArchive->GetItemFileId(itemId)};
+        pWsdFile = GetFileAddressImpl(wsdFileId);
+    }
+
+    if ((loadFlag & LoadFlag_Wsd) != 0 || (loadFlag & LoadFlag_Warc) != 0) {
+        if (pWsdFile == nullptr)
+            return false;
+    }
+
+    if ((loadFlag & LoadFlag_Warc) != 0) {
+        u32 index;
+        {
+            SoundArchive::WaveSoundInfo info;
+            if (!m_pSoundArchive->detail_ReadWaveSoundInfo(itemId, &info))
+                return false;
+
+            index = info.index;
+        }
+
+        u32 warcId;
+        u32 waveIndex;
+        {
+            WaveSoundFileReader reader{pWsdFile};
+            WaveSoundNoteInfo info;
+            if (!reader.ReadNoteInfo(&info, index, 0))
+                return false;
+
+            warcId = info.waveArchiveId;
+            waveIndex = info.waveIndex;
+        }
+
+        if (!IsWaveArchiveDataLoaded(warcId, waveIndex))
+            return false;
+    }
+
+    return true;
+}
+
 bool SoundArchiveLoader::IsGroupDataLoaded(SoundArchive::ItemId itemId) const {
     u32 fileId{m_pSoundArchive->GetItemFileId(itemId)};
     return GetFileAddressImpl(fileId) != nullptr;
