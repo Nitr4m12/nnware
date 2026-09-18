@@ -200,6 +200,10 @@ bool SoundDataManager::SetFileAddressInGroupFile(const void* address,
     return true;
 }
 
+void SoundDataManager::ClearFileAddressInGroupFile(const void* address, size_t size) {
+    InvalidateSoundData(address, size);
+}
+
 void SoundDataManager::InvalidateSoundData(const void* address, size_t size) {
     detail::DriverCommand& cmdmgr{detail::DriverCommand::GetInstance()};
     if (cmdmgr.IsAvailable()) {

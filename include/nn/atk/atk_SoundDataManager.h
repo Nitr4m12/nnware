@@ -10,8 +10,7 @@ namespace detail {
 
 class SoundFileManager {
 public:
-    virtual void Impl1();
-    virtual void Impl2();
+    virtual ~SoundFileManager() = default;
     virtual const void* GetFileAddressImpl(SoundArchive::FileId fileId);
 };
 
