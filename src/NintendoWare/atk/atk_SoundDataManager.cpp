@@ -24,10 +24,10 @@ bool SoundDataManager::Initialize(const SoundArchive* pArchive, void* buffer, si
         return false;
 
     SetSoundArchive(pArchive);
+
     detail::DriverCommand& cmdmgr{detail::DriverCommand::GetInstance()};
 
     auto* command{cmdmgr.AllocCommand<detail::DriverCommandDisposeCallback>()};
-
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
     if (command == nullptr)
         return false;
@@ -60,6 +60,21 @@ bool SoundDataManager::CreateTables(void** pOutBuffer, const SoundArchive* pArch
         m_pFileTable->item[i].address = nullptr;
 
     return true;
+}
+
+void SoundDataManager::Finalize() {
+    detail::DriverCommand& cmdmgr{detail::DriverCommand::GetInstance()};
+
+    auto* command{cmdmgr.AllocCommand<detail::DriverCommandDisposeCallback>()};
+    command->id = detail::DriverCommandId_UnregistDisposeCallback;
+    command->callback = this;
+
+    cmdmgr.PushCommand(command);
+    u32 tag{cmdmgr.FlushCommand(true)};
+    cmdmgr.WaitCommandReply(tag);
+
+    m_pFileManager = nullptr;
+    m_pFileTable = nullptr;
 }
 
 }  // namespace nn::atk
