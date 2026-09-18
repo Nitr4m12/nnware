@@ -29,7 +29,13 @@ public:
         f32 mainSend;
         f32 fxSend[AuxBus_Count];
 
-        void Initialize();
+        void Initialize() {
+            volume = 1.0f;
+            mainSend = 0.0f;
+
+            for (int i{0}; i < AuxBus_Count; ++i)
+                fxSend[i] = 0.0f;
+        }
     };
     static_assert(sizeof(OutputParam) == 0x14);
 
@@ -117,19 +123,19 @@ private:
     PriorityList m_PriorityList;
     PlayerHeapList m_PlayerHeapFreeList;
     PlayerHeapList m_PlayerHeapFreeReqList;
-    int m_PlayableCount;
-    int m_PlayableLimit;
-    u32 m_PlayerHeapCount;
-    float m_Volume;
-    float m_LpfFreq;
-    int m_BiquadType;
-    float m_BiquadValue;
-    u32 m_OutputLineFlag;
+    int m_PlayableCount{1};
+    int m_PlayableLimit{INT_MAX};
+    u32 m_PlayerHeapCount{0};
+    float m_Volume{1.0f};
+    float m_LpfFreq{0.0f};
+    int m_BiquadType{BiquadFilterType_Inherit};
+    float m_BiquadValue{0.0f};
+    u32 m_OutputLineFlag{1};
     OutputParam m_TvParam;
 #if NN_SDK_VER >= NN_MAKE_VER(4, 0, 0)
-    detail::OutputAdditionalParam* m_pOutputAdditionalParam;
+    detail::OutputAdditionalParam* m_pOutputAdditionalParam{};
 #endif
-    bool m_IsFirstComeBased;
+    bool m_IsFirstComeBased{false};
 };
 #if NN_SDK_VER < NN_MAKE_VER(4, 0, 0)
 static_assert(sizeof(SoundPlayer) == 0x78);
