@@ -19,7 +19,7 @@ public:
     ~FileStreamHandle() = default;
 
     fnd::FileStream* operator->() { return m_pStream; }
-    operator bool() const { return m_pStream != nullptr; }
+    explicit operator bool() const { return m_pStream != nullptr; }
 
 private:
     fnd::FileStream* m_pStream;
@@ -813,6 +813,33 @@ bool SoundArchiveLoader::IsWaveArchiveDataLoaded(SoundArchive::ItemId itemId, u3
 bool SoundArchiveLoader::IsGroupDataLoaded(SoundArchive::ItemId itemId) const {
     u32 fileId{m_pSoundArchive->GetItemFileId(itemId)};
     return GetFileAddressImpl(fileId) != nullptr;
+}
+
+bool SoundArchiveLoader::IsSoundGroupDataLoaded(SoundArchive::ItemId itemId, u32 loadFlag) const {
+    SoundArchive::SoundGroupInfo info;
+    if (!m_pSoundArchive->detail_ReadSoundGroupInfo(itemId, &info))
+        return false;
+
+    switch (m_pSoundArchive->GetSoundType(info.startId)) {
+    case SoundArchive::SoundType_Sequence:
+        for (u32 id{info.startId}; id <= info.endId; ++id) {
+            if (!IsSequenceSoundDataLoaded(id, loadFlag))
+                return false;
+        }
+        break;
+
+    case SoundArchive::SoundType_Wave:
+        for (u32 id{info.startId}; id <= info.endId; ++id) {
+            if (!IsWaveSoundDataLoaded(id, loadFlag))
+                return false;
+        }
+        break;
+
+    default:
+        break;
+    }
+
+    return true;
 }
 
 }  // namespace nn::atk::detail
