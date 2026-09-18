@@ -15,6 +15,10 @@ SoundPlayer::SoundPlayer(detail::OutputAdditionalParam* pParam) : m_pOutputAddit
 }
 #endif
 
+SoundPlayer::~SoundPlayer() {
+    StopAllSound(0);
+}
+
 void SoundPlayer::StopAllSound(int fadeFrames) {
     for (auto itr{m_SoundList.begin()}; itr != m_SoundList.end();) {
         auto curItr{itr++};
