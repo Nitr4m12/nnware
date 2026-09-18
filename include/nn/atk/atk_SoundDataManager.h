@@ -8,7 +8,12 @@ namespace nn::atk {
 
 namespace detail {
 
-class SoundFileManager;
+class SoundFileManager {
+public:
+    virtual void Impl1();
+    virtual void Impl2();
+    virtual const void* GetFileAddressImpl(SoundArchive::FileId fileId);
+};
 
 }  // namespace detail
 
