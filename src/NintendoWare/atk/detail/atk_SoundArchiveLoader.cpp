@@ -8,7 +8,6 @@
 #include <nn/atk/atk_HardwareManager.h>
 #include <nn/atk/atk_WaveArchiveFileReader.h>
 #include <nn/atk/atk_WaveSoundFileReader.h>
-#include "nn/util/util_BytePtr.h"
 
 namespace nn::atk::detail {
 
@@ -742,6 +741,39 @@ bool SoundArchiveLoader::IsWaveSoundDataLoaded(SoundArchive::ItemId itemId, u32 
 
         if (!IsWaveArchiveDataLoaded(warcId, waveIndex))
             return false;
+    }
+
+    return true;
+}
+
+bool SoundArchiveLoader::IsBankDataLoaded(SoundArchive::ItemId itemId, u32 loadFlag) const {
+    const void* pBankFile;
+    {
+        u32 fileId{m_pSoundArchive->GetItemFileId(itemId)};
+        pBankFile = GetFileAddressImpl(fileId);
+    }
+
+    if ((loadFlag & LoadFlag_Bank) != 0 || (loadFlag & LoadFlag_Warc) != 0) {
+        if (pBankFile == nullptr)
+            return false;
+    }
+
+    if ((loadFlag & LoadFlag_Warc) != 0) {
+        BankFileReader reader{pBankFile};
+        const Util::WaveIdTable* table{reader.GetWaveIdTable()};
+
+        if (table == nullptr)
+            return false;
+
+        for (u32 i{0}; i < table->GetCount(); ++i) {
+            const Util::WaveId* pWaveId{table->GetWaveId(i)};
+
+            u32 warcId{pWaveId->waveArchiveId};
+            u32 waveIndex{pWaveId->waveIndex};
+
+            if (!IsWaveArchiveDataLoaded(warcId, waveIndex))
+                return false;
+        }
     }
 
     return true;
