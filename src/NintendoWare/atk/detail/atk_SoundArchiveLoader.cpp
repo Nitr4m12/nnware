@@ -779,6 +779,37 @@ bool SoundArchiveLoader::IsBankDataLoaded(SoundArchive::ItemId itemId, u32 loadF
     return true;
 }
 
+bool SoundArchiveLoader::IsWaveArchiveDataLoaded(SoundArchive::ItemId itemId, u32 waveIndex) const {
+    const void* pWarcFile;
+    {
+        u32 fileId{m_pSoundArchive->GetItemFileId(itemId)};
+        pWarcFile = GetFileAddressImpl(fileId);
+    }
+
+    if (pWarcFile == nullptr)
+        return false;
+
+    SoundArchive::WaveArchiveInfo info;
+    if (!m_pSoundArchive->ReadWaveArchiveInfo(itemId, &info))
+        return false;
+
+    if (info.isLoadIndividual) {
+        WaveArchiveFileReader reader{pWarcFile, info.isLoadIndividual};
+        if (waveIndex != SoundArchive::InvalidId && !reader.IsLoaded(waveIndex))
+            return false;
+
+        if (waveIndex == SoundArchive::InvalidId) {
+            u32 waveCount{reader.GetWaveFileCount()};
+            for (u32 i{0}; i < waveCount; ++i) {
+                if (!reader.IsLoaded(i))
+                    return false;
+            }
+        }
+    }
+
+    return true;
+}
+
 bool SoundArchiveLoader::IsGroupDataLoaded(SoundArchive::ItemId itemId) const {
     u32 fileId{m_pSoundArchive->GetItemFileId(itemId)};
     return GetFileAddressImpl(fileId) != nullptr;
