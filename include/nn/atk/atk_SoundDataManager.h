@@ -51,6 +51,7 @@ private:
     struct FileAddress {
         const void* address;
     };
+    static_assert(sizeof(FileAddress) == 0x8);
 
     using FileTable = detail::Util::Table<FileAddress>;
 
