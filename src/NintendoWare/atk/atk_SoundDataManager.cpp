@@ -67,6 +67,10 @@ void SoundDataManager::Finalize() {
     detail::DriverCommand& cmdmgr{detail::DriverCommand::GetInstance()};
 
     auto* command{cmdmgr.AllocCommand<detail::DriverCommandDisposeCallback>()};
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    if (command == nullptr)
+        return;
+#endif
     command->id = detail::DriverCommandId_UnregistDisposeCallback;
     command->callback = this;
 
@@ -157,6 +161,10 @@ const void* SoundDataManager::GetFileAddressFromTable(SoundArchive::FileId fileI
         return nullptr;
 
     return m_pFileTable->item[fileId].address;
+}
+
+const void* SoundDataManager::SetFileAddress(SoundArchive::FileId fileId, const void* address) {
+    return SetFileAddressToTable(fileId, address);
 }
 
 }  // namespace nn::atk
