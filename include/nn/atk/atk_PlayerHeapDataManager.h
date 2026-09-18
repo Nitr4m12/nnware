@@ -27,9 +27,9 @@ public:
 
     void InvalidateData(const void* start, const void* end) override;
 
-    void* SetFileAddressToTable(SoundArchive::FileId fileId, const void* address) override;
-    void* GetFileAddressFromTable(SoundArchive::FileId fileId) const override;
-    void* GetFileAddressImpl(SoundArchive::FileId fileId) const override;
+    const void* SetFileAddressToTable(SoundArchive::FileId fileId, const void* address) override;
+    const void* GetFileAddressFromTable(SoundArchive::FileId fileId) const override;
+    const void* GetFileAddressImpl(SoundArchive::FileId fileId) const override;
 
 private:
     FileAddress m_FileAddress[FileAddressCount];
