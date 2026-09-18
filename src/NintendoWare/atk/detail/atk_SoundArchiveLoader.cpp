@@ -849,4 +849,50 @@ const void* SoundArchiveLoader::GetFileAddressFromSoundArchive(SoundArchive::Fil
     return m_pSoundArchive->detail_GetFileAddress(fileId);
 }
 
+const void* SoundArchiveLoader::detail_GetFileAddressByItemId(SoundArchive::ItemId itemId) const {
+    if (m_pSoundArchive == nullptr)
+        return nullptr;
+
+    SoundArchive::FileId fileId{SoundArchive::InvalidId};
+    const void* result{};
+
+    switch (Util::GetItemType(itemId)) {
+    case ItemType_Sound: {
+        SoundArchive::SoundInfo info;
+        m_pSoundArchive->ReadSoundInfo(&info, itemId);
+        fileId = info.fileId;
+        break;
+    }
+    case ItemType_SoundGroup:
+        break;
+
+    case ItemType_Bank: {
+        SoundArchive::BankInfo info;
+        m_pSoundArchive->ReadBankInfo(&info, itemId);
+        fileId = info.fileId;
+        break;
+    }
+    case ItemType_Player:
+        break;
+
+    case ItemType_WaveArchive: {
+        SoundArchive::WaveArchiveInfo info;
+        m_pSoundArchive->ReadWaveArchiveInfo(itemId, &info);
+        fileId = info.fileId;
+        break;
+    }
+    case ItemType_Group: {
+        SoundArchive::GroupInfo info;
+        m_pSoundArchive->ReadGroupInfo(&info, itemId);
+        fileId = info.fileId;
+        break;
+    }
+    }
+
+    if (fileId != SoundArchive::InvalidId)
+        result = GetFileAddressImpl(fileId);
+
+    return result;
+}
+
 }  // namespace nn::atk::detail

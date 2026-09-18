@@ -185,8 +185,8 @@ public:
     static_assert(sizeof(SoundGroupInfo) == 0x10);
 
     struct GroupInfo {
-        FileId fileId;
-        u32 groupFileSize;
+        FileId fileId{InvalidId};
+        u32 groupFileSize{0};
 
         GroupInfo() = default;
     };
