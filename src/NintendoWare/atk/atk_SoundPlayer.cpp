@@ -26,4 +26,15 @@ void SoundPlayer::StopAllSound(int fadeFrames) {
     }
 }
 
+void SoundPlayer::DoFreePlayerHeap() {
+    for (auto itr{m_PlayerHeapFreeReqList.begin()}; itr != m_PlayerHeapFreeReqList.end();) {
+        auto curItr{itr++};
+
+        if (curItr->GetState() == detail::PlayerHeap::State_TaskFinished) {
+            m_PlayerHeapFreeReqList.erase(curItr);
+            m_PlayerHeapFreeList.push_back(*curItr);
+        }
+    }
+}
+
 }  // namespace nn::atk
