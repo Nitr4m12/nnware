@@ -26,6 +26,17 @@ void SoundPlayer::StopAllSound(int fadeFrames) {
     }
 }
 
+void SoundPlayer::Update() {
+    DoFreePlayerHeap();
+
+    for (auto itr{m_SoundList.begin()}; itr != m_SoundList.end();) {
+        auto curItr{itr++};
+        curItr->Update();
+    }
+
+    detail_SortPriorityList(false);
+}
+
 void SoundPlayer::DoFreePlayerHeap() {
     for (auto itr{m_PlayerHeapFreeReqList.begin()}; itr != m_PlayerHeapFreeReqList.end();) {
         auto curItr{itr++};
