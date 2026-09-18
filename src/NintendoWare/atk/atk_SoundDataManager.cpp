@@ -1,6 +1,7 @@
 #include <nn/atk/atk_SoundDataManager.h>
 
 #include <nn/atk/atk_DriverCommand.h>
+#include <nn/atk/atk_WaveArchiveFileReader.h>
 
 namespace nn::atk {
 
@@ -75,6 +76,45 @@ void SoundDataManager::Finalize() {
 
     m_pFileManager = nullptr;
     m_pFileTable = nullptr;
+}
+
+void SoundDataManager::InvalidateData(const void* start, const void* end) {
+    if (m_pFileTable != nullptr) {
+        for (u32 i{0}; i < m_pFileTable->count; ++i) {
+            const void* addr{m_pFileTable->item[i].address};
+
+            if (start <= addr && addr <= end)
+                m_pFileTable->item[i].address = nullptr;
+        }
+    }
+
+    const SoundArchive* arc{GetSoundArchive()};
+    if (arc == nullptr)
+        return;
+
+    u32 waveArchiveCount{arc->GetWaveArchiveCount()};
+
+    for (u32 i{0}; i < waveArchiveCount; ++i) {
+        SoundArchive::WaveArchiveInfo info;
+        if (!arc->ReadWaveArchiveInfo(SoundArchive::GetWaveArchiveIdFromIndex(i), &info))
+            continue;
+
+        if (!info.isLoadIndividual)
+            continue;
+
+        const void* pWarcTable{GetFileAddressFromTable(info.fileId)};
+        if (pWarcTable == nullptr)
+            continue;
+
+        detail::WaveArchiveFileReader reader{pWarcTable, true};
+
+        for (u32 j{0}; j < info.waveCount; ++j) {
+            const void* waveAddr{reader.GetWaveFile(j)};
+
+            if (waveAddr != nullptr && start <= waveAddr && waveAddr <= end)
+                reader.SetWaveFile(j, nullptr);
+        }
+    }
 }
 
 }  // namespace nn::atk
