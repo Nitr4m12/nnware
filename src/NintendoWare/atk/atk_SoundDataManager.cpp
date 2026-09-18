@@ -144,7 +144,8 @@ const void* SoundDataManager::GetFileAddressImpl(SoundArchive::FileId fileId) co
     }
 }
 
-const void* SoundDataManager::SetFileAddressToTable(SoundArchive::FileId fileId, const void* address) {
+const void* SoundDataManager::SetFileAddressToTable(SoundArchive::FileId fileId,
+                                                    const void* address) {
     if (m_pFileTable == nullptr)
         return nullptr;
 
@@ -165,6 +166,15 @@ const void* SoundDataManager::GetFileAddressFromTable(SoundArchive::FileId fileI
 
 const void* SoundDataManager::SetFileAddress(SoundArchive::FileId fileId, const void* address) {
     return SetFileAddressToTable(fileId, address);
+}
+
+SoundArchive::FileId SoundDataManager::detail_GetFileIdFromTable(const void* address) const {
+    for (u32 i{0}; i < m_pFileTable->count; ++i) {
+        if (m_pFileTable->item[i].address == address)
+            return i;
+    }
+
+    return SoundArchive::InvalidId;
 }
 
 }  // namespace nn::atk
