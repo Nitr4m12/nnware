@@ -917,4 +917,28 @@ bool SoundArchiveLoader::detail_LoadWaveArchiveByBankFile(const void* bankFile,
     return true;
 }
 
+bool SoundArchiveLoader::detail_LoadWaveArchiveByWaveSoundFile(const void* wsdFile, int wsdIndex,
+                                                               SoundMemoryAllocatable* pAllocator) {
+    if (wsdFile == nullptr)
+        return false;
+
+    u32 warcId{SoundArchive::InvalidId};
+    u32 waveIndex;
+    {
+        WaveSoundFileReader reader{wsdFile};
+        WaveSoundNoteInfo info;
+
+        if (!reader.ReadNoteInfo(&info, wsdIndex, 0))
+            return false;
+
+        warcId = info.waveArchiveId;
+        waveIndex = info.waveIndex;
+    }
+
+    if (!LoadWaveArchiveImpl(warcId, waveIndex, pAllocator, LoadFlag_Warc, 0))
+        return false;
+
+    return true;
+}
+
 }  // namespace nn::atk::detail
