@@ -149,4 +149,14 @@ const void* SoundDataManager::SetFileAddressToTable(SoundArchive::FileId fileId,
     return preAddress;
 }
 
+const void* SoundDataManager::GetFileAddressFromTable(SoundArchive::FileId fileId) const {
+    if (m_pFileTable == nullptr)
+        return nullptr;
+
+    if (fileId >= m_pFileTable->count)
+        return nullptr;
+
+    return m_pFileTable->item[fileId].address;
+}
+
 }  // namespace nn::atk
