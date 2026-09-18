@@ -420,7 +420,7 @@ struct DriverCommandStreamSoundTrackMixParameter : Command {
 static_assert(sizeof(DriverCommandStreamSoundTrackMixParameter) == 0x48);
 
 struct DriverCommandInvalidateData : Command {
-    void* mem;
+    const void* mem;
     size_t size;
 };
 static_assert(sizeof(DriverCommandInvalidateData) == 0x28);

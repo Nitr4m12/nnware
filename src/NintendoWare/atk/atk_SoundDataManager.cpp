@@ -200,4 +200,21 @@ bool SoundDataManager::SetFileAddressInGroupFile(const void* address,
     return true;
 }
 
+void SoundDataManager::InvalidateSoundData(const void* address, size_t size) {
+    detail::DriverCommand& cmdmgr{detail::DriverCommand::GetInstance()};
+    if (cmdmgr.IsAvailable()) {
+        auto* command{cmdmgr.AllocCommand<detail::DriverCommandInvalidateData>()};
+        if (command == nullptr)
+            return;
+
+        command->id = detail::DriverCommandId_InvalidateData;
+        command->mem = address;
+        command->size = size;
+
+        cmdmgr.PushCommand(command);
+        u32 tag{cmdmgr.FlushCommand(true)};
+        cmdmgr.WaitCommandReply(tag);
+    }
+}
+
 }  // namespace nn::atk
