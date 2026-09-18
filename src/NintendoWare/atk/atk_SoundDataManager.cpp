@@ -140,4 +140,13 @@ const void* SoundDataManager::GetFileAddressImpl(SoundArchive::FileId fileId) co
     }
 }
 
+const void* SoundDataManager::SetFileAddressToTable(SoundArchive::FileId fileId, const void* address) {
+    if (m_pFileTable == nullptr)
+        return nullptr;
+
+    const void* preAddress{m_pFileTable->item[fileId].address};
+    m_pFileTable->item[fileId].address = address;
+    return preAddress;
+}
+
 }  // namespace nn::atk
