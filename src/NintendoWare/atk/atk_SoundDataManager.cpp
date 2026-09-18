@@ -4,4 +4,6 @@ namespace nn::atk {
 
 SoundDataManager::SoundDataManager() = default;
 
+SoundDataManager::~SoundDataManager() = default;
+
 }  // namespace nn::atk
