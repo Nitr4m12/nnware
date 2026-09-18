@@ -539,6 +539,99 @@ size_t SoundArchiveLoader::ReadFile(SoundArchive::FileId fileId, void* buffer, s
     return 0;
 }
 
+// NON_MATCHING: unknown reason
+bool SoundArchiveLoader::PostProcessForLoadedGroupFile(const void* pGroupFile,
+                                                       SoundMemoryAllocatable* pAllocator,
+                                                       size_t loadBlockSize) {
+    GroupFileReader reader{pGroupFile};
+    bool isLinkGroup{false};
+    u32 groupItemCount{reader.GetGroupItemCount()};
+
+    for (u32 i{0}; i < groupItemCount; ++i) {
+        GroupItemLocationInfo info;
+        if (!reader.ReadGroupItemLocationInfo(&info, i))
+            return false;
+
+        if (info.address == nullptr)
+            isLinkGroup = i == 0;
+        else
+            SetFileAddressToTable(info.fileId, info.address);
+
+        if (isLinkGroup) {
+            u32 groupItemInfoExCount{reader.GetGroupItemExCount()};
+            if (groupItemInfoExCount == 0)
+                return true;
+
+            for (u32 i{0}; i < groupItemInfoExCount; ++i) {
+                GroupFile::GroupItemInfoEx infoEx;
+                if (!reader.ReadGroupItemInfoEx(&infoEx, i))
+                    return false;
+
+                if (!LoadData(infoEx.itemId, pAllocator, infoEx.loadFlag, loadBlockSize))
+                    return false;
+            }
+
+            return true;
+        }
+    }
+
+    u32 groupItemInfoExCount{reader.GetGroupItemExCount()};
+    if (groupItemInfoExCount == 0)
+        return true;
+
+    for (u32 i{0}; i != groupItemInfoExCount; ++i) {
+        GroupFile::GroupItemInfoEx infoEx;
+        if (!reader.ReadGroupItemInfoEx(&infoEx, i))
+            break;
+
+        if ((infoEx.loadFlag & LoadFlag_Warc) == 0)
+            break;
+
+        switch (Util::GetItemType(infoEx.itemId)) {
+        case ItemType_Sound: {
+            if (m_pSoundArchive->GetSoundType(infoEx.itemId) == SoundArchive::SoundType_Sequence)
+                SetWaveArchiveTableWithSeqInEmbeddedGroup(infoEx.itemId, pAllocator);
+            break;
+        }
+        case ItemType_SoundGroup: {
+            SoundArchive::SoundGroupInfo info;
+            if (!m_pSoundArchive->detail_ReadSoundGroupInfo(infoEx.itemId, &info))
+                break;
+
+            if (info.startId == SoundArchive::InvalidId)
+                break;
+
+            switch (m_pSoundArchive->GetSoundType(info.startId)) {
+            case SoundArchive::SoundType_Sequence:
+                for (u32 id{info.startId}; id <= info.endId; ++id) {
+                    SetWaveArchiveTableWithSeqInEmbeddedGroup(id, pAllocator);
+                }
+                break;
+
+            case SoundArchive::SoundType_Wave:
+                SetWaveArchiveTableWithWsdInEmbeddedGroup(info.startId, pAllocator);
+                break;
+
+            default:
+                break;
+            }
+
+            break;
+        }
+        case ItemType_Bank: {
+            SetWaveArchiveTableWithBankInEmbeddedGroup(infoEx.itemId, pAllocator);
+            break;
+        }
+        case ItemType_Player:
+        case ItemType_WaveArchive:
+        case ItemType_Group:
+            break;
+        }
+    }
+
+    return true;
+}
+
 void SoundArchiveLoader::SetWaveArchiveTableWithSeqInEmbeddedGroup(
     SoundArchive::ItemId seqId, SoundMemoryAllocatable* pAllocator) {
     SoundArchive::SequenceSoundInfo info;
