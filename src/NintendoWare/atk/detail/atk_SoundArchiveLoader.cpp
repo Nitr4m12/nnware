@@ -895,4 +895,26 @@ const void* SoundArchiveLoader::detail_GetFileAddressByItemId(SoundArchive::Item
     return result;
 }
 
+bool SoundArchiveLoader::detail_LoadWaveArchiveByBankFile(const void* bankFile,
+                                                          SoundMemoryAllocatable* pAllocator) {
+    if (bankFile == nullptr)
+        return false;
+
+    BankFileReader reader{bankFile};
+    const Util::WaveIdTable* table{reader.GetWaveIdTable()};
+
+    if (table == nullptr)
+        return false;
+
+    for (u32 i{0}; i < table->GetCount(); ++i) {
+        const Util::WaveId* pWaveId{table->GetWaveId(i)};
+
+        if (!LoadWaveArchiveImpl(pWaveId->waveArchiveId, pWaveId->waveIndex, pAllocator,
+                                 LoadFlag_Warc, 0))
+            return false;
+    }
+
+    return true;
+}
+
 }  // namespace nn::atk::detail
