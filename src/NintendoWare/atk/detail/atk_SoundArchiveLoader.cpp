@@ -842,4 +842,11 @@ bool SoundArchiveLoader::IsSoundGroupDataLoaded(SoundArchive::ItemId itemId, u32
     return true;
 }
 
+const void* SoundArchiveLoader::GetFileAddressFromSoundArchive(SoundArchive::FileId fileId) const {
+    if (m_pSoundArchive == nullptr)
+        return nullptr;
+
+    return m_pSoundArchive->detail_GetFileAddress(fileId);
+}
+
 }  // namespace nn::atk::detail
