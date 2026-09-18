@@ -117,4 +117,8 @@ void SoundDataManager::InvalidateData(const void* start, const void* end) {
     }
 }
 
+const void* SoundDataManager::detail_GetFileAddress(SoundArchive::FileId fileId) const {
+    return GetFileAddressImpl(fileId);
+}
+
 }  // namespace nn::atk
