@@ -1,4 +1,5 @@
 #include <nn/atk/atk_SoundPlayer.h>
+#include "nn/atk/atk_PlayerHeap.h"
 
 namespace nn::atk {
 
@@ -234,6 +235,16 @@ void SoundPlayer::detail_AppendPlayerHeap(detail::PlayerHeap* pHeap) {
     pHeap->AttachSoundPlayer(this);
     m_PlayerHeapFreeList.push_back(*pHeap);
     ++m_PlayerHeapCount;
+}
+
+detail::PlayerHeap* SoundPlayer::detail_AllocPlayerHeap() {
+    if (m_PlayerHeapFreeList.empty())
+        return nullptr;
+
+    detail::PlayerHeap& playerHeap{m_PlayerHeapFreeList.front()};
+    m_PlayerHeapFreeList.pop_front();
+
+    return &playerHeap;
 }
 
 }  // namespace nn::atk
