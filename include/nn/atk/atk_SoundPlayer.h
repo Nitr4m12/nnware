@@ -101,9 +101,15 @@ public:
     int GetPlayableSoundCount() const { return m_PlayableCount; }
 
     void detail_SetPlayableSoundLimit(int limit);
+
+    bool detail_CanPlaySound(int startPriority);
+
+    bool detail_AppendSound(detail::BasicSound* pSound);
     void detail_RemoveSound(detail::BasicSound* pSound);
+
     void detail_SortPriorityList(bool reverse);
     void detail_SortPriorityList(detail::BasicSound* pSound);
+
     void detail_AppendPlayerHeap(detail::PlayerHeap* pHeap);
     bool detail_CanUsePlayerHeap() const { return m_PlayerHeapCount != 0; }
     detail::PlayerHeap* detail_AllocPlayerHeap();
