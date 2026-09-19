@@ -55,4 +55,18 @@ void SoundArchiveManager::Remove(AddonSoundArchiveContainer& container) {
     m_ContainerList.Remove(container);
 }
 
+bool SoundArchiveManager::IsAvailable() const {
+    if (m_pMainSoundArchive == nullptr)
+        return false;
+
+    bool isAvailable{m_pMainSoundArchive->IsAvailable()};
+
+    bool isSoundArchiveListAvailable{true};
+    for (ContainerList::ConstIterator iterator{m_ContainerList.Begin()};
+         iterator != m_ContainerList.End(); ++iterator)
+        isSoundArchiveListAvailable &= iterator->GetSoundArchive()->IsAvailable();
+
+    return isAvailable && isSoundArchiveListAvailable;
+}
+
 }  // namespace nn::atk::detail
