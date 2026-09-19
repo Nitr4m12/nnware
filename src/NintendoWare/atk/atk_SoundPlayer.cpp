@@ -147,4 +147,22 @@ void SoundPlayer::RemoveSoundList(detail::BasicSound* pSound) {
     pSound->DetachSoundPlayer(this);
 }
 
+// NON_MATCHING: bad branching
+void SoundPlayer::InsertPriorityList(detail::BasicSound* pSound) {
+    auto itr{m_SoundList.begin()};
+
+    while (itr != m_SoundList.end() && itr->CalcCurrentPlayerPriority() <= pSound->CalcCurrentPlayerPriority()) {
+        if (m_IsFirstComeBased && itr->CalcCurrentPlayerPriority() == pSound->CalcCurrentPlayerPriority())
+            break;
+
+        ++itr;
+    }
+
+    m_SoundList.insert(itr, *pSound);
+}
+
+void SoundPlayer::RemovePriorityList(detail::BasicSound* pSound) {
+    m_PriorityList.erase(m_PriorityList.iterator_to(*pSound));
+}
+
 }  // namespace nn::atk
