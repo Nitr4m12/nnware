@@ -98,4 +98,9 @@ void SoundPlayer::SetLowPassFilterFrequency(float lpfFreq) {
     m_LpfFreq = lpfFreq;
 }
 
+void SoundPlayer::SetBiquadFilter(int type, float value) {
+    m_BiquadType = type;
+    m_BiquadValue = value;
+}
+
 }  // namespace nn::atk
