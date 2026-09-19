@@ -103,4 +103,8 @@ void SoundPlayer::SetBiquadFilter(int type, float value) {
     m_BiquadValue = value;
 }
 
+void SoundPlayer::SetDefaultOutputLine(u32 outputLineFlag) {
+    m_OutputLineFlag = outputLineFlag;
+}
+
 }  // namespace nn::atk
