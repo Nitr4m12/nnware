@@ -94,4 +94,8 @@ void SoundPlayer::SetVolume(float volume) {
     m_Volume = volume < 0.0f ? 0.0f : volume;
 }
 
+void SoundPlayer::SetLowPassFilterFrequency(float lpfFreq) {
+    m_LpfFreq = lpfFreq;
+}
+
 }  // namespace nn::atk
