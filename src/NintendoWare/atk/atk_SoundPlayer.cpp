@@ -90,4 +90,8 @@ void SoundPlayer::PauseAllSound(bool flag, int fadeFrames, PauseMode pauseMode) 
     }
 }
 
+void SoundPlayer::SetVolume(float volume) {
+    m_Volume = volume < 0.0f ? 0.0f : volume;
+}
+
 }  // namespace nn::atk
