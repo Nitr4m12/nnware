@@ -69,4 +69,18 @@ bool SoundArchiveManager::IsAvailable() const {
     return isAvailable && isSoundArchiveListAvailable;
 }
 
+const AddonSoundArchive*
+SoundArchiveManager::GetAddonSoundArchive(const char* soundArchiveName) const {
+    if (soundArchiveName == nullptr)
+        return nullptr;
+
+    for (ContainerList::ConstIterator iterator{m_ContainerList.Begin()};
+         iterator != m_ContainerList.End(); ++iterator) {
+        if (iterator->IsSameName(soundArchiveName))
+            return static_cast<const AddonSoundArchive*>(iterator->GetSoundArchive());
+    }
+
+    return nullptr;
+}
+
 }  // namespace nn::atk::detail
