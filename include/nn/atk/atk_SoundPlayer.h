@@ -67,6 +67,7 @@ public:
     void SetDefaultOutputLine(u32 outputLineFlag);
     u32 GetDefaultOutputLine() const { return m_OutputLineFlag; }
 
+#if NN_SDK_VER >= NN_MAKE_VER(4, 0, 0)
     void SetMainSend(float send);
     float GetMainSend() const;
 
@@ -75,6 +76,7 @@ public:
 
     void SetSend(int subMixBus, float send);
     float GetSend(int subMixBus);
+#endif
 
     void SetOutputVolume(OutputDevice device, float volume);
     float GetOutputVolume([[maybe_unused]] OutputDevice device) const { return m_TvParam.volume; }
