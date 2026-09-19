@@ -142,4 +142,9 @@ void SoundPlayer::SetOutputVolume(OutputDevice device, float volume) {
     m_TvParam.volume = volume < 0.0f ? 0.0f : volume;
 }
 
+void SoundPlayer::RemoveSoundList(detail::BasicSound* pSound) {
+    m_SoundList.erase(m_SoundList.iterator_to(*pSound));
+    pSound->DetachSoundPlayer(this);
+}
+
 }  // namespace nn::atk
