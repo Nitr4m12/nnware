@@ -32,4 +32,13 @@ void SoundArchiveManager::ChangeTargetArchive(const char* soundArchiveName) {
     }
 }
 
+void SoundArchiveManager::Finalize() {
+    m_pCurrentSoundArchive = nullptr;
+    m_pCurrentSoundDataManager = nullptr;
+    m_ContainerList.Clear();
+    m_pMainSoundArchive = nullptr;
+    m_pMainSoundDataManager = nullptr;
+    m_pParametersHook = nullptr;
+}
+
 }  // namespace nn::atk::detail
