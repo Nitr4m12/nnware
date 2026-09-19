@@ -37,9 +37,12 @@ public:
     bool IsEmpty() const { return m_ListImpl.empty(); }
 
     void Remove(Element& element) {
-        for (Iterator iterator{Begin()}; iterator != End(); ++iterator)
-            if (&*iterator == &element)
+        for (Iterator iterator{Begin()}; iterator != End(); ++iterator) {
+            if (&*iterator == &element) {
                 m_ListImpl.erase(iterator);
+                return;
+            }
+        }
     }
 
     void Clear() { m_ListImpl.clear(); }

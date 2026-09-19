@@ -2,7 +2,11 @@
 
 namespace nn::atk::detail {
 
-SoundArchiveManager::SoundArchiveManager() = default;
+SoundArchiveManager::SoundArchiveManager() {
+#if NN_WARE_VER > NN_MAKE_VER(1, 6, 1)
+    m_pParametersHook = nullptr;
+#endif
+};
 
 SoundArchiveManager::~SoundArchiveManager() = default;
 
@@ -38,11 +42,17 @@ void SoundArchiveManager::Finalize() {
     m_ContainerList.Clear();
     m_pMainSoundArchive = nullptr;
     m_pMainSoundDataManager = nullptr;
+#if NN_WARE_VER > NN_MAKE_VER(1, 6, 1)
     m_pParametersHook = nullptr;
+#endif
 }
 
 void SoundArchiveManager::Add(AddonSoundArchiveContainer& container) {
     m_ContainerList.PushBack(container);
+}
+
+void SoundArchiveManager::Remove(AddonSoundArchiveContainer& container) {
+    m_ContainerList.Remove(container);
 }
 
 }  // namespace nn::atk::detail
