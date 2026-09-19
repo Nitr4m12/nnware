@@ -76,4 +76,18 @@ void SoundPlayer::detail_SortPriorityList(bool reverse) {
     }
 }
 
+void SoundPlayer::PauseAllSound(bool flag, int fadeFrames) {
+    for (auto itr{m_SoundList.begin()}; itr != m_SoundList.end();) {
+        auto curItr{itr++};
+        curItr->Pause(flag, fadeFrames);
+    }
+}
+
+void SoundPlayer::PauseAllSound(bool flag, int fadeFrames, PauseMode pauseMode) {
+    for (auto itr{m_SoundList.begin()}; itr != m_SoundList.end();) {
+        auto curItr{itr++};
+        curItr->Pause(flag, fadeFrames, pauseMode);
+    }
+}
+
 }  // namespace nn::atk
