@@ -41,4 +41,8 @@ void SoundArchiveManager::Finalize() {
     m_pParametersHook = nullptr;
 }
 
+void SoundArchiveManager::Add(AddonSoundArchiveContainer& container) {
+    m_ContainerList.PushBack(container);
+}
+
 }  // namespace nn::atk::detail
