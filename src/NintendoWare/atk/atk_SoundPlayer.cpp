@@ -247,4 +247,11 @@ detail::PlayerHeap* SoundPlayer::detail_AllocPlayerHeap() {
     return &playerHeap;
 }
 
+void SoundPlayer::detail_FreePlayerHeap(detail::PlayerHeap* pHeap) {
+    if (pHeap->GetState() == detail::PlayerHeap::State_TaskFinished)
+        m_PlayerHeapFreeList.push_back(*pHeap);
+    else
+        m_PlayerHeapFreeReqList.push_back(*pHeap);
+}
+
 }  // namespace nn::atk
