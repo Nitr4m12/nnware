@@ -230,4 +230,10 @@ bool SoundPlayer::detail_CanPlaySound(int startPriority) {
     return true;
 }
 
+void SoundPlayer::detail_AppendPlayerHeap(detail::PlayerHeap* pHeap) {
+    pHeap->AttachSoundPlayer(this);
+    m_PlayerHeapFreeList.push_back(*pHeap);
+    ++m_PlayerHeapCount;
+}
+
 }  // namespace nn::atk
