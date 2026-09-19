@@ -119,7 +119,7 @@ public:
     void SetFirstComeBased(bool isFirstComeBased) { m_IsFirstComeBased = isFirstComeBased; }
 
 private:
-    detail::BasicSound* GetLowestPrioritySound() { return &m_SoundList.front(); }
+    detail::BasicSound* GetLowestPrioritySound() { return &m_PriorityList.front(); }
 
     void InsertPriorityList(detail::BasicSound* pSound);
     void RemovePriorityList(detail::BasicSound* pSound);

@@ -151,8 +151,10 @@ void SoundPlayer::RemoveSoundList(detail::BasicSound* pSound) {
 void SoundPlayer::InsertPriorityList(detail::BasicSound* pSound) {
     auto itr{m_SoundList.begin()};
 
-    while (itr != m_SoundList.end() && itr->CalcCurrentPlayerPriority() <= pSound->CalcCurrentPlayerPriority()) {
-        if (m_IsFirstComeBased && itr->CalcCurrentPlayerPriority() == pSound->CalcCurrentPlayerPriority())
+    while (itr != m_SoundList.end() &&
+           itr->CalcCurrentPlayerPriority() <= pSound->CalcCurrentPlayerPriority()) {
+        if (m_IsFirstComeBased &&
+            itr->CalcCurrentPlayerPriority() == pSound->CalcCurrentPlayerPriority())
             break;
 
         ++itr;
@@ -178,7 +180,7 @@ bool SoundPlayer::detail_AppendSound(detail::BasicSound* pSound) {
     if (GetPlayableSoundCount() == 0)
         return false;
 
-    while (GetPlayingSoundCount() < GetPlayableSoundCount()) {
+    while (GetPlayingSoundCount() > GetPlayableSoundCount()) {
         detail::BasicSound* dropSound{GetLowestPrioritySound()};
         if (dropSound->CalcCurrentPlayerPriority() <= allocPriority) {
             InsertPriorityList(pSound);
@@ -194,6 +196,15 @@ bool SoundPlayer::detail_AppendSound(detail::BasicSound* pSound) {
 void SoundPlayer::detail_RemoveSound(detail::BasicSound* pSound) {
     RemovePriorityList(pSound);
     RemoveSoundList(pSound);
+}
+
+void SoundPlayer::SetPlayableSoundCount(int count) {
+    m_PlayableCount = detail::fnd::Clamp(count, 0, m_PlayableLimit);
+
+    while (GetPlayingSoundCount() > GetPlayableSoundCount()) {
+        detail::BasicSound* dropSound{GetLowestPrioritySound()};
+        dropSound->Finalize();
+    }
 }
 
 }  // namespace nn::atk
