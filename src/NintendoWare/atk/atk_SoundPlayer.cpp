@@ -48,4 +48,32 @@ void SoundPlayer::DoFreePlayerHeap() {
     }
 }
 
+void SoundPlayer::detail_SortPriorityList(bool reverse) {
+    if (m_PriorityList.size() <= 1)
+        return;
+
+    const int TmpCount{PlayerPriorityMax + 1};
+    static PriorityList tmplist[TmpCount];
+
+    while (!m_PriorityList.empty()) {
+        detail::BasicSound& front{m_PriorityList.front()};
+        m_PriorityList.pop_front();
+        tmplist[front.CalcCurrentPlayerPriority()].push_back(front);
+    }
+
+    for (int i{0}; i < TmpCount; ++i) {
+        while (!tmplist[i].empty()) {
+            if (reverse) {
+                detail::BasicSound& back{tmplist[i].back()};
+                tmplist[i].pop_back();
+                m_PriorityList.push_back(back);
+            } else {
+                detail::BasicSound& front{tmplist[i].front()};
+                tmplist[i].pop_front();
+                m_PriorityList.push_back(front);
+            }
+        }
+    }
+}
+
 }  // namespace nn::atk
