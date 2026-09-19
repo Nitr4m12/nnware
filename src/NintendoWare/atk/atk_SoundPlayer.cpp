@@ -107,4 +107,32 @@ void SoundPlayer::SetDefaultOutputLine(u32 outputLineFlag) {
     m_OutputLineFlag = outputLineFlag;
 }
 
+#if NN_SDK_VER >= NN_MAKE_VER(4, 0, 0)
+void SoundPlayer::SetMainSend(float send) {
+    m_TvParam.mainSend = send;
+}
+
+float SoundPlayer::GetMainSend() const {
+    return m_TvParam.mainSend;
+}
+
+void SoundPlayer::SetEffectSend(AuxBus bus, float send) {
+    m_TvParam.fxSend[bus] = send;
+}
+
+float SoundPlayer::GetEffectSend(AuxBus bus) const {
+    return m_TvParam.fxSend[bus];
+}
+
+float SoundPlayer::GetSend(int subMixBus) {
+    if (subMixBus == 0)
+        return m_TvParam.mainSend;
+
+    if (subMixBus < 4)
+        return m_TvParam.fxSend[subMixBus - 1u];
+
+    return m_pOutputAdditionalParam->TryGetAdditionalSend(subMixBus);
+}
+#endif
+
 }  // namespace nn::atk
