@@ -207,4 +207,8 @@ void SoundPlayer::SetPlayableSoundCount(int count) {
     }
 }
 
+void SoundPlayer::detail_SetPlayableSoundLimit(int limit) {
+    m_PlayableLimit = limit;
+}
+
 }  // namespace nn::atk
