@@ -211,4 +211,22 @@ void SoundPlayer::detail_SetPlayableSoundLimit(int limit) {
     m_PlayableLimit = limit;
 }
 
+bool SoundPlayer::detail_CanPlaySound(int startPriority) {
+    if (GetPlayableSoundCount() == 0)
+        return false;
+
+    if (GetPlayingSoundCount() >= GetPlayableSoundCount()) {
+        detail::BasicSound* dropSound{GetLowestPrioritySound()};
+
+        if (m_IsFirstComeBased) {
+            if (startPriority <= dropSound->CalcCurrentPlayerPriority())
+                return false;
+
+        } else if (startPriority < dropSound->CalcCurrentPlayerPriority())
+            return false;
+    }
+
+    return true;
+}
+
 }  // namespace nn::atk
