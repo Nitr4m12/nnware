@@ -4,4 +4,6 @@ namespace nn::atk::detail {
 
 SoundArchiveManager::SoundArchiveManager() = default;
 
+SoundArchiveManager::~SoundArchiveManager() = default;
+
 }  // namespace nn::atk::detail
