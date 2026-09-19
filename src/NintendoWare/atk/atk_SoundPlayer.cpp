@@ -147,33 +147,34 @@ void SoundPlayer::RemoveSoundList(detail::BasicSound* pSound) {
     pSound->DetachSoundPlayer(this);
 }
 
-// NON_MATCHING: bad branching/missing checks.
 void SoundPlayer::InsertPriorityList(detail::BasicSound* pSound) {
-    auto itr{m_SoundList.begin()};
+    auto itr{m_PriorityList.begin()};
 
-    while (itr != m_SoundList.end() &&
-           itr->CalcCurrentPlayerPriority() <= pSound->CalcCurrentPlayerPriority()) {
-        if (m_IsFirstComeBased &&
-            itr->CalcCurrentPlayerPriority() == pSound->CalcCurrentPlayerPriority())
+    while (itr != m_PriorityList.end()) {
+        if (m_IsFirstComeBased) {
+            if (pSound->CalcCurrentPlayerPriority() <= itr->CalcCurrentPlayerPriority())
+                break;
+
+        } else if (pSound->CalcCurrentPlayerPriority() < itr->CalcCurrentPlayerPriority()) {
             break;
+        }
 
         ++itr;
     }
 
-    m_SoundList.insert(itr, *pSound);
+    m_PriorityList.insert(itr, *pSound);
 }
 
 void SoundPlayer::RemovePriorityList(detail::BasicSound* pSound) {
     m_PriorityList.erase(m_PriorityList.iterator_to(*pSound));
 }
 
-// NON_MATCHING: requires SoundPlayer::InsertPriorityList
 void SoundPlayer::detail_SortPriorityList(detail::BasicSound* pSound) {
     RemovePriorityList(pSound);
     InsertPriorityList(pSound);
 }
 
-// NON_MATCHING: requires SoundPlayer::InsertPriorityList
+// NON_MATCHING: unknown reason
 bool SoundPlayer::detail_AppendSound(detail::BasicSound* pSound) {
     int allocPriority{pSound->CalcCurrentPlayerPriority()};
 
@@ -182,7 +183,7 @@ bool SoundPlayer::detail_AppendSound(detail::BasicSound* pSound) {
 
     while (GetPlayingSoundCount() > GetPlayableSoundCount()) {
         detail::BasicSound* dropSound{GetLowestPrioritySound()};
-        if (dropSound->CalcCurrentPlayerPriority() <= allocPriority) {
+        if (allocPriority <= dropSound->CalcCurrentPlayerPriority()) {
             InsertPriorityList(pSound);
             pSound->AttachSoundPlayer(this);
             return true;
