@@ -15,4 +15,21 @@ void SoundArchiveManager::Initialize(const SoundArchive* pSoundArchive,
     m_pCurrentSoundDataManager = m_pMainSoundDataManager;
 }
 
+void SoundArchiveManager::ChangeTargetArchive(const char* soundArchiveName) {
+    m_pCurrentSoundArchive = m_pMainSoundArchive;
+    m_pCurrentSoundDataManager = m_pMainSoundDataManager;
+
+    if (soundArchiveName == nullptr)
+        return;
+
+    for (ContainerList::ConstIterator iterator{m_ContainerList.Begin()};
+         iterator != m_ContainerList.End(); ++iterator) {
+        if (iterator->IsSameName(soundArchiveName)) {
+            m_pCurrentSoundArchive = iterator->GetSoundArchive();
+            m_pCurrentSoundDataManager = iterator->GetSoundDataManager();
+            return;
+        }
+    }
+}
+
 }  // namespace nn::atk::detail
