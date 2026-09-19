@@ -1,4 +1,5 @@
 #include <nn/atk/detail/atk_SoundArchiveManager.h>
+#include "nn/atk/atk_SoundDataManager.h"
 
 namespace nn::atk::detail {
 
@@ -78,6 +79,20 @@ SoundArchiveManager::GetAddonSoundArchive(const char* soundArchiveName) const {
          iterator != m_ContainerList.End(); ++iterator) {
         if (iterator->IsSameName(soundArchiveName))
             return static_cast<const AddonSoundArchive*>(iterator->GetSoundArchive());
+    }
+
+    return nullptr;
+}
+
+const SoundDataManager*
+SoundArchiveManager::GetAddonSoundDataManager(const char* soundArchiveName) const {
+    if (soundArchiveName == nullptr)
+        return nullptr;
+
+    for (ContainerList::ConstIterator iterator{m_ContainerList.Begin()};
+         iterator != m_ContainerList.End(); ++iterator) {
+        if (iterator->IsSameName(soundArchiveName))
+            return iterator->GetSoundDataManager();
     }
 
     return nullptr;
