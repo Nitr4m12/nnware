@@ -135,4 +135,11 @@ float SoundPlayer::GetSend(int subMixBus) {
 }
 #endif
 
+void SoundPlayer::SetOutputVolume(OutputDevice device, float volume) {
+    if (device != OutputDevice_Main)
+        return;
+
+    m_TvParam.volume = volume < 0.0f ? 0.0f : volume;
+}
+
 }  // namespace nn::atk
