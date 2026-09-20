@@ -207,4 +207,8 @@ void RegionManager::SetPosition(position_t position) {
     m_CurrentRegion.current = position;
 }
 
+void RegionManager::AddPosition(position_t position) {
+    m_CurrentRegion.current += position;
+}
+
 }  // namespace nn::atk::detail
