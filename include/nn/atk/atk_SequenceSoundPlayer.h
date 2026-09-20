@@ -13,9 +13,9 @@
 namespace nn::atk {
 
 struct SequenceUserProcCallbackParam {
-    s16* localVariable;
-    s16* globalVariable;
-    s16* trackVariable;
+    volatile s16* localVariable;
+    volatile s16* globalVariable;
+    volatile s16* trackVariable;
     bool cmpFlag;
 };
 static_assert(sizeof(SequenceUserProcCallbackParam) == 0x20);
@@ -30,64 +30,63 @@ using SequenceSoundLoaderManager = LoaderManager<SequenceSoundLoader>;
 class SequenceSoundLoader {
 public:
     struct LoadInfo {
+
+        const SoundArchive* soundArchive;
+        const SoundDataManager* soundDataManager;
+        LoadItemInfo* loadInfoSeq;
+        LoadItemInfo* loadInfoBanks[SeqBankMax];
+        SoundPlayer* soundPlayer;
+
         LoadInfo(const SoundArchive* arc, const SoundDataManager* mgr, LoadItemInfo* seq,
                  LoadItemInfo* banks, SoundPlayer* player);
-
-        SoundArchive* soundArchive;
-        SoundDataManager* soundDataManager;
-        LoadItemInfo* loadInfoSeq;
-        LoadItemInfo* loadInfoBanks[4];
-        SoundPlayer* soundPlayer;
     };
     static_assert(sizeof(LoadInfo) == 0x40);
 
-    struct Arg {
-        SoundArchive* soundArchive;
-        SoundDataManager* soundDataManager;
-        SoundPlayer* soundPlayer;
-        LoadItemInfo loadInfoSeq;
-        LoadItemInfo loadInfoBanks[4];
-    };
-    static_assert(sizeof(Arg) == 0x68);
-
     struct Data {
-        void* seqFile;
-        void* bankFiles[4];
-        void* warcFiles[4];
-        bool warcIsIndividuals[4];
+        const void* seqFile;
+        const void* bankFiles[SeqBankMax];
+        const void* warcFiles[SeqBankMax];
+        bool warcIsIndividuals[SeqBankMax];
+
+        Data() = default;
+
+        void Initialize();
     };
     static_assert(sizeof(Data) == 0x50);
 
-    class DataLoadTask : Task {
+    struct Arg {
+        const SoundArchive* soundArchive;
+        const SoundDataManager* soundDataManager;
+        SoundPlayer* soundPlayer;
+        LoadItemInfo loadInfoSeq;
+        LoadItemInfo loadInfoBanks[SeqBankMax];
+
+        Arg() = default;
+    };
+    static_assert(sizeof(Arg) == 0x68);
+
+    class DataLoadTask : public Task {
     public:
-        DataLoadTask();
+        void Initialize();
+        void Execute(TaskProfileLogger& logger) override;
+        bool TryAllocPlayerHeap();
         ~DataLoadTask() override;
 
-        void Initialize();
-
-        bool TryAllocPlayerHeap();
-
-        void Execute(TaskProfileLogger& logger) override;
-
-    private:
         Arg m_Arg;
         Data m_Data;
         PlayerHeap* m_pPlayerHeap;
         PlayerHeapDataManager* m_pPlayerHeapDataManager;
         bool m_IsLoadSuccess;
-        u8 m_Padding[3];
+        [[maybe_unused]] u8 m_Padding[3];
     };
     static_assert(sizeof(DataLoadTask) == 0x118);
 
-    class FreePlayerHeapTask : Task {
+    class FreePlayerHeapTask : public Task {  // 197
     public:
-        FreePlayerHeapTask();
-        ~FreePlayerHeapTask() override;
-
         void Initialize();
         void Execute(TaskProfileLogger& logger) override;
+        ~FreePlayerHeapTask() override;
 
-    private:
         Arg m_Arg;
         PlayerHeap* m_pPlayerHeap;
         PlayerHeapDataManager* m_pPlayerHeapDataManager;
@@ -96,20 +95,22 @@ public:
 
     ~SequenceSoundLoader();
 
-    void Initialize(const Arg& arg);
-
-    void Finalize();
-
     bool IsInUse();
+
+    void Initialize(const Arg& arg);
+    void Finalize();
 
     bool TryWait();
 
-private:
-    friend SequenceSoundLoaderManager;
+    bool IsLoadSuccess() const { return m_Task.m_IsLoadSuccess; }
+    const Data& GetData() const { return m_Task.m_Data; }
 
+private:
     DataLoadTask m_Task;
     FreePlayerHeapTask m_FreePlayerHeapTask;
     PlayerHeapDataManager m_PlayerHeapDataManager;
+
+public:
     util::IntrusiveListNode m_LinkForLoaderManager;
 };
 static_assert(sizeof(SequenceSoundLoader) == 0x4b0);
