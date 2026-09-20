@@ -1,4 +1,5 @@
 #include <nn/atk/detail/atk_SoundArchiveManager.h>
+#include "nn/atk/detail/atk_AddonSoundArchiveContainer.h"
 
 namespace nn::atk::detail {
 
@@ -114,6 +115,16 @@ AddonSoundArchiveContainer* SoundArchiveManager::GetAddonSoundArchiveContainer(i
         ++iterator;
 
     return &*iterator;
+}
+
+void SoundArchiveManager::SetParametersHook(SoundArchiveParametersHook* parametersHook) {
+    SoundArchive* mainArchive{const_cast<SoundArchive*>(m_pMainSoundArchive)};
+    mainArchive->detail_SetParametersHook(parametersHook);
+
+    for (auto iterator{m_ContainerList.Begin()}; iterator != m_ContainerList.End(); ++iterator) {
+        SoundArchive* archive{const_cast<SoundArchive*>(iterator->GetSoundArchive())};
+        archive->detail_SetParametersHook(parametersHook);
+    }
 }
 
 }  // namespace nn::atk::detail
