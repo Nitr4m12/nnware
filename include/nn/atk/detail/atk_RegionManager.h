@@ -14,10 +14,10 @@ enum StreamRegionCallbackResult {
 };
 
 struct StreamRegionCallbackParam {
-    s32 regionNo;
+    int regionNo;
     char regionName[64];
     bool isRegionNameEnabled;
-    s32 regionCount;
+    int regionCount;
     detail::IRegionInfoReadable* pRegionInfoReader;
 };
 static_assert(sizeof(StreamRegionCallbackParam) == 0x58);
@@ -84,8 +84,13 @@ public:
 
     bool IsPreparedForRegionJump() const;
 
-    bool SetRegionInfo(const StreamSoundFile::RegionInfo* pRegionInfo,
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    void SetRegionInfo(int regionNo, IRegionInfoReadable* pRegionReader,
+                       StreamDataInfoDetail* pStreamDataInfo);
+#else
+    void SetRegionInfo(const StreamSoundFile::RegionInfo* pRegionInfo,
                        const StreamDataInfoDetail* pStreamDataInfo);
+#endif
 
 private:
     bool m_IsRegionInfoEnabled;
