@@ -188,7 +188,7 @@ bool RegionManager::TryMoveNextRegion(IRegionInfoReadable* pRegionReader,
                                       StreamDataInfoDetail* pStreamDataInfo) {
     if (pStreamDataInfo->loopFlag) {
         m_CurrentRegion.begin = pStreamDataInfo->loopStart;
-        m_CurrentRegion.end = pStreamDataInfo->sampleCount;
+        m_CurrentRegion.end = static_cast<position_t>(pStreamDataInfo->sampleCount);
         m_CurrentRegion.current = m_CurrentRegion.begin;
         return true;
     }
@@ -201,6 +201,10 @@ bool RegionManager::TryMoveNextRegion(IRegionInfoReadable* pRegionReader,
 
     m_CurrentRegion.current = m_CurrentRegion.end;
     return false;
+}
+
+void RegionManager::SetPosition(position_t position) {
+    m_CurrentRegion.current = position;
 }
 
 }  // namespace nn::atk::detail
