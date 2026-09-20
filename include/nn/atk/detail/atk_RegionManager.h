@@ -34,22 +34,25 @@ public:
         position_t current;
         position_t begin;
         position_t end;
-#if NN_SDK_VER >= NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
         bool isEnabled;
 #endif
+
+        bool IsIn(position_t value) const { return current + value < end; }
+
+        bool IsInWithBorder(position_t value) const { return current + value <= end; }
+
+        bool IsEnd() const { return current == end; }
+
+        size_t Rest() const { return end - current; }
     };
 
     void Initialize();
     bool InitializeRegion(IRegionInfoReadable* pRegionReader,
                           StreamDataInfoDetail* pStreamDataInfo);
 
-    bool IsPreparedForRegionJump() const;
-
-    bool ChangeRegion(s32 currentRegionNo, IRegionInfoReadable* pRegionReader,
+    bool ChangeRegion(int currentRegionNo, IRegionInfoReadable* pRegionReader,
                       StreamDataInfoDetail* pStreamDataInfo);
-
-    bool SetRegionInfo(const StreamSoundFile::RegionInfo* pRegionInfo,
-                       const StreamDataInfoDetail* pStreamDataInfo);
 
     bool TryMoveNextRegion(IRegionInfoReadable* pRegionReader,
                            StreamDataInfoDetail* pStreamDataInfo);
@@ -57,7 +60,32 @@ public:
     void SetPosition(position_t position);
     void AddPosition(position_t position);
 
+    const Region& GetCurrentRegion() const { return m_CurrentRegion; }
+
+    void SetStartOffsetFrame(position_t startOffsetFrame) {
+        m_AdpcmContextForStartOffsetFrame = startOffsetFrame;
+    }
+
+    position_t GetStartOffsetFrame() const { return m_AdpcmContextForStartOffsetFrame; }
+
+    AdpcmContext& GetAdpcmContextForStartOffset(int channelIndex) {
+        return m_AdpcmContextForStartOffset[channelIndex];
+    }
+    const AdpcmContext& GetAdpcmContextForStartOffset(int channelIndex) const {
+        return m_AdpcmContextForStartOffset[channelIndex];
+    }
+
     bool IsInFirstRegion() const;
+
+    void SetRegionCallback(const StreamRegionCallback& function, void* argument) {
+        m_StreamRegionCallbackFunc = function;
+        m_StreamRegionCallbackArg = argument;
+    }
+
+    bool IsPreparedForRegionJump() const;
+
+    bool SetRegionInfo(const StreamSoundFile::RegionInfo* pRegionInfo,
+                       const StreamDataInfoDetail* pStreamDataInfo);
 
 private:
     bool m_IsRegionInfoEnabled;
@@ -66,18 +94,18 @@ private:
     bool m_IsCurrentRegionNameEnabled;
     StreamRegionCallback m_StreamRegionCallbackFunc;
     void* m_StreamRegionCallbackArg;
-    s32 m_CurrentRegionNo;
-#if NN_SDK_VER >= NN_MAKE_VER(4, 0, 0)
-    char* m_pCurrentRegionName;
+    int m_CurrentRegionNo;
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+    const char* m_pCurrentRegionName;
 #endif
     Region m_CurrentRegion;
     position_t m_AdpcmContextForStartOffsetFrame;
-    AdpcmContext m_AdpcmContextForStartOffset[16];
-#if NN_SDK_VER >= NN_MAKE_VER(4, 0, 0)
+    AdpcmContext m_AdpcmContextForStartOffset[StreamChannelCount];
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
     char m_CurrentRegionName[64];
 #endif
 };
-#if NN_SDK_VER < NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
 static_assert(sizeof(RegionManager) == 0x440);
 #else
 static_assert(sizeof(RegionManager) == 0x4c0);
