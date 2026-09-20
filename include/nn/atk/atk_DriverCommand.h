@@ -115,6 +115,13 @@ struct DriverCommandReply : Command {
 };
 static_assert(sizeof(DriverCommandReply) == 0x20);
 
+struct DriverCommandPlayer : Command {
+    driver::BasicSoundPlayer* player;
+    bool flag;
+    u8 padding[3];
+};
+static_assert(sizeof(DriverCommandPlayer) == 0x28);
+
 struct DriverCommandPlayerInit : Command {
     driver::BasicSoundPlayer* player;
 #if NN_SDK_VER >= NN_MAKE_VER(4, 0, 0)
@@ -136,31 +143,17 @@ struct DriverCommandPlayerPanParam : Command {
 };
 static_assert(sizeof(DriverCommandPlayerPanParam) == 0x28);
 
-struct DriverCommandPlayer : Command {
-    driver::BasicSoundPlayer* player;
-    bool flag;
-    u8 padding[3];
-};
-static_assert(sizeof(DriverCommandPlayer) == 0x28);
-
 struct DriverCommandPlayerParam : Command {
     driver::BasicSoundPlayer* player;
-    f32 volume;
-    f32 pitch;
-    f32 lpfFreq;
-    s32 biquadFilterType;
-    f32 biquadFilterValue;
+    float volume;
+    float pitch;
+    float lpfFreq;
+    int biquadFilterType;
+    float biquadFilterValue;
     u32 outputLineFlag;
     OutputParam tvParam;
 };
 static_assert(sizeof(DriverCommandPlayerParam) == 0x88);
-
-struct DriverCommandPlayerAdditionalSend : Command {
-    driver::BasicSoundPlayer* player;
-    s32 bus;
-    f32 send;
-};
-static_assert(sizeof(DriverCommandPlayerAdditionalSend) == 0x28);
 
 struct DriverCommandPlayerBusMixVolumeUsed : Command {
     driver::BasicSoundPlayer* player;
@@ -176,14 +169,21 @@ static_assert(sizeof(DriverCommandPlayerBusMixVolume) == 0xe0);
 
 struct DriverCommandPlayerBusMixVolumeEnabled : Command {
     driver::BasicSoundPlayer* player;
-    s32 bus;
+    int bus;
     bool isEnabled;
 };
 static_assert(sizeof(DriverCommandPlayerBusMixVolumeEnabled) == 0x28);
 
+struct DriverCommandPlayerAdditionalSend : Command {
+    driver::BasicSoundPlayer* player;
+    int bus;
+    float send;
+};
+static_assert(sizeof(DriverCommandPlayerAdditionalSend) == 0x28);
+
 struct DriverCommandPlayerBinaryVolume : Command {
     driver::BasicSoundPlayer* player;
-    f32 volume;
+    float volume;
 };
 static_assert(sizeof(DriverCommandPlayerBinaryVolume) == 0x28);
 
@@ -195,7 +195,7 @@ static_assert(sizeof(DriverCommandPlayerVolumeThroughModeUsed) == 0x28);
 
 struct DriverCommandPlayerVolumeThroughMode : Command {
     driver::BasicSoundPlayer* player;
-    s32 bus;
+    int bus;
     u8 volumeThroughMode;
 };
 static_assert(sizeof(DriverCommandPlayerVolumeThroughMode) == 0x28);
@@ -210,7 +210,7 @@ struct DriverCommandSequenceSoundSetup : Command {
     driver::SequenceSoundPlayer::SetupArg arg;
     u8 channelPriority;
     bool isReleasePriorityFix;
-    std::uintptr_t userproc;
+    uintptr_t userproc;
     void* userprocArg;
 };
 static_assert(sizeof(DriverCommandSequenceSoundSetup) == 0x50);
@@ -230,14 +230,14 @@ static_assert(sizeof(DriverCommandSequenceSoundPrepare) == 0x80);
 
 struct DriverCommandSequenceSoundSkip : Command {
     driver::SequenceSoundPlayer* player;
-    s32 offsetType;
-    s32 offset;
+    int offsetType;
+    int offset;
 };
 static_assert(sizeof(DriverCommandSequenceSoundSkip) == 0x28);
 
 struct DriverCommandSequenceSoundTempoRatio : Command {
     driver::SequenceSoundPlayer* player;
-    f32 tempoRatio;
+    float tempoRatio;
 };
 static_assert(sizeof(DriverCommandSequenceSoundTempoRatio) == 0x28);
 
@@ -250,8 +250,8 @@ static_assert(sizeof(DriverCommandSequenceSoundChannelPrio) == 0x28);
 
 struct DriverCommandSequenceSoundSetVar : Command {
     driver::SequenceSoundPlayer* player;
-    s32 trackNo;
-    s32 varNo;
+    int trackNo;
+    int varNo;
     s32 var;
 };
 static_assert(sizeof(DriverCommandSequenceSoundSetVar) == 0x30);
@@ -263,30 +263,30 @@ struct DriverCommandSequenceSoundTrack : Command {
 static_assert(sizeof(DriverCommandSequenceSoundTrack) == 0x28);
 
 struct DriverCommandSequenceSoundTrackMute : DriverCommandSequenceSoundTrack {
-    s32 mute;
+    int mute;
 };
 static_assert(sizeof(DriverCommandSequenceSoundTrackMute) == 0x28);
 
 struct DriverCommandSequenceSoundTrackSilence : DriverCommandSequenceSoundTrack {
     bool silenceFlag;
-    s32 fadeFrames;
+    int fadeFrames;
 };
 static_assert(sizeof(DriverCommandSequenceSoundTrackSilence) == 0x30);
 
 struct DriverCommandSequenceSoundTrackParam : DriverCommandSequenceSoundTrack {
-    f32 value;
+    float value;
     u32 uint32Value;
 };
 static_assert(sizeof(DriverCommandSequenceSoundTrackParam) == 0x30);
 
 struct DriverCommandSequenceSoundTrackBiquad : DriverCommandSequenceSoundTrack {
-    s32 type;
-    f32 value;
+    int type;
+    float value;
 };
 static_assert(sizeof(DriverCommandSequenceSoundTrackBiquad) == 0x30);
 
 struct DriverCommandSequenceSoundTrackBankIndex : DriverCommandSequenceSoundTrack {
-    s32 bankIndex;
+    int bankIndex;
 };
 static_assert(sizeof(DriverCommandSequenceSoundTrackBankIndex) == 0x28);
 
@@ -361,6 +361,7 @@ static_assert(sizeof(DriverCommandStreamSoundSetup) == 0xb8);
 #else
 static_assert(sizeof(DriverCommandStreamSoundSetup) == 0xc0);
 #endif
+
 struct DriverCommandStreamSoundPrepare : Command {
     driver::StreamSoundPlayer* player;
     driver::StreamSoundPlayer::PrepareArg arg;
@@ -397,7 +398,7 @@ static_assert(sizeof(DriverCommandStreamSoundForceFinish) == 0x20);
 struct DriverCommandStreamSoundTrackParam : Command {
     driver::StreamSoundPlayer* player;
     u32 trackBitFlag;
-    f32 value;
+    float value;
     u32 uint32Value;
     u32 drcIndex;
 };
@@ -431,7 +432,7 @@ struct DriverCommandDisposeCallback : Command {
 static_assert(sizeof(DriverCommandDisposeCallback) == 0x20);
 
 struct DriverCommandEffect : Command {
-    s32 bus;
+    int bus;
     EffectBase* effect;
     void* effectBuffer;
     size_t effectBufferSize;
@@ -440,7 +441,7 @@ struct DriverCommandEffect : Command {
 static_assert(sizeof(DriverCommandEffect) == 0x40);
 
 struct DriverCommandEffectAux : Command {
-    s32 bus;
+    int bus;
     EffectAux* effect;
     void* effectBuffer;
     size_t effectBufferSize;
@@ -448,37 +449,29 @@ struct DriverCommandEffectAux : Command {
 };
 static_assert(sizeof(DriverCommandEffectAux) == 0x40);
 
-struct DriverCommandSubMixApplyDestination : Command {
 #if NN_SDK_VER >= NN_MAKE_VER(4, 0, 0)
+struct DriverCommandSubMixApplyDestination : Command {
     OutputReceiver* pReceiver;
-#endif
 };
-#if NN_SDK_VER < NN_MAKE_VER(4, 0, 0)
-static_assert(sizeof(DriverCommandSubMixApplyDestination) == 0x18);
-#else
 static_assert(sizeof(DriverCommandSubMixApplyDestination) == 0x20);
 #endif
 
-struct DriverCommandSubMixUpdateMixVolume : Command {
 #if NN_SDK_VER >= NN_MAKE_VER(4, 0, 0)
+struct DriverCommandSubMixUpdateMixVolume : Command {
     OutputReceiver* pReceiver;
-#endif
-    s32 srcBus;
-    s32 srcChannel;
-    s32 dstBus;
-    s32 dstChannel;
+    int srcBus;
+    int srcChannel;
+    int dstBus;
+    int dstChannel;
 };
-#if NN_SDK_VER < NN_MAKE_VER(4, 0, 0)
-static_assert(sizeof(DriverCommandSubMixUpdateMixVolume) == 0x28);
-#else
 static_assert(sizeof(DriverCommandSubMixUpdateMixVolume) == 0x30);
 #endif
 
 struct DriverCommandAuxBusVolume : Command {
     AuxBus bus;
-    s32 subMixIndex;
-    f32 volume;
-    s32 fadeFrames;
+    int subMixIndex;
+    float volume;
+    int fadeFrames;
 };
 static_assert(sizeof(DriverCommandAuxBusVolume) == 0x28);
 
@@ -506,14 +499,14 @@ static_assert(sizeof(DriverCommandVoicePlay) == 0x28);
 
 struct DriverCommandVoiceWaveInfo : DriverCommandVoice {
     SampleFormat format;
-    s32 sampleRate;
-    s32 interpolationType;
+    int sampleRate;
+    int interpolationType;
 };
 static_assert(sizeof(DriverCommandVoiceWaveInfo) == 0x30);
 
 struct DriverCommandVoiceAdpcmParam : DriverCommandVoice {
-    s32 channel;
-    s32 voiceOut;
+    int channel;
+    int voiceOut;
     AdpcmParam* param;
 };
 static_assert(sizeof(DriverCommandVoiceAdpcmParam) == 0x30);

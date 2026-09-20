@@ -123,7 +123,7 @@ const char* SoundArchiveFile::StringBlockBody::GetString(SoundArchive::StringId 
     if (table == nullptr)
         return nullptr;
 
-    return table->GetString(stringId);
+    return table->GetString(static_cast<int>(stringId));
 }
 
 void SoundArchiveFile::StringBlockBody::DumpTree() const {
