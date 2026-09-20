@@ -90,8 +90,10 @@ public:
 private:
     bool m_IsRegionInfoEnabled;
     bool m_IsRegionIndexCheckEnabled;
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
     bool m_IsRegionInitialized;
     bool m_IsCurrentRegionNameEnabled;
+#endif
     StreamRegionCallback m_StreamRegionCallbackFunc;
     void* m_StreamRegionCallbackArg;
     int m_CurrentRegionNo;
