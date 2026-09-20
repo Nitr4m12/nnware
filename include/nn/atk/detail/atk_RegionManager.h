@@ -15,12 +15,23 @@ enum StreamRegionCallbackResult {
 
 struct StreamRegionCallbackParam {
     int regionNo;
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    int _4;
+    int _8;
+    int _c;
+    int _10;
+#else
     char regionName[64];
     bool isRegionNameEnabled;
+#endif
     int regionCount;
     detail::IRegionInfoReadable* pRegionInfoReader;
 };
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+static_assert(sizeof(StreamRegionCallbackParam) == 0x20);
+#else
 static_assert(sizeof(StreamRegionCallbackParam) == 0x58);
+#endif
 
 using StreamRegionCallback = StreamRegionCallbackResult (*)(StreamRegionCallbackParam*, void*);
 

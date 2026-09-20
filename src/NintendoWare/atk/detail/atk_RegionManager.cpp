@@ -61,7 +61,7 @@ bool RegionManager::IsPreparedForRegionJump() const {
     return m_StreamRegionCallbackFunc != nullptr;
 }
 
-// NON_MATCHING
+// NON_MATCHING on versions higher than 4.0.0. Unknown reason.
 bool RegionManager::ChangeRegion(int currentRegionNo, IRegionInfoReadable* pRegionReader,
                                  StreamDataInfoDetail* pStreamDataInfo) {
     StreamRegionCallbackParam param;
@@ -77,21 +77,49 @@ bool RegionManager::ChangeRegion(int currentRegionNo, IRegionInfoReadable* pRegi
 #endif
 
     param.regionCount = pStreamDataInfo->regionCount;
+    param.pRegionInfoReader = pRegionReader;
 
     if (m_StreamRegionCallbackFunc(&param, m_StreamRegionCallbackArg) ==
         StreamRegionCallbackResult_Finish)
         return false;
 
-#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
-    if (param.isRegionNameEnabled) {
-        // TODO
-    }
-#endif
-
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
     m_CurrentRegionNo = param.regionNo;
+    SetRegionInfo(m_CurrentRegionNo, pRegionReader, pStreamDataInfo);
+#else
+    {
+        if (param.isRegionNameEnabled) {
+            int targetRegionIndex{-1};
+            for (int i{0}; i < pStreamDataInfo->regionCount; ++i) {
+                StreamSoundFile::RegionInfo regionInfo;
+                pRegionReader->ReadRegionInfo(&regionInfo, i);
+                if (util::Strncmp(regionInfo.regionName, param.regionName,
+                                  sizeof(param.regionName)) == 0)
+                    break;
+                ++targetRegionIndex;
+            }
 
-#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
-    m_pCurrentRegionName = nullptr;
+            if (targetRegionIndex != -1) {
+                m_CurrentRegionNo = targetRegionIndex;
+                util::Strlcpy(m_CurrentRegionName, param.regionName, sizeof(m_CurrentRegionName));
+                m_pCurrentRegionName = m_CurrentRegionName;
+            } else {
+                m_CurrentRegionNo = param.regionNo;
+                m_pCurrentRegionName = nullptr;
+            }
+        } else {
+            m_CurrentRegionNo = param.regionNo;
+            m_pCurrentRegionName = nullptr;
+        }
+
+        m_IsCurrentRegionNameEnabled = param.isRegionNameEnabled;
+        StreamSoundFile::RegionInfo regionInfo;
+        bool result{pRegionReader->ReadRegionInfo(&regionInfo, m_CurrentRegionNo)};
+        if (result)
+            SetRegionInfo(&regionInfo, pStreamDataInfo);
+        else
+            SetRegionInfo(&regionInfo, nullptr);
+    }
 #endif
 
     return true;
