@@ -184,4 +184,23 @@ void RegionManager::SetRegionInfo(const StreamSoundFile::RegionInfo* pRegionInfo
 }
 #endif
 
+bool RegionManager::TryMoveNextRegion(IRegionInfoReadable* pRegionReader,
+                                      StreamDataInfoDetail* pStreamDataInfo) {
+    if (pStreamDataInfo->loopFlag) {
+        m_CurrentRegion.begin = pStreamDataInfo->loopStart;
+        m_CurrentRegion.end = pStreamDataInfo->sampleCount;
+        m_CurrentRegion.current = m_CurrentRegion.begin;
+        return true;
+    }
+
+    if (IsPreparedForRegionJump() &&
+        ChangeRegion(m_CurrentRegionNo, pRegionReader, pStreamDataInfo)) {
+        m_CurrentRegion.current = m_CurrentRegion.begin;
+        return true;
+    }
+
+    m_CurrentRegion.current = m_CurrentRegion.end;
+    return false;
+}
+
 }  // namespace nn::atk::detail
