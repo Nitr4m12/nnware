@@ -211,4 +211,8 @@ void RegionManager::AddPosition(position_t position) {
     m_CurrentRegion.current += position;
 }
 
+bool RegionManager::IsInFirstRegion() const {
+    return m_CurrentRegionNo == 0;
+}
+
 }  // namespace nn::atk::detail
