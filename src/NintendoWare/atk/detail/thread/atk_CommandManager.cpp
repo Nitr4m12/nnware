@@ -83,4 +83,18 @@ size_t CommandBuffer::GetAllocatableCommandSize() const {
 
 CommandManager::CommandManager() = default;
 
+CommandManager::~CommandManager() {
+    if (m_IsInitializedSendMessageQueue) {
+        os::FinalizeMessageQueue(&m_SendCommandQueue);
+        m_IsInitializedSendMessageQueue = false;
+    }
+
+    if (m_IsInitializedRecvMessageQueue) {
+        os::FinalizeMessageQueue(&m_RecvCommandQueue);
+        m_IsInitializedRecvMessageQueue = false;
+    }
+
+    m_Available = false;
+}
+
 }  // namespace nn::atk::detail
