@@ -6,4 +6,6 @@ CommandBuffer::CommandBuffer() = default;
 
 CommandBuffer::~CommandBuffer() = default;
 
+void CommandBuffer::Finalize() {}
+
 }  // namespace nn::atk::detail
