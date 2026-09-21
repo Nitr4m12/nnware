@@ -147,7 +147,9 @@ bool CommandManager::ProcessCommand() {
         m_pProcessCommandListFunc(commandList);
 
     os::SendMessageQueue(&m_RecvCommandQueue, msg);
+#if NN_WARE_VER < NN_MAKE_VER(3, 5, 1)
     RecvCommandReply();
+#endif
     return true;
 }
 
@@ -172,6 +174,15 @@ void CommandManager::FinalizeCommandList(Command* commandList) {
         commandList = command->next;
     }
     m_CommandBuffer.FreeMemory(command);
+}
+
+bool CommandManager::IsFinishCommand(u32 tag) const {
+    const u32 limit{(tag - m_FinishCommandTag) / 0x40000000};
+
+    if (tag > m_FinishCommandTag)
+        return limit != 0;
+
+    return (m_FinishCommandTag - tag) / 0x40000000 == 0;
 }
 
 }  // namespace nn::atk::detail
