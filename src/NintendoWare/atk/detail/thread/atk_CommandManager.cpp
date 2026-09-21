@@ -8,4 +8,13 @@ CommandBuffer::~CommandBuffer() = default;
 
 void CommandBuffer::Finalize() {}
 
+void CommandBuffer::Initialize(void* commandBuffer, size_t commandBufferSize) {
+    m_CommandMemoryAreaBegin = 0;
+    m_CommandMemoryAreaEnd = 0;
+    m_CommandMemoryAreaZeroFlag = false;
+
+    m_CommandMemoryArea = static_cast<u32*>(commandBuffer);
+    m_CommandMemoryAreaSize = commandBufferSize / sizeof(u32);
+}
+
 }  // namespace nn::atk::detail
