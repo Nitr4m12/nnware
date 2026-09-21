@@ -200,4 +200,14 @@ Command* CommandManager::RecvCommandReplySync() {
     return commandList;
 }
 
+void CommandManager::WaitCommandReply(u32 tag) {
+#if NN_WARE_VER < NN_MAKE_VER(3, 5, 1)
+    while (ProcessCommand()) {
+    };
+#else
+    while (RecvCommandReplySync()->tag != tag) {
+    };
+#endif
+}
+
 }  // namespace nn::atk::detail
