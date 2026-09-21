@@ -210,4 +210,8 @@ void CommandManager::WaitCommandReply(u32 tag) {
 #endif
 }
 
+size_t CommandManager::GetCommandBufferSize() const {
+    return m_CommandBuffer.GetCommandBufferSize();
+}
+
 }  // namespace nn::atk::detail
