@@ -126,6 +126,10 @@ void CommandManager::Initialize(void* commandBuffer, size_t commandBufferSize,
     m_Available = true;
 }
 
+// void* CommandManager::AllocMemory(size_t size, bool forceProcessCommandFlag) {}
+
+// bool CommandManager::TryAllocMemory(size_t size) {}
+
 void CommandManager::RecvCommandReply() {
     uintptr_t msg;
     while (os::TryReceiveMessageQueue(&msg, &m_RecvCommandQueue)) {
@@ -163,6 +167,8 @@ u32 CommandManager::PushCommand(Command* command) {
     command->next = nullptr;
     return m_CommandTag;
 }
+
+// u32 CommandManager::FlushCommand(bool forceFlag, bool forceProcessCommandFlag) {}
 
 void CommandManager::FinalizeCommandList(Command* commandList) {
     Command* command{commandList};
@@ -212,6 +218,20 @@ void CommandManager::WaitCommandReply(u32 tag) {
 
 size_t CommandManager::GetCommandBufferSize() const {
     return m_CommandBuffer.GetCommandBufferSize();
+}
+
+// NON_MATCHING: requires CommandBuffer::GetAllocatableCommandSize
+size_t CommandManager::GetAllocatableCommandSize() const {
+    return m_CommandBuffer.GetAllocatableCommandSize();
+}
+
+// NON_MATCHING: requires CommandBuffer::GetAllocatedCommandBufferSize
+size_t CommandManager::GetAllocatedCommandBufferSize() const {
+    return m_CommandBuffer.GetAllocatedCommandBufferSize();
+}
+
+int CommandManager::GetAllocatedCommandCount() const {
+    return m_AllocatedCommandCount;
 }
 
 }  // namespace nn::atk::detail
