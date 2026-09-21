@@ -84,6 +84,10 @@ size_t CommandBuffer::GetAllocatableCommandSize() const {
 CommandManager::CommandManager() = default;
 
 CommandManager::~CommandManager() {
+    Finalize();
+}
+
+void CommandManager::Finalize() {
     if (m_IsInitializedSendMessageQueue) {
         os::FinalizeMessageQueue(&m_SendCommandQueue);
         m_IsInitializedSendMessageQueue = false;
