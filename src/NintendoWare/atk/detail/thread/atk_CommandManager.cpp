@@ -185,4 +185,19 @@ bool CommandManager::IsFinishCommand(u32 tag) const {
     return (m_FinishCommandTag - tag) / 0x40000000 == 0;
 }
 
+Command* CommandManager::RecvCommandReplySync() {
+    uintptr_t msg;
+    bool result{os::TryReceiveMessageQueue(&msg, &m_RecvCommandQueue)};
+
+    if (!result) {
+        if (m_pRequestProcessCommandFunc != nullptr)
+            m_pRequestProcessCommandFunc();
+        os::ReceiveMessageQueue(&msg, &m_RecvCommandQueue);
+    }
+
+    Command* commandList{reinterpret_cast<Command*>(msg)};
+    FinalizeCommandList(commandList);
+    return commandList;
+}
+
 }  // namespace nn::atk::detail

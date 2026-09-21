@@ -65,7 +65,7 @@ public:
     u32 FlushCommand(bool forceFlag, bool forceProcessCommandFlag);
 
     void RecvCommandReply();
-    void RecvCommandReplySync();
+    Command* RecvCommandReplySync();
 
     void WaitCommandReply(u32 tag);
 
