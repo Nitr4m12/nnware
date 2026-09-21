@@ -134,6 +134,23 @@ void CommandManager::RecvCommandReply() {
     }
 }
 
+bool CommandManager::ProcessCommand() {
+    uintptr_t msg;
+    bool result{os::TryReceiveMessageQueue(&msg, &m_SendCommandQueue)};
+    if (!result)
+        return false;
+
+    --m_CommandListCount;
+
+    Command* commandList{reinterpret_cast<Command*>(msg)};
+    if (commandList->id != InvalidCommand)
+        m_pProcessCommandListFunc(commandList);
+
+    os::SendMessageQueue(&m_RecvCommandQueue, msg);
+    RecvCommandReply();
+    return true;
+}
+
 void CommandManager::FinalizeCommandList(Command* commandList) {
     Command* command{commandList};
 
