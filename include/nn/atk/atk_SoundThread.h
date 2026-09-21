@@ -62,6 +62,8 @@ public:
         util::IntrusiveListNode m_Link;
     };
 
+    static SoundThread& GetInstance();
+
     using PlayerCallbackList = util::IntrusiveList<
         PlayerCallback,
         util::IntrusiveListMemberNodeTraits<PlayerCallback, &PlayerCallback::m_Link>>;
