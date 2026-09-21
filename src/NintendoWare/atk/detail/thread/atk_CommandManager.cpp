@@ -126,6 +126,14 @@ void CommandManager::Initialize(void* commandBuffer, size_t commandBufferSize,
     m_Available = true;
 }
 
+void CommandManager::RecvCommandReply() {
+    uintptr_t msg;
+    while (os::TryReceiveMessageQueue(&msg, &m_RecvCommandQueue)) {
+        Command* commandList{reinterpret_cast<Command*>(msg)};
+        FinalizeCommandList(commandList);
+    }
+}
+
 void CommandManager::FinalizeCommandList(Command* commandList) {
     Command* command{commandList};
 
