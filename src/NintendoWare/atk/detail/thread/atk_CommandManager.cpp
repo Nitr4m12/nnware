@@ -17,4 +17,9 @@ void CommandBuffer::Initialize(void* commandBuffer, size_t commandBufferSize) {
     m_CommandMemoryAreaSize = commandBufferSize / sizeof(u32);
 }
 
+void CommandBuffer::FreeMemory(Command* lastCommand) {
+    m_CommandMemoryAreaEnd = lastCommand->memory_next;
+    m_CommandMemoryAreaZeroFlag = false;
+}
+
 }  // namespace nn::atk::detail
