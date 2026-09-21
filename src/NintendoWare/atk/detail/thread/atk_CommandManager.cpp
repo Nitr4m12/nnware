@@ -101,4 +101,26 @@ void CommandManager::Finalize() {
     m_Available = false;
 }
 
+void CommandManager::Initialize(void* commandBuffer, size_t commandBufferSize, ProcessCommandListFunc func) {
+    m_pProcessCommandListFunc = func;
+    m_pRequestProcessCommandFunc = nullptr;
+    m_CommandBuffer.Initialize(commandBuffer, commandBufferSize);
+    m_CommandListBegin = nullptr;
+    m_CommandListEnd = nullptr;
+    m_CommandTag = 0;
+
+    if (!m_IsInitializedSendMessageQueue) {
+        os::InitializeMessageQueue(&m_SendCommandQueue, m_SendCommandQueueBuffer, SendCommandQueueCount);
+        m_IsInitializedSendMessageQueue = true;
+    }
+
+    if (!m_IsInitializedRecvMessageQueue) {
+        os::InitializeMessageQueue(&m_RecvCommandQueue, m_RecvCommandQueueBuffer, RecvCommandQueueCount);
+        m_IsInitializedRecvMessageQueue = true;
+    }
+
+    m_CommandListCount = 0;
+    m_Available = true;
+}
+
 }  // namespace nn::atk::detail
