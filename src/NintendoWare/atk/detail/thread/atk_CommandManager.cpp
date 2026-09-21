@@ -75,10 +75,12 @@ size_t CommandBuffer::GetAllocatableCommandSize() const {
     if (curBegin < curEnd)
         return (curEnd - curBegin) * 4;
 
-    if (curEnd > m_CommandMemoryAreaSize - curBegin)
+    if (curEnd > count - curBegin)
         return 0;
 
-    return (m_CommandMemoryAreaSize - curBegin) * 4;
+    return (count - curBegin) * 4;
 }
+
+CommandManager::CommandManager() = default;
 
 }  // namespace nn::atk::detail

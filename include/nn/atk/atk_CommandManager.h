@@ -91,15 +91,15 @@ private:
     static const int RecvCommandQueueCount{SendCommandQueueCount + 1};
     static const u32 InvalidCommand{0xffffffff};
 
-    bool m_Available;
-    ProcessCommandListFunc m_pProcessCommandListFunc;
-    RequestProcessCommandFunc m_pRequestProcessCommandFunc;
+    bool m_Available{false};
+    ProcessCommandListFunc m_pProcessCommandListFunc{};
+    RequestProcessCommandFunc m_pRequestProcessCommandFunc{};
     os::MessageQueueType m_SendCommandQueue;
     uintptr_t m_SendCommandQueueBuffer[SendCommandQueueCount];
-    bool m_IsInitializedSendMessageQueue;
+    bool m_IsInitializedSendMessageQueue{false};
     os::MessageQueueType m_RecvCommandQueue;
     uintptr_t m_RecvCommandQueueBuffer[RecvCommandQueueCount];
-    bool m_IsInitializedRecvMessageQueue;
+    bool m_IsInitializedRecvMessageQueue{false};
     Command* m_CommandListBegin;
     Command* m_CommandListEnd;
     std::atomic_int m_CommandListCount;
