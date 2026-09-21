@@ -101,7 +101,8 @@ void CommandManager::Finalize() {
     m_Available = false;
 }
 
-void CommandManager::Initialize(void* commandBuffer, size_t commandBufferSize, ProcessCommandListFunc func) {
+void CommandManager::Initialize(void* commandBuffer, size_t commandBufferSize,
+                                ProcessCommandListFunc func) {
     m_pProcessCommandListFunc = func;
     m_pRequestProcessCommandFunc = nullptr;
     m_CommandBuffer.Initialize(commandBuffer, commandBufferSize);
@@ -110,17 +111,31 @@ void CommandManager::Initialize(void* commandBuffer, size_t commandBufferSize, P
     m_CommandTag = 0;
 
     if (!m_IsInitializedSendMessageQueue) {
-        os::InitializeMessageQueue(&m_SendCommandQueue, m_SendCommandQueueBuffer, SendCommandQueueCount);
+        os::InitializeMessageQueue(&m_SendCommandQueue, m_SendCommandQueueBuffer,
+                                   SendCommandQueueCount);
         m_IsInitializedSendMessageQueue = true;
     }
 
     if (!m_IsInitializedRecvMessageQueue) {
-        os::InitializeMessageQueue(&m_RecvCommandQueue, m_RecvCommandQueueBuffer, RecvCommandQueueCount);
+        os::InitializeMessageQueue(&m_RecvCommandQueue, m_RecvCommandQueueBuffer,
+                                   RecvCommandQueueCount);
         m_IsInitializedRecvMessageQueue = true;
     }
 
     m_CommandListCount = 0;
     m_Available = true;
+}
+
+void CommandManager::FinalizeCommandList(Command* commandList) {
+    Command* command{commandList};
+
+    m_FinishCommandTag = command->tag;
+    while (commandList != nullptr) {
+        command = commandList;
+        --m_AllocatedCommandCount;
+        commandList = command->next;
+    }
+    m_CommandBuffer.FreeMemory(command);
 }
 
 }  // namespace nn::atk::detail
