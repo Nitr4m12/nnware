@@ -151,6 +151,17 @@ bool CommandManager::ProcessCommand() {
     return true;
 }
 
+u32 CommandManager::PushCommand(Command* command) {
+    if (m_CommandListEnd != nullptr)
+        m_CommandListEnd->next = command;
+    else
+        m_CommandListBegin = command;
+
+    m_CommandListEnd = command;
+    command->next = nullptr;
+    return m_CommandTag;
+}
+
 void CommandManager::FinalizeCommandList(Command* commandList) {
     Command* command{commandList};
 
