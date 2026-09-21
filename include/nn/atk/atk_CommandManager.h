@@ -1,7 +1,7 @@
 #pragma once
 
 #include <atomic>
-#include <nn/os/os_MessageQueueTypes.h>
+#include <nn/os/os_MessageQueue.h>
 
 #include <nn/atk/atk_Command.h>
 
