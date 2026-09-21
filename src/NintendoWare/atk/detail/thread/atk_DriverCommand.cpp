@@ -7,6 +7,16 @@ DriverCommand& DriverCommand::GetInstance() {
     return instance;
 }
 
+DriverCommand& DriverCommand::GetInstanceForTaskThread() {
+    static DriverCommand instance;
+    return instance;
+}
+
 DriverCommand::DriverCommand() = default;
+
+void DriverCommand::Initialize(void* commandBuffer, size_t commandBufferSize) {
+    CommandManager::Initialize(commandBuffer, commandBufferSize, ProcessCommandList);
+    SetRequestProcessCommandFunc(RequestProcessCommand);
+}
 
 }  // namespace nn::atk::detail
