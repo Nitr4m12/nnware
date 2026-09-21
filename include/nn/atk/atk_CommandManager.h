@@ -24,11 +24,11 @@ public:
     size_t GetAllocatedCommandBufferSize() const;
 
 private:
-    u32* m_CommandMemoryArea;
-    size_t m_CommandMemoryAreaSize;
-    uintptr_t m_CommandMemoryAreaBegin;
-    uintptr_t m_CommandMemoryAreaEnd;
-    bool m_CommandMemoryAreaZeroFlag;
+    u32* m_CommandMemoryArea{};
+    size_t m_CommandMemoryAreaSize{0};
+    uintptr_t m_CommandMemoryAreaBegin{0};
+    uintptr_t m_CommandMemoryAreaEnd{0};
+    bool m_CommandMemoryAreaZeroFlag{true};
 };
 static_assert(sizeof(CommandBuffer) == 0x28);
 
