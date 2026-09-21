@@ -85,7 +85,7 @@ private:
     void* AllocMemory(size_t size, bool forceProcessCommandFlag);
     bool TryAllocMemory(size_t size);
 
-    void FinalizeCommandList(Command* command);
+    void FinalizeCommandList(Command* commandList);
 
     static const int SendCommandQueueCount{32};
     static const int RecvCommandQueueCount{SendCommandQueueCount + 1};
