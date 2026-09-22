@@ -196,5 +196,23 @@ void StreamSoundLoader::RequestLoadData(void** bufferAddress, uint32_t bufferBlo
     TaskManager::GetInstance().AppendTask(task, static_cast<TaskManager::TaskPriority>(priority));
 }
 
+void StreamSoundLoader::Update() {
+    for (auto itr{m_StreamDataLoadTaskList.begin()}; itr != m_StreamDataLoadTaskList.end();) {
+        auto curItr{itr++};
+        StreamDataLoadTask* task{&*curItr};
+        switch (task->GetStatus()) {
+        case Task::Status_Done:
+        case Task::Status_Cancel:
+            task->Wait();
+            m_StreamDataLoadTaskList.erase(m_StreamDataLoadTaskList.iterator_to(*task));
+            m_StreamDataLoadTaskPool.Free(task);
+            break;
+
+        default:
+            return;
+        }
+    }
+}
+
 }  // namespace driver
 }  // namespace nn::atk::detail
