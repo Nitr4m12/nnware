@@ -53,6 +53,7 @@ StreamSoundLoader::StreamSoundLoader() {
 StreamSoundLoader::~StreamSoundLoader() {
     WaitFinalize();
 
+#if NN_WARE_VER >= NN_MAKE_VER(3, 0, 0)
     if (m_pStreamDataDecoderManager != nullptr) {
         if (m_pStreamDataDecoder != nullptr) {
             m_pStreamDataDecoderManager->FreeImpl(m_pStreamDataDecoder);
@@ -60,6 +61,14 @@ StreamSoundLoader::~StreamSoundLoader() {
         }
         m_pStreamDataDecoderManager = nullptr;
     }
+#else
+    if (g_pStreamDataDecoderManager != nullptr) {
+        if (m_pStreamDataDecoder != nullptr) {
+            g_pStreamDataDecoderManager->FreeImpl(m_pStreamDataDecoder);
+            m_pStreamDataDecoder = nullptr;
+        }
+    }
+#endif
 
     m_StreamDataLoadTaskPool.Destroy();
 }
@@ -75,6 +84,24 @@ void StreamSoundLoader::WaitFinalize() {
         m_StreamDataLoadTaskList.erase(m_StreamDataLoadTaskList.iterator_to(*task));
         m_StreamDataLoadTaskPool.Free(task);
     }
+}
+
+void StreamSoundLoader::Initialize() {
+    WaitFinalize();
+    m_LoadingDataBlockIndex = 0;
+    m_LastBlockIndex = 0xffffffff;
+    m_LoopStartBlockIndex = 0;
+    m_LoopStartFilePos = 0;
+    m_LoopStartBlockSampleOffset = 0;
+    m_LoopJumpFlag = false;
+    m_LoadFinishFlag = false;
+    m_RegionManager.Initialize();
+    m_SampleFormat = SampleFormat_DspAdpcm;
+#if NN_WARE_VER >= NN_MAKE_VER(3, 0, 0)
+    m_DecodeMode = DecodeMode_Invalid;
+    m_pStreamDataDecoderManager = nullptr;
+#endif
+    m_pStreamDataDecoder = nullptr;
 }
 
 }  // namespace driver

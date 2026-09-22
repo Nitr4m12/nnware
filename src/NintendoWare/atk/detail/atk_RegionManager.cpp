@@ -9,7 +9,7 @@ namespace nn::atk::detail {
 void RegionManager::Initialize() {
     m_IsRegionInfoEnabled = false;
     m_IsRegionIndexCheckEnabled = false;
-#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER >= NN_MAKE_VER(3, 0, 0)
     m_IsRegionInitialized = false;
 #endif
     m_StreamRegionCallbackFunc = nullptr;
@@ -19,7 +19,7 @@ void RegionManager::Initialize() {
 
 bool RegionManager::InitializeRegion(IRegionInfoReadable* pRegionReader,
                                      StreamDataInfoDetail* pStreamDataInfo) {
-#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
     if (m_IsRegionIndexCheckEnabled)
         return true;
 #else
@@ -29,7 +29,7 @@ bool RegionManager::InitializeRegion(IRegionInfoReadable* pRegionReader,
 
     m_CurrentRegionNo = 0;
 
-#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER >= NN_MAKE_VER(3, 0, 0)
     m_pCurrentRegionName = nullptr;
     m_IsCurrentRegionNameEnabled = false;
 #endif
@@ -47,7 +47,7 @@ bool RegionManager::InitializeRegion(IRegionInfoReadable* pRegionReader,
     }
     m_CurrentRegion.current = m_CurrentRegion.begin;
 
-#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER >= NN_MAKE_VER(3, 0, 0)
     m_IsRegionInitialized = true;
 #endif
 
@@ -68,7 +68,7 @@ bool RegionManager::ChangeRegion(int currentRegionNo, IRegionInfoReadable* pRegi
     param.regionCount = pStreamDataInfo->regionCount;
     param.pRegionInfoReader = pRegionReader;
 
-#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER >= NN_MAKE_VER(3, 0, 0)
     if (m_pCurrentRegionName != nullptr)
         util::Strlcpy(param.regionName, m_pCurrentRegionName, sizeof(param.regionName));
     else
@@ -80,7 +80,7 @@ bool RegionManager::ChangeRegion(int currentRegionNo, IRegionInfoReadable* pRegi
         StreamRegionCallbackResult_Finish)
         return false;
 
-#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
     m_CurrentRegionNo = param.regionNo;
     SetRegionInfo(m_CurrentRegionNo, pRegionReader, pStreamDataInfo);
 #else
@@ -127,7 +127,7 @@ bool RegionManager::ChangeRegion(int currentRegionNo, IRegionInfoReadable* pRegi
     return true;
 }
 
-#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
 void RegionManager::SetRegionInfo(int regionNo, IRegionInfoReadable* pRegionReader,
                                   StreamDataInfoDetail* pStreamDataInfo) {
     StreamSoundFile::RegionInfo regionInfo;
@@ -154,7 +154,7 @@ void RegionManager::SetRegionInfo(int regionNo, IRegionInfoReadable* pRegionRead
 }
 #endif
 
-#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER >= NN_MAKE_VER(3, 0, 0)
 void RegionManager::SetRegionInfo(const StreamSoundFile::RegionInfo* pRegionInfo,
                                   const StreamDataInfoDetail* pStreamDataInfo) {
     if (pRegionInfo == nullptr) {

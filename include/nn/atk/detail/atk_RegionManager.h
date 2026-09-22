@@ -15,7 +15,7 @@ enum StreamRegionCallbackResult {
 
 struct StreamRegionCallbackParam {
     int regionNo;
-#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
     int _4;
     int _8;
     int _c;
@@ -27,7 +27,7 @@ struct StreamRegionCallbackParam {
     int regionCount;
     detail::IRegionInfoReadable* pRegionInfoReader;
 };
-#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
 static_assert(sizeof(StreamRegionCallbackParam) == 0x20);
 #else
 static_assert(sizeof(StreamRegionCallbackParam) == 0x58);
@@ -45,7 +45,7 @@ public:
         position_t current{0};
         position_t begin{0};
         position_t end{0};
-#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER >= NN_MAKE_VER(3, 0, 0)
         bool isEnabled;
 #endif
 
@@ -99,7 +99,7 @@ public:
 
     bool IsPreparedForRegionJump() const;
 
-#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
     void SetRegionInfo(int regionNo, IRegionInfoReadable* pRegionReader,
                        StreamDataInfoDetail* pStreamDataInfo);
 #else
@@ -110,24 +110,24 @@ public:
 private:
     bool m_IsRegionInfoEnabled;
     bool m_IsRegionIndexCheckEnabled;
-#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER >= NN_MAKE_VER(3, 0, 0)
     bool m_IsRegionInitialized;
     bool m_IsCurrentRegionNameEnabled;
 #endif
     StreamRegionCallback m_StreamRegionCallbackFunc;
     void* m_StreamRegionCallbackArg;
     int m_CurrentRegionNo;
-#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER >= NN_MAKE_VER(3, 0, 0)
     const char* m_pCurrentRegionName;
 #endif
     Region m_CurrentRegion;
     position_t m_AdpcmContextForStartOffsetFrame;
     AdpcmContext m_AdpcmContextForStartOffset[StreamChannelCount];
-#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER >= NN_MAKE_VER(3, 0, 0)
     char m_CurrentRegionName[64];
 #endif
 };
-#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
 static_assert(sizeof(RegionManager) == 0x440);
 #else
 static_assert(sizeof(RegionManager) == 0x4c0);
