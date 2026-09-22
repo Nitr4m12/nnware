@@ -42,12 +42,14 @@ struct StreamDataInfoDetail;
 class RegionManager {
 public:
     struct Region {
-        position_t current;
-        position_t begin;
-        position_t end;
+        position_t current{0};
+        position_t begin{0};
+        position_t end{0};
 #if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
         bool isEnabled;
 #endif
+
+        Region() = default;
 
         bool IsIn(position_t value) const { return current + value < end; }
 
@@ -57,6 +59,8 @@ public:
 
         size_t Rest() const { return end - current; }
     };
+
+    RegionManager() = default;
 
     void Initialize();
     bool InitializeRegion(IRegionInfoReadable* pRegionReader,

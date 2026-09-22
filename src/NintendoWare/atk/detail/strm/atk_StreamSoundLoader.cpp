@@ -42,6 +42,14 @@ void StreamDataInfoDetail::SetStreamSoundInfo(const StreamSoundFile::StreamSound
     regionCount = info.regionCount;
 }
 
-namespace driver {}
+namespace driver {
+
+StreamSoundLoader::StreamSoundLoader() {
+    [[maybe_unused]] u32 taskCount = m_StreamDataLoadTaskPool.Create(
+        m_StreamDataLoadTaskArea, DataBlockSizeBase - sizeof(StreamDataLoadTask) - 8);
+    std::memset(m_FilePath, 0, sizeof(m_FilePath));
+};
+
+}  // namespace driver
 
 }  // namespace nn::atk::detail
