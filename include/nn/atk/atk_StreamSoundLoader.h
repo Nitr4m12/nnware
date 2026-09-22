@@ -199,6 +199,7 @@ public:
     position_t detail_GetCachePosition();
     size_t detail_GetCachedLength();
 
+private:
     class StreamHeaderLoadTask : public Task {
     public:
         StreamHeaderLoadTask() = default;
@@ -206,7 +207,6 @@ public:
 
         void Execute(TaskProfileLogger& logger) override;
 
-    private:
         StreamSoundLoader* m_pLoader;
     };
     static_assert(sizeof(StreamHeaderLoadTask) == 0x50);
@@ -234,7 +234,6 @@ public:
 
         void Execute(TaskProfileLogger& logger) override;
 
-    private:
         StreamSoundLoader* m_pLoader;
     };
     static_assert(sizeof(StreamCloseTask) == 0x50);
@@ -257,7 +256,6 @@ public:
     };
     static_assert(sizeof(BlockInfo) == 0x30);
 
-private:
     void WaitFinalize();
 
     fnd::FndResult Open();
