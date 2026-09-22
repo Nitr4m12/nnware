@@ -1,8 +1,10 @@
 #include <nn/atk/atk_StreamSoundLoader.h>
 
+#include <nn/atk/atk_DriverCommand.h>
+#include <nn/atk/atk_SoundArchiveFilesHook.h>
 #include <nn/atk/atk_TaskManager.h>
 #include <nn/atk/atk_WaveFileReader.h>
-#include "nn/atk/atk_DriverCommand.h"
+#include <nn/atk/fnd/io/atkfnd_FileStreamImpl.h>
 
 namespace {
 
@@ -235,6 +237,34 @@ bool StreamSoundLoader::IsBusy() const {
 bool StreamSoundLoader::IsInUse() {
     Update();
     return !m_StreamDataLoadTaskList.empty();
+}
+
+fnd::FndResult StreamSoundLoader::Open() {
+    if (m_pExternalData != nullptr) {
+        m_pFileStream =
+            new (m_FileStreamBuffer) MemoryFileStream(m_pExternalData, m_ExternalDataSize);
+    } else {
+        if (m_FileStreamHookParam.IsHookEnabled())
+            m_pFileStream = m_FileStreamHookParam.pSoundArchiveFilesHook->OpenFile(
+                m_FileStreamBuffer, sizeof(m_FileStreamBuffer), m_pCacheBuffer, m_CacheSize,
+                m_FileStreamHookParam.itemLabel, SoundArchiveFilesHook::FileTypeStreamBinary);
+
+        if (m_pFileStream == nullptr) {
+            fnd::FileStream* stream{new (m_FileStreamBuffer) fnd::FileStreamImpl()};
+            fnd::FndResult result{stream->Open(m_FilePath, fnd::FileStream::AccessMode_Read)};
+            if (result.IsFailed())
+                return result;
+
+            if (stream->IsOpened() && IsStreamCacheEnabled())
+                stream->EnableCache(m_pCacheBuffer, m_CacheSize);
+
+            m_pFileStream = stream;
+        }
+    }
+
+    m_FileLoader.Initialize(m_pFileStream);
+
+    return fnd::FndResult{fnd::FndResultType_True};
 }
 
 }  // namespace driver
