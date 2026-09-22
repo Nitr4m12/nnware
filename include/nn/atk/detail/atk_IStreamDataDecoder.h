@@ -45,6 +45,10 @@ public:
 
 class IStreamDataDecoderManager {
 public:
+    virtual ~IStreamDataDecoderManager() = default;
+    virtual void Impl1();
+    virtual void Finalize();
+
     util::IntrusiveListNode m_Link;
 };
 

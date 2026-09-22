@@ -50,6 +50,31 @@ StreamSoundLoader::StreamSoundLoader() {
     std::memset(m_FilePath, 0, sizeof(m_FilePath));
 };
 
-}  // namespace driver
+StreamSoundLoader::~StreamSoundLoader() {
+    WaitFinalize();
+    if (m_pStreamDataDecoderManager != nullptr) {
+        if (m_pStreamDataDecoder != nullptr) {
+            m_pStreamDataDecoderManager->Finalize();
+            m_pStreamDataDecoder = nullptr;
+        }
+        m_pStreamDataDecoderManager = nullptr;
+    }
 
+    m_StreamDataLoadTaskPool.Destroy();
+}
+
+void StreamSoundLoader::WaitFinalize() {
+    m_StreamHeaderLoadTask.Wait();
+    m_StreamCloseTask.Wait();
+
+    for (auto itr{m_StreamDataLoadTaskList.begin()}; itr != m_StreamDataLoadTaskList.end();) {
+        auto curItr{itr++};
+        StreamDataLoadTask* task{&*curItr};
+        task->Wait();
+        m_StreamDataLoadTaskList.erase(m_StreamDataLoadTaskList.iterator_to(*task));
+        m_StreamDataLoadTaskPool.Free(task);
+    }
+}
+
+}  // namespace driver
 }  // namespace nn::atk::detail

@@ -72,7 +72,10 @@ public:
 
     T* Alloc() { return reinterpret_cast<T*>(AllocImpl()); }
 
-    void Free(T* obj) { FreeImpl(obj); }
+    void Free(T* obj) {
+        obj->~T();
+        FreeImpl(obj);
+    }
 };
 
 }  // namespace nn::atk::detail
