@@ -232,5 +232,10 @@ bool StreamSoundLoader::IsBusy() const {
     return !m_StreamDataLoadTaskList.empty();
 }
 
+bool StreamSoundLoader::IsInUse() {
+    Update();
+    return !m_StreamDataLoadTaskList.empty();
+}
+
 }  // namespace driver
 }  // namespace nn::atk::detail
