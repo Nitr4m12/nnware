@@ -225,5 +225,12 @@ void StreamSoundLoader::ForceFinish() {
     cmdmgr.FlushCommand(true, false);
 }
 
+bool StreamSoundLoader::IsBusy() const {
+    if (m_LoadFinishFlag)
+        return false;
+
+    return !m_StreamDataLoadTaskList.empty();
+}
+
 }  // namespace driver
 }  // namespace nn::atk::detail
