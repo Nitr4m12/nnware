@@ -124,5 +124,9 @@ void StreamSoundLoader::RegisterStreamDataDecoderManager(IStreamDataDecoderManag
     g_StreamDataDecoderManagerList.push_back(*pManager);
 }
 
+void StreamSoundLoader::UnregisterStreamDataDecoderManager(IStreamDataDecoderManager* pManager) {
+    g_StreamDataDecoderManagerList.erase(g_StreamDataDecoderManagerList.iterator_to(*pManager));
+}
+
 }  // namespace driver
 }  // namespace nn::atk::detail
