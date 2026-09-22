@@ -111,7 +111,7 @@ void StreamSoundLoader::Finalize() {
 }
 
 void StreamSoundLoader::CancelRequest() {
-    TaskManager::GetInstance().CancelTaskById(reinterpret_cast<ptrdiff_t>(this));
+    TaskManager::GetInstance().CancelTaskById(reinterpret_cast<uintptr_t>(this));
 }
 
 void StreamSoundLoader::RequestClose() {
@@ -166,6 +166,13 @@ size_t StreamSoundLoader::detail_GetCachedLength() {
         return 0;
 
     return m_pFileStream->GetCachedLength();
+}
+
+void StreamSoundLoader::RequestLoadHeader() {
+    m_StreamHeaderLoadTask.m_pLoader = this;
+    m_StreamHeaderLoadTask.SetId(reinterpret_cast<uintptr_t>(this));
+    TaskManager::GetInstance().AppendTask(&m_StreamHeaderLoadTask,
+                                          TaskManager::TaskPriority_Middle);
 }
 
 }  // namespace driver
