@@ -361,7 +361,7 @@ private:
     AdpcmInfo m_AdpcmInfo[StreamChannelCount];
     u32 m_FileStreamBuffer[128];
     IStreamDataDecoder* m_pStreamDataDecoder{};
-#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
     static IStreamDataDecoderManager* g_pStreamDataDecoderManager;
 #else
     IStreamDataDecoderManager* m_pStreamDataDecoderManager{};
@@ -372,7 +372,7 @@ private:
 public:
     util::IntrusiveListNode m_LinkForLoaderManager;
 };
-#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
 static_assert(sizeof(StreamSoundLoader) == 0x35c0);
 #else
 static_assert(sizeof(StreamSoundLoader) == 0x3640);
