@@ -105,6 +105,11 @@ void StreamSoundLoader::Initialize() {
     m_pStreamDataDecoder = nullptr;
 }
 
+void StreamSoundLoader::Finalize() {
+    CancelRequest();
+    RequestClose();
+}
+
 void StreamSoundLoader::CancelRequest() {
     TaskManager::GetInstance().CancelTaskById(reinterpret_cast<ptrdiff_t>(this));
 }
