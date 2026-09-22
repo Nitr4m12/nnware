@@ -175,5 +175,26 @@ void StreamSoundLoader::RequestLoadHeader() {
                                           TaskManager::TaskPriority_Middle);
 }
 
+void StreamSoundLoader::RequestLoadData(void** bufferAddress, uint32_t bufferBlockIndex,
+                                        position_t startOffsetSamples,
+                                        position_t prefetchOffsetSamples, int priority) {
+    StreamDataLoadTask* task{m_StreamDataLoadTaskPool.Alloc()};
+
+    if (task != nullptr)
+        new (task) StreamDataLoadTask();
+
+    task->m_pLoader = this;
+    task->m_BufferBlockIndex = bufferBlockIndex;
+    task->m_PrefetchOffsetSamples = prefetchOffsetSamples;
+    task->m_StartOffsetSamples = startOffsetSamples;
+    task->SetId(reinterpret_cast<uintptr_t>(this));
+
+    for (int ch{0}; ch < m_ChannelCount; ++ch)
+        task->m_BufferAddress[ch] = bufferAddress[ch];
+
+    m_StreamDataLoadTaskList.push_back(*task);
+    TaskManager::GetInstance().AppendTask(task, static_cast<TaskManager::TaskPriority>(priority));
+}
+
 }  // namespace driver
 }  // namespace nn::atk::detail
