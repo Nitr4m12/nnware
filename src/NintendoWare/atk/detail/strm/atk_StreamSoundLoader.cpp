@@ -52,9 +52,10 @@ StreamSoundLoader::StreamSoundLoader() {
 
 StreamSoundLoader::~StreamSoundLoader() {
     WaitFinalize();
+
     if (m_pStreamDataDecoderManager != nullptr) {
         if (m_pStreamDataDecoder != nullptr) {
-            m_pStreamDataDecoderManager->Finalize();
+            m_pStreamDataDecoderManager->FreeImpl(m_pStreamDataDecoder);
             m_pStreamDataDecoder = nullptr;
         }
         m_pStreamDataDecoderManager = nullptr;
