@@ -23,9 +23,9 @@ protected:
     void FreeImpl(void* ptr);
 
 private:
-    PoolImpl* m_pNext;
-    void* m_pBuffer;
-    size_t m_BufferSize;
+    PoolImpl* m_pNext{};
+    void* m_pBuffer{};
+    size_t m_BufferSize{0};
 };
 static_assert(sizeof(PoolImpl) == 0x18);
 

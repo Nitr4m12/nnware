@@ -95,8 +95,8 @@ struct LoadDataParam {
 static_assert(sizeof(LoadDataParam) == 0x98);
 
 struct FileStreamHookParam {
-    SoundArchiveFilesHook* pSoundArchiveFilesHook;
-    const char* itemLabel;
+    SoundArchiveFilesHook* pSoundArchiveFilesHook{};
+    const char* itemLabel{};
 
     FileStreamHookParam() = default;
 
@@ -327,7 +327,7 @@ private:
 
     StreamSoundFileLoader m_FileLoader;
     StreamSoundPlayer* m_PlayerHandle;
-    fnd::FileStream* m_pFileStream;
+    fnd::FileStream* m_pFileStream{};
     StreamDataInfoDetail* m_DataInfo;
     StreamFileType m_FileType;
     DecodeMode m_DecodeMode;
@@ -360,11 +360,11 @@ private:
     SampleFormat m_SampleFormat;
     AdpcmInfo m_AdpcmInfo[StreamChannelCount];
     u32 m_FileStreamBuffer[128];
-    IStreamDataDecoder* m_pStreamDataDecoder;
+    IStreamDataDecoder* m_pStreamDataDecoder{};
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
     static IStreamDataDecoderManager* g_pStreamDataDecoderManager;
 #else
-    IStreamDataDecoderManager* m_pStreamDataDecoderManager;
+    IStreamDataDecoderManager* m_pStreamDataDecoderManager{};
 #endif
 
     static u8 g_LoadBuffer[LoadBufferSize];
