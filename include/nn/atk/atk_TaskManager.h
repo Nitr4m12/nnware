@@ -24,6 +24,8 @@ public:
     constexpr static u32 PriorityCount = 3;
     constexpr static u32 ThreadMessageBufferSize = 32;
 
+    static TaskManager& GetInstance();
+
     TaskManager();
     ~TaskManager();
 

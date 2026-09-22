@@ -1,5 +1,6 @@
 #include <nn/atk/atk_StreamSoundLoader.h>
 
+#include <nn/atk/atk_TaskManager.h>
 #include <nn/atk/atk_WaveFileReader.h>
 
 namespace {
@@ -102,6 +103,10 @@ void StreamSoundLoader::Initialize() {
     m_pStreamDataDecoderManager = nullptr;
 #endif
     m_pStreamDataDecoder = nullptr;
+}
+
+void StreamSoundLoader::CancelRequest() {
+    TaskManager::GetInstance().CancelTaskById(reinterpret_cast<ptrdiff_t>(this));
 }
 
 }  // namespace driver
