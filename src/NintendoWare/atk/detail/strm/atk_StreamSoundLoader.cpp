@@ -288,5 +288,29 @@ void StreamSoundLoader::Close() {
     m_FileLoader.Finalize();
 }
 
+void StreamSoundLoader::LoadHeader() {
+    DriverCommand& cmdmgr{DriverCommand::GetInstanceForTaskThread()};
+    auto* command{cmdmgr.AllocCommand<DriverCommandStreamSoundLoadHeader>(false)};
+
+    command->id = DriverCommandId_StrmLoadHeader;
+    command->player = m_PlayerHandle;
+    command->assignNumber = m_AssignNumber;
+
+    bool result{false};
+    switch (m_FileType) {
+    case StreamFileType_Bfstm:
+        result = LoadHeader1(command);
+        break;
+    case StreamFileType_Opus:
+        result = LoadHeaderForOpus(command, m_FileType, m_DecodeMode);
+        break;
+    }
+
+    command->result = result;
+
+    cmdmgr.PushCommand(command);
+    cmdmgr.FlushCommand(true, false);
+}
+
 }  // namespace driver
 }  // namespace nn::atk::detail
