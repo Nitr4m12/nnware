@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstring>
+
 #include <nn/atk/atk_Adpcm.h>
 #include <nn/atk/atk_Config.h>
 #include <nn/atk/atk_InstancePool.h>
@@ -13,35 +15,34 @@
 
 namespace nn::atk::detail {
 
-struct IStreamDataDecoderManager;
 struct DriverCommandStreamSoundLoadHeader;
 struct DriverCommandStreamSoundLoadData;
 
 struct TrackDataInfo {
-    u8 volume;
-    u8 pan;
-    u8 span;
-    u8 flags;
-    u8 mainSend;
-    u8 fxSend[3];
-    u8 lpfFreq;
-    u8 biquadType;
-    u8 biquadValue;
-    u8 channelCount;
-    u8 channelIndex[2];
+    uint8_t volume;
+    uint8_t pan;
+    uint8_t span;
+    uint8_t flags;
+    uint8_t mainSend;
+    uint8_t fxSend[AuxBus_Count];
+    uint8_t lpfFreq;
+    uint8_t biquadType;
+    uint8_t biquadValue;
+    uint8_t channelCount;
+    uint8_t channelIndex[2];
+
+    void Dump() const;
 };
 static_assert(sizeof(TrackDataInfo) == 0xe);
 
 struct TrackDataInfos {
-    TrackDataInfo track[8];
+    TrackDataInfo track[StreamTrackCount];
 };
 static_assert(sizeof(TrackDataInfos) == 0x70);
 
 struct StreamDataInfoDetail {
-    void SetStreamSoundInfo(const StreamSoundFile::StreamSoundInfo&, bool);
-
     SampleFormat sampleFormat;
-    s32 sampleRate;
+    int sampleRate;
     bool loopFlag;
     position_t loopStart;
     size_t sampleCount;
@@ -49,35 +50,57 @@ struct StreamDataInfoDetail {
     position_t originalLoopEnd;
     bool isRevisionCheckEnabled;
     bool isRegionIndexCheckEnabled;
-    u32 revisionValue;
+    uint32_t revisionValue;
     size_t blockSampleCount;
     size_t blockSize;
     size_t lastBlockSize;
     size_t lastBlockSampleCount;
-    s32 channelCount;
-    s32 trackCount;
-    TrackDataInfo trackInfo[8];
-    s32 regionCount;
+    int channelCount;
+    int trackCount;
+    TrackDataInfo trackInfo[StreamTrackCount];
+    int regionCount;
+
+    void SetStreamSoundInfo(const StreamSoundFile::StreamSoundInfo& info, bool isCrc32CheckEnabled);
+
+    uint32_t GetLastBlockIndex() const { return (sampleCount - 1) / blockSampleCount; }
+
+    position_t GetLoopStartInBlock() const { return loopStart; }
+
+    uint32_t GetLoopStartBlockIndex(position_t loopStartInBlock) const {
+        return loopStartInBlock / blockSampleCount;
+    }
+
+    void Dump(bool);
 };
 static_assert(sizeof(StreamDataInfoDetail) == 0xd8);
 
 struct LoadDataParam {
-    u32 blockIndex;
+    uint32_t blockIndex;
     size_t samples;
     position_t sampleBegin;
     position_t sampleOffset;
     size_t sampleBytes;
     bool adpcmContextEnable;
-    AdpcmContextNotAligned adpcmContext[16];
-    s32 loopCount;
+    AdpcmContextNotAligned adpcmContext[StreamChannelCount];
+    int loopCount;
     bool lastBlockFlag;
     bool isStartOffsetOfLastBlockApplied;
+
+    LoadDataParam() = default;
+
+    void Initialize();
+
+    void Dump();
 };
 static_assert(sizeof(LoadDataParam) == 0x98);
 
 struct FileStreamHookParam {
     SoundArchiveFilesHook* pSoundArchiveFilesHook;
-    char* itemLabel;
+    const char* itemLabel;
+
+    FileStreamHookParam() = default;
+
+    bool IsHookEnabled() const { return pSoundArchiveFilesHook != nullptr; }
 };
 static_assert(sizeof(FileStreamHookParam) == 0x10);
 
@@ -90,18 +113,96 @@ using StreamSoundLoaderManager = LoaderManager<StreamSoundLoader>;
 
 class StreamSoundLoader {
 public:
-    constexpr static size_t DataBlockSizeBase = 0x2000;
-    constexpr static size_t DataBlockSizeMargin = 0x900;
-    constexpr static size_t DataBlockSizeMax = DataBlockSizeBase + DataBlockSizeMargin;
+    static const size_t DataBlockSizeBase{8192};
+    static const size_t DataBlockSizeMargin{2304};
+    static const size_t DataBlockSizeMax{DataBlockSizeBase + DataBlockSizeMargin};
 
-    constexpr static u32 FileStreamBufferSize = 0x200;
-    constexpr static u32 LoadBufferChannelCount = 2;
-    constexpr static size_t LoadBufferSize = 0x5200;
+    static const int FileStreamBufferSize{512};
 
-    class StreamHeaderLoadTask : Task {
+    static const int LoadBufferChannelCount{2};
+    static const size_t LoadBufferSize{DataBlockSizeMax * LoadBufferChannelCount};
+
+    StreamSoundLoader();
+    ~StreamSoundLoader();
+
+    void Initialize();
+    void Finalize();
+
+    void RegisterStreamDataDecoderManager(IStreamDataDecoderManager* pManager);
+    void UnregisterStreamDataDecoderManager(IStreamDataDecoderManager* pManager);
+
+    void Update();
+
+    void ForceFinish();
+
+    bool IsBusy() const;
+    bool IsInUse();
+
+    void RequestLoadHeader();
+    void RequestLoadData(void** bufferAddress, uint32_t bufferBlockIndex,
+                         position_t startOffsetSamples, position_t prefetchOffsetSamples,
+                         int priority);
+    void RequestClose();
+
+    void CancelRequest();
+
+    RegionManager& GetRegionManager() { return m_RegionManager; }
+
+    void SetStreamSoundPlayer(StreamSoundPlayer* pPlayer) { m_PlayerHandle = pPlayer; }
+
+    void SetFileType(StreamFileType fileType) { m_FileType = fileType; }
+
+    void SetDecodeMode(DecodeMode mode) { m_DecodeMode = mode; }
+
+    void SetAssignNumber(uint16_t assignNumber) { m_AssignNumber = assignNumber; }
+
+    void SetStreamDataInfo(StreamDataInfoDetail* pStreamDataInfo) { m_DataInfo = pStreamDataInfo; }
+
+    void SetRegionCallback(const StreamRegionCallback& function, void* argument) {
+        m_RegionManager.SetRegionCallback(function, argument);
+    }
+
+    void SetLoopParameter(bool loopFlag, position_t loopStart, position_t loopEnd) {
+        m_LoopFlag = loopFlag;
+        m_LoopStart = loopStart;
+        m_LoopEnd = loopEnd;
+    }
+
+    void SetExternalData(const void* pData, size_t size) {
+        m_pExternalData = pData;
+        m_ExternalDataSize = size;
+    }
+
+    void SetCacheBuffer(void* buffer, size_t size) {
+        m_pCacheBuffer = buffer;
+        m_CacheSize = size;
+    }
+
+    void InitializeFileStream(bool isStreamOpenFailureHalt) {
+        m_pFileStream = nullptr;
+        m_IsStreamOpenFailureHalt = isStreamOpenFailureHalt;
+    }
+
+    void SetFilePath(const char* filePath, int filePathLength) {
+        std::strncpy(m_FilePath, filePath, filePathLength);
+    }
+
+    const char* GetFilePath() const { return m_FilePath; }
+
+    void SetFileStreamHookParam(const FileStreamHookParam& fileStreamHookParam) {
+        m_FileStreamHookParam = fileStreamHookParam;
+    }
+
+    void* detail_SetFsAccessLog(fnd::FsAccessLog* pFsAccessLog);
+
+    position_t detail_GetCurrentPosition();
+    position_t detail_GetCachePosition();
+    size_t detail_GetCachedLength();
+
+    class StreamHeaderLoadTask : public Task {
     public:
-        StreamHeaderLoadTask();
-        ~StreamHeaderLoadTask() override;
+        StreamHeaderLoadTask() = default;
+        ~StreamHeaderLoadTask() override = default;
 
         void Execute(TaskProfileLogger& logger) override;
 
@@ -110,10 +211,26 @@ public:
     };
     static_assert(sizeof(StreamHeaderLoadTask) == 0x50);
 
-    class StreamCloseTask : Task {
+    class StreamDataLoadTask : public Task {
     public:
-        StreamCloseTask();
-        ~StreamCloseTask() override;
+        StreamDataLoadTask() = default;
+        ~StreamDataLoadTask() override = default;
+
+        void Execute(TaskProfileLogger& logger) override;
+
+        void* m_BufferAddress[StreamChannelCount];
+        uint32_t m_BufferBlockIndex;
+        position_t m_StartOffsetSamples;
+        position_t m_PrefetchOffsetSamples;
+        StreamSoundLoader* m_pLoader;
+        util::IntrusiveListNode m_Link;
+    };
+    static_assert(sizeof(StreamDataLoadTask) == 0xf8);
+
+    class StreamCloseTask : public Task {
+    public:
+        StreamCloseTask() = default;
+        ~StreamCloseTask() override = default;
 
         void Execute(TaskProfileLogger& logger) override;
 
@@ -122,76 +239,26 @@ public:
     };
     static_assert(sizeof(StreamCloseTask) == 0x50);
 
-    class StreamDataLoadTask : Task {
-    public:
-        StreamDataLoadTask();
-        ~StreamDataLoadTask() override;
-
-        void Execute(TaskProfileLogger& logger) override;
-
-    private:
-        friend StreamSoundLoader;
-
-        void* m_BufferAddress[16];
-        u32 m_BufferBlockIndex;
-        position_t m_StartOffsetSamples;
-        position_t m_PrefetchOffsetSamples;
-        StreamSoundLoader* m_pLoader;
-        util::IntrusiveListNode m_Link;
-    };
-    static_assert(sizeof(StreamDataLoadTask) == 0xf8);
-
     using StreamDataLoadTaskList = util::IntrusiveList<
         StreamDataLoadTask,
         util::IntrusiveListMemberNodeTraits<StreamDataLoadTask, &StreamDataLoadTask::m_Link>>;
 
-    struct AdpcmInfo {
-        AdpcmParam param;
-        AdpcmContext beginContext;
-        AdpcmContext loopContext;
-    };
-    static_assert(sizeof(AdpcmInfo) == 0xc0);
-
     struct BlockInfo {
+        BlockInfo() = default;
+
         size_t size;
         size_t samples;
         size_t startOffsetSamples;
         size_t startOffsetSamplesAlign;
         size_t startOffsetByte;
         size_t copyByte;
+
+        size_t GetStartOffsetInFrame() const;
     };
     static_assert(sizeof(BlockInfo) == 0x30);
 
-    StreamSoundLoader();
-    ~StreamSoundLoader();
-
+private:
     void WaitFinalize();
-
-    void Initialize();
-    void Finalize();
-
-    void CancelRequest();
-    void RequestClose();
-
-    void RegisterStreamDataDecoderManager(IStreamDataDecoderManager* manager);
-    void UnregisterStreamDataDecoderManager(IStreamDataDecoderManager* manager);
-
-    void* detail_SetFsAccessLog(fnd::FsAccessLog* pFsAccessLog);
-
-    position_t detail_GetCurrentPosition();
-    position_t detail_GetCachePosition();
-
-    size_t detail_GetCachedLength();
-
-    void RequestLoadHeader();
-    void RequestLoadData(void** bufferAddress, u32 bufferBlockIndex, position_t startOffsetSamples,
-                         position_t prefetchOffsetSamples, s32 priority);
-
-    void Update();
-    void ForceFinish();
-
-    bool IsBusy() const;
-    bool IsInUse();
 
     fnd::FndResult Open();
     void Close();
@@ -201,30 +268,39 @@ public:
     bool LoadHeaderForOpus(DriverCommandStreamSoundLoadHeader* command, StreamFileType type,
                            DecodeMode decodeMode);
 
-    bool ReadTrackInfoFromStreamSoundFile(StreamSoundFileReader& reader);
+    IStreamDataDecoderManager* SelectStreamDataDecoderManager(StreamFileType type,
+                                                              DecodeMode decodeMode);
 
-    bool SetAdpcmInfo(StreamSoundFileReader& reader, s32 channelCount, AdpcmParam** adpcmParam);
-
-    void UpdateLoadingDataBlockIndex();
-
-    IStreamDataDecoderManager* SelectStreamDataDecoderManager(StreamFileType, DecodeMode);
-
-    void SetStreamSoundInfoForOpus(const IStreamDataDecoder::DataInfo& dataInfo);
-
-    void LoadData(void** bufferAddress, u32 bufferBlockIndex, size_t startOffsetSamples,
+    void LoadData(void** bufferAddress, uint32_t bufferBlockIndex, size_t startOffsetSamples,
                   size_t prefetchOffsetSamples, TaskProfileLogger& logger);
     bool LoadData1(DriverCommandStreamSoundLoadData* command, void** bufferAddress,
-                   u32 bufferBlockIndex, size_t startOffsetSamples, size_t prefetchOffsetSamples,
-                   TaskProfileLogger& logger);
+                   uint32_t bufferBlockIndex, size_t startOffsetSamples,
+                   size_t prefetchOffsetSamples, TaskProfileLogger& logger);
     bool LoadDataForOpus(DriverCommandStreamSoundLoadData* command, void** bufferAddress,
-                         u32 bufferBlockIndex, size_t startOffsetSamples,
+                         uint32_t bufferBlockIndex, size_t startOffsetSamples,
                          size_t prefetchOffsetSamples, TaskProfileLogger& logger);
 
-    bool ApplyStartOffset(s64, s32*);
+    void SetStreamSoundInfoForOpus(const IStreamDataDecoder::DataInfo& info);
 
-    void CalculateBlockInfo(BlockInfo&);
+    bool ApplyStartOffset(position_t startOffsetSamples, int* loopCount);
 
-    bool LoadAdpcmContextForStartOffset();
+    bool MoveNextRegion(int* loopCount);
+
+    bool ReadTrackInfoFromStreamSoundFile(StreamSoundFileReader& reader);
+
+    bool IsLoopStartFilePos(uint32_t loadingDataBlockIndex);
+
+    void UpdateLoadingDataBlockIndex();
+    void UpdateLoadingDataBlockIndexForOpus(void** bufferAddress);
+
+    int GetLoadChannelCount(int loadStartChannel);
+
+    bool LoadStreamBuffer(uint8_t* buffer, const BlockInfo& blockInfo, uint32_t loadChannelCount);
+    bool LoadStreamBuffer(uint8_t* buffer, size_t size);
+
+    bool SkipStreamBuffer(size_t skipSize);
+
+    void CalculateBlockInfo(BlockInfo& blockInfo);
 
     bool LoadOneBlockDataViaCache(void** bufferAddress, const BlockInfo& blockInfo,
                                   position_t destAddressOffset, bool firstBlock,
@@ -232,25 +308,22 @@ public:
     bool LoadOneBlockData(void** bufferAddress, const BlockInfo& blockInfo,
                           position_t destAddressOffset, bool firstBlock, bool updateAdpcmContext);
 
-    bool MoveNextRegion(s32*);
+    bool LoadAdpcmContextForStartOffset();
 
-    bool DecodeStreamData(void**, IStreamDataDecoder::DecodeType);
+    void UpdateAdpcmInfoForStartOffset(const void* blockBegin, int channelIndex,
+                                       const BlockInfo& blockInfo);
+    bool SetAdpcmInfo(StreamSoundFileReader& reader, int channelCount, AdpcmParam** adpcmParam);
 
-    void UpdateLoadingDataBlockIndexForOpus(void**);
+    bool DecodeStreamData(void** pOutBufferAddresses, IStreamDataDecoder::DecodeType decodeType);
 
-    bool IsLoopStartFilePos(u32);
+    bool IsStreamCacheEnabled() const { return m_pCacheBuffer != nullptr && m_CacheSize != 0; }
 
-    s32 GetLoadChannelCount(s32);
-
-    bool LoadStreamBuffer(u8*, const BlockInfo&, u32);
-    bool LoadStreamBuffer(u8*, u64);
-
-    bool SkipStreamBuffer(u64);
-
-    void UpdateAdpcmInfoForStartOffset(const void*, s32, const BlockInfo&);
-
-private:
-    friend StreamSoundLoaderManager;
+    struct AdpcmInfo {
+        AdpcmParam param;
+        AdpcmContext beginContext;
+        AdpcmContext loopContext;
+    };
+    static_assert(sizeof(AdpcmInfo) == 0xc0);
 
     StreamSoundFileLoader m_FileLoader;
     StreamSoundPlayer* m_PlayerHandle;
@@ -259,20 +332,20 @@ private:
     StreamFileType m_FileType;
     DecodeMode m_DecodeMode;
     FileStreamHookParam m_FileStreamHookParam;
-    s32 m_ChannelCount;
-    u16 m_AssignNumber;
+    int m_ChannelCount;
+    uint16_t m_AssignNumber;
     bool m_LoopFlag;
     bool m_IsStreamOpenFailureHalt;
     position_t m_LoopStart;
     position_t m_LoopEnd;
-    char m_FilePath[SoundArchive::FilePathMax];
-    void* m_pExternalData;
+    char m_FilePath[FilePathMax];
+    const void* m_pExternalData;
     size_t m_ExternalDataSize;
     void* m_pCacheBuffer;
     size_t m_CacheSize;
-    u32 m_LoadingDataBlockIndex;
-    u32 m_LastBlockIndex;
-    u32 m_LoopStartBlockIndex;
+    uint32_t m_LoadingDataBlockIndex;
+    uint32_t m_LastBlockIndex;
+    uint32_t m_LoopStartBlockIndex;
     position_t m_DataStartFilePos;
     position_t m_LoopStartFilePos;
     position_t m_LoopStartBlockSampleOffset;
@@ -283,21 +356,23 @@ private:
     StreamCloseTask m_StreamCloseTask;
     StreamDataLoadTaskList m_StreamDataLoadTaskList;
     InstancePool<StreamDataLoadTask> m_StreamDataLoadTaskPool;
-    u8 m_StreamDataLoadTaskArea[0x1f00];
+    u8 m_StreamDataLoadTaskArea[DataBlockSizeBase - sizeof(StreamDataLoadTask) - 8];
     SampleFormat m_SampleFormat;
-    AdpcmInfo m_AdpcmInfo[16];
+    AdpcmInfo m_AdpcmInfo[StreamChannelCount];
     u32 m_FileStreamBuffer[128];
     IStreamDataDecoder* m_pStreamDataDecoder;
-#if NN_SDK_VER < NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
     static IStreamDataDecoderManager* g_pStreamDataDecoderManager;
 #else
     IStreamDataDecoderManager* m_pStreamDataDecoderManager;
 #endif
-    util::IntrusiveListNode m_LinkForLoaderManager;
 
     static u8 g_LoadBuffer[LoadBufferSize];
+
+public:
+    util::IntrusiveListNode m_LinkForLoaderManager;
 };
-#if NN_SDK_VER < NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
 static_assert(sizeof(StreamSoundLoader) == 0x35c0);
 #else
 static_assert(sizeof(StreamSoundLoader) == 0x3640);

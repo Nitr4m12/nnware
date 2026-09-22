@@ -141,8 +141,9 @@ public:
     };
     static_assert(sizeof(PrefetchIndexInfo) == 0x18);
 
-    struct PrefetchLoadDataParam : LoadDataParam {
+    struct PrefetchLoadDataParam : public LoadDataParam {
         u32 prefetchBlockIndex;
+        u32 _padding;
         size_t prefetchBlockBytes;
     };
     static_assert(sizeof(PrefetchLoadDataParam) == 0xa8);

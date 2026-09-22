@@ -1,6 +1,7 @@
 #pragma once
 
 #include <nn/os.h>
+#include <nn/util/util_IntrusiveList.h>
 
 #include <nn/atk/atk_Config.h>
 
@@ -40,6 +41,11 @@ public:
     static_assert(sizeof(CacheProfile) == 0x20);
 
     virtual ~IStreamDataDecoder();
+};
+
+class IStreamDataDecoderManager {
+public:
+    util::IntrusiveListNode m_Link;
 };
 
 }  // namespace nn::atk::detail
