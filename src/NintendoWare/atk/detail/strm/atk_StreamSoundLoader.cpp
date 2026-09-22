@@ -128,5 +128,15 @@ void StreamSoundLoader::UnregisterStreamDataDecoderManager(IStreamDataDecoderMan
     g_StreamDataDecoderManagerList.erase(g_StreamDataDecoderManagerList.iterator_to(*pManager));
 }
 
+void* StreamSoundLoader::detail_SetFsAccessLog(fnd::FsAccessLog* pFsAccessLog) {
+    if (m_pFileStream == nullptr)
+        return nullptr;
+
+    if (!m_pFileStream->CanSetFsAccessLog())
+        return nullptr;
+
+    return m_pFileStream->SetFsAccessLog(pFsAccessLog);
+}
+
 }  // namespace driver
 }  // namespace nn::atk::detail
