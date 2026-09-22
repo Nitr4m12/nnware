@@ -109,5 +109,11 @@ void StreamSoundLoader::CancelRequest() {
     TaskManager::GetInstance().CancelTaskById(reinterpret_cast<ptrdiff_t>(this));
 }
 
+void StreamSoundLoader::RequestClose() {
+    m_StreamCloseTask.Wait();
+    m_StreamCloseTask.m_pLoader = this;
+    TaskManager::GetInstance().AppendTask(&m_StreamCloseTask, TaskManager::TaskPriority_Middle);
+}
+
 }  // namespace driver
 }  // namespace nn::atk::detail
