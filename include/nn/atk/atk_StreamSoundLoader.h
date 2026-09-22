@@ -11,6 +11,7 @@
 #include <nn/atk/atk_StreamSoundFileReader.h>
 #include <nn/atk/atk_Task.h>
 #include <nn/atk/detail/atk_IStreamDataDecoder.h>
+#include <nn/atk/detail/atk_MemoryFileStream.h>
 #include <nn/atk/detail/atk_RegionManager.h>
 
 namespace nn::atk::detail {
@@ -357,7 +358,7 @@ private:
     u8 m_StreamDataLoadTaskArea[DataBlockSizeBase - sizeof(StreamDataLoadTask) - 8];
     SampleFormat m_SampleFormat;
     AdpcmInfo m_AdpcmInfo[StreamChannelCount];
-    u32 m_FileStreamBuffer[128];
+    u32 m_FileStreamBuffer[sizeof(MemoryFileStream) * 4];
     IStreamDataDecoder* m_pStreamDataDecoder{};
 #if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
     static IStreamDataDecoderManager* g_pStreamDataDecoderManager;
