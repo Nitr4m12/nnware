@@ -128,8 +128,8 @@ public:
     void Initialize();
     void Finalize();
 
-    void RegisterStreamDataDecoderManager(IStreamDataDecoderManager* pManager);
-    void UnregisterStreamDataDecoderManager(IStreamDataDecoderManager* pManager);
+    static void RegisterStreamDataDecoderManager(IStreamDataDecoderManager* pManager);
+    static void UnregisterStreamDataDecoderManager(IStreamDataDecoderManager* pManager);
 
     void Update();
 
