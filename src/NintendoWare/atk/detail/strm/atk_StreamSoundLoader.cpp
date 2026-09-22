@@ -120,5 +120,9 @@ void StreamSoundLoader::RequestClose() {
     TaskManager::GetInstance().AppendTask(&m_StreamCloseTask, TaskManager::TaskPriority_Middle);
 }
 
+void StreamSoundLoader::RegisterStreamDataDecoderManager(IStreamDataDecoderManager* pManager) {
+    g_StreamDataDecoderManagerList.push_back(*pManager);
+}
+
 }  // namespace driver
 }  // namespace nn::atk::detail
