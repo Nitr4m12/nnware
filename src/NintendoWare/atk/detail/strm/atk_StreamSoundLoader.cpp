@@ -148,5 +148,15 @@ position_t StreamSoundLoader::detail_GetCurrentPosition() {
     return m_pFileStream->GetCurrentPosition();
 }
 
+position_t StreamSoundLoader::detail_GetCachePosition() {
+    if (m_pFileStream == nullptr)
+        return 0;
+
+    if (!m_pFileStream->IsCacheEnabled())
+        return 0;
+
+    return m_pFileStream->GetCachePosition();
+}
+
 }  // namespace driver
 }  // namespace nn::atk::detail
