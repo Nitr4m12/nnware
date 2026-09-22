@@ -138,5 +138,15 @@ void* StreamSoundLoader::detail_SetFsAccessLog(fnd::FsAccessLog* pFsAccessLog) {
     return m_pFileStream->SetFsAccessLog(pFsAccessLog);
 }
 
+position_t StreamSoundLoader::detail_GetCurrentPosition() {
+    if (m_pFileStream == nullptr)
+        return 0;
+
+    if (!m_pFileStream->IsCacheEnabled())
+        return 0;
+
+    return m_pFileStream->GetCurrentPosition();
+}
+
 }  // namespace driver
 }  // namespace nn::atk::detail
