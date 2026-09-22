@@ -2,6 +2,7 @@
 
 #include <nn/atk/atk_TaskManager.h>
 #include <nn/atk/atk_WaveFileReader.h>
+#include "nn/atk/atk_DriverCommand.h"
 
 namespace {
 
@@ -212,6 +213,16 @@ void StreamSoundLoader::Update() {
             return;
         }
     }
+}
+
+void StreamSoundLoader::ForceFinish() {
+    DriverCommand& cmdmgr{DriverCommand::GetInstanceForTaskThread()};
+    DriverCommandStreamSoundForceFinish* command{
+        cmdmgr.AllocCommand<DriverCommandStreamSoundForceFinish>(false)};
+    command->id = DriverCommandId_StrmForceFinish;
+    command->player = m_PlayerHandle;
+    cmdmgr.PushCommand(command);
+    cmdmgr.FlushCommand(true, false);
 }
 
 }  // namespace driver
