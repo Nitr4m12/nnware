@@ -57,20 +57,20 @@ StreamSoundLoader::StreamSoundLoader() {
 StreamSoundLoader::~StreamSoundLoader() {
     WaitFinalize();
 
-#if NN_WARE_VER >= NN_MAKE_VER(3, 0, 0)
+#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
+    if (g_pStreamDataDecoderManager != nullptr) {
+        if (m_pStreamDataDecoder != nullptr) {
+            g_pStreamDataDecoderManager->FreeImpl(m_pStreamDataDecoder);
+            m_pStreamDataDecoder = nullptr;
+        }
+    }
+#else
     if (m_pStreamDataDecoderManager != nullptr) {
         if (m_pStreamDataDecoder != nullptr) {
             m_pStreamDataDecoderManager->FreeImpl(m_pStreamDataDecoder);
             m_pStreamDataDecoder = nullptr;
         }
         m_pStreamDataDecoderManager = nullptr;
-    }
-#else
-    if (g_pStreamDataDecoderManager != nullptr) {
-        if (m_pStreamDataDecoder != nullptr) {
-            g_pStreamDataDecoderManager->FreeImpl(m_pStreamDataDecoder);
-            m_pStreamDataDecoder = nullptr;
-        }
     }
 #endif
 
@@ -265,6 +265,27 @@ fnd::FndResult StreamSoundLoader::Open() {
     m_FileLoader.Initialize(m_pFileStream);
 
     return fnd::FndResult{fnd::FndResultType_True};
+}
+
+void StreamSoundLoader::Close() {
+#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
+    if (g_pStreamDataDecoderManager != nullptr && m_pStreamDataDecoder != nullptr) {
+        g_pStreamDataDecoderManager->FreeImpl(m_pStreamDataDecoder);
+        m_pStreamDataDecoder = nullptr;
+    }
+#else
+    if (m_pStreamDataDecoderManager != nullptr && m_pStreamDataDecoder != nullptr) {
+        m_pStreamDataDecoderManager->FreeImpl(m_pStreamDataDecoder);
+        m_pStreamDataDecoder = nullptr;
+    }
+#endif
+
+    if (m_pFileStream == nullptr)
+        return;
+
+    m_pFileStream->Close();
+    m_pFileStream = nullptr;
+    m_FileLoader.Finalize();
 }
 
 }  // namespace driver
