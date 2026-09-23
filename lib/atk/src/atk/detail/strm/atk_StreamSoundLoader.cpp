@@ -325,6 +325,7 @@ bool StreamSoundLoader::LoadHeader1(DriverCommandStreamSoundLoadHeader* command)
     uint32_t channelCount{reader.GetChannelCount()};
 
     m_ChannelCount = channelCount;
+    m_DataInfo->channelCount = channelCount;
     m_DataInfo->SetStreamSoundInfo(info, reader.IsCrc32CheckAvailable());
 
     if (reader.IsTrackInfoAvailable() && !ReadTrackInfoFromStreamSoundFile(reader))
@@ -337,9 +338,7 @@ bool StreamSoundLoader::LoadHeader1(DriverCommandStreamSoundLoadHeader* command)
         if (!SetAdpcmInfo(reader, channelCount, command->adpcmParam))
             return false;
         break;
-    case SampleFormat_PcmS8:
-    case SampleFormat_PcmS16:
-    case SampleFormat_PcmS32:
+    default:
         for (uint32_t ch{0}; ch < channelCount; ++ch)
             command->adpcmParam[ch] = nullptr;
         break;
@@ -348,10 +347,10 @@ bool StreamSoundLoader::LoadHeader1(DriverCommandStreamSoundLoadHeader* command)
     m_DataStartFilePos = reader.GetSampleDataOffset();
     m_LastBlockIndex = m_DataInfo->GetLastBlockIndex();
     m_LoopStartBlockIndex = m_DataInfo->GetLoopStartBlockIndex(0);
-    m_LoopStartBlockSampleOffset = 0;
 
     m_LoopStartFilePos =
-        m_DataStartFilePos + m_DataInfo->blockSize * m_LoopStartBlockIndex * m_ChannelCount;
+        m_DataStartFilePos + m_DataInfo->blockSize * m_ChannelCount * m_LoopStartBlockIndex;
+    m_LoopStartBlockSampleOffset = 0;
 
     m_DataInfo->isRegionIndexCheckEnabled = reader.IsRegionIndexCheckAvailable();
     if (!m_RegionManager.InitializeRegion(&m_FileLoader, m_DataInfo))
