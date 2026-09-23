@@ -10,7 +10,7 @@ namespace detail {
 
 class SoundArchiveFileReader;
 class SoundArchiveParametersHook;
-struct SoundArchiveFilesHook;
+class SoundArchiveFilesHook;
 
 namespace driver {
 
