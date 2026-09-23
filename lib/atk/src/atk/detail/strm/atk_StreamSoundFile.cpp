@@ -82,10 +82,6 @@ StreamSoundFile::TrackInfoTable::GetTrackInfo(uint32_t index) const {
         table.GetReferedItem(index, ElementType_StreamSoundFile_TrackInfo));
 }
 
-uint32_t StreamSoundFile::ChannelInfoTable::GetChannelCount() const {
-    return table.count;
-}
-
 const StreamSoundFile::ChannelInfo*
 StreamSoundFile::ChannelInfoTable::GetChannelInfo(uint32_t index) const {
     return static_cast<const ChannelInfo*>(

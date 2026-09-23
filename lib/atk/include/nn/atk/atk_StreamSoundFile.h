@@ -126,7 +126,7 @@ struct StreamSoundFile {
     struct ChannelInfoTable {
         Util::ReferenceTable table;
 
-        uint32_t GetChannelCount() const;
+        uint32_t GetChannelCount() const { return table.count; }
         const ChannelInfo* GetChannelInfo(uint32_t index) const;
     };
 
