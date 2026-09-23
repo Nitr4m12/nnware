@@ -68,7 +68,7 @@ struct StreamDataInfoDetail {
     position_t GetLoopStartInBlock() const { return loopStart; }
 
     uint32_t GetLoopStartBlockIndex(position_t loopStartInBlock) const {
-        return loopStartInBlock / blockSampleCount;
+        return (loopStart + loopStartInBlock) / blockSampleCount;
     }
 
     void Dump(bool);

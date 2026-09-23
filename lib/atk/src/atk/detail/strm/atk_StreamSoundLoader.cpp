@@ -312,5 +312,63 @@ void StreamSoundLoader::LoadHeader() {
     cmdmgr.FlushCommand(true, false);
 }
 
+bool StreamSoundLoader::LoadHeader1(DriverCommandStreamSoundLoadHeader* command) {
+    StreamSoundFileReader reader;
+
+    if (!m_FileLoader.LoadFileHeader(&reader, g_LoadBuffer, sizeof(g_LoadBuffer)))
+        return false;
+
+    StreamSoundFile::StreamSoundInfo info;
+    if (!reader.ReadStreamSoundInfo(&info))
+        return false;
+
+    uint32_t channelCount{reader.GetChannelCount()};
+
+    m_ChannelCount = channelCount;
+    m_DataInfo->SetStreamSoundInfo(info, reader.IsCrc32CheckAvailable());
+
+    if (reader.IsTrackInfoAvailable() && !ReadTrackInfoFromStreamSoundFile(reader))
+        return false;
+
+    m_SampleFormat = m_DataInfo->sampleFormat;
+
+    switch (m_SampleFormat) {
+    case SampleFormat_DspAdpcm:
+        if (!SetAdpcmInfo(reader, channelCount, command->adpcmParam))
+            return false;
+        break;
+    case SampleFormat_PcmS8:
+    case SampleFormat_PcmS16:
+    case SampleFormat_PcmS32:
+        for (uint32_t ch{0}; ch < channelCount; ++ch)
+            command->adpcmParam[ch] = nullptr;
+        break;
+    }
+
+    m_DataStartFilePos = reader.GetSampleDataOffset();
+    m_LastBlockIndex = m_DataInfo->GetLastBlockIndex();
+    m_LoopStartBlockIndex = m_DataInfo->GetLoopStartBlockIndex(0);
+    m_LoopStartBlockSampleOffset = 0;
+
+    m_LoopStartFilePos =
+        m_DataStartFilePos + m_DataInfo->blockSize * m_LoopStartBlockIndex * m_ChannelCount;
+
+    m_DataInfo->isRegionIndexCheckEnabled = reader.IsRegionIndexCheckAvailable();
+    if (!m_RegionManager.InitializeRegion(&m_FileLoader, m_DataInfo))
+        return false;
+
+    UpdateLoadingDataBlockIndex();
+    return true;
+}
+
+void StreamSoundLoader::UpdateLoadingDataBlockIndex() {
+    m_LoadingDataBlockIndex =
+        m_RegionManager.GetCurrentRegion().current / m_DataInfo->blockSampleCount;
+
+    position_t startFilePos{static_cast<position_t>(
+        m_DataStartFilePos + m_DataInfo->blockSize * m_ChannelCount * m_LoadingDataBlockIndex)};
+    m_pFileStream->Seek(startFilePos, fnd::FileStream::SeekOrigin_Begin);
+}
+
 }  // namespace driver
 }  // namespace nn::atk::detail
