@@ -41,6 +41,10 @@ public:
                                uint32_t fileIndex);
 
 protected:
+    // XXX: these are not part of debug symbols, but are here
+    // because this class needs virtual functions. Names are pure
+    // guesses
+
     virtual void Impl0();
     virtual void Impl1();
     virtual void Impl2();

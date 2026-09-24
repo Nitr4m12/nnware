@@ -360,6 +360,20 @@ bool StreamSoundLoader::LoadHeader1(DriverCommandStreamSoundLoadHeader* command)
     return true;
 }
 
+bool StreamSoundLoader::LoadHeaderForOpus(DriverCommandStreamSoundLoadHeader* command,
+                                          StreamFileType type, DecodeMode decodeMode) {
+    DecodeMode actualDecodeMode{decodeMode == DecodeMode_Default ? DecodeMode_Cpu : decodeMode};
+#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
+    if (g_pStreamDataDecoderManager == nullptr)
+        return false;
+#else
+    if (m_pStreamDataDecoderManager == nullptr)
+        return false;
+#endif
+
+    return true;
+}
+
 void StreamSoundLoader::UpdateLoadingDataBlockIndex() {
     m_LoadingDataBlockIndex =
         m_RegionManager.GetCurrentRegion().current / m_DataInfo->blockSampleCount;
@@ -367,6 +381,32 @@ void StreamSoundLoader::UpdateLoadingDataBlockIndex() {
     position_t startFilePos{static_cast<position_t>(
         m_DataStartFilePos + m_DataInfo->blockSize * m_ChannelCount * m_LoadingDataBlockIndex)};
     m_pFileStream->Seek(startFilePos, fnd::FileStream::SeekOrigin_Begin);
+}
+
+IStreamDataDecoderManager*
+StreamSoundLoader::SelectStreamDataDecoderManager(StreamFileType type, DecodeMode decodeMode) {
+    if (!g_StreamDataDecoderManagerList.empty()) {
+        for (auto itr{g_StreamDataDecoderManagerList.begin()};
+             itr != g_StreamDataDecoderManagerList.end(); ++itr) {
+            if (itr->GetStreamFileTypeImpl() == type && itr->GetDecodeModeImpl() == decodeMode)
+                return &*itr;
+        }
+    }
+
+    char decoderName[32];
+    switch (decodeMode) {
+    case DecodeMode_Cpu:
+        util::SNPrintf(decoderName, sizeof(decoderName), "OpusDecoder");
+        break;
+    case DecodeMode_Accelerator:
+        util::SNPrintf(decoderName, sizeof(decoderName), "HardwareOpusDecoder");
+        break;
+    default:
+        util::SNPrintf(decoderName, sizeof(decoderName), "Decoder");
+        break;
+    }
+
+    return nullptr;
 }
 
 }  // namespace driver

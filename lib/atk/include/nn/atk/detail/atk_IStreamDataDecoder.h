@@ -4,6 +4,7 @@
 #include <nn/util/util_IntrusiveList.h>
 
 #include <nn/atk/atk_Config.h>
+#include <nn/atk/atk_Global.h>
 
 namespace nn::atk::detail {
 namespace driver {
@@ -45,9 +46,15 @@ public:
 
 class IStreamDataDecoderManager {
 public:
+    // XXX: these are not part of debug symbols, but are here
+    // because this class needs virtual functions. Names are pure
+    // guesses
+
     virtual ~IStreamDataDecoderManager() = default;
     virtual void Impl1();
     virtual void FreeImpl(IStreamDataDecoder* pStreamDataDecoder);
+    virtual StreamFileType GetStreamFileTypeImpl() const;
+    virtual DecodeMode GetDecodeModeImpl() const;
 
     util::IntrusiveListNode m_Link;
 };
