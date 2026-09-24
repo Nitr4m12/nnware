@@ -360,7 +360,8 @@ bool StreamSoundLoader::LoadHeader1(DriverCommandStreamSoundLoadHeader* command)
     return true;
 }
 
-bool StreamSoundLoader::LoadHeaderForOpus(DriverCommandStreamSoundLoadHeader* command, StreamFileType type, DecodeMode decodeMode) {
+bool StreamSoundLoader::LoadHeaderForOpus(DriverCommandStreamSoundLoadHeader* command,
+                                          StreamFileType type, DecodeMode decodeMode) {
 #if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
     if (g_pStreamDataDecoderManager == nullptr)
         return false;
@@ -385,8 +386,43 @@ bool StreamSoundLoader::LoadHeaderForOpus(DriverCommandStreamSoundLoadHeader* co
     uint32_t channelCount = info.channelCount;
     m_ChannelCount = channelCount;
     m_DataInfo->channelCount = channelCount;
+    SetStreamSoundInfoForOpus(info);
+    m_LastBlockIndex = m_DataInfo->GetLastBlockIndex();
+    if (m_DataInfo->loopFlag)
+        m_DataInfo->lastBlockSampleCount =
+            m_DataInfo->sampleCount - m_LastBlockIndex * m_DataInfo->blockSampleCount;
+    else
+        m_DataInfo->lastBlockSampleCount = m_DataInfo->blockSampleCount;
 
-    return true;
+    for (uint32_t ch{0}; ch < channelCount; ++ch)
+        command->adpcmParam[ch] = nullptr;
+
+    uint32_t loopStartBlockIndex{m_DataInfo->GetLoopStartBlockIndex(0)};
+    position_t loopStartBlockSampleOffset =
+        m_DataInfo->loopStart - loopStartBlockIndex * m_DataInfo->blockSampleCount;
+
+    if (m_DataInfo->loopFlag) {
+        size_t loopStartToBlockEnd{m_DataInfo->blockSampleCount - loopStartBlockSampleOffset};
+        if (loopStartBlockSampleOffset > 0) {
+            m_DataInfo->loopStart += loopStartToBlockEnd;
+            m_DataInfo->lastBlockSampleCount += loopStartToBlockEnd;
+        }
+
+        if (m_DataInfo->lastBlockSampleCount < m_DataInfo->blockSampleCount) {
+            m_DataInfo->loopStart += m_DataInfo->blockSampleCount;
+            m_DataInfo->lastBlockSampleCount += m_DataInfo->blockSampleCount;
+        }
+
+        loopStartBlockIndex = m_DataInfo->GetLoopStartBlockIndex(0);
+        loopStartBlockSampleOffset =
+            m_DataInfo->loopStart - loopStartBlockIndex * m_DataInfo->blockSampleCount;
+    }
+
+    m_LoopStartBlockIndex = loopStartBlockIndex;
+    m_LoopStartBlockSampleOffset = loopStartBlockSampleOffset;
+
+    m_DataInfo->isRegionIndexCheckEnabled = false;
+    return m_RegionManager.InitializeRegion(&m_FileLoader, m_DataInfo);
 }
 
 void StreamSoundLoader::UpdateLoadingDataBlockIndex() {
