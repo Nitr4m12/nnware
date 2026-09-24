@@ -455,6 +455,33 @@ bool StreamSoundLoader::ReadTrackInfoFromStreamSoundFile(StreamSoundFileReader& 
     return true;
 }
 
+bool StreamSoundLoader::SetAdpcmInfo(StreamSoundFileReader& reader, int channelCount,
+                                     AdpcmParam** adpcmParam) {
+    for (int ch{0}; ch < channelCount; ++ch) {
+        DspAdpcmParam dspAdpcmParam;
+        DspAdpcmLoopParam dspAdpcmLoopParam;
+        if (!reader.ReadDspAdpcmChannelInfo(&dspAdpcmParam, &dspAdpcmLoopParam, ch))
+            return false;
+
+        AdpcmInfo& adpcmInfo{m_AdpcmInfo[ch]};
+        for (int i{0}; i < 8; ++i) {
+            for (int j{0}; j < 2; ++j)
+                adpcmInfo.param.coefficients[(i * sizeof(uint16_t)) + j] = dspAdpcmParam.coef[i][j];
+        }
+        adpcmInfo.beginContext.audioAdpcmContext.predScale = dspAdpcmParam.predScale;
+        adpcmInfo.beginContext.audioAdpcmContext.history[0] = dspAdpcmParam.yn1;
+        adpcmInfo.beginContext.audioAdpcmContext.history[1] = dspAdpcmParam.yn2;
+
+        adpcmInfo.loopContext.audioAdpcmContext.predScale = dspAdpcmLoopParam.loopPredScale;
+        adpcmInfo.loopContext.audioAdpcmContext.history[0] = dspAdpcmLoopParam.loopYn1;
+        adpcmInfo.loopContext.audioAdpcmContext.history[1] = dspAdpcmLoopParam.loopYn2;
+
+        adpcmParam[ch] = &adpcmInfo.param;
+    }
+
+    return true;
+}
+
 void StreamSoundLoader::UpdateLoadingDataBlockIndex() {
     m_LoadingDataBlockIndex =
         m_RegionManager.GetCurrentRegion().current / m_DataInfo->blockSampleCount;
