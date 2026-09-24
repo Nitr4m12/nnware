@@ -530,5 +530,48 @@ void StreamSoundLoader::SetStreamSoundInfoForOpus(const IStreamDataDecoder::Data
     m_DataInfo->lastBlockSize = m_DataInfo->blockSize;
 }
 
+// NON_MATCHING: x5 shouldn't be set when calling LoadDataForOpus, but it currently is
+void StreamSoundLoader::LoadData(void** bufferAddress, uint32_t bufferBlockIndex,
+                                 size_t startOffsetSamples, size_t prefetchOffsetSamples,
+                                 TaskProfileLogger& logger) {
+    if (m_LoadFinishFlag)
+        return;
+
+    DriverCommand& cmdmgr{DriverCommand::GetInstanceForTaskThread()};
+    auto* command{cmdmgr.AllocCommand<DriverCommandStreamSoundLoadData>(false)};
+
+    command->id = DriverCommandId_StrmLoadData;
+    command->assignNumber = m_AssignNumber;
+
+    bool result{false};
+    if (m_pFileStream != nullptr) {
+        switch (m_FileType) {
+        case StreamFileType_Bfstm:
+            result = LoadData1(command, bufferAddress, bufferBlockIndex, startOffsetSamples,
+                               prefetchOffsetSamples, logger);
+            break;
+        case StreamFileType_Opus:
+            result = LoadDataForOpus(command, bufferAddress, bufferBlockIndex, startOffsetSamples,
+                                     prefetchOffsetSamples, logger);
+            break;
+        }
+    }
+
+    command->result = result;
+    command->player = m_PlayerHandle;
+    cmdmgr.PushCommand(command);
+    cmdmgr.FlushCommand(true, false);
+}
+
+bool StreamSoundLoader::MoveNextRegion(int* loopCount) {
+    if (m_RegionManager.TryMoveNextRegion(&m_FileLoader, m_DataInfo)) {
+        *loopCount = *loopCount + 1;
+        return true;
+    }
+
+    m_LoadFinishFlag = true;
+    return false;
+}
+
 }  // namespace driver
 }  // namespace nn::atk::detail
