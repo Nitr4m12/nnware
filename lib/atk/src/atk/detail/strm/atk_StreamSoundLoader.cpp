@@ -563,6 +563,20 @@ void StreamSoundLoader::LoadData(void** bufferAddress, uint32_t bufferBlockIndex
     cmdmgr.FlushCommand(true, false);
 }
 
+bool StreamSoundLoader::ApplyStartOffset(position_t startOffsetSamples, int* loopCount) {
+    position_t startOffsetSamplesInRegion{startOffsetSamples};
+
+    while (!m_RegionManager.GetCurrentRegion().IsIn(startOffsetSamplesInRegion)) {
+        startOffsetSamplesInRegion +=
+            m_RegionManager.GetCurrentRegion().current - m_RegionManager.GetCurrentRegion().end;
+
+        if (!MoveNextRegion(loopCount))
+            return false;
+    }
+    m_RegionManager.AddPosition(startOffsetSamplesInRegion);
+    return true;
+}
+
 bool StreamSoundLoader::MoveNextRegion(int* loopCount) {
     if (m_RegionManager.TryMoveNextRegion(&m_FileLoader, m_DataInfo)) {
         *loopCount = *loopCount + 1;
