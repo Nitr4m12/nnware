@@ -622,5 +622,24 @@ void StreamSoundLoader::CalculateBlockInfo(BlockInfo& blockInfo) {
     }
 }
 
+bool StreamSoundLoader::LoadAdpcmContextForStartOffset() {
+    position_t fpos{m_pFileStream->GetCurrentPosition()};
+
+    uint16_t yn1[StreamChannelCount];
+    uint16_t yn2[StreamChannelCount];
+
+    if (!m_FileLoader.ReadSeekBlockData(yn1, yn2, m_LoadingDataBlockIndex, m_ChannelCount))
+        return false;
+
+    m_pFileStream->Seek(fpos, fnd::FileStream::SeekOrigin_Begin);
+
+    for (int ch{0}; ch < m_ChannelCount; ++ch) {
+        m_RegionManager.GetAdpcmContextForStartOffset(ch).audioAdpcmContext.history[0] = yn1[ch];
+        m_RegionManager.GetAdpcmContextForStartOffset(ch).audioAdpcmContext.history[1] = yn2[ch];
+    }
+
+    return true;
+}
+
 }  // namespace driver
 }  // namespace nn::atk::detail
