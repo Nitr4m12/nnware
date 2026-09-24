@@ -12,9 +12,9 @@ public:
         uint8_t span;
         uint8_t flags;
         uint8_t channelCount;
-        uint8_t globalChannelIndex[2];
+        uint8_t globalChannelIndex[WaveChannelMax];
 
-        TrackInfo();
+        TrackInfo() : volume(0), pan(0), channelCount(0), globalChannelIndex() {}
     };
 
     StreamSoundFileReader();

@@ -403,7 +403,7 @@ bool StreamSoundLoader::LoadHeaderForOpus(DriverCommandStreamSoundLoadHeader* co
 
     if (m_DataInfo->loopFlag) {
         size_t loopStartToBlockEnd{m_DataInfo->blockSampleCount - loopStartBlockSampleOffset};
-        if (loopStartBlockSampleOffset > 0) {
+        if (loopStartBlockSampleOffset >= LoopDecodeStartOffset) {
             m_DataInfo->loopStart += loopStartToBlockEnd;
             m_DataInfo->lastBlockSampleCount += loopStartToBlockEnd;
         }
@@ -423,6 +423,36 @@ bool StreamSoundLoader::LoadHeaderForOpus(DriverCommandStreamSoundLoadHeader* co
 
     m_DataInfo->isRegionIndexCheckEnabled = false;
     return m_RegionManager.InitializeRegion(&m_FileLoader, m_DataInfo);
+}
+
+bool StreamSoundLoader::ReadTrackInfoFromStreamSoundFile(StreamSoundFileReader& reader) {
+    uint32_t trackCount{reader.GetTrackCount()};
+    trackCount = trackCount < StreamTrackCount ? trackCount : StreamTrackCount;
+
+    for (uint32_t i{0}; i < trackCount; ++i) {
+        StreamSoundFileReader::TrackInfo trackInfo;
+        if (!reader.ReadStreamTrackInfo(&trackInfo, i))
+            return false;
+
+        m_DataInfo->trackInfo[i].volume = trackInfo.volume;
+        m_DataInfo->trackInfo[i].pan = trackInfo.pan;
+        m_DataInfo->trackInfo[i].channelCount = trackInfo.channelCount;
+
+        for (int ch{0}; ch < trackInfo.channelCount; ++ch)
+            m_DataInfo->trackInfo[i].channelIndex[ch] = trackInfo.globalChannelIndex[ch];
+
+        m_DataInfo->trackInfo[i].span = 0;
+        m_DataInfo->trackInfo[i].flags = 0;
+        m_DataInfo->trackInfo[i].mainSend = 127;
+        for (int j{0}; j < AuxBus_Count; ++j)
+            m_DataInfo->trackInfo[i].fxSend[j] = 0;
+
+        m_DataInfo->trackInfo[i].lpfFreq = DefaultLpfFreq;
+        m_DataInfo->trackInfo[i].biquadType = DefaultBiquadType;
+        m_DataInfo->trackInfo[i].biquadValue = DefaultBiquadValue;
+    }
+
+    return true;
 }
 
 void StreamSoundLoader::UpdateLoadingDataBlockIndex() {
