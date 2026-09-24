@@ -360,16 +360,31 @@ bool StreamSoundLoader::LoadHeader1(DriverCommandStreamSoundLoadHeader* command)
     return true;
 }
 
-bool StreamSoundLoader::LoadHeaderForOpus(DriverCommandStreamSoundLoadHeader* command,
-                                          StreamFileType type, DecodeMode decodeMode) {
-    DecodeMode actualDecodeMode{decodeMode == DecodeMode_Default ? DecodeMode_Cpu : decodeMode};
+bool StreamSoundLoader::LoadHeaderForOpus(DriverCommandStreamSoundLoadHeader* command, StreamFileType type, DecodeMode decodeMode) {
 #if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
     if (g_pStreamDataDecoderManager == nullptr)
         return false;
 #else
+    DecodeMode actualDecodeMode{decodeMode == DecodeMode_Default ? DecodeMode_Cpu : decodeMode};
+    m_pStreamDataDecoderManager = SelectStreamDataDecoderManager(type, actualDecodeMode);
     if (m_pStreamDataDecoderManager == nullptr)
         return false;
 #endif
+
+    if (m_pStreamDataDecoder == nullptr) {
+        m_pStreamDataDecoder = m_pStreamDataDecoderManager->AllocImpl();
+        if (m_pStreamDataDecoder == nullptr)
+            return false;
+    }
+
+    IStreamDataDecoder::DataInfo info;
+    bool result{m_pStreamDataDecoder->ReadDataInfo(&info, m_pFileStream)};
+    if (!result)
+        return false;
+
+    uint32_t channelCount = info.channelCount;
+    m_ChannelCount = channelCount;
+    m_DataInfo->channelCount = channelCount;
 
     return true;
 }
@@ -407,6 +422,19 @@ StreamSoundLoader::SelectStreamDataDecoderManager(StreamFileType type, DecodeMod
     }
 
     return nullptr;
+}
+
+void StreamSoundLoader::SetStreamSoundInfoForOpus(const IStreamDataDecoder::DataInfo& info) {
+    m_DataInfo->sampleFormat = SampleFormat_PcmS16;
+    m_DataInfo->sampleRate = info.sampleRate;
+    m_DataInfo->loopFlag = m_LoopFlag;
+    m_DataInfo->loopStart = m_LoopStart;
+    m_DataInfo->sampleCount = m_LoopEnd;
+    m_DataInfo->originalLoopStart = m_LoopStart;
+    m_DataInfo->originalLoopEnd = m_LoopEnd;
+    m_DataInfo->blockSampleCount = info.blockSampleCount;
+    m_DataInfo->blockSize = info.blockSize;
+    m_DataInfo->lastBlockSize = m_DataInfo->blockSize;
 }
 
 }  // namespace driver

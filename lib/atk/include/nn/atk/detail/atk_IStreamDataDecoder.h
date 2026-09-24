@@ -5,6 +5,7 @@
 
 #include <nn/atk/atk_Config.h>
 #include <nn/atk/atk_Global.h>
+#include <nn/atk/fnd/io/atkfnd_FileStream.h>
 
 namespace nn::atk::detail {
 namespace driver {
@@ -42,6 +43,7 @@ public:
     static_assert(sizeof(CacheProfile) == 0x20);
 
     virtual ~IStreamDataDecoder();
+    virtual bool ReadDataInfo(DataInfo* info, fnd::FileStream* pStream);
 };
 
 class IStreamDataDecoderManager {
@@ -51,7 +53,7 @@ public:
     // guesses
 
     virtual ~IStreamDataDecoderManager() = default;
-    virtual void Impl1();
+    virtual IStreamDataDecoder* AllocImpl();
     virtual void FreeImpl(IStreamDataDecoder* pStreamDataDecoder);
     virtual StreamFileType GetStreamFileTypeImpl() const;
     virtual DecodeMode GetDecodeModeImpl() const;
