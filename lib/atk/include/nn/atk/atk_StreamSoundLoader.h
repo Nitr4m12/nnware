@@ -249,8 +249,8 @@ private:
         size_t size;
         size_t samples;
         size_t startOffsetSamples;
-        size_t startOffsetSamplesAlign;
-        size_t startOffsetByte;
+        size_t startOffsetSamplesAlign{0};
+        size_t startOffsetByte{0};
         size_t copyByte;
 
         size_t GetStartOffsetInFrame() const;

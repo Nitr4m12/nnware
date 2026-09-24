@@ -135,6 +135,8 @@ public:
     void RegisterReader(TaskProfileReader& profileReader);
     void UnregisterReader(const TaskProfileReader& profileReader);
 
+    bool IsProfilingEnabled() const { return m_IsProfilingEnabled; }
+
     void SetProfilingEnabled(bool isEnabledProfiling);
 
     void Finalize();

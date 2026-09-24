@@ -573,6 +573,7 @@ bool StreamSoundLoader::ApplyStartOffset(position_t startOffsetSamples, int* loo
         if (!MoveNextRegion(loopCount))
             return false;
     }
+
     m_RegionManager.AddPosition(startOffsetSamplesInRegion);
     return true;
 }
@@ -585,6 +586,40 @@ bool StreamSoundLoader::MoveNextRegion(int* loopCount) {
 
     m_LoadFinishFlag = true;
     return false;
+}
+
+void StreamSoundLoader::CalculateBlockInfo(BlockInfo& blockInfo) {
+    if (m_LoadingDataBlockIndex != m_LastBlockIndex) {
+        blockInfo.size = m_DataInfo->blockSize;
+        blockInfo.samples = m_DataInfo->blockSampleCount;
+    } else {
+        blockInfo.size = m_DataInfo->lastBlockSize;
+        blockInfo.samples = m_DataInfo->lastBlockSampleCount;
+    }
+
+    blockInfo.startOffsetSamples =
+        m_RegionManager.GetCurrentRegion().current -
+        (m_RegionManager.GetCurrentRegion().current / m_DataInfo->blockSampleCount) *
+            m_DataInfo->blockSampleCount;
+    blockInfo.startOffsetSamplesAlign = blockInfo.startOffsetSamples;
+
+    if (m_SampleFormat == SampleFormat_DspAdpcm) {
+        blockInfo.startOffsetSamplesAlign = (blockInfo.startOffsetSamplesAlign / 14);
+        blockInfo.startOffsetSamplesAlign *= 14L << 32;
+        blockInfo.startOffsetSamplesAlign =
+            static_cast<int64_t>(blockInfo.startOffsetSamplesAlign) >> 32;
+    }
+
+    blockInfo.startOffsetByte =
+        Util::GetByteBySample(blockInfo.startOffsetSamplesAlign, m_SampleFormat);
+    blockInfo.copyByte = blockInfo.size - blockInfo.startOffsetByte;
+    blockInfo.samples -= blockInfo.startOffsetSamples;
+
+    if (!m_RegionManager.GetCurrentRegion().IsInWithBorder(blockInfo.samples)) {
+        blockInfo.samples = m_RegionManager.GetCurrentRegion().Rest();
+        if (blockInfo.samples < DataBlockSizeMarginSamples)
+            blockInfo.copyByte = DataBlockSizeMargin;
+    }
 }
 
 }  // namespace driver
