@@ -835,6 +835,26 @@ bool StreamSoundLoader::MoveNextRegion(int* loopCount) {
     return false;
 }
 
+bool StreamSoundLoader::DecodeStreamData(void** pOutBufferAddresses,
+                                         IStreamDataDecoder::DecodeType decodeType) {
+#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
+    if (g_pStreamDataDecoderManager == nullptr)
+        return false;
+#else
+    if (m_pStreamDataDecoderManager == nullptr)
+        return false;
+#endif
+
+    int16_t* pDecodedBufferAddresses[StreamChannelCount];
+
+    for (int i{0}; i < m_ChannelCount; ++i) {
+        pDecodedBufferAddresses[i] = static_cast<int16_t*>(pOutBufferAddresses[i]);
+    }
+
+    return m_pStreamDataDecoder->DecodeStreamData(pDecodedBufferAddresses, m_pFileStream,
+                                                  m_ChannelCount, decodeType);
+}
+
 int StreamSoundLoader::GetLoadChannelCount(int loadStartChannel) {
     int loadChannelCount = loadStartChannel + static_cast<int>(WaveChannelMax) <= m_ChannelCount ?
                                WaveChannelMax :
