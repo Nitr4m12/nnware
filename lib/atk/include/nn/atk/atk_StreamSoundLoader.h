@@ -253,7 +253,9 @@ private:
         size_t startOffsetByte{0};
         size_t copyByte;
 
-        size_t GetStartOffsetInFrame() const { return startOffsetSamples - startOffsetSamplesAlign; }
+        size_t GetStartOffsetInFrame() const {
+            return startOffsetSamples - startOffsetSamplesAlign;
+        }
     };
     static_assert(sizeof(BlockInfo) == 0x30);
 

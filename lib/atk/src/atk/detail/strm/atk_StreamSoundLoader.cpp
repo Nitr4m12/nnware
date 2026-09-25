@@ -49,6 +49,8 @@ void StreamDataInfoDetail::SetStreamSoundInfo(const StreamSoundFile::StreamSound
 
 namespace driver {
 
+uint8_t StreamSoundLoader::g_LoadBuffer[LoadBufferSize]{};
+
 StreamSoundLoader::StreamSoundLoader() {
     [[maybe_unused]] uint32_t taskCount = m_StreamDataLoadTaskPool.Create(
         m_StreamDataLoadTaskArea, DataBlockSizeBase - sizeof(StreamDataLoadTask) - 8);
@@ -787,10 +789,14 @@ bool StreamSoundLoader::LoadOneBlockDataViaCache(void** bufferAddress, const Blo
     return true;
 }
 
+// NON_MATCHING
 bool StreamSoundLoader::LoadOneBlockData(void** bufferAddress, const BlockInfo& blockInfo,
                                          position_t destAddressOffset, bool firstBlock,
                                          bool updateAdpcmContext) {
-    for (int ch{0}; ch < m_ChannelCount; ++ch) {
+    if (m_ChannelCount <= 0)
+        return true;
+
+    for (int ch{0}; ch < m_ChannelCount;) {
         if (m_PlayerHandle->IsFinalizing())
             return false;
 
@@ -798,17 +804,22 @@ bool StreamSoundLoader::LoadOneBlockData(void** bufferAddress, const BlockInfo& 
         if (!LoadStreamBuffer(g_LoadBuffer, blockInfo, loadChannelCount))
             return false;
 
+        if (loadChannelCount <= 0)
+            continue;
+
         for (int i{0}; i < loadChannelCount; ++i) {
             const void* blockBegin{util::BytePtr(g_LoadBuffer, blockInfo.size * i).Get()};
             const void* source{util::ConstBytePtr(blockBegin, blockInfo.startOffsetByte).Get()};
-            void* dest{util::BytePtr(bufferAddress[ch], i * 8).Get()};
+            void* dest{util::BytePtr(bufferAddress[ch + i], destAddressOffset).Get()};
 
             std::memcpy(dest, source, blockInfo.copyByte);
 
             HardwareManager::FlushDataCache(dest, blockInfo.copyByte);
-            // if (firstBlock && updateAdpcmContext)
-            //     UpdateAdpcmInfoForStartOffset(dest, ch, blockInfo);
+
+            if (firstBlock && updateAdpcmContext)
+                UpdateAdpcmInfoForStartOffset(blockBegin, ch + i, blockInfo);
         }
+        ch += loadChannelCount;
     }
 
     return true;
@@ -835,7 +846,7 @@ int StreamSoundLoader::GetLoadChannelCount(int loadStartChannel) {
 bool StreamSoundLoader::LoadStreamBuffer(uint8_t* buffer, const BlockInfo& blockInfo,
                                          uint32_t loadChannelCount) {
     size_t loadSize{blockInfo.size * loadChannelCount};
-    return m_pFileStream->Read(buffer, loadSize, nullptr) == loadSize;
+    return LoadStreamBuffer(buffer, loadSize);
 }
 
 bool StreamSoundLoader::LoadStreamBuffer(uint8_t* buffer, size_t size) {
