@@ -5,6 +5,7 @@
 #include <nn/atk/atk_TaskManager.h>
 #include <nn/atk/atk_WaveFileReader.h>
 #include <nn/atk/fnd/io/atkfnd_FileStreamImpl.h>
+#include "nn/atk/fnd/io/atkfnd_Stream.h"
 
 namespace {
 
@@ -798,6 +799,10 @@ bool StreamSoundLoader::LoadStreamBuffer(uint8_t* buffer, const BlockInfo& block
 
 bool StreamSoundLoader::LoadStreamBuffer(uint8_t* buffer, size_t size) {
     return m_pFileStream->Read(buffer, size, nullptr) == size;
+}
+
+bool StreamSoundLoader::SkipStreamBuffer(size_t skipSize) {
+    return !m_pFileStream->Seek(skipSize, fnd::Stream::SeekOrigin_Current).IsFailed();
 }
 
 }  // namespace driver
