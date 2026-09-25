@@ -855,6 +855,10 @@ bool StreamSoundLoader::DecodeStreamData(void** pOutBufferAddresses,
                                                   m_ChannelCount, decodeType);
 }
 
+bool StreamSoundLoader::IsLoopStartFilePos(uint32_t loadingDataBlockIndex) {
+    return m_LoopStartBlockIndex != 0 && m_LoopStartBlockIndex - 1 == loadingDataBlockIndex;
+}
+
 int StreamSoundLoader::GetLoadChannelCount(int loadStartChannel) {
     int loadChannelCount = loadStartChannel + static_cast<int>(WaveChannelMax) <= m_ChannelCount ?
                                WaveChannelMax :
