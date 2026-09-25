@@ -35,10 +35,10 @@ public:
     static_assert(sizeof(DecodeProfile) == 0x20);
 
     struct CacheProfile {
-        position_t cacheStartPosition;
-        size_t cachedLength;
-        position_t cacheCurrentPosition;
-        driver::StreamSoundPlayer* player;
+        position_t cacheStartPosition{0};
+        size_t cachedLength{0};
+        position_t cacheCurrentPosition{0};
+        driver::StreamSoundPlayer* player{};
     };
     static_assert(sizeof(CacheProfile) == 0x20);
 

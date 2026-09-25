@@ -563,6 +563,138 @@ void StreamSoundLoader::LoadData(void** bufferAddress, uint32_t bufferBlockIndex
     cmdmgr.FlushCommand(true, false);
 }
 
+// NON_MATCHING: mismatch is too big to pinpoint.
+bool StreamSoundLoader::LoadData1(DriverCommandStreamSoundLoadData* command, void** bufferAddress,
+                                  uint32_t bufferBlockIndex, size_t startOffsetSamples,
+                                  size_t prefetchOffsetSamples, TaskProfileLogger& logger) {
+    const os::Tick beginTick{os::GetSystemTick()};
+    LoadDataParam& loadDataParam{command->loadDataParam};
+
+    position_t startOffsetSamplesInFrame{0};
+    bool updateAdpcmContext{true};
+    int loopCount{0};
+
+    if (prefetchOffsetSamples == 0 && startOffsetSamples == 0) {
+        updateAdpcmContext = false;
+    } else {
+        if (!ApplyStartOffset(startOffsetSamples + prefetchOffsetSamples, &loopCount)) {
+            loadDataParam.samples = 0;
+            return true;
+        }
+        UpdateLoadingDataBlockIndex();
+        updateAdpcmContext = m_SampleFormat == SampleFormat_DspAdpcm;
+    }
+
+    size_t totalBlockSamples{0};
+    position_t destAddressOffset{0};
+    position_t sampleBegin{0};
+
+    bool firstBlock{prefetchOffsetSamples == 0};
+    bool isFirstDataLoad{true};
+
+    loadDataParam.isStartOffsetOfLastBlockApplied = false;
+
+    while (totalBlockSamples < DataBlockSizeMarginSamples ||
+           m_RegionManager.GetCurrentRegion().Rest() < DataBlockSizeMarginSamples) {
+        BlockInfo blockInfo;
+        CalculateBlockInfo(blockInfo);
+        auto samples = blockInfo.samples;
+        auto copyByte = blockInfo.copyByte;
+
+        if (prefetchOffsetSamples == 0) {
+            startOffsetSamplesInFrame = blockInfo.GetStartOffsetInFrame();
+            if (updateAdpcmContext && !LoadAdpcmContextForStartOffset())
+                return false;
+        }
+
+        bool result;
+        if (IsStreamCacheEnabled()) {
+            result = LoadOneBlockDataViaCache(bufferAddress, blockInfo, destAddressOffset,
+                                              firstBlock, updateAdpcmContext);
+        } else {
+            result = LoadOneBlockData(bufferAddress, blockInfo, destAddressOffset, firstBlock,
+                                      updateAdpcmContext);
+        }
+
+        if (!result)
+            return false;
+
+        totalBlockSamples += samples;
+        destAddressOffset += copyByte;
+        m_RegionManager.AddPosition(samples);
+        ++m_LoadingDataBlockIndex;
+
+        if (m_RegionManager.GetCurrentRegion().IsEnd()) {
+            if (MoveNextRegion(&loopCount))
+                UpdateLoadingDataBlockIndex();
+
+            if (prefetchOffsetSamples == 0 && startOffsetSamples == 0) {
+                // loadDataParam.isStartOffsetOfLastBlockApplied = false;
+            } else {
+                if (isFirstDataLoad && totalBlockSamples < DataBlockSizeMarginSamples)
+                    loadDataParam.isStartOffsetOfLastBlockApplied = true;
+            }
+            break;
+        }
+
+        firstBlock = false;
+        isFirstDataLoad = false;
+    }
+
+    sampleBegin = m_RegionManager.GetCurrentRegion().current;
+    loadDataParam.adpcmContextEnable = false;
+    if (m_SampleFormat == SampleFormat_DspAdpcm) {
+        if (sampleBegin == 0) {
+            for (int ch{0}; ch < m_ChannelCount; ++ch)
+                loadDataParam.adpcmContext[ch].audioAdpcmContext =
+                    m_AdpcmInfo[ch].beginContext.audioAdpcmContext;
+            loadDataParam.adpcmContextEnable = true;
+
+        } else if (m_DataInfo->loopFlag && sampleBegin == m_DataInfo->loopStart) {
+            for (int ch{0}; ch < m_ChannelCount; ++ch)
+                loadDataParam.adpcmContext[ch].audioAdpcmContext =
+                    m_AdpcmInfo[ch].loopContext.audioAdpcmContext;
+            loadDataParam.adpcmContextEnable = true;
+
+        } else if (sampleBegin == m_RegionManager.GetStartOffsetFrame()) {
+            for (int ch{0}; ch < m_ChannelCount; ++ch)
+                loadDataParam.adpcmContext[ch].audioAdpcmContext =
+                    m_RegionManager.GetAdpcmContextForStartOffset(ch).audioAdpcmContext;
+            loadDataParam.adpcmContextEnable = true;
+        }
+    }
+
+    loadDataParam.blockIndex = bufferBlockIndex;
+    loadDataParam.samples = totalBlockSamples;
+    loadDataParam.sampleBegin = sampleBegin;
+    loadDataParam.sampleOffset = startOffsetSamplesInFrame;
+    loadDataParam.sampleBytes = destAddressOffset;
+    loadDataParam.loopCount = loopCount;
+    loadDataParam.lastBlockFlag = m_LoadFinishFlag;
+
+    if (logger.IsProfilingEnabled()) {
+        const os::Tick endTick{os::GetSystemTick()};
+
+        TaskProfile profile;
+        profile.type = TaskProfile::TaskProfileType_LoadStreamBlock;
+
+        IStreamDataDecoder::CacheProfile cacheProfile;
+
+        if (IsStreamCacheEnabled()) {
+            cacheProfile.cacheStartPosition = detail_GetCachePosition();
+            cacheProfile.cachedLength = detail_GetCachedLength();
+            cacheProfile.cacheCurrentPosition = detail_GetCurrentPosition();
+            cacheProfile.player = m_PlayerHandle;
+        }
+
+        profile.loadStreamBlock.SetData(beginTick, endTick, cacheProfile);
+
+        logger.Record(profile);
+    }
+
+    return true;
+}
+
 bool StreamSoundLoader::ApplyStartOffset(position_t startOffsetSamples, int* loopCount) {
     position_t startOffsetSamplesInRegion{startOffsetSamples};
 
@@ -576,16 +708,6 @@ bool StreamSoundLoader::ApplyStartOffset(position_t startOffsetSamples, int* loo
 
     m_RegionManager.AddPosition(startOffsetSamplesInRegion);
     return true;
-}
-
-bool StreamSoundLoader::MoveNextRegion(int* loopCount) {
-    if (m_RegionManager.TryMoveNextRegion(&m_FileLoader, m_DataInfo)) {
-        *loopCount = *loopCount + 1;
-        return true;
-    }
-
-    m_LoadFinishFlag = true;
-    return false;
 }
 
 void StreamSoundLoader::CalculateBlockInfo(BlockInfo& blockInfo) {
@@ -639,6 +761,43 @@ bool StreamSoundLoader::LoadAdpcmContextForStartOffset() {
     }
 
     return true;
+}
+
+bool StreamSoundLoader::LoadOneBlockDataViaCache(void** bufferAddress, const BlockInfo& blockInfo,
+                                                 position_t destAddressOffset, bool firstBlock,
+                                                 bool updateAdpcmContext) {
+    for (int ch{0}; ch < m_ChannelCount; ++ch) {
+        if (firstBlock && updateAdpcmContext) {
+            if (m_PlayerHandle->IsFinalizing())
+                return false;
+
+            uint8_t* dest{util::BytePtr(bufferAddress[ch], destAddressOffset).Get<uint8_t>()};
+            SkipStreamBuffer(blockInfo.startOffsetByte);
+            LoadStreamBuffer(dest, blockInfo.copyByte);
+        }
+    }
+
+    return true;
+}
+
+bool StreamSoundLoader::MoveNextRegion(int* loopCount) {
+    if (m_RegionManager.TryMoveNextRegion(&m_FileLoader, m_DataInfo)) {
+        *loopCount = *loopCount + 1;
+        return true;
+    }
+
+    m_LoadFinishFlag = true;
+    return false;
+}
+
+bool StreamSoundLoader::LoadStreamBuffer(uint8_t* buffer, const BlockInfo& blockInfo,
+                                         uint32_t loadChannelCount) {
+    size_t loadSize{blockInfo.size * loadChannelCount};
+    return m_pFileStream->Read(buffer, loadSize, nullptr) == loadSize;
+}
+
+bool StreamSoundLoader::LoadStreamBuffer(uint8_t* buffer, size_t size) {
+    return m_pFileStream->Read(buffer, size, nullptr) == size;
 }
 
 }  // namespace driver

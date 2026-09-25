@@ -290,6 +290,8 @@ public:
     void OnUpdateFrameSoundThreadWithAudioFrameFrequency() override;
     void OnShutdownSoundThread() override;
 
+    bool IsFinalizing() const { return m_IsFinalizing; }
+
 private:
     bool m_IsInitialized;
     bool m_IsPrepared;
