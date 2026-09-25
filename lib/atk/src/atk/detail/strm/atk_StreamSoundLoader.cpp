@@ -805,5 +805,17 @@ bool StreamSoundLoader::SkipStreamBuffer(size_t skipSize) {
     return !m_pFileStream->Seek(skipSize, fnd::Stream::SeekOrigin_Current).IsFailed();
 }
 
+void StreamSoundLoader::UpdateAdpcmInfoForStartOffset(const void* blockBegin, int channelIndex,
+                                                      const BlockInfo& blockInfo) {
+    AdpcmContext& adpcmContext{m_RegionManager.GetAdpcmContextForStartOffset(channelIndex)};
+    adpcmContext.audioAdpcmContext.predScale = *static_cast<const uint8_t*>(blockBegin);
+
+    uint32_t offset{static_cast<uint32_t>((blockInfo.startOffsetSamples / 14) * 14)};
+    MultiVoice::CalcOffsetAdpcmParam(&adpcmContext, m_AdpcmInfo[channelIndex].param, offset,
+                                     blockBegin);
+
+    m_RegionManager.SetStartOffsetFrame(m_RegionManager.GetCurrentRegion().current);
+}
+
 }  // namespace driver
 }  // namespace nn::atk::detail
