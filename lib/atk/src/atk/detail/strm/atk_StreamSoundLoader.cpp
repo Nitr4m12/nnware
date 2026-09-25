@@ -5,6 +5,7 @@
 #include <nn/atk/atk_TaskManager.h>
 #include <nn/atk/atk_WaveFileReader.h>
 #include <nn/atk/fnd/io/atkfnd_FileStreamImpl.h>
+#include "nn/atk/atk_HardwareManager.h"
 #include "nn/atk/fnd/io/atkfnd_Stream.h"
 
 namespace {
@@ -768,14 +769,20 @@ bool StreamSoundLoader::LoadOneBlockDataViaCache(void** bufferAddress, const Blo
                                                  position_t destAddressOffset, bool firstBlock,
                                                  bool updateAdpcmContext) {
     for (int ch{0}; ch < m_ChannelCount; ++ch) {
-        if (firstBlock && updateAdpcmContext) {
-            if (m_PlayerHandle->IsFinalizing())
-                return false;
+        if (m_PlayerHandle->IsFinalizing())
+            return false;
 
-            uint8_t* dest{util::BytePtr(bufferAddress[ch], destAddressOffset).Get<uint8_t>()};
+        uint8_t* dest{util::BytePtr(bufferAddress[ch], destAddressOffset).Get<uint8_t>()};
+        if (blockInfo.startOffsetByte != 0)
             SkipStreamBuffer(blockInfo.startOffsetByte);
-            LoadStreamBuffer(dest, blockInfo.copyByte);
-        }
+
+        if (!LoadStreamBuffer(dest, blockInfo.copyByte))
+            return false;
+
+        HardwareManager::FlushDataCache(dest, blockInfo.copyByte);
+
+        if (firstBlock && updateAdpcmContext)
+            UpdateAdpcmInfoForStartOffset(dest, ch, blockInfo);
     }
 
     return true;
