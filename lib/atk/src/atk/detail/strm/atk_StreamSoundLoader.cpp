@@ -1,12 +1,11 @@
 #include <nn/atk/atk_StreamSoundLoader.h>
 
 #include <nn/atk/atk_DriverCommand.h>
+#include <nn/atk/atk_HardwareManager.h>
 #include <nn/atk/atk_SoundArchiveFilesHook.h>
 #include <nn/atk/atk_TaskManager.h>
 #include <nn/atk/atk_WaveFileReader.h>
 #include <nn/atk/fnd/io/atkfnd_FileStreamImpl.h>
-#include "nn/atk/atk_HardwareManager.h"
-#include "nn/atk/fnd/io/atkfnd_Stream.h"
 
 namespace {
 
@@ -788,6 +787,33 @@ bool StreamSoundLoader::LoadOneBlockDataViaCache(void** bufferAddress, const Blo
     return true;
 }
 
+bool StreamSoundLoader::LoadOneBlockData(void** bufferAddress, const BlockInfo& blockInfo,
+                                         position_t destAddressOffset, bool firstBlock,
+                                         bool updateAdpcmContext) {
+    for (int ch{0}; ch < m_ChannelCount; ++ch) {
+        if (m_PlayerHandle->IsFinalizing())
+            return false;
+
+        int loadChannelCount{GetLoadChannelCount(ch)};
+        if (!LoadStreamBuffer(g_LoadBuffer, blockInfo, loadChannelCount))
+            return false;
+
+        for (int i{0}; i < loadChannelCount; ++i) {
+            const void* blockBegin{util::BytePtr(g_LoadBuffer, blockInfo.size * i).Get()};
+            const void* source{util::ConstBytePtr(blockBegin, blockInfo.startOffsetByte).Get()};
+            void* dest{util::BytePtr(bufferAddress[ch], i * 8).Get()};
+
+            std::memcpy(dest, source, blockInfo.copyByte);
+
+            HardwareManager::FlushDataCache(dest, blockInfo.copyByte);
+            // if (firstBlock && updateAdpcmContext)
+            //     UpdateAdpcmInfoForStartOffset(dest, ch, blockInfo);
+        }
+    }
+
+    return true;
+}
+
 bool StreamSoundLoader::MoveNextRegion(int* loopCount) {
     if (m_RegionManager.TryMoveNextRegion(&m_FileLoader, m_DataInfo)) {
         *loopCount = *loopCount + 1;
@@ -796,6 +822,14 @@ bool StreamSoundLoader::MoveNextRegion(int* loopCount) {
 
     m_LoadFinishFlag = true;
     return false;
+}
+
+int StreamSoundLoader::GetLoadChannelCount(int loadStartChannel) {
+    int loadChannelCount = loadStartChannel + static_cast<int>(WaveChannelMax) <= m_ChannelCount ?
+                               WaveChannelMax :
+                               m_ChannelCount - loadStartChannel;
+
+    return loadChannelCount;
 }
 
 bool StreamSoundLoader::LoadStreamBuffer(uint8_t* buffer, const BlockInfo& blockInfo,
