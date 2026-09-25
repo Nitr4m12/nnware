@@ -44,7 +44,7 @@ public:
 
     virtual ~IStreamDataDecoder();
     virtual bool ReadDataInfo(DataInfo* info, fnd::FileStream* pStream);
-    virtual void Impl3();
+    virtual void PrepareStreamData(fnd::FileStream* pStream);
     virtual bool DecodeStreamData(int16_t** pOutBufferAddresses, fnd::FileStream* pStream,
                                   int channelCount, DecodeType decodeType);
 };

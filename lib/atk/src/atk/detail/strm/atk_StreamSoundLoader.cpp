@@ -855,6 +855,27 @@ bool StreamSoundLoader::DecodeStreamData(void** pOutBufferAddresses,
                                                   m_ChannelCount, decodeType);
 }
 
+void StreamSoundLoader::UpdateLoadingDataBlockIndexForOpus(void** bufferAddress) {
+    m_LoadingDataBlockIndex =
+        m_RegionManager.GetCurrentRegion().current / m_DataInfo->blockSampleCount;
+
+    for (uint32_t i{0}; i < m_LoadingDataBlockIndex; ++i) {
+        if (IsLoopStartFilePos(i))
+            m_LoopStartFilePos = m_pFileStream->GetCurrentPosition();
+
+        if (i == m_LoadingDataBlockIndex - 1) {
+#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
+            if (i != 0 && g_pStreamDataDecoderManager != nullptr)
+                DecodeStreamData(bufferAddress, IStreamDataDecoder::DecodeType_Idling);
+#else
+            if (i != 0 && m_pStreamDataDecoderManager != nullptr)
+                DecodeStreamData(bufferAddress, IStreamDataDecoder::DecodeType_Idling);
+#endif
+        } else
+            m_pStreamDataDecoder->PrepareStreamData(m_pFileStream);
+    }
+}
+
 bool StreamSoundLoader::IsLoopStartFilePos(uint32_t loadingDataBlockIndex) {
     return m_LoopStartBlockIndex != 0 && m_LoopStartBlockIndex - 1 == loadingDataBlockIndex;
 }
