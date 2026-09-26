@@ -246,12 +246,12 @@ private:
     struct BlockInfo {
         BlockInfo() = default;
 
-        size_t size;
-        size_t samples;
-        size_t startOffsetSamples;
+        size_t size{0};
+        size_t samples{0};
+        size_t startOffsetSamples{0};
         size_t startOffsetSamplesAlign{0};
         size_t startOffsetByte{0};
-        size_t copyByte;
+        size_t copyByte{0};
 
         size_t GetStartOffsetInFrame() const {
             return startOffsetSamples - startOffsetSamplesAlign;
@@ -363,7 +363,7 @@ private:
     uint32_t m_FileStreamBuffer[sizeof(MemoryFileStream) * 4];
     IStreamDataDecoder* m_pStreamDataDecoder{};
 #if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
-    static IStreamDataDecoderManager* g_pStreamDataDecoderManager;
+    static IStreamDataDecoderManager* m_pStreamDataDecoderManager;
 #else
     IStreamDataDecoderManager* m_pStreamDataDecoderManager{};
 #endif

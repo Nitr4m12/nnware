@@ -47,6 +47,8 @@ public:
     virtual void PrepareStreamData(fnd::FileStream* pStream);
     virtual bool DecodeStreamData(int16_t** pOutBufferAddresses, fnd::FileStream* pStream,
                                   int channelCount, DecodeType decodeType);
+    virtual void PrepareOpusData();
+    virtual DecodeProfile DecodeOpusData();
 };
 
 class IStreamDataDecoderManager {

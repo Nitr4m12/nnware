@@ -60,22 +60,15 @@ StreamSoundLoader::StreamSoundLoader() {
 StreamSoundLoader::~StreamSoundLoader() {
     WaitFinalize();
 
-#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
-    if (g_pStreamDataDecoderManager != nullptr) {
-        if (m_pStreamDataDecoder != nullptr) {
-            g_pStreamDataDecoderManager->FreeImpl(m_pStreamDataDecoder);
-            m_pStreamDataDecoder = nullptr;
-        }
-    }
-#else
     if (m_pStreamDataDecoderManager != nullptr) {
         if (m_pStreamDataDecoder != nullptr) {
             m_pStreamDataDecoderManager->FreeImpl(m_pStreamDataDecoder);
             m_pStreamDataDecoder = nullptr;
         }
+#if NN_WARE_VER >= NN_MAKE_VER(3, 0, 0)
         m_pStreamDataDecoderManager = nullptr;
-    }
 #endif
+    }
 
     m_StreamDataLoadTaskPool.Destroy();
 }
@@ -272,8 +265,8 @@ fnd::FndResult StreamSoundLoader::Open() {
 
 void StreamSoundLoader::Close() {
 #if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
-    if (g_pStreamDataDecoderManager != nullptr && m_pStreamDataDecoder != nullptr) {
-        g_pStreamDataDecoderManager->FreeImpl(m_pStreamDataDecoder);
+    if (m_pStreamDataDecoderManager != nullptr && m_pStreamDataDecoder != nullptr) {
+        m_pStreamDataDecoderManager->FreeImpl(m_pStreamDataDecoder);
         m_pStreamDataDecoder = nullptr;
     }
 #else
@@ -366,7 +359,7 @@ bool StreamSoundLoader::LoadHeader1(DriverCommandStreamSoundLoadHeader* command)
 bool StreamSoundLoader::LoadHeaderForOpus(DriverCommandStreamSoundLoadHeader* command,
                                           StreamFileType type, DecodeMode decodeMode) {
 #if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
-    if (g_pStreamDataDecoderManager == nullptr)
+    if (m_pStreamDataDecoderManager == nullptr)
         return false;
 #else
     DecodeMode actualDecodeMode{decodeMode == DecodeMode_Default ? DecodeMode_Cpu : decodeMode};
@@ -533,7 +526,6 @@ void StreamSoundLoader::SetStreamSoundInfoForOpus(const IStreamDataDecoder::Data
     m_DataInfo->lastBlockSize = m_DataInfo->blockSize;
 }
 
-// NON_MATCHING: x5 shouldn't be set when calling LoadDataForOpus, but it currently is
 void StreamSoundLoader::LoadData(void** bufferAddress, uint32_t bufferBlockIndex,
                                  size_t startOffsetSamples, size_t prefetchOffsetSamples,
                                  TaskProfileLogger& logger) {
@@ -566,7 +558,7 @@ void StreamSoundLoader::LoadData(void** bufferAddress, uint32_t bufferBlockIndex
     cmdmgr.FlushCommand(true, false);
 }
 
-// NON_MATCHING: mismatch is too big to pinpoint.
+// NON_MATCHING: the checks for startOffsetSamples and prefetchOffsetSamples seem to be wrong
 bool StreamSoundLoader::LoadData1(DriverCommandStreamSoundLoadData* command, void** bufferAddress,
                                   uint32_t bufferBlockIndex, size_t startOffsetSamples,
                                   size_t prefetchOffsetSamples, TaskProfileLogger& logger) {
@@ -574,12 +566,10 @@ bool StreamSoundLoader::LoadData1(DriverCommandStreamSoundLoadData* command, voi
     LoadDataParam& loadDataParam{command->loadDataParam};
 
     position_t startOffsetSamplesInFrame{0};
-    bool updateAdpcmContext{true};
+    bool updateAdpcmContext{false};
     int loopCount{0};
 
-    if (prefetchOffsetSamples == 0 && startOffsetSamples == 0) {
-        updateAdpcmContext = false;
-    } else {
+    if (startOffsetSamples != 0 || prefetchOffsetSamples & 1) {
         if (!ApplyStartOffset(startOffsetSamples + prefetchOffsetSamples, &loopCount)) {
             loadDataParam.samples = 0;
             return true;
@@ -590,9 +580,9 @@ bool StreamSoundLoader::LoadData1(DriverCommandStreamSoundLoadData* command, voi
 
     size_t totalBlockSamples{0};
     position_t destAddressOffset{0};
-    position_t sampleBegin{0};
+    position_t sampleBegin{m_RegionManager.GetCurrentRegion().current};
 
-    bool firstBlock{prefetchOffsetSamples == 0};
+    bool firstBlock{true};
     bool isFirstDataLoad{true};
 
     loadDataParam.isStartOffsetOfLastBlockApplied = false;
@@ -601,39 +591,32 @@ bool StreamSoundLoader::LoadData1(DriverCommandStreamSoundLoadData* command, voi
            m_RegionManager.GetCurrentRegion().Rest() < DataBlockSizeMarginSamples) {
         BlockInfo blockInfo;
         CalculateBlockInfo(blockInfo);
-        auto samples = blockInfo.samples;
-        auto copyByte = blockInfo.copyByte;
 
-        if (prefetchOffsetSamples == 0) {
+        if (prefetchOffsetSamples & 1) {
             startOffsetSamplesInFrame = blockInfo.GetStartOffsetInFrame();
             if (updateAdpcmContext && !LoadAdpcmContextForStartOffset())
                 return false;
         }
 
-        bool result;
         if (IsStreamCacheEnabled()) {
-            result = LoadOneBlockDataViaCache(bufferAddress, blockInfo, destAddressOffset,
-                                              firstBlock, updateAdpcmContext);
-        } else {
-            result = LoadOneBlockData(bufferAddress, blockInfo, destAddressOffset, firstBlock,
-                                      updateAdpcmContext);
+            if (!LoadOneBlockDataViaCache(bufferAddress, blockInfo, destAddressOffset, firstBlock,
+                                          updateAdpcmContext))
+                return false;
+        } else if (!LoadOneBlockData(bufferAddress, blockInfo, destAddressOffset, firstBlock,
+                                     updateAdpcmContext)) {
+            return false;
         }
 
-        if (!result)
-            return false;
-
-        totalBlockSamples += samples;
-        destAddressOffset += copyByte;
-        m_RegionManager.AddPosition(samples);
+        totalBlockSamples += blockInfo.samples;
+        destAddressOffset += blockInfo.copyByte;
+        m_RegionManager.AddPosition(blockInfo.samples);
         ++m_LoadingDataBlockIndex;
 
         if (m_RegionManager.GetCurrentRegion().IsEnd()) {
             if (MoveNextRegion(&loopCount))
                 UpdateLoadingDataBlockIndex();
 
-            if (prefetchOffsetSamples == 0 && startOffsetSamples == 0) {
-                // loadDataParam.isStartOffsetOfLastBlockApplied = false;
-            } else {
+            if (startOffsetSamples != 0 || prefetchOffsetSamples & 1) {
                 if (isFirstDataLoad && totalBlockSamples < DataBlockSizeMarginSamples)
                     loadDataParam.isStartOffsetOfLastBlockApplied = true;
             }
@@ -644,7 +627,6 @@ bool StreamSoundLoader::LoadData1(DriverCommandStreamSoundLoadData* command, voi
         isFirstDataLoad = false;
     }
 
-    sampleBegin = m_RegionManager.GetCurrentRegion().current;
     loadDataParam.adpcmContextEnable = false;
     if (m_SampleFormat == SampleFormat_DspAdpcm) {
         if (sampleBegin == 0) {
@@ -691,6 +673,131 @@ bool StreamSoundLoader::LoadData1(DriverCommandStreamSoundLoadData* command, voi
         }
 
         profile.loadStreamBlock.SetData(beginTick, endTick, cacheProfile);
+
+        logger.Record(profile);
+    }
+
+    return true;
+}
+
+bool StreamSoundLoader::LoadDataForOpus(DriverCommandStreamSoundLoadData* command,
+                                        void** bufferAddress, uint32_t bufferBlockIndex,
+                                        size_t startOffsetSamples,
+                                        [[maybe_unused]] size_t prefetchOffsetSamples,
+                                        TaskProfileLogger& logger) {
+    // if (command == nullptr)
+    //     return false;
+
+    const os::Tick beginTick{os::GetSystemTick()};
+    LoadDataParam& loadDataParam{command->loadDataParam};
+
+    position_t startOffsetSamplesInFrame{0};
+    int loopCount{0};
+    os::Tick fsAccessTick{0};
+
+    const bool isProfileEnabled{logger.IsProfilingEnabled() && m_pStreamDataDecoder != nullptr};
+    if (isProfileEnabled)
+        m_pStreamDataDecoder->PrepareOpusData();
+
+    if (m_LoadingDataBlockIndex > m_LastBlockIndex && m_DataInfo->loopFlag) {
+        m_LoadingDataBlockIndex = m_LoopStartBlockIndex;
+
+        const os::Tick begin{os::GetSystemTick()};
+        m_pFileStream->Seek(m_LoopStartFilePos, fnd::FileStream::SeekOrigin_Begin);
+        const os::Tick end{os::GetSystemTick()};
+        fsAccessTick = end - begin;
+
+        if (m_LoopStartBlockIndex != 0) {
+            if (!DecodeStreamData(bufferAddress, IStreamDataDecoder::DecodeType_Idling))
+                return false;
+        }
+
+        m_RegionManager.SetPosition(m_DataInfo->loopStart);
+        m_LoopJumpFlag = true;
+    }
+
+    if (startOffsetSamples != 0) {
+        if (!ApplyStartOffset(startOffsetSamples, &loopCount)) {
+            loadDataParam.samples = 0;
+            return true;
+        }
+        UpdateLoadingDataBlockIndexForOpus(bufferAddress);
+
+        startOffsetSamplesInFrame = m_RegionManager.GetCurrentRegion().current -
+                                    m_DataInfo->blockSampleCount * m_LoadingDataBlockIndex;
+
+    } else if (m_LoopJumpFlag) {
+        startOffsetSamplesInFrame = m_LoopStartBlockSampleOffset;
+    }
+
+    if (IsLoopStartFilePos(m_LoadingDataBlockIndex))
+        m_LoopStartFilePos = m_pFileStream->GetCurrentPosition();
+
+    position_t sampleBegin{m_RegionManager.GetCurrentRegion().current};
+
+    size_t blockSamples{0};
+    IStreamDataDecoder::DecodeType decodeType{IStreamDataDecoder::DecodeType_Loop};
+
+    if (m_LoadingDataBlockIndex != m_LastBlockIndex) {
+        blockSamples = m_DataInfo->blockSampleCount;
+        decodeType = IStreamDataDecoder::DecodeType_Normal;
+    } else
+        blockSamples = m_DataInfo->lastBlockSampleCount;
+
+    if (m_pFileStream->GetCurrentPosition() >= static_cast<position_t>(m_pFileStream->GetSize()))
+        blockSamples = 0;
+
+    if (blockSamples != 0) {
+        if (!DecodeStreamData(bufferAddress, decodeType))
+            return false;
+
+        for (int i{0}; i < m_ChannelCount; ++i)
+            HardwareManager::FlushDataCache(bufferAddress[i], blockSamples * sizeof(uint16_t));
+
+        if (!m_DataInfo->loopFlag) {
+            if (m_pFileStream->GetCurrentPosition() >=
+                static_cast<position_t>(m_pFileStream->GetSize()))
+                m_LastBlockIndex = m_LoadingDataBlockIndex;
+        }
+    }
+
+    m_RegionManager.AddPosition(blockSamples);
+    m_LoopJumpFlag = false;
+    m_LoadingDataBlockIndex += 1;
+
+    if (m_LoadingDataBlockIndex > m_LastBlockIndex) {
+        if (m_DataInfo->loopFlag)
+            ++loopCount;
+        else
+            m_LoadFinishFlag = true;
+    }
+
+    loadDataParam.adpcmContextEnable = false;
+    loadDataParam.blockIndex = bufferBlockIndex;
+    loadDataParam.samples = blockSamples;
+    loadDataParam.sampleBegin = sampleBegin;
+    loadDataParam.loopCount = loopCount;
+    loadDataParam.sampleOffset = startOffsetSamplesInFrame;
+    loadDataParam.sampleBytes = blockSamples * sizeof(uint16_t);
+    loadDataParam.lastBlockFlag = m_LoadFinishFlag;
+
+    if (isProfileEnabled) {
+        const os::Tick endTick{os::GetSystemTick()};
+        IStreamDataDecoder::DecodeProfile decodeProfile{m_pStreamDataDecoder->DecodeOpusData()};
+        decodeProfile.fsAccessTick += fsAccessTick;
+
+        TaskProfile profile;
+        IStreamDataDecoder::CacheProfile cacheProfile;
+        profile.type = TaskProfile::TaskProfileType_LoadOpusStreamBlock;
+
+        if (IsStreamCacheEnabled()) {
+            cacheProfile.cacheStartPosition = detail_GetCachePosition();
+            cacheProfile.cachedLength = detail_GetCachedLength();
+            cacheProfile.cacheCurrentPosition = detail_GetCurrentPosition();
+            cacheProfile.player = m_PlayerHandle;
+        }
+
+        profile.loadOpusStreamBlock.SetData(beginTick, endTick, decodeProfile, cacheProfile);
 
         logger.Record(profile);
     }
@@ -837,13 +944,8 @@ bool StreamSoundLoader::MoveNextRegion(int* loopCount) {
 
 bool StreamSoundLoader::DecodeStreamData(void** pOutBufferAddresses,
                                          IStreamDataDecoder::DecodeType decodeType) {
-#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
-    if (g_pStreamDataDecoderManager == nullptr)
-        return false;
-#else
     if (m_pStreamDataDecoderManager == nullptr)
         return false;
-#endif
 
     int16_t* pDecodedBufferAddresses[StreamChannelCount];
 
@@ -864,15 +966,11 @@ void StreamSoundLoader::UpdateLoadingDataBlockIndexForOpus(void** bufferAddress)
             m_LoopStartFilePos = m_pFileStream->GetCurrentPosition();
 
         if (i == m_LoadingDataBlockIndex - 1) {
-#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
-            if (i != 0 && g_pStreamDataDecoderManager != nullptr)
-                DecodeStreamData(bufferAddress, IStreamDataDecoder::DecodeType_Idling);
-#else
             if (i != 0 && m_pStreamDataDecoderManager != nullptr)
                 DecodeStreamData(bufferAddress, IStreamDataDecoder::DecodeType_Idling);
-#endif
-        } else
+        } else {
             m_pStreamDataDecoder->PrepareStreamData(m_pFileStream);
+        }
     }
 }
 
