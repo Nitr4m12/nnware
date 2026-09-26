@@ -31,11 +31,11 @@ struct TaskProfile {
         float GetRemainingCachePercentage() const;
         size_t GetCachedLength() const;
 
-#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER >= NN_MAKE_VER(3, 0, 0)
         detail::driver::StreamSoundPlayer* GetStreamSoundPlayer() const;
 #endif
 
-#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
         void SetTick(const os::Tick& beginTick, const os::Tick& endTick);
 #else
         void SetData(const os::Tick& beginTick, const os::Tick& endTick,
@@ -45,14 +45,14 @@ struct TaskProfile {
     private:
         uint64_t m_BeginTick;
         uint64_t m_EndTick;
-#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER >= NN_MAKE_VER(3, 0, 0)
         position_t m_CacheStartPosition;
         size_t m_CachedLength;
         position_t m_CacheCurrentPosition;
         detail::driver::StreamSoundPlayer* m_pPlayer;
 #endif
     };
-#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
     static_assert(sizeof(LoadStreamBlock) == 0x10);
 #else
     static_assert(sizeof(LoadStreamBlock) == 0x30);
@@ -73,11 +73,11 @@ struct TaskProfile {
         TimeSpan GetFsAccessTime();
         size_t GetFsReadSize();
 
-#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER >= NN_MAKE_VER(3, 0, 0)
         detail::driver::StreamSoundPlayer* GetStreamSoundPlayer() const;
 #endif
 
-#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
         void SetData(const os::Tick& beginTick, const os::Tick& endTick,
                      detail::IStreamDataDecoder::DecodeProfile* decodeProfile);
 #else
@@ -89,7 +89,7 @@ struct TaskProfile {
     private:
         uint64_t m_BeginTick;
         uint64_t m_EndTick;
-#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER >= NN_MAKE_VER(3, 0, 0)
         position_t m_CacheStartPosition;
         size_t m_CachedLength;
         position_t m_CacheCurrentPosition;
@@ -98,11 +98,11 @@ struct TaskProfile {
         uint64_t m_FsAccessTick;
         size_t m_FsReadSize;
         int32_t m_DecodedSampleCount;
-#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER >= NN_MAKE_VER(3, 0, 0)
         detail::driver::StreamSoundPlayer* m_pPlayer;
 #endif
     };
-#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
     static_assert(sizeof(LoadOpusStreamBlock) == 0x30);
 #else
     static_assert(sizeof(LoadOpusStreamBlock) == 0x50);
@@ -114,7 +114,7 @@ struct TaskProfile {
         LoadOpusStreamBlock loadOpusStreamBlock;
     };
 };
-#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
 static_assert(sizeof(TaskProfile) == 0x38);
 #else
 static_assert(sizeof(TaskProfile) == 0x58);

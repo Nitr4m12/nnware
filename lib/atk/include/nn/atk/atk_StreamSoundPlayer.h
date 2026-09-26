@@ -6,7 +6,7 @@
 #include <nn/atk/atk_StreamSoundPrefetchFileReader.h>
 #include <nn/atk/atk_StreamTrack.h>
 
-namespace nn::atk::detail {
+namespace nn::atk {
 
 struct StreamDataInfo {
     bool loopFlag;
@@ -16,6 +16,8 @@ struct StreamDataInfo {
     int64_t compatibleLoopStart;
     int64_t compatibleLoopEnd;
     int32_t channelCount;
+
+    void Dump();
 };
 static_assert(sizeof(StreamDataInfo) == 0x30);
 
@@ -27,6 +29,8 @@ struct StreamSoundDataInfo {
     int64_t compatibleLoopStart;
     int64_t compatibleLoopEnd;
     int32_t channelCount;
+
+    void Dump();
 };
 static_assert(sizeof(StreamSoundDataInfo) == 0x30);
 
@@ -38,76 +42,27 @@ struct StreamSoundRegionDataInfo {
 };
 static_assert(sizeof(StreamSoundRegionDataInfo) == 0x4c);
 
-namespace driver {
+namespace detail::driver {
 
-class StreamSoundPlayer : BasicSoundPlayer, SoundThread::PlayerCallback {
+class StreamSoundPlayer : public BasicSoundPlayer, public SoundThread::PlayerCallback {
 public:
     enum StartOffsetType {
         StartOffsetType_Sample,
         StartOffsetType_Millisec,
     };
 
-    struct SetupArg;
-    struct ItemData {
-        float pitch;
-        float mainSend;
-        float fxSend[3];
+    StreamSoundPlayer();
+    ~StreamSoundPlayer() override;
 
-        void Set(const SetupArg& arg);
-    };
-    static_assert(sizeof(ItemData) == 0x14);
-
-    struct TrackData {
-        float volume;
-        float lpfFreq;
-        int32_t biquadType;
-        float biquadValue;
-        float pan;
-        float span;
-        float mainSend;
-        float fxSend[3];
-
-        void Set(const StreamTrack* pStreamTrack);
-    };
-    static_assert(sizeof(TrackData) == 0x28);
-
-    struct WaveBufferInfo {
-        position_t sampleBegin;
-        size_t sampleLength;
-        int32_t loopCount;
-    };
-    static_assert(sizeof(WaveBufferInfo) == 0x18);
-
-    struct PrepareBaseArg {
-        StartOffsetType startOffsetType;
-        position_t offset;
-        int32_t delayTime;
-        int32_t delayCount;
-        UpdateType updateType;
-#if NN_WARE_VER < NN_MAKE_VER(4, 4, 1)
-        uint32_t subMixIndex;
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    void Initialize() override;
+#else
+    void Initialize(OutputReceiver* pOutputReceiver) override;
 #endif
-        StreamRegionCallback regionCallback;
-        void* regionCallbackArg;
-        char filePath[639];
-        void* pExternalData;
-        size_t externalDataSize;
-        FileStreamHookParam fileStreamHookParam;
-    };
-    static_assert(sizeof(PrepareBaseArg) == 0x2d0);
 
-    struct PrepareArg {
-        PrepareBaseArg baseArg;
-        void* cacheBuffer;
-        size_t cacheSize;
-    };
-    static_assert(sizeof(PrepareArg) == 0x2e0);
+    void Finalize() override;
 
-    struct PreparePrefetchArg {
-        PrepareBaseArg baseArg;
-        void* strmPrefetchFile;
-    };
-    static_assert(sizeof(PreparePrefetchArg) == 0x2d8);
+    void SetLoaderManager(driver::StreamSoundLoaderManager* manager) { m_pLoaderManager = manager; }
 
     struct SetupArg {
         StreamBufferPool* pBufferPool;
@@ -120,154 +75,68 @@ public:
         position_t loopEnd;
         float pitch;
         uint8_t mainSend;
-        uint8_t fxSend[3];
-#if NN_WARE_VER >= NN_MAKE_VER(4, 4, 1)
+        uint8_t fxSend[AuxBus_Count];
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
         DecodeMode decodeMode;
 #endif
     };
-#if NN_WARE_VER < NN_MAKE_VER(4, 4, 1)
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
     static_assert(sizeof(SetupArg) == 0x98);
 #else
     static_assert(sizeof(SetupArg) == 0xa0);
 #endif
 
-    struct PrefetchIndexInfo {
-        void Initialize(const StreamDataInfoDetail& streamDataInfo);
-
-        uint32_t lastBlockIndex;
-        position_t loopStartInBlock;
-        uint32_t loopStartBlockIndex;
-        int32_t loopBlockCount;
-    };
-    static_assert(sizeof(PrefetchIndexInfo) == 0x18);
-
-    struct PrefetchLoadDataParam : public LoadDataParam {
-        uint32_t prefetchBlockIndex;
-        uint32_t _padding;
-        size_t prefetchBlockBytes;
-    };
-    static_assert(sizeof(PrefetchLoadDataParam) == 0xa8);
-
-    StreamSoundPlayer();
-    ~StreamSoundPlayer() override;
-
-#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
-    void Initialize() override;
-#else
-    void Initialize(OutputReceiver* pOutputReceiver) override;
-#endif
-
-    bool TryAllocLoader();
-
-    void Finalize() override;
-
-    void FinishPlayer();
-
-    void FreeStreamBuffers();
-    void FreeVoices();
-    void FreeLoader();
-
     void Setup(const SetupArg& arg);
-    void SetupTrack(const SetupArg& arg);
+
+    struct PrepareBaseArg {
+        StartOffsetType startOffsetType;
+        position_t offset;
+        int delayTime;
+        int delayCount;
+        UpdateType updateType;
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+        uint32_t subMixIndex;
+#endif
+        StreamRegionCallback regionCallback;
+        void* regionCallbackArg;
+        char filePath[FilePathMax];
+        const void* pExternalData;
+        size_t externalDataSize;
+        FileStreamHookParam fileStreamHookParam;
+
+        PrepareBaseArg() = default;
+    };
+    static_assert(sizeof(PrepareBaseArg) == 0x2d0);
+
+    struct PrepareArg {
+        PrepareBaseArg baseArg;
+        void* cacheBuffer;
+        size_t cacheSize;
+
+        PrepareArg() = default;
+    };
+    static_assert(sizeof(PrepareArg) == 0x2e0);
 
     void Prepare(const PrepareArg& arg);
 
-    void SetPrepareBaseArg(const PrepareBaseArg& arg);
+    struct PreparePrefetchArg {
+        PrepareBaseArg baseArg;
+        const void* strmPrefetchFile;
 
-    void RequestLoadHeader(const PrepareArg& arg);
+        PreparePrefetchArg() = default;
+    };
+    static_assert(sizeof(PreparePrefetchArg) == 0x2d8);
 
     void PreparePrefetch(const PreparePrefetchArg& arg);
 
-    bool ReadPrefetchFile(StreamSoundPrefetchFileReader& reader);
-
-    bool ApplyStreamDataInfo(const StreamDataInfoDetail& streamDataInfo);
-
-    bool SetupPlayer();
-
-    bool AllocVoices();
-
-    bool LoadPrefetchBlocks(StreamSoundPrefetchFileReader& reader);
-
     void Start() override;
-    void StartPlayer();
-
     void Stop() override;
-
     void Pause(bool flag) override;
 
-    void UpdatePauseStatus();
-
+    bool IsFinalizing() const { return m_IsFinalizing; }
+    bool IsSuspendByLoadingDelay() const { return m_IsStoppedByLoadingDelay; }
     bool IsLoadingDelayState() const;
-    bool IsBufferEmpty() const;
-
-    bool ReadStreamDataInfo(StreamDataInfo* strmDataInfo) const;
-    bool ReadStreamDataInfo(StreamSoundDataInfo* strmDataInfo) const;
-
-    position_t GetPlaySamplePosition(bool) const;
-    float GetFilledBufferPercentage() const;
-    int32_t GetBufferBlockCount(WaveBuffer::Status waveBufferStatus) const;
-    int32_t GetTotalBufferBlockCount() const;
-
-    bool LoadHeader(bool result, AdpcmParam** adpcmParam, uint16_t assignNumber);
-
-    bool CheckPrefetchRevision(const StreamDataInfoDetail& streamDataInfo) const;
-
-    bool AllocStreamBuffers();
-
-    void UpdateLoadingBlockIndex();
-
-    bool LoadStreamData(bool result, const LoadDataParam& loadDataParam, uint16_t assignNumber);
-    bool LoadStreamData(bool result, const LoadDataParam& loadDataParam, uint16_t assignNumber,
-                        bool usePrefetchFlag, uint32_t currentPrefetchBlockIndex,
-                        size_t currentPrefetchBlockBytes);
-
-    bool IsStoppedByLoadingDelay() const;
-
-    static void VoiceCallbackFunc(MultiVoice* voice, MultiVoice::VoiceCallbackStatus status,
-                                  void* arg);
-
-    void Update();
-    void UpdateBuffer();
-    void UpdateVoiceParams(StreamTrack* track);
-
-    bool CheckDiskDriveError();
-
-    void SetOutputParam(const OutputParam*, const OutputParam&, const TrackData&);
-
-#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
-    void ApplyTvOutputParamForMultiChannel(OutputParam* outputParam, MultiVoice* MultiVoice,
-                                           int32_t channelIndex, MixMode mixMode);
-#else
-    void ApplyTvOutputParamForMultiChannel(OutputParam* outputParam,
-                                           OutputAdditionalParam* pOutputAdditionalParam,
-                                           MultiVoice* MultiVoice, int32_t channelIndex,
-                                           MixMode mixMode);
-#endif
-
-    void MixSettingForOutputParam(OutputParam* outputParam, int32_t channelIndex, MixMode mixMode);
-
-    position_t GetOriginalPlaySamplePosition(position_t,
-                                             const StreamDataInfoDetail& streamDataInfo) const;
-
-    bool IsValidStartOffset(const StreamDataInfoDetail& streamDataInfo);
-
-    void ApplyTrackDataInfo(const StreamDataInfoDetail& streamDataInfo);
-
-    uint64_t GetStartOffsetSamples(const StreamDataInfoDetail& streamDataInfo);
-
-    void PreparePrefetchOnLastBlock(PrefetchLoadDataParam*, const PrefetchIndexInfo&);
-    void PreparePrefetchOnLoopStartBlock(PrefetchLoadDataParam*, const PrefetchIndexInfo&,
-                                         StreamSoundPrefetchFileReader& reader);
-    void PreparePrefetchOnLoopBlock(PrefetchLoadDataParam*, const PrefetchIndexInfo&, uint32_t);
-    bool PreparePrefetchOnNormalBlock(PrefetchLoadDataParam*, uint32_t,
-                                      StreamSoundPrefetchFileReader* reader);
-
-    bool SetAdpcmLoopInfo(StreamSoundPrefetchFileReader& reader,
-                          const StreamDataInfoDetail& streamDataInfo, AdpcmParam* adpcmParam,
-                          AdpcmContextNotAligned* adpcmContext);
-    bool SetAdpcmInfo(StreamSoundPrefetchFileReader& reader,
-                      const StreamDataInfoDetail& streamDataInfo, AdpcmParam* adpcmParam,
-                      AdpcmContextNotAligned* adpcmContext);
+    bool IsPrepared() const { return m_IsPrepared; }
 
     void SetTrackVolume(uint32_t trackBitFlag, float volume);
     void SetTrackInitialVolume(uint32_t trackBitFlag, uint32_t volume);
@@ -283,16 +152,217 @@ public:
     void SetTrackTvMainSend(uint32_t trackBitFlag, float send);
     void SetTrackTvFxSend(uint32_t trackBitFlag, AuxBus bus, float send);
 
-    StreamTrack* GetPlayerTrack(int32_t index);
-    StreamTrack* GetPlayerTrack(int32_t index) const;
+    void SetTrackDrcVolume(uint32_t, uint32_t, float);
+    void SetTrackChannelDrcMixParameter(uint32_t, uint32_t, uint32_t, const MixParameter&);
+    void SetTrackDrcPan(uint32_t, uint32_t, float);
+    void SetTrackDrcSurroundPan(uint32_t, uint32_t, float);
+    void SetTrackDrcMainSend(uint32_t, uint32_t, float);
+    void SetTrackDrcFxSend(uint32_t, uint32_t, AuxBus, float);
 
+    bool ReadStreamSoundDataInfo(StreamDataInfo* info) const;
+    bool ReadStreamSoundDataInfo(StreamSoundDataInfo* info) const;
+
+    int GetPlayLoopCount() const { return m_PlayingBlockLoopCounter; }
+    position_t GetPlaySamplePosition(bool isOriginalSamplePosition) const;
+    float GetFilledBufferPercentage() const;
+    int GetBufferBlockCount(WaveBuffer::Status status) const;
+    int GetTotalBufferBlockCount() const;
+
+    int GetActiveChannelCount() const {
+        if (!IsActive())
+            return 0;
+
+        return m_ChannelCount;
+    }
+
+    int GetActiveTrackCount() const {
+        if (!IsActive())
+            return 0;
+
+        return m_TrackCount;
+    }
+
+    StreamTrack* GetPlayerTrack(int trackNo);
+    const StreamTrack* GetPlayerTrack(int trackNo) const;
+
+    bool LoadHeader(bool result, AdpcmParam** adpcmParam, uint16_t assignNumber);
+    bool LoadStreamData(bool result, const LoadDataParam& loadDataParam, uint16_t assignNumber);
+    bool LoadStreamData(bool result, const LoadDataParam& loadDataParam, uint16_t assignNumber,
+                        bool usePrefetchFlag, uint32_t currentPrefetchBlockIndex,
+                        size_t currentPrefetchBlockBytes);
+
+    void ForceFinish() { SetFinishFlag(true); };
+
+    os::Tick GetProcessTick(const SoundProfile& profile);
+
+    void* detail_SetFsAccessLog(fnd::FsAccessLog* fsAccessLog);
+
+protected:
     void OnUpdateFrameSoundThread() override;
     void OnUpdateFrameSoundThreadWithAudioFrameFrequency() override;
     void OnShutdownSoundThread() override;
 
-    bool IsFinalizing() const { return m_IsFinalizing; }
-
 private:
+    struct ItemData {
+        float pitch;
+        float mainSend;
+        float fxSend[AuxBus_Count];
+
+        void Set(const SetupArg& arg);
+    };
+    static_assert(sizeof(ItemData) == 0x14);
+
+    struct TrackData {
+        float volume;
+        float lpfFreq;
+        int biquadType;
+        float biquadValue;
+        float pan;
+        float span;
+        float mainSend;
+        float fxSend[AuxBus_Count];
+
+        void Set(const StreamTrack* track);
+    };
+    static_assert(sizeof(TrackData) == 0x28);
+
+    struct PrefetchLoadDataParam : LoadDataParam {
+        uint32_t prefetchBlockIndex;
+        size_t prefetchBlockBytes;
+
+        PrefetchLoadDataParam() = default;
+    };
+    // static_assert(sizeof(PrefetchLoadDataParam) == 0xa0);
+
+    struct PrefetchIndexInfo {
+        uint32_t lastBlockIndex;
+        position_t loopStartInBlock;
+        uint32_t loopStartBlockIndex;
+        int loopBlockCount;
+
+        void Initialize(const StreamDataInfoDetail& streamDataInfo);
+
+        bool IsOverLastBlock(uint32_t blockIndex) { return blockIndex > lastBlockIndex; }
+
+        // TODO
+        uint32_t GetBlockOffsetFromLoopEnd(uint32_t blockIndex) {}
+
+        bool IsLoopStartBlock(uint32_t blockIndex) { return loopStartInBlock == blockIndex; }
+
+        // TODO
+        bool IsLastBlock(uint32_t blockIndex, uint32_t blockOffsetFromLoopEnd) {
+            if (blockOffsetFromLoopEnd == 0)
+                return false;
+        }
+    };
+    static_assert(sizeof(PrefetchIndexInfo) == 0x18);
+
+    void StartPlayer();
+    void FinishPlayer();
+    bool SetupPlayer();
+
+    void Update();
+    void UpdateBuffer();
+    void UpdateVoiceParams(StreamTrack* track);
+
+    void SetOutputParam(const OutputParam* pOutOutputParam, const OutputParam& trackParam,
+                        const TrackData& trackData);
+
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    void MixSettingForOutputParam(OutputParam* pOutOutputParam, int channelIndex, MixMode mixMode);
+#else
+    void MixSettingForOutputParam(OutputParam* pOutOutputParam,
+                                  OutputBusMixVolume* pOutOutputBusMixVolume, int32_t channelIndex,
+                                  MixMode mixMode);
+#endif
+
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    void ApplyTvOutputParamForMultiChannel(const OutputParam& outputParam, MultiVoice* MultiVoice,
+                                           int32_t channelIndex, MixMode mixMode);
+    void ApplyDrcOutputParamForMultiChannel(const OutputParam& outputParam, MultiVoice* MultiVoice,
+                                            int32_t channelIndex, MixMode mixMode, uint32_t);
+#else
+    void ApplyTvOutputParamForMultiChannel(
+        const OutputParam& outputParam, const OutputAdditionalParam* const pOutputAdditionalParam,
+        MultiVoice* MultiVoice, int32_t channelIndex, MixMode mixMode);
+    void ApplyDrcOutputParamForMultiChannel(const OutputParam& outputParam, MultiVoice* MultiVoice,
+                                            int32_t channelIndex, MixMode mixMode, uint32_t);
+#endif
+
+    bool AllocVoices();
+    void FreeVoices();
+
+    bool TryAllocLoader();
+    void FreeLoader();
+
+    bool AllocStreamBuffers();
+    void FreeStreamBuffers();
+
+    void UpdateLoadingBlockIndex();
+    void UpdatePauseStatus();
+
+    bool CheckDiskDriveError() const;
+
+    bool IsBufferEmpty() const;
+
+    bool IsStoppedByLoadingDelay() const;
+
+    void SetupTrack(const SetupArg& arg);
+    void SetPrepareBaseArg(const PrepareBaseArg& baseArg);
+
+    void RequestLoadHeader(const PrepareArg& arg);
+    bool ReadPrefetchFile(StreamSoundPrefetchFileReader& reader);
+
+    bool ApplyStreamDataInfo(const StreamDataInfoDetail& streamDataInfo);
+
+    position_t GetOriginalPlaySamplePosition(position_t playSamplePosition,
+                                             const StreamDataInfoDetail& streamDataInfo) const;
+
+    int GetOriginalLoopCount(position_t playSamplePosition,
+                             const StreamDataInfoDetail& streamDataInfo) const;
+
+    position_t GetStartOffsetSamples(const StreamDataInfoDetail& streamDataInfo);
+
+    bool IsValidStartOffset(const StreamDataInfoDetail& streamDataInfo);
+
+    void ApplyTrackDataInfo(const StreamDataInfoDetail& streamDataInfo);
+
+    bool CheckPrefetchRevision(const StreamDataInfoDetail& streamDataInfo) const;
+
+    bool LoadPrefetchBlocks(StreamSoundPrefetchFileReader& reader);
+
+    void PreparePrefetchOnLastBlock(PrefetchLoadDataParam* param,
+                                    const PrefetchIndexInfo& indexInfo);
+
+    void PreparePrefetchOnLoopStartBlock(PrefetchLoadDataParam* param,
+                                         const PrefetchIndexInfo& indexInfo,
+                                         StreamSoundPrefetchFileReader& reader);
+
+    void PreparePrefetchOnLoopBlock(PrefetchLoadDataParam* param,
+                                    const PrefetchIndexInfo& indexInfo,
+                                    uint32_t blockOffsetFromLoopEnd);
+
+    bool PreparePrefetchOnNormalBlock(PrefetchLoadDataParam* param, uint32_t blockIndex,
+                                      StreamSoundPrefetchFileReader* reader);
+
+    bool SetAdpcmInfo(StreamSoundPrefetchFileReader& reader,
+                      const StreamDataInfoDetail& streamDataInfo, AdpcmParam* adpcmParam,
+                      AdpcmContextNotAligned* adpcmContext);
+
+    bool SetAdpcmLoopInfo(StreamSoundPrefetchFileReader& reader,
+                          const StreamDataInfoDetail& streamDataInfo, AdpcmParam* adpcmParam,
+                          AdpcmContextNotAligned* adpcmContext);
+
+    static void VoiceCallbackFunc(MultiVoice* voice, MultiVoice::VoiceCallbackStatus status,
+                                  void* arg);
+
+    struct WaveBufferInfo {
+        position_t sampleBegin;
+        size_t sampleLength;
+        int loopCount;
+    };
+    static_assert(sizeof(WaveBufferInfo) == 0x18);
+
     bool m_IsInitialized;
     bool m_IsPrepared;
     bool m_IsFinalizing;
@@ -304,25 +374,25 @@ private:
     bool m_IsStoppedByLoadingDelay;
     bool m_IsRegisterPlayerCallback;
     bool m_UseDelayCount;
-#if NN_WARE_VER >= NN_MAKE_VER(5, 3, 0)
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
     uint8_t m_Padding1[2];
 #endif
-    int32_t m_LoopCounter;
-    int32_t m_PlayingBlockLoopCounter;
-    int32_t m_PrepareCounter;
+    int m_LoopCounter;
+    int m_PlayingBlockLoopCounter;
+    int m_PrepareCounter;
     StreamSoundLoaderManager* m_pLoaderManager;
     StreamSoundLoader* m_pLoader;
     detail::driver::StreamBufferPool* m_pBufferPool;
-    int32_t m_BufferBlockCount;
+    int m_BufferBlockCount;
     uint32_t m_LoadingBufferBlockIndex;
     uint32_t m_PlayingBufferBlockIndex;
     uint32_t m_LastPlayFinishBufferBlockIndex;
     StartOffsetType m_StartOffsetType;
     position_t m_StartOffset;
-    int32_t m_DelayCount;
+    int m_DelayCount;
     uint16_t m_AssignNumber;
     uint8_t m_FileType;
-#if NN_WARE_VER >= NN_MAKE_VER(4, 4, 1)
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
     DecodeMode m_DecodeMode;
 #endif
     bool m_LoopFlag;
@@ -331,31 +401,33 @@ private:
     position_t m_LoopStart;
     position_t m_LoopEnd;
     ItemData m_ItemData;
-    void* m_pStreamPrefetchFile;
-    AdpcmParam m_PrefetchAdpcmParam[16];
+    const void* m_pStreamPrefetchFile;
+    AdpcmParam m_PrefetchAdpcmParam[StreamChannelCount];
     StreamSoundPrefetchFileReader::PrefetchDataInfo m_PrefetchDataInfo;
     position_t m_PrefetchOffset;
     bool m_IsPrefetchRevisionCheckEnabled;
     uint32_t m_PrefetchRevisionValue;
-    int32_t m_ChannelCount;
-    int32_t m_TrackCount;
-    StreamChannel m_Channels[16];
-    StreamTrack m_Tracks[8];
+    int m_ChannelCount;
+    int m_TrackCount;
+    StreamChannel m_Channels[StreamChannelCount];
+    StreamTrack m_Tracks[StreamTrackCount];
     UpdateType m_UpdateType;
-#if NN_WARE_VER < NN_MAKE_VER(4, 4, 1)
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
     uint32_t m_SubMixIndex;
 #endif
-    WaveBufferInfo m_WaveBufferInfo[32];
+    WaveBufferInfo m_WaveBufferInfo[StreamDataLoadTaskMax];
     PrepareArg m_PrepareArg;
     bool m_IsSucceedPrepare;
     SetupArg m_SetupArg;
+
+    static uint16_t g_AssignNumberCount;
+
     position_t m_PlaySamplePosition;
     position_t m_OriginalPlaySamplePosition;
 
     static uint16_t g_TaskRequestIndexCount;
-    static uint16_t g_AssignNumberCount;
 };
 static_assert(sizeof(StreamSoundPlayer) == 0x11740);
 
-}  // namespace driver
-}  // namespace nn::atk::detail
+}  // namespace detail::driver
+}  // namespace nn::atk
