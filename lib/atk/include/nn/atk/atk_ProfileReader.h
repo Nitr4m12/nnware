@@ -6,6 +6,8 @@
 #include <nn/os.h>
 #include <nn/util/util_IntrusiveList.h>
 
+#include <nn/atk/atk_HardwareManager.h>
+
 namespace nn::atk {
 
 struct TimeRange {
@@ -27,13 +29,8 @@ struct SoundProfile {
     uint32_t nwVoiceCount;
     uint64_t nwFrameProcessTick;
     TimeRange _additionalSubMixProcess;
-#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
-    TimeRange _voiceProcessTable[96];
-    audio::NodeId _voiceIdTable[96];
-#else
-    TimeRange _voiceProcessTable[192];
-    audio::NodeId _voiceIdTable[192];
-#endif
+    TimeRange _voiceProcessTable[detail::driver::HardwareManager::AtkVoiceCountMax];
+    audio::NodeId _voiceIdTable[detail::driver::HardwareManager::AtkVoiceCountMax];
 };
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
 static_assert(sizeof(SoundProfile) == 0x818);

@@ -663,17 +663,21 @@ bool StreamSoundLoader::LoadData1(DriverCommandStreamSoundLoadData* command, voi
         TaskProfile profile;
         profile.type = TaskProfile::TaskProfileType_LoadStreamBlock;
 
+#if NN_WARE_VER >= NN_MAKE_VER(3, 0, 0)
         IStreamDataDecoder::CacheProfile cacheProfile;
-
         if (IsStreamCacheEnabled()) {
             cacheProfile.cacheStartPosition = detail_GetCachePosition();
             cacheProfile.cachedLength = detail_GetCachedLength();
             cacheProfile.cacheCurrentPosition = detail_GetCurrentPosition();
             cacheProfile.player = m_PlayerHandle;
         }
+#endif
 
+#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
+        profile.loadStreamBlock.SetTick(beginTick, endTick);
+#else
         profile.loadStreamBlock.SetData(beginTick, endTick, cacheProfile);
-
+#endif
         logger.Record(profile);
     }
 
@@ -787,17 +791,23 @@ bool StreamSoundLoader::LoadDataForOpus(DriverCommandStreamSoundLoadData* comman
         decodeProfile.fsAccessTick += fsAccessTick;
 
         TaskProfile profile;
-        IStreamDataDecoder::CacheProfile cacheProfile;
         profile.type = TaskProfile::TaskProfileType_LoadOpusStreamBlock;
 
+#if NN_WARE_VER >= NN_MAKE_VER(3, 0, 0)
+        IStreamDataDecoder::CacheProfile cacheProfile;
         if (IsStreamCacheEnabled()) {
             cacheProfile.cacheStartPosition = detail_GetCachePosition();
             cacheProfile.cachedLength = detail_GetCachedLength();
             cacheProfile.cacheCurrentPosition = detail_GetCurrentPosition();
             cacheProfile.player = m_PlayerHandle;
         }
+#endif
 
+#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
+        profile.loadOpusStreamBlock.SetData(beginTick, endTick, decodeProfile);
+#else
         profile.loadOpusStreamBlock.SetData(beginTick, endTick, decodeProfile, cacheProfile);
+#endif
 
         logger.Record(profile);
     }

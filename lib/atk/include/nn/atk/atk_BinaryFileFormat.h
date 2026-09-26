@@ -18,7 +18,7 @@ struct BinaryFileHeader {
 static_assert(sizeof(BinaryFileHeader) == 0x14);
 
 struct BinaryBlockHeader {
-    // Named "kind", but functionally the same as BinaryFileHeader.signature
+    // Functionally the same as BinaryFileHeader.signature
     int32_t kind;
     uint32_t size;
 };
