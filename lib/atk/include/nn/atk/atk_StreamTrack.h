@@ -19,12 +19,7 @@ struct StreamChannel {
 };
 static_assert(sizeof(StreamChannel) == 0x1080);
 
-class StreamTrack {
-public:
-    StreamTrack() = default;
-    ~StreamTrack() = default;
-
-private:
+struct StreamTrack {
     bool m_ActiveFlag;
     StreamChannel* m_pChannels[2];
     uint8_t channelCount;
@@ -40,6 +35,9 @@ private:
     float m_Volume;
     int32_t m_OutputLine;
     OutputParam m_TvParam;
+
+    StreamTrack() = default;
+    ~StreamTrack() = default;
 };
 static_assert(sizeof(StreamTrack) == 0x80);
 
