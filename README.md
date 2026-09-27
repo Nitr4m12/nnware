@@ -12,7 +12,9 @@ Usage of the materials here outside of matching decompilation is not supported.
 
 # Development
 For running commands please install [task](https://taskfile.dev), CMake, Ninja and Clang/LLVM.
-The Clang/LLVM toolchain version should match the [image used in the PR](https://github.com/open-ead/containers/blob/main/ubuntu-builder/Dockerfile)
+
+The Clang/LLVM toolchain is only used for formatting and running `clang-tidy`.
+The version should match the [image used in the PR](https://github.com/open-ead/containers/blob/main/ubuntu-builder/Dockerfile)
 
 Before you begin, run `task clone-deps` to clone dependencies.
 

@@ -3,12 +3,16 @@ version: '3'
 # https://taskfile.dev
 
 vars:
+  NX_AARCH64: 22.1.8-1
   # Modules to check with clang-format/clang-tidy;
   MODULES: atk,font,g3d,ui2d,vfx
   _MODULES1: ',{{.MODULES}}'
   _MODULES2: '^{{.MODULES}}$'
   SOURCES: '{{._MODULES1 | replace "," " lib/"}}'
   CLANG_TIDY_LIBS: '{{.MODULES | replace " " "" | replace "," "|" }}'
+
+env:
+  NX_AARCH64: '{{.NX_AARCH64}}'
 
 tasks:
   clone-deps:
@@ -27,35 +31,17 @@ tasks:
   configure:
     desc: Configure CMake
     cmds:
-      - task: cmake
-        vars:
-          CMAKE_ARGS: -DNNSDK_DIR=$(pwd)/lib/nnsdk
-      - >
-        cmake -G Ninja -B test/header_check/build -S test/header_check
-        -DNN_SDK=1.2.3 
-        -DNN_WARE=4.5.6 
-        -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-        -DCMAKE_CXX_STANDARD=17
-        -DCMAKE_C_COMPILER=clang
-        -DCMAKE_CXX_COMPILER=clang++
-        -DCMAKE_C_FLAGS='-D__aarch64__'
-        -DCMAKE_CXX_FLAGS='-D__aarch64__'
-        -DNNSDK_DIR=$(pwd)/lib/nnsdk
-  cmake:
-    cmds:
-      - >
-        cmake -G Ninja -B build -S .
-        -DNN_SDK=1.2.3 
-        -DNN_WARE=4.5.6 
-        -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-        -DCMAKE_CXX_STANDARD=17
-        -DCMAKE_C_COMPILER=clang
-        -DCMAKE_CXX_COMPILER=clang++
-        -DCMAKE_C_FLAGS='-D__aarch64__'
-        -DCMAKE_CXX_FLAGS='-D__aarch64__'
-        {{.CMAKE_ARGS}}
-        {{.CLI_ARGS}}
-      
+      - silent: true
+        cmd: |
+          if [ -z "$CI" ]; then
+            [ -d "toolchain/musl" ] || git clone https://github.com/open-ead/botw-lib-musl toolchain/musl
+            VERSION={{.NX_AARCH64}}
+            OUTPUT=toolchain
+            [ -d "$OUTPUT/nx-aarch64-$VERSION" ] || curl -fsSL https://raw.githubusercontent.com/Pistonight/nx-aarch64/main/install.sh | VERSION="$VERSION" OUTPUT="$OUTPUT" sh
+          fi
+      - cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE="$PWD/toolchain/Toolchain.cmake" -B build
+      - cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE="$PWD/toolchain/Toolchain.cmake" -B test/header_check/build -S test/header_check
+
 
   build:
     desc: Check the project builds
