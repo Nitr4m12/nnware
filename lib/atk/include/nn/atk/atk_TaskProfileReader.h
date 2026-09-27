@@ -1,0 +1,149 @@
+#pragma once
+
+#include <nn/time.h>
+#include <nn/util/util_IntrusiveList.h>
+
+#include <nn/atk/atk_Config.h>
+#include <nn/atk/atk_ProfileReader.h>
+#include <nn/atk/detail/atk_IStreamDataDecoder.h>
+#include <nn/atk/fnd/os/atkfnd_CriticalSection.h>
+
+namespace nn::atk {
+
+namespace detail::driver {
+
+class StreamSoundPlayer;
+
+}  // namespace detail::driver
+
+struct TaskProfile {
+    enum TaskProfileType {
+        TaskProfileType_LoadStreamBlock,
+        TaskProfileType_LoadOpusStreamBlock,
+    };
+
+    class LoadStreamBlock {
+    public:
+        TimeSpan GetTotalTime() const;
+        uint64_t GetBeginTick() const;
+        uint64_t GetEndTick() const;
+
+        float GetRemainingCachePercentage() const;
+        size_t GetCachedLength() const;
+
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+        detail::driver::StreamSoundPlayer* GetStreamSoundPlayer() const;
+#endif
+
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+        void SetTick(const os::Tick& beginTick, const os::Tick& endTick);
+#else
+        void SetData(const os::Tick& beginTick, const os::Tick& endTick,
+                     const detail::IStreamDataDecoder::CacheProfile& cacheProfile);
+#endif
+
+    private:
+        uint64_t m_BeginTick;
+        uint64_t m_EndTick;
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+        position_t m_CacheStartPosition;
+        size_t m_CachedLength;
+        position_t m_CacheCurrentPosition;
+        detail::driver::StreamSoundPlayer* m_pPlayer;
+#endif
+    };
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    static_assert(sizeof(LoadStreamBlock) == 0x10);
+#else
+    static_assert(sizeof(LoadStreamBlock) == 0x30);
+#endif
+
+    class LoadOpusStreamBlock {
+    public:
+        TimeSpan GetTotalTime() const;
+        uint64_t GetBeginTick() const;
+        uint64_t GetEndTick() const;
+
+        float GetRemainingCachePercentage() const;
+        size_t GetCachedLength() const;
+
+        TimeSpan GetDecodeTime() const;
+        int32_t GetDecodedSampleCount() const;
+
+        TimeSpan GetFsAccessTime();
+        size_t GetFsReadSize();
+
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+        detail::driver::StreamSoundPlayer* GetStreamSoundPlayer() const;
+#endif
+
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+        void SetData(const os::Tick& beginTick, const os::Tick& endTick,
+                     detail::IStreamDataDecoder::DecodeProfile* decodeProfile);
+#else
+        void SetData(const os::Tick& beginTick, const os::Tick& endTick,
+                     const detail::IStreamDataDecoder::DecodeProfile& decodeProfile,
+                     const detail::IStreamDataDecoder::CacheProfile& cacheProfile);
+#endif
+
+    private:
+        uint64_t m_BeginTick;
+        uint64_t m_EndTick;
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+        position_t m_CacheStartPosition;
+        size_t m_CachedLength;
+        position_t m_CacheCurrentPosition;
+#endif
+        uint64_t m_DecodeTick;
+        uint64_t m_FsAccessTick;
+        size_t m_FsReadSize;
+        int32_t m_DecodedSampleCount;
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+        detail::driver::StreamSoundPlayer* m_pPlayer;
+#endif
+    };
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    static_assert(sizeof(LoadOpusStreamBlock) == 0x30);
+#else
+    static_assert(sizeof(LoadOpusStreamBlock) == 0x50);
+#endif
+
+    TaskProfileType type;
+    union {
+        LoadStreamBlock loadStreamBlock;
+        LoadOpusStreamBlock loadOpusStreamBlock;
+    };
+};
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+static_assert(sizeof(TaskProfile) == 0x38);
+#else
+static_assert(sizeof(TaskProfile) == 0x58);
+#endif
+
+using TaskProfileReader = AtkProfileReader<TaskProfile>;
+
+class TaskProfileLogger {
+public:
+    using TaskProfileReaderList = util::IntrusiveList<
+        TaskProfileReader,
+        util::IntrusiveListMemberNodeTraits<TaskProfileReader, &TaskProfileReader::m_List>>;
+
+    TaskProfileLogger();
+
+    void Record(const TaskProfile& profile);
+
+    void RegisterReader(TaskProfileReader& profileReader);
+    void UnregisterReader(const TaskProfileReader& profileReader);
+
+    void SetProfilingEnabled(bool isEnabledProfiling);
+
+    void Finalize();
+
+private:
+    TaskProfileReaderList m_List;
+    detail::fnd::CriticalSection m_Lock;
+    bool m_IsProfilingEnabled;
+};
+static_assert(sizeof(TaskProfileLogger) == 0x38);
+
+}  // namespace nn::atk

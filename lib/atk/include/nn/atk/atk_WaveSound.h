@@ -1,0 +1,70 @@
+#pragma once
+
+#include <nn/atk/atk_BasicSound.h>
+#include <nn/atk/atk_SoundInstanceManager.h>
+#include <nn/atk/atk_WaveSoundHandle.h>
+#include <nn/atk/atk_WaveSoundPlayer.h>
+
+namespace nn::atk::detail {
+
+class WaveSound;
+using WaveSoundInstanceManager = SoundInstanceManager<WaveSound>;
+
+class WaveSound : BasicSound {
+public:
+    explicit WaveSound(WaveSoundInstanceManager& manager);
+    ~WaveSound() override;
+
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    bool Initialize() override;
+#else
+    bool Initialize(OutputReceiver* pOutputReceiver) override;
+#endif
+    void Finalize() override;
+
+    void Prepare(const void* wsdFile, const void* waveFile,
+                 const driver::WaveSoundPlayer::StartInfo& startInfo, int8_t waveType);
+
+    void RegisterDataLoadTask(const driver::WaveSoundLoader::LoadInfo& loadInfo,
+                              const driver::WaveSoundPlayer::StartInfo& startInfo);
+
+    void SetChannelPriority(int32_t priority);
+
+    void InitializeChannelParam(int32_t priority, bool isReleasePriorityFix);
+
+    void OnUpdatePlayerPriority() override;
+
+    bool IsAttachedTempSpecialHandle() override;
+    void DetachTempSpecialHandle() override;
+
+    bool ReadWaveSoundDataInfo(WaveSoundDataInfo*) const;
+
+    position_t GetPlaySamplePosition(bool) const;
+
+    bool IsPrepared() const override;
+
+    driver::BasicSoundPlayer* GetBasicSoundPlayerHandle() override;
+
+    void OnUpdateParam() override;
+
+private:
+    friend WaveSoundInstanceManager;
+
+    util::IntrusiveListNode m_PriorityLink;
+    WaveSoundHandle* m_pTempSpecialHandle;
+    WaveSoundInstanceManager* m_Manager;
+    void* m_pWaveFile;
+    int8_t m_WaveType;
+    bool m_InitializeFlag;
+    bool m_IsCalledPrepare;
+    uint8_t m_Padding[1];
+    uint32_t m_ChannelCount;
+    driver::WaveSoundPlayer m_PlayerInstance;
+};
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+static_assert(sizeof(WaveSound) == 0x3b0);
+#else
+static_assert(sizeof(WaveSound) == 0x3e0);
+#endif
+
+}  // namespace nn::atk::detail

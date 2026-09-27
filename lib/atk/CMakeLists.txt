@@ -18,3 +18,5 @@ set_target_properties(nn_atk PROPERTIES VERIFY_INTERFACE_HEADER_SETS ON)
 nnware_ver(nn_atk)
 target_compile_options(nn_atk PRIVATE ${NNWARE_COMPILE_FLAGS})
 nnware_header_verification_compile_options(nn_atk)
+
+target_link_libraries(nn_atk PUBLIC nnSdk)

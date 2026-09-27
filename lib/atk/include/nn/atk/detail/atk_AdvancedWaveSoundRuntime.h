@@ -1,23 +1,59 @@
-/**
- * @brief Runtime wave sound api.
- */
-
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 
+#include <nn/atk/atk_OutputReceiver.h>
+#include <nn/atk/atk_SoundDataManager.h>
+#include <nn/atk/atk_SoundStartable.h>
+#include <nn/atk/atk_StartInfoReader.h>
+#include <nn/atk/detail/atk_AdvancedWaveSound.h>
+
 namespace nn::atk::detail {
+
 class AdvancedWaveSoundRuntime {
 public:
     AdvancedWaveSoundRuntime();
     ~AdvancedWaveSoundRuntime();
 
-    void Initialize(int32_t, void**, void const*);
+    bool Initialize(int32_t soundCount, void** pOutAllocatedAddr, const void* endAddr);
     void Finalize();
+
+    static size_t
+    GetRequiredMemorySize(const SoundArchive::SoundArchivePlayerInfo& soundArchivePlayerInfo,
+                          size_t alignmentSize);
+
     int32_t GetActiveCount() const;
-    void SetupUserParam(void**, uint64_t);
+    int32_t GetFreeAdvancedWaveSoundCount() const;
+
+    void SetupUserParam(void** startAddr, size_t adjustSize);
+
     void Update();
 
-    uint8_t _0[0x30];
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    AdvancedWaveSound* AllocSound(SoundArchive::ItemId soundId, int32_t priority,
+                                  int32_t ambientPriority, BasicSound::AmbientInfo* ambientArgInfo);
+#else
+    AdvancedWaveSound* AllocSound(SoundArchive::ItemId soundId, int32_t priority,
+                                  int32_t ambientPriority, BasicSound::AmbientInfo* ambientArgInfo,
+                                  OutputReceiver* pOutputReceiver);
+#endif
+
+    SoundStartable::StartResult PrepareImpl(const SoundArchive* pSoundArchive,
+                                            const SoundDataManager* pSoundDataManager,
+                                            SoundArchive::ItemId soundId, AdvancedWaveSound* sound,
+                                            const SoundArchive::SoundInfo* commonInfo,
+                                            const StartInfoReader& startInfoReader);
+
+    void DumpMemory(const SoundArchive*) const;
+
+private:
+    AdvancedWaveSoundInstanceManager m_InstanceManager;
 };
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+static_assert(sizeof(AdvancedWaveSoundRuntime) == 0x30);
+#else
+static_assert(sizeof(AdvancedWaveSoundRuntime) == 0x38);
+#endif
+
 }  // namespace nn::atk::detail
