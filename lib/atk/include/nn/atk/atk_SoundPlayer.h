@@ -1,53 +1,154 @@
-/**
- * @brief Sound player.
- */
-
 #pragma once
 
-#include <cstdint>
+#include <nn/util/util_IntrusiveList.h>
+
+#include <nn/atk/atk_BasicSound.h>
+#include <nn/atk/atk_OutputAdditionalParam.h>
+#include <nn/atk/atk_PlayerHeap.h>
 
 namespace nn::atk {
-enum PauseMode {
-
-};
 
 class SoundPlayer {
 public:
+    using PlayerHeapList = util::IntrusiveList<
+        detail::PlayerHeap,
+        util::IntrusiveListMemberNodeTraits<detail::PlayerHeap, &detail::PlayerHeap::m_Link>>;
+
+    using SoundList =
+        util::IntrusiveList<detail::BasicSound,
+                            util::IntrusiveListMemberNodeTraits<
+                                detail::BasicSound, &detail::BasicSound::m_SoundPlayerPlayLink>>;
+
+    using PriorityList = util::IntrusiveList<
+        detail::BasicSound,
+        util::IntrusiveListMemberNodeTraits<detail::BasicSound,
+                                            &detail::BasicSound::m_SoundPlayerPriorityLink>>;
+
+    struct OutputParam {
+        float volume;
+        float mainSend;
+        float fxSend[AuxBus_Count];
+
+        void Initialize() {
+            volume = 1.0f;
+            mainSend = 0.0f;
+
+            for (int i{0}; i < AuxBus_Count; ++i)
+                fxSend[i] = 0.0f;
+        }
+    };
+    static_assert(sizeof(OutputParam) == 0x14);
+
     SoundPlayer();
+
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+    explicit SoundPlayer(detail::OutputAdditionalParam* pParam);
+#endif
+
     ~SoundPlayer();
 
-    void StopAllSound(int32_t);
     void Update();
+
+    void StopAllSound(int fadeFrames);
+
+    void PauseAllSound(bool flag, int fadeFrames);
+    void PauseAllSound(bool flag, int fadeFrames, PauseMode pauseMode);
+
+    void SetVolume(float volume);
+    float GetVolume() const { return m_Volume; }
+
+    void SetLowPassFilterFrequency(float lpfFreq);
+    float GetLowPassFilterFrequency() const { return m_LpfFreq; }
+
+    void SetBiquadFilter(int type, float value);
+    int GetBiquadFilterType() const { return m_BiquadType; }
+    float GetBiquadFilterValue() const { return m_BiquadValue; }
+
+    void SetDefaultOutputLine(uint32_t outputLineFlag);
+    uint32_t GetDefaultOutputLine() const { return m_OutputLineFlag; }
+
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+    void SetMainSend(float send);
+    float GetMainSend() const;
+
+    void SetEffectSend(AuxBus bus, float send);
+    float GetEffectSend(AuxBus bus) const;
+
+    void SetSend(int subMixBus, float send);
+    float GetSend(int subMixBus);
+#endif
+
+    void SetOutputVolume(OutputDevice device, float volume);
+    float GetOutputVolume([[maybe_unused]] OutputDevice device) const { return m_TvParam.volume; }
+
+    void SetOutputMainSend([[maybe_unused]] OutputDevice device, float send) {
+        m_TvParam.mainSend = send;
+    }
+    float GetOutputMainSend([[maybe_unused]] OutputDevice device) const {
+        return m_TvParam.mainSend;
+    }
+
+    void SetOutputFxSend([[maybe_unused]] OutputDevice device, AuxBus bus, float send) {
+        m_TvParam.fxSend[bus] = send;
+    }
+    float GetOutputFxSend([[maybe_unused]] OutputDevice device, AuxBus bus) const {
+        return m_TvParam.fxSend[bus];
+    }
+
+    int GetPlayingSoundCount() const { return m_SoundList.size(); }
+
+    void SetPlayableSoundCount(int count);
+    int GetPlayableSoundCount() const { return m_PlayableCount; }
+
+    void detail_SetPlayableSoundLimit(int limit);
+
+    bool detail_CanPlaySound(int startPriority);
+
+    bool detail_AppendSound(detail::BasicSound* pSound);
+    void detail_RemoveSound(detail::BasicSound* pSound);
+
+    void detail_SortPriorityList(bool reverse);
+    void detail_SortPriorityList(detail::BasicSound* pSound);
+
+    void detail_AppendPlayerHeap(detail::PlayerHeap* pHeap);
+    bool detail_CanUsePlayerHeap() const { return m_PlayerHeapCount != 0; }
+    detail::PlayerHeap* detail_AllocPlayerHeap();
+    void detail_FreePlayerHeap(detail::PlayerHeap* pHeap);
+
+    bool IsFirstComeBased() { return m_IsFirstComeBased; }
+    void SetFirstComeBased(bool isFirstComeBased) { m_IsFirstComeBased = isFirstComeBased; }
+
+private:
+    detail::BasicSound* GetLowestPrioritySound() { return &m_PriorityList.front(); }
+
+    void InsertPriorityList(detail::BasicSound* pSound);
+    void RemovePriorityList(detail::BasicSound* pSound);
+    void RemoveSoundList(detail::BasicSound* pSound);
+
     void DoFreePlayerHeap();
-    void detail_SortPriorityList(bool);
-    void PauseAllSound(int32_t, bool);
-    void PauseAllSound(bool, int32_t, nn::atk::PauseMode);
-    void SetVolume(float vol);
-    void SetLowPassFilterFrequency(float filterFreq);
-    void SetBiquadFilter(int32_t filterType, float baseFreq);
-    void SetDefaultOutputLine(uint32_t line);
 
-    void detail_SetPlayableSoundLimit(int32_t limit);
-    bool CanPlaySound(int32_t);
-
-    uint64_t _0;
-    uint64_t _8;
-    uint64_t _10;
-    uint64_t _18;
-    uint64_t _20;
-    uint64_t _28;
-    uint64_t _30;
-    uint64_t _38;
-    int32_t _40;
-    int32_t mPlayableSoundCount;  // _44
-    int32_t _48;
-    float mVolume;                // _4C
-    float mLowPassFreq;           // _50
-    int32_t mFilterType;          // _54
-    float mBaseFreq;              // _58
-    uint32_t mDefaultOutputLine;  // _5C
-    float mOutputVolume;          // _60
-    uint64_t _64;
-    uint64_t _6C;
+    SoundList m_SoundList;
+    PriorityList m_PriorityList;
+    PlayerHeapList m_PlayerHeapFreeList;
+    PlayerHeapList m_PlayerHeapFreeReqList;
+    int m_PlayableCount{1};
+    int m_PlayableLimit{INT_MAX};
+    uint32_t m_PlayerHeapCount{0};
+    float m_Volume{1.0f};
+    float m_LpfFreq{0.0f};
+    int m_BiquadType{BiquadFilterType_Inherit};
+    float m_BiquadValue{0.0f};
+    uint32_t m_OutputLineFlag{1};
+    OutputParam m_TvParam;
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+    detail::OutputAdditionalParam* m_pOutputAdditionalParam{};
+#endif
+    bool m_IsFirstComeBased{false};
 };
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+static_assert(sizeof(SoundPlayer) == 0x78);
+#else
+static_assert(sizeof(SoundPlayer) == 0x88);
+#endif
+
 }  // namespace nn::atk
