@@ -10,4 +10,8 @@ namespace nn::atk::detail::driver {
 
 StreamSoundPlayer::StreamSoundPlayer() = default;
 
+StreamSoundPlayer::~StreamSoundPlayer() {
+    Finalize();
+}
+
 }  // namespace nn::atk::detail::driver
