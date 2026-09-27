@@ -55,9 +55,8 @@ public:
         if (m_FreeList.empty())
             return nullptr;
 
-        m_FreeList.pop_front();
-
         Instance* instance{&m_FreeList.front()};
+        m_FreeList.pop_front();
 
         return instance;
     }
