@@ -89,19 +89,19 @@ public:
     void Setup(const SetupArg& arg);
 
     struct PrepareBaseArg {
-        StartOffsetType startOffsetType;
-        position_t offset;
-        int delayTime;
-        int delayCount;
-        UpdateType updateType;
+        StartOffsetType startOffsetType{StartOffsetType_Sample};
+        position_t offset{0};
+        int delayTime{0};
+        int delayCount{0};
+        UpdateType updateType{UpdateType_AudioFrame};
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
         uint32_t subMixIndex;
 #endif
-        StreamRegionCallback regionCallback;
-        void* regionCallbackArg;
-        char filePath[FilePathMax];
-        const void* pExternalData;
-        size_t externalDataSize;
+        StreamRegionCallback regionCallback{};
+        void* regionCallbackArg{};
+        char filePath[FilePathMax]{};
+        const void* pExternalData{};
+        size_t externalDataSize{0};
         FileStreamHookParam fileStreamHookParam;
 
         PrepareBaseArg() = default;
@@ -110,8 +110,8 @@ public:
 
     struct PrepareArg {
         PrepareBaseArg baseArg;
-        void* cacheBuffer;
-        size_t cacheSize;
+        void* cacheBuffer{};
+        size_t cacheSize{0};
 
         PrepareArg() = default;
     };
@@ -363,7 +363,7 @@ private:
     };
     static_assert(sizeof(WaveBufferInfo) == 0x18);
 
-    bool m_IsInitialized;
+    bool m_IsInitialized{false};
     bool m_IsPrepared;
     bool m_IsFinalizing;
     bool m_IsPreparedPrefetch;
@@ -372,7 +372,7 @@ private:
     bool m_LoadFinishFlag;
     bool m_ReportLoadingDelayFlag;
     bool m_IsStoppedByLoadingDelay;
-    bool m_IsRegisterPlayerCallback;
+    bool m_IsRegisterPlayerCallback{false};
     bool m_UseDelayCount;
 #if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
     uint8_t m_Padding1[2];
@@ -380,8 +380,8 @@ private:
     int m_LoopCounter;
     int m_PlayingBlockLoopCounter;
     int m_PrepareCounter;
-    StreamSoundLoaderManager* m_pLoaderManager;
-    StreamSoundLoader* m_pLoader;
+    StreamSoundLoaderManager* m_pLoaderManager{};
+    StreamSoundLoader* m_pLoader{};
     detail::driver::StreamBufferPool* m_pBufferPool;
     int m_BufferBlockCount;
     uint32_t m_LoadingBufferBlockIndex;
@@ -401,14 +401,14 @@ private:
     position_t m_LoopStart;
     position_t m_LoopEnd;
     ItemData m_ItemData;
-    const void* m_pStreamPrefetchFile;
+    const void* m_pStreamPrefetchFile{};
     AdpcmParam m_PrefetchAdpcmParam[StreamChannelCount];
     StreamSoundPrefetchFileReader::PrefetchDataInfo m_PrefetchDataInfo;
     position_t m_PrefetchOffset;
     bool m_IsPrefetchRevisionCheckEnabled;
     uint32_t m_PrefetchRevisionValue;
-    int m_ChannelCount;
-    int m_TrackCount;
+    int m_ChannelCount{0};
+    int m_TrackCount{0};
     StreamChannel m_Channels[StreamChannelCount];
     StreamTrack m_Tracks[StreamTrackCount];
     UpdateType m_UpdateType;
@@ -417,7 +417,7 @@ private:
 #endif
     WaveBufferInfo m_WaveBufferInfo[StreamDataLoadTaskMax];
     PrepareArg m_PrepareArg;
-    bool m_IsSucceedPrepare;
+    bool m_IsSucceedPrepare{false};
     SetupArg m_SetupArg;
 
     static uint16_t g_AssignNumberCount;
