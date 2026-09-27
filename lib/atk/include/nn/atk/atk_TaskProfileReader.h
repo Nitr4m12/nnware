@@ -79,7 +79,7 @@ struct TaskProfile {
 
 #if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
         void SetData(const os::Tick& beginTick, const os::Tick& endTick,
-                     detail::IStreamDataDecoder::DecodeProfile* decodeProfile);
+                     const detail::IStreamDataDecoder::DecodeProfile& decodeProfile);
 #else
         void SetData(const os::Tick& beginTick, const os::Tick& endTick,
                      const detail::IStreamDataDecoder::DecodeProfile& decodeProfile,

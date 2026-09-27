@@ -24,9 +24,48 @@ void StreamSoundPlayer::Initialize(OutputReceiver* pOutputReceiver)
     BasicSoundPlayer::Initialize();
 #else
     BasicSoundPlayer::Initialize(pOutputReceiver);
-#endif
     m_LoopCounter = 0;
+#endif
 
+    m_PlayingBlockLoopCounter = 0;
+    m_PrefetchOffset = 0;
+    m_IsPrefetchRevisionCheckEnabled = false;
+    m_PrefetchRevisionValue = 0;
+    m_DelayCount = 0;
+    m_UseDelayCount = false;
+    m_LoadFinishFlag = false;
+    m_PauseStatus = false;
+    m_LoadWaitFlag = false;
+    m_IsInitialized = false;
+    m_IsPrepared = false;
+    m_IsFinalizing = false;
+    m_IsPreparedPrefetch = false;
+    m_OriginalPlaySamplePosition = 0;
+    m_PlaySamplePosition = 0;
+
+    if (TryAllocLoader())
+        m_pLoader->Initialize();
+
+    m_ItemData.pitch = 1.0f;
+    m_ItemData.mainSend = 1.0f;
+    for (int i{0}; i < AuxBus_Count; ++i)
+        m_ItemData.fxSend[i] = 0.0f;
+
+    for (int trackIndex{0}; trackIndex < static_cast<int>(StreamTrackCount); ++trackIndex) {
+        StreamTrack& track{m_Tracks[trackIndex]};
+
+        track.m_ActiveFlag = false;
+        track.m_Volume = 1.0f;
+        track.m_OutputLine = -1;
+        track.m_TvParam.Initialize();
+    }
+
+    for (int channelIndex{0}; channelIndex < StreamChannelCount; ++channelIndex) {
+        StreamChannel& channel{m_Channels[channelIndex]};
+
+        channel.m_pBufferAddress = nullptr;
+        channel.m_pVoice = nullptr;
+    }
 }
 
 bool StreamSoundPlayer::TryAllocLoader() {
