@@ -1,22 +1,11 @@
-set(NN_ATK_HEADERS
-  include/nn/atk.h
-  include/nn/atk/atk_AuxBus.h
-  include/nn/atk/atk_SoundArchivePlayer.h
-  include/nn/atk/atk_SoundDataManager.h
-  include/nn/atk/atk_SoundPlayer.h
-  include/nn/atk/detail/atk_AdvancedWaveSoundRuntime.h
-  include/nn/atk/detail/atk_BasicSound.h
-  include/nn/atk/detail/atk_SequenceSoundRuntime.h
-  include/nn/atk/detail/atk_SoundArchiveManager.h
-  include/nn/atk/detail/atk_StreamSoundRuntime.h
-  include/nn/atk/detail/atk_WaveSoundRuntime.h
+file(GLOB_RECURSE NN_ATK_HEADERS CONFIGURE_DEPENDS
+  include/*.h
+)
+file(GLOB_RECURSE NN_ATK_SOURCES CONFIGURE_DEPENDS
+  src/*.cpp
 )
 
-set(NN_ATK_SOURCES
-  src/atk/atk_Stub.cpp
-)
-
-add_library(nn_atk OBJECT ${NN_ATK_SOURCES})
+add_library(nn_atk STATIC ${NN_ATK_SOURCES})
 
 target_sources(nn_atk PUBLIC
   FILE_SET HEADERS
@@ -24,18 +13,8 @@ target_sources(nn_atk PUBLIC
   FILES ${NN_ATK_HEADERS}
 )
 
-set_target_properties(nn_atk PROPERTIES
-    LINKER_LANGUAGE CXX
-    VERIFY_INTERFACE_HEADER_SETS ON
-)
+set_target_properties(nn_atk PROPERTIES VERIFY_INTERFACE_HEADER_SETS ON)
 
-target_include_directories(nn_atk PUBLIC include/)
-
-target_nn_ver(nn_atk PUBLIC NN_WARE)
-target_compile_options(nn_atk INTERFACE
-    -fno-strict-aliasing
-    -fno-exceptions
-    -Wall
-    -Wextra
-    -Wno-invalid-offsetof
-)
+nnware_ver(nn_atk)
+target_compile_options(nn_atk PRIVATE ${NNWARE_COMPILE_FLAGS})
+nnware_header_verification_compile_options(nn_atk)

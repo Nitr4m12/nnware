@@ -1,12 +1,11 @@
-set(NN_FONT_HEADERS
-  include/nn/font/font_Util.h
+file(GLOB_RECURSE NN_FONT_HEADERS CONFIGURE_DEPENDS
+  include/*.h
+)
+file(GLOB_RECURSE NN_FONT_SOURCES CONFIGURE_DEPENDS
+  src/*.cpp
 )
 
-set(NN_FONT_SOURCES
-  src/font/font_Stub.cpp
-)
-
-add_library(nn_font OBJECT ${NN_FONT_SOURCES})
+add_library(nn_font STATIC ${NN_FONT_SOURCES})
 
 target_sources(nn_font PUBLIC
   FILE_SET HEADERS
@@ -14,18 +13,8 @@ target_sources(nn_font PUBLIC
   FILES ${NN_FONT_HEADERS}
 )
 
-set_target_properties(nn_font PROPERTIES
-    LINKER_LANGUAGE CXX
-    VERIFY_INTERFACE_HEADER_SETS ON
-)
+set_target_properties(nn_font PROPERTIES VERIFY_INTERFACE_HEADER_SETS ON)
 
-target_include_directories(nn_font PUBLIC include/)
-
-target_nn_ver(nn_font PUBLIC NN_WARE)
-target_compile_options(nn_font INTERFACE
-    -fno-strict-aliasing
-    -fno-exceptions
-    -Wall
-    -Wextra
-    -Wno-invalid-offsetof
-)
+nnware_ver(nn_font)
+target_compile_options(nn_font PRIVATE ${NNWARE_COMPILE_FLAGS})
+nnware_header_verification_compile_options(nn_font)

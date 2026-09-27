@@ -30,6 +30,17 @@ tasks:
       - task: cmake
         vars:
           CMAKE_ARGS: -DNNSDK_DIR=$(pwd)/lib/nnsdk
+      - >
+        cmake -G Ninja -B test/header_check/build -S test/header_check
+        -DNN_SDK=1.2.3 
+        -DNN_WARE=4.5.6 
+        -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+        -DCMAKE_CXX_STANDARD=17
+        -DCMAKE_C_COMPILER=clang
+        -DCMAKE_CXX_COMPILER=clang++
+        -DCMAKE_C_FLAGS='-D__aarch64__'
+        -DCMAKE_CXX_FLAGS='-D__aarch64__'
+        -DNNSDK_DIR=$(pwd)/lib/nnsdk
   cmake:
     cmds:
       - >
@@ -51,8 +62,9 @@ tasks:
     vars:
       VERIFY_TARGETS: '{{._MODULES2 | replace " " "" | replace "," "$ ^" | replace "^" "--target nn_" | replace "$" "_verify_interface_header_sets"}}'
     cmds:
-      - cmake --build build
+      # the header check test already builds all the libs so we don't need an extra --build build here
       - cmake --build build {{.VERIFY_TARGETS}}
+      - cmake --build test/header_check/build
 
   check:
     desc: Run clang-format and clang-tidy checks
@@ -77,6 +89,7 @@ tasks:
     desc: Remove CMake build files
     cmds:
       - rm -rf build
+      - rm -rf test/*/build
 
   clang-format:
     cmds:

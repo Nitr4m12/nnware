@@ -1,12 +1,11 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.24)
 
 project(NintendoWare C CXX)
-set(NINTENDOWARE_PATH "${CMAKE_CURRENT_SOURCE_DIR}")
 
 # Downstream projects should set something like:
 # set(NN_WARE 1.2.3)
-function(target_nn_ver LIB_TARGET SCOPE ID)
-  set(VER ${${ID}})
+function(nnware_ver TARGET)
+  set(VER ${NN_WARE})
   string(REPLACE "." ";" VER "${VER}")
 
   list(LENGTH VER SEGS)
@@ -15,36 +14,42 @@ function(target_nn_ver LIB_TARGET SCOPE ID)
     list(SUBLIST DEF_VER ${SEGS} -1 DEF_VER)
     list(APPEND VER ${DEF_VER})
 
-    message(AUTHOR_WARNING "${ID} semver is not complete (%d.%d.%d): ${${ID}}")
+    message(AUTHOR_WARNING "NN_WARE semver is malformed (should be %d.%d.%d): ${NN_WARE}")
   endif()
 
   list(POP_FRONT VER MAJOR MINOR PATCH)
-  
+
   foreach(VAR IN ITEMS MAJOR MINOR PATCH)
-    target_compile_definitions(${LIB_TARGET} ${SCOPE} ${ID}_${VAR}=${${VAR}})
+    target_compile_definitions(${TARGET} PUBLIC NN_WARE_${VAR}=${${VAR}})
   endforeach()
 endfunction()
 
-function(find_nnsdk)
-  if(NOT TARGET nnSdk)
-    if(DEFINED NNSDK_DIR)
-      if(IS_DIRECTORY "${NNSDK_DIR}")
-        message(STATUS "Found NintendoSDK: ${NNSDK_DIR}")
-        add_subdirectory(${NNSDK_DIR} ${NNSDK_DIR}/build)
-      else()
-        message(FATAL_ERROR "NNSDK_DIR is provided, but NintendoSDK is not found at: ${NNSDK_DIR}")
-      endif()
-    else()
-      message(FATAL_ERROR "NintendoSDK cannot be found. Ensure your project adds open-ead/nnsdk as a dependency (submodule), and your CMakeLists.txt contains `add_subdirectory(path/to/nnsdk)`")
-    endif()
-  endif()
+# these flags are shared with all modules
+set(NNWARE_COMPILE_FLAGS
+  -fno-strict-aliasing
+  -fno-exceptions
+  -Wall
+  -Wextra
+  -Wno-invalid-offsetof
+  # some WIP stuff might contain unused fields
+  -Wno-unused-private-field
+)
+function(nnware_header_verification_compile_options TARGET)
+  target_compile_options(${TARGET} INTERFACE
+    "$<$<STREQUAL:$<TARGET_PROPERTY:NAME>,${TARGET}_verify_interface_header_sets>:${NNWARE_COMPILE_FLAGS}>"
+  )
 endfunction()
 
-function(find_nnsdk_module NN_SDK_MODULE)
-  if(NOT TARGET ${NN_SDK_MODULE})
-    message(FATAL_ERROR "Cannot find ${NN_SDK_MODULE}. You appear to have a broken or unsupported NintendoSDK. Please use open-ead/nnsdk.")
+if(NOT TARGET nnSdk)
+  if(NOT DEFINED NNSDK_DIR)
+    message(FATAL_ERROR "NintendoSDK cannot be found. Ensure your project adds open-ead/nnsdk as a dependency (submodule), and your CMakeLists.txt contains `add_subdirectory(path/to/nnsdk)`")
   endif()
-endfunction()
+  if(NOT IS_DIRECTORY "${NNSDK_DIR}")
+    message(FATAL_ERROR "NNSDK_DIR is provided, but NintendoSDK is not found at: ${NNSDK_DIR}")
+  endif()
+  message(STATUS "Found NintendoSDK: ${NNSDK_DIR}")
+  add_subdirectory(${NNSDK_DIR} nnsdk)
+endif()
 
 add_subdirectory(lib/atk)
 add_subdirectory(lib/font)
