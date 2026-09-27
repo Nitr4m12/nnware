@@ -50,7 +50,7 @@ public:
 
     class PlayerCallback {
     public:
-        virtual ~PlayerCallback();
+        virtual ~PlayerCallback() = default;
 
         virtual void OnUpdateFrameSoundThread() = 0;
         virtual void OnUpdateFrameSoundThreadWithAudioFrameFrequency() = 0;

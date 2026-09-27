@@ -22,7 +22,7 @@ static_assert(sizeof(StreamChannel) == 0x1080);
 class StreamTrack {
 public:
     StreamTrack() = default;
-    ~StreamTrack();
+    ~StreamTrack() = default;
 
 private:
     bool m_ActiveFlag;
