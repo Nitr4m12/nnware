@@ -13,8 +13,8 @@ struct StreamChannel {
 
     void* m_pBufferAddress;
     MultiVoice* m_pVoice;
-    WaveBuffer m_WaveBuffer[32];
-    AdpcmContext m_AdpcmContext[32];
+    WaveBuffer m_WaveBuffer[StreamDataLoadTaskMax];
+    AdpcmContext m_AdpcmContext[StreamDataLoadTaskMax];
     UpdateType m_UpdateType;
 };
 static_assert(sizeof(StreamChannel) == 0x1080);
