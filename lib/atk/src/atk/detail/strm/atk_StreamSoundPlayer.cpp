@@ -111,4 +111,15 @@ void StreamSoundPlayer::FreeStreamBuffers() {
     }
 }
 
+void StreamSoundPlayer::FreeVoices() {
+    for (int ch{0}; ch < m_ChannelCount; ++ch) {
+        StreamChannel& channel{m_Channels[ch]};
+
+        if (channel.m_pVoice != nullptr) {
+            channel.m_pVoice->Free();
+            channel.m_pVoice = nullptr;
+        }
+    }
+}
+
 }  // namespace nn::atk::detail::driver
