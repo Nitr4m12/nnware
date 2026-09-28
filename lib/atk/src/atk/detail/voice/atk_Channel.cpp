@@ -42,8 +42,8 @@ Channel* Channel::AllocChannel(int voiceChannelCount, int priority, ChannelCallb
 
     channel->m_AllocFlag = 1;
 
-    MultiVoice* voice{MultiVoiceManager::GetInstance()->AllocVoice(voiceChannelCount, priority,
-                                                                   VoiceCallbackFunc, channel)};
+    MultiVoice* voice{MultiVoiceManager::GetInstance().AllocVoice(voiceChannelCount, priority,
+                                                                  VoiceCallbackFunc, channel)};
 
     if (voice == nullptr) {
         FreeChannel(channel);

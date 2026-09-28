@@ -45,7 +45,7 @@ public:
 
     VoiceList* GetVoiceList() const;
 
-    static MultiVoiceManager* GetInstance();
+    static MultiVoiceManager& GetInstance();
 
 private:
     bool m_Initialized;
