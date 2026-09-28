@@ -76,11 +76,11 @@ public:
         float pitch;
         uint8_t mainSend;
         uint8_t fxSend[AuxBus_Count];
-#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER >= NN_MAKE_VER(3, 0, 0)
         DecodeMode decodeMode;
 #endif
     };
-#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
     static_assert(sizeof(SetupArg) == 0x98);
 #else
     static_assert(sizeof(SetupArg) == 0xa0);
@@ -392,7 +392,7 @@ private:
     int m_DelayCount;
     uint16_t m_AssignNumber;
     uint8_t m_FileType;
-#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER >= NN_MAKE_VER(3, 0, 0)
     DecodeMode m_DecodeMode;
 #endif
     bool m_LoopFlag;

@@ -356,7 +356,7 @@ struct DriverCommandStreamSoundSetup : Command {
     driver::StreamSoundPlayer* player;
     driver::StreamSoundPlayer::SetupArg arg;
 };
-#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
 static_assert(sizeof(DriverCommandStreamSoundSetup) == 0xb8);
 #else
 static_assert(sizeof(DriverCommandStreamSoundSetup) == 0xc0);
