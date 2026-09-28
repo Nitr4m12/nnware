@@ -8,6 +8,8 @@ const uint32_t LoopRegionSizeMin{nn::atk::DataBlockSizeMarginSamples};
 
 namespace nn::atk::detail::driver {
 
+uint16_t StreamSoundPlayer::g_AssignNumberCount{};
+
 StreamSoundPlayer::StreamSoundPlayer() = default;
 
 StreamSoundPlayer::~StreamSoundPlayer() {
@@ -154,13 +156,26 @@ void StreamSoundPlayer::Setup(const SetupArg& arg) {
     }
 
     m_FileType = arg.fileType;
+#if NN_WARE_VER >= NN_MAKE_VER(3, 0, 0)
     m_DecodeMode = arg.decodeMode;
+#endif
     m_LoopFlag = arg.loopFlag;
     m_LoopStart = arg.loopStart;
     m_LoopEnd = arg.loopEnd;
-    m_AssignNumber = g_AssignNumberCount++;
-    m_pLoader->SetAssignNumber(g_AssignNumberCount);
+
+    uint16_t assignNumberCount{g_AssignNumberCount};
+    g_AssignNumberCount = g_AssignNumberCount + 1;
+
+    m_AssignNumber = assignNumberCount;
+    m_pLoader->SetAssignNumber(assignNumberCount);
+
     m_ItemData.Set(arg);
+
+    if (!SetupTrack(arg))
+        return;
+
+    m_pBufferPool = arg.pBufferPool;
+    m_IsInitialized = true;
 }
 
 void StreamSoundPlayer::ItemData::Set(const SetupArg& arg) {
@@ -174,14 +189,6 @@ void StreamSoundPlayer::ItemData::Set(const SetupArg& arg) {
 bool StreamSoundPlayer::SetupTrack(const SetupArg& arg) {
     uint32_t bitMask{arg.allocTrackFlag};
     uint32_t trackIndex{0};
-
-#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
-    if (bitMask == 0) {
-        m_TrackCount = 0;
-        Finalize();
-        return false;
-    }
-#endif
 
     while (bitMask != 0) {
         if (bitMask & 1) {
