@@ -215,4 +215,23 @@ bool StreamSoundPlayer::SetupTrack(const SetupArg& arg) {
     return true;
 }
 
+void StreamSoundPlayer::SetPrepareBaseArg(const PrepareBaseArg& baseArg) {
+    m_DelayCount = baseArg.delayCount != 0 ? baseArg.delayCount : ToDelayCount(baseArg.delayTime);
+    m_UseDelayCount = m_DelayCount > 0;
+    m_StartOffsetType = baseArg.startOffsetType;
+    m_StartOffset = baseArg.offset;
+    m_UpdateType = baseArg.updateType;
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    m_SubMixIndex = baseArg.subMixIndex;
+#endif
+
+    m_pLoader->SetRegionCallback(baseArg.regionCallback, baseArg.regionCallbackArg);
+    m_pLoader->SetStreamSoundPlayer(this);
+    m_pLoader->SetStreamDataInfo(&m_StreamDataInfo);
+    m_pLoader->SetFileType(static_cast<StreamFileType>(m_FileType));
+    m_pLoader->SetDecodeMode(m_DecodeMode);
+
+    SetActiveFlag(true);
+}
+
 }  // namespace nn::atk::detail::driver

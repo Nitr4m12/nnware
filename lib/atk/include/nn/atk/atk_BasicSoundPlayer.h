@@ -118,7 +118,9 @@ protected:
         m_pPlayerHeapDataManager = mgr;
     }
 
-    int32_t ToDelayCount(int32_t delayTimeMilliSec) { return delayTimeMilliSec / 5; };
+    int32_t ToDelayCount(int32_t delayTimeMilliSec) {
+        return static_cast<uint32_t>(delayTimeMilliSec) / 5;
+    }
 
     void SetActiveFlag(bool isActive) { m_ActiveFlag = isActive; }
     void SetStartedFlag(bool isStarted) { m_StartedFlag = isStarted; }
