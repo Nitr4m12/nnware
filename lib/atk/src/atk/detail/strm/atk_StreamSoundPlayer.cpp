@@ -4,9 +4,11 @@
 #include <nn/atk/fnd/basis/atkfnd_Inlines.h>
 
 namespace {
+
 const uint8_t OpusFileType{nn::atk::detail::StreamFileType_Opus};
 const float OpusPitchMax{4.0f};
 const uint32_t LoopRegionSizeMin{nn::atk::DataBlockSizeMarginSamples};
+
 }  // anonymous namespace
 
 namespace nn::atk::detail::driver {
@@ -283,6 +285,28 @@ bool StreamSoundPlayer::ApplyStreamDataInfo(const StreamDataInfoDetail& streamDa
     }
 
     ApplyTrackDataInfo(streamDataInfo);
+    return true;
+}
+
+bool StreamSoundPlayer::SetupPlayer() {
+    if (m_StreamDataInfo.blockSize > StreamSoundLoader::DataBlockSizeBase)
+        return false;
+
+    const size_t strmBufferSize{
+        m_pBufferPool->GetBlockSize() /
+        (m_StreamDataInfo.blockSize + StreamSoundLoader::DataBlockSizeMargin)};
+
+    m_BufferBlockCount = strmBufferSize;
+
+    if (m_BufferBlockCount < StreamSoundLoader::LoadBufferChannelCount)
+        return false;
+
+    if (m_BufferBlockCount > 32)
+        m_BufferBlockCount = 32;
+
+    m_LoadingBufferBlockIndex = 0;
+    m_PlayingBufferBlockIndex = 0;
+    m_LastPlayFinishBufferBlockIndex = 0;
     return true;
 }
 
