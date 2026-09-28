@@ -1,5 +1,6 @@
 #include <nn/atk/atk_StreamSoundPlayer.h>
 
+#include <nn/atk/atk_MultiVoiceManager.h>
 #include <nn/atk/atk_SoundSystem.h>
 #include <nn/atk/fnd/basis/atkfnd_Inlines.h>
 
@@ -277,6 +278,50 @@ void StreamSoundPlayer::RequestLoadHeader(const PrepareArg& arg) {
     m_pLoader->RequestLoadHeader();
 }
 
+// NON_MATCHING: required StreamSoundPlayer::AllocVoices
+void StreamSoundPlayer::PreparePrefetch(const PreparePrefetchArg& arg) {
+    if (!m_IsInitialized)
+        return;
+
+    m_pStreamPrefetchFile = arg.strmPrefetchFile;
+
+    StreamSoundPrefetchFileReader reader;
+    reader.Initialize(m_pStreamPrefetchFile);
+
+    if (!ReadPrefetchFile(reader))
+        return;
+
+    SetPrepareBaseArg(arg.baseArg);
+
+    if (reader.IsIncludeRegionInfo()) {
+        m_StreamDataInfo.isRegionIndexCheckEnabled = reader.IsRegionIndexCheckAvailable();
+
+        if (m_pLoader == nullptr)
+            return;
+
+        if (!m_pLoader->GetRegionManager().InitializeRegion(&reader, &m_StreamDataInfo))
+            return;
+
+        if (!m_pLoader->GetRegionManager().IsInFirstRegion()) {
+            SetActiveFlag(false);
+            return;
+        }
+    }
+
+    ApplyStreamDataInfo(m_StreamDataInfo);
+
+    if (!SetupPlayer())
+        return;
+
+    // if (!AllocVoices())
+    //     return;
+
+    FreeStreamBuffers();
+
+    m_IsPreparedPrefetch = true;
+    LoadPrefetchBlocks(reader);
+}
+
 bool StreamSoundPlayer::ApplyStreamDataInfo(const StreamDataInfoDetail& streamDataInfo) {
     if (!IsValidStartOffset(streamDataInfo)) {
         SetFinishFlag(true);
@@ -307,6 +352,29 @@ bool StreamSoundPlayer::SetupPlayer() {
     m_LoadingBufferBlockIndex = 0;
     m_PlayingBufferBlockIndex = 0;
     m_LastPlayFinishBufferBlockIndex = 0;
+    return true;
+}
+
+// NON_MATCHING
+bool StreamSoundPlayer::AllocVoices() {
+    for (int channelIndex{0}; channelIndex < m_ChannelCount; ++channelIndex) {
+        StreamChannel& channel{m_Channels[channelIndex]};
+
+        MultiVoice* voice{MultiVoiceManager::GetInstance().AllocVoice(1, 0xff, VoiceCallbackFunc,
+                                                                      channel.m_pBufferAddress)};
+
+        if (voice == nullptr) {
+            for (int i{channelIndex}; i > 0; --i) {
+                StreamChannel& c{m_Channels[i]};
+                if (c.m_pVoice != nullptr) {
+                    c.m_pVoice->Free();
+                    c.m_pVoice = nullptr;
+                }
+            }
+            return false;
+        }
+    }
+
     return true;
 }
 
