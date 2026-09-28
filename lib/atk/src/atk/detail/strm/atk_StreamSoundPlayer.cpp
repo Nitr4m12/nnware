@@ -1,7 +1,7 @@
 #include <nn/atk/atk_StreamSoundPlayer.h>
 
 #include <nn/atk/atk_SoundSystem.h>
-#include "nn/atk/fnd/basis/atkfnd_Inlines.h"
+#include <nn/atk/fnd/basis/atkfnd_Inlines.h>
 
 namespace {
 const uint8_t OpusFileType{nn::atk::detail::StreamFileType_Opus};
@@ -273,6 +273,17 @@ void StreamSoundPlayer::RequestLoadHeader(const PrepareArg& arg) {
     m_pLoader->InitializeFileStream(isStreamOpenFailureHalt);
 
     m_pLoader->RequestLoadHeader();
+}
+
+bool StreamSoundPlayer::ApplyStreamDataInfo(const StreamDataInfoDetail& streamDataInfo) {
+    if (!IsValidStartOffset(streamDataInfo)) {
+        SetFinishFlag(true);
+        Stop();
+        return false;
+    }
+
+    ApplyTrackDataInfo(streamDataInfo);
+    return true;
 }
 
 bool StreamSoundPlayer::IsValidStartOffset(const StreamDataInfoDetail& streamDataInfo) {
