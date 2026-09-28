@@ -147,4 +147,28 @@ void StreamSoundPlayer::FreeLoader() {
     m_pLoader = nullptr;
 }
 
+void StreamSoundPlayer::Setup(const SetupArg& arg) {
+    if (m_pLoader == nullptr) {
+        m_SetupArg = arg;
+        return;
+    }
+
+    m_FileType = arg.fileType;
+    m_DecodeMode = arg.decodeMode;
+    m_LoopFlag = arg.loopFlag;
+    m_LoopStart = arg.loopStart;
+    m_LoopEnd = arg.loopEnd;
+    m_AssignNumber = g_AssignNumberCount++;
+    m_pLoader->SetAssignNumber(g_AssignNumberCount);
+    m_ItemData.Set(arg);
+}
+
+void StreamSoundPlayer::ItemData::Set(const SetupArg& arg) {
+    pitch = arg.pitch;
+    mainSend = arg.mainSend / 127.0f - 1.0f;
+
+    for (int i{0}; i < AuxBus_Count; ++i)
+        fxSend[i] = arg.fxSend[i] / 127.0f;
+}
+
 }  // namespace nn::atk::detail::driver
