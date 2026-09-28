@@ -64,7 +64,7 @@ struct SoundSystem {
     constexpr static uint32_t SoundThreadIntervalUsec = 5000;
 
     constexpr static int32_t g_TaskThreadFsPriority = 1;
-    constexpr static bool g_IsStreamOpenFailureHalt = true;
+    static bool g_IsStreamOpenFailureHalt;
     constexpr static bool g_IsTaskThreadEnabled = true;
     constexpr static bool g_IsManagingMemoryPool = true;
     constexpr static uint32_t g_UserEffectCount = 10;
@@ -311,7 +311,13 @@ struct SoundSystem {
     static CircularBufferSinkState GetCircularBufferSinkState();
     static detail::SoundInstanceConfig GetSoundInstanceConfig();
 
-    static bool detail_IsStreamOpenFailureHaltEnabled() { return true; }
+    static bool detail_IsStreamOpenFailureHaltEnabled() {
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+        return true;
+#else
+        return g_IsStreamOpenFailureHalt;
+#endif
+    }
 };
 
 }  // namespace nn::atk

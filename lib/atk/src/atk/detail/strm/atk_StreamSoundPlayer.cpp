@@ -217,6 +217,31 @@ bool StreamSoundPlayer::SetupTrack(const SetupArg& arg) {
     return true;
 }
 
+void StreamSoundPlayer::Prepare(const PrepareArg& arg) {
+    if (!m_IsRegisterPlayerCallback) {
+        SoundThread::GetInstance().RegisterPlayerCallback(this);
+        m_IsRegisterPlayerCallback = true;
+    }
+
+    if (m_pLoader == nullptr) {
+        m_PrepareArg = arg;
+        m_IsSucceedPrepare = false;
+        return;
+    }
+
+    if (!m_IsInitialized)
+        return;
+
+    if (!m_IsPreparedPrefetch)
+        SetPrepareBaseArg(arg.baseArg);
+
+    m_ReportLoadingDelayFlag = false;
+    m_IsStoppedByLoadingDelay = false;
+    m_IsSucceedPrepare = true;
+
+    RequestLoadHeader(arg);
+}
+
 void StreamSoundPlayer::SetPrepareBaseArg(const PrepareBaseArg& baseArg) {
     m_DelayCount = baseArg.delayCount != 0 ? baseArg.delayCount : ToDelayCount(baseArg.delayTime);
     m_UseDelayCount = m_DelayCount > 0;
