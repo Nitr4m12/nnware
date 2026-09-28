@@ -83,4 +83,23 @@ bool StreamSoundPlayer::TryAllocLoader() {
     return true;
 }
 
+void StreamSoundPlayer::FinishPlayer() {
+    if (m_pLoader != nullptr)
+        m_pLoader->CancelRequest();
+
+    for (int ch{0}; ch < m_ChannelCount; ++ch) {
+        MultiVoice* voice{m_Channels[ch].m_pVoice};
+        if (voice != nullptr)
+            voice->Stop();
+    }
+
+    if (m_IsRegisterPlayerCallback) {
+        SoundThread::GetInstance().UnregisterPlayerCallback(this);
+        m_IsRegisterPlayerCallback = false;
+    }
+
+    if (IsStarted())
+        SetStartedFlag(false);
+}
+
 }  // namespace nn::atk::detail::driver
