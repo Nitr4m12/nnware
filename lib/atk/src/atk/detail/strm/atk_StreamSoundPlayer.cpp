@@ -275,6 +275,15 @@ void StreamSoundPlayer::RequestLoadHeader(const PrepareArg& arg) {
     m_pLoader->RequestLoadHeader();
 }
 
+bool StreamSoundPlayer::IsValidStartOffset(const StreamDataInfoDetail& streamDataInfo) {
+    if (!streamDataInfo.loopFlag) {
+        if (GetStartOffsetSamples(streamDataInfo) >= streamDataInfo.sampleCount)
+            return false;
+    }
+
+    return true;
+}
+
 position_t StreamSoundPlayer::GetStartOffsetSamples(const StreamDataInfoDetail& streamDataInfo) {
     position_t startOffsetSamples{0};
 
