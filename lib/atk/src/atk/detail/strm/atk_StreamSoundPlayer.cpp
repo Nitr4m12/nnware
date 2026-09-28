@@ -1,5 +1,7 @@
 #include <nn/atk/atk_StreamSoundPlayer.h>
 
+#include <nn/atk/atk_SoundSystem.h>
+
 namespace {
 const uint8_t OpusFileType{nn::atk::detail::StreamFileType_Opus};
 const float OpusPitchMax{4.0f};
@@ -232,6 +234,19 @@ void StreamSoundPlayer::SetPrepareBaseArg(const PrepareBaseArg& baseArg) {
     m_pLoader->SetDecodeMode(m_DecodeMode);
 
     SetActiveFlag(true);
+}
+
+void StreamSoundPlayer::RequestLoadHeader(const PrepareArg& arg) {
+    m_pLoader->SetLoopParameter(m_LoopFlag, m_LoopStart, m_LoopEnd);
+    m_pLoader->SetFilePath(arg.baseArg.filePath, FilePathMax);
+    m_pLoader->SetFileStreamHookParam(arg.baseArg.fileStreamHookParam);
+    m_pLoader->SetExternalData(arg.baseArg.pExternalData, arg.baseArg.externalDataSize);
+    m_pLoader->SetCacheBuffer(arg.cacheBuffer, arg.cacheSize);
+
+    bool isStreamOpenFailureHalt{SoundSystem::detail_IsStreamOpenFailureHaltEnabled()};
+    m_pLoader->InitializeFileStream(isStreamOpenFailureHalt);
+
+    m_pLoader->RequestLoadHeader();
 }
 
 }  // namespace nn::atk::detail::driver

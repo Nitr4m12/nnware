@@ -310,6 +310,8 @@ struct SoundSystem {
 
     static CircularBufferSinkState GetCircularBufferSinkState();
     static detail::SoundInstanceConfig GetSoundInstanceConfig();
+
+    static bool detail_IsStreamOpenFailureHaltEnabled() { return true; }
 };
 
 }  // namespace nn::atk
