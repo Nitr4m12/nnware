@@ -30,7 +30,7 @@ struct TrackDataInfo {
     uint8_t biquadType;
     uint8_t biquadValue;
     uint8_t channelCount;
-    uint8_t channelIndex[2];
+    uint8_t channelIndex[WaveChannelMax];
 
     void Dump() const;
 };

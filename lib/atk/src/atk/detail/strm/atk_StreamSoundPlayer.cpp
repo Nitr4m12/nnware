@@ -171,4 +171,41 @@ void StreamSoundPlayer::ItemData::Set(const SetupArg& arg) {
         fxSend[i] = arg.fxSend[i] / 127.0f;
 }
 
+bool StreamSoundPlayer::SetupTrack(const SetupArg& arg) {
+    uint32_t bitMask{arg.allocTrackFlag};
+    uint32_t trackIndex{0};
+
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+    if (bitMask == 0) {
+        m_TrackCount = 0;
+        Finalize();
+        return false;
+    }
+#endif
+
+    while (bitMask != 0) {
+        if (bitMask & 1) {
+            if (trackIndex > StreamTrackCount - 1)
+                break;
+            m_Tracks[trackIndex].m_ActiveFlag = true;
+        }
+        bitMask >>= 1;
+        ++trackIndex;
+    }
+
+    m_TrackCount = trackIndex <= 8 ? trackIndex : 8;
+
+    if (m_TrackCount == 0) {
+        Finalize();
+        return false;
+    }
+
+    for (int i{0}; i < static_cast<int>(StreamTrackCount); ++i) {
+        TrackDataInfo& data{m_StreamDataInfo.trackInfo[i]};
+        data = arg.trackInfos.track[i];
+    }
+
+    return true;
+}
+
 }  // namespace nn::atk::detail::driver
