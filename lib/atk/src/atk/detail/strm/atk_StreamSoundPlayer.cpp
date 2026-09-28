@@ -83,6 +83,23 @@ bool StreamSoundPlayer::TryAllocLoader() {
     return true;
 }
 
+void StreamSoundPlayer::Finalize() {
+    FinishPlayer();
+
+    if (!m_IsInitialized)
+        return;
+
+    m_IsFinalizing = true;
+    FreeStreamBuffers();
+    FreeVoices();
+    FreeLoader();
+
+    m_pBufferPool = nullptr;
+    BasicSoundPlayer::Finalize();
+    SetActiveFlag(false);
+    m_IsInitialized = false;
+}
+
 void StreamSoundPlayer::FinishPlayer() {
     if (m_pLoader != nullptr)
         m_pLoader->CancelRequest();
