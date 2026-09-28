@@ -307,7 +307,7 @@ private:
 
     bool IsStoppedByLoadingDelay() const;
 
-    void SetupTrack(const SetupArg& arg);
+    bool SetupTrack(const SetupArg& arg);
     void SetPrepareBaseArg(const PrepareBaseArg& baseArg);
 
     void RequestLoadHeader(const PrepareArg& arg);
