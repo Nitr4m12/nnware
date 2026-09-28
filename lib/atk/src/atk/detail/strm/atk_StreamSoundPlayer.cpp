@@ -1,6 +1,7 @@
 #include <nn/atk/atk_StreamSoundPlayer.h>
 
 #include <nn/atk/atk_SoundSystem.h>
+#include "nn/atk/fnd/basis/atkfnd_Inlines.h"
 
 namespace {
 const uint8_t OpusFileType{nn::atk::detail::StreamFileType_Opus};
@@ -272,6 +273,22 @@ void StreamSoundPlayer::RequestLoadHeader(const PrepareArg& arg) {
     m_pLoader->InitializeFileStream(isStreamOpenFailureHalt);
 
     m_pLoader->RequestLoadHeader();
+}
+
+position_t StreamSoundPlayer::GetStartOffsetSamples(const StreamDataInfoDetail& streamDataInfo) {
+    position_t startOffsetSamples{0};
+
+    switch (m_StartOffsetType) {
+    case StartOffsetType_Sample:
+        startOffsetSamples = m_StartOffset;
+        break;
+    case StartOffsetType_Millisec:
+        startOffsetSamples = (static_cast<uint64_t>(m_StartOffset) * streamDataInfo.sampleRate) / 8;
+        startOffsetSamples = fnd::Clamp<uint64_t>(startOffsetSamples / 125, 0, 0xffffffff);
+        break;
+    }
+
+    return startOffsetSamples;
 }
 
 }  // namespace nn::atk::detail::driver
