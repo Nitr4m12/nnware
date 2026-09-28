@@ -278,7 +278,6 @@ void StreamSoundPlayer::RequestLoadHeader(const PrepareArg& arg) {
     m_pLoader->RequestLoadHeader();
 }
 
-// NON_MATCHING: required StreamSoundPlayer::AllocVoices
 void StreamSoundPlayer::PreparePrefetch(const PreparePrefetchArg& arg) {
     if (!m_IsInitialized)
         return;
@@ -308,15 +307,16 @@ void StreamSoundPlayer::PreparePrefetch(const PreparePrefetchArg& arg) {
         }
     }
 
-    ApplyStreamDataInfo(m_StreamDataInfo);
+    if (!ApplyStreamDataInfo(m_StreamDataInfo))
+        return;
 
     if (!SetupPlayer())
         return;
 
-    // if (!AllocVoices())
-    //     return;
-
-    FreeStreamBuffers();
+    if (!AllocVoices()) {
+        FreeStreamBuffers();
+        return;
+    }
 
     m_IsPreparedPrefetch = true;
     LoadPrefetchBlocks(reader);
@@ -396,8 +396,9 @@ position_t StreamSoundPlayer::GetStartOffsetSamples(const StreamDataInfoDetail& 
         startOffsetSamples = m_StartOffset;
         break;
     case StartOffsetType_Millisec:
-        startOffsetSamples = (static_cast<uint64_t>(m_StartOffset) * streamDataInfo.sampleRate) / 8;
-        startOffsetSamples = fnd::Clamp<uint64_t>(startOffsetSamples / 125, 0, 0xffffffff);
+        startOffsetSamples =
+            (static_cast<uint64_t>(m_StartOffset) * streamDataInfo.sampleRate) / 1000;
+        startOffsetSamples = fnd::Clamp<uint64_t>(startOffsetSamples, 0, 0xffffffff);
         break;
     }
 
