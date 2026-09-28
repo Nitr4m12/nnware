@@ -122,4 +122,12 @@ void StreamSoundPlayer::FreeVoices() {
     }
 }
 
+void StreamSoundPlayer::FreeLoader() {
+    if (m_pLoader == nullptr || m_pLoaderManager == nullptr)
+        return;
+
+    m_pLoaderManager->Free(m_pLoader);
+    m_pLoader = nullptr;
+}
+
 }  // namespace nn::atk::detail::driver
