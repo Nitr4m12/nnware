@@ -102,4 +102,13 @@ void StreamSoundPlayer::FinishPlayer() {
         SetStartedFlag(false);
 }
 
+void StreamSoundPlayer::FreeStreamBuffers() {
+    for (int index{0}; index < m_ChannelCount; ++index) {
+        if (m_Channels[index].m_pBufferAddress != nullptr) {
+            m_pBufferPool->Free(m_Channels[index].m_pBufferAddress);
+            m_Channels[index].m_pBufferAddress = nullptr;
+        }
+    }
+}
+
 }  // namespace nn::atk::detail::driver
