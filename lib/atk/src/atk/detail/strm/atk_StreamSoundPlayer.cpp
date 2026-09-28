@@ -355,16 +355,15 @@ bool StreamSoundPlayer::SetupPlayer() {
     return true;
 }
 
-// NON_MATCHING
 bool StreamSoundPlayer::AllocVoices() {
     for (int channelIndex{0}; channelIndex < m_ChannelCount; ++channelIndex) {
         StreamChannel& channel{m_Channels[channelIndex]};
 
-        MultiVoice* voice{MultiVoiceManager::GetInstance().AllocVoice(1, 0xff, VoiceCallbackFunc,
-                                                                      channel.m_pBufferAddress)};
+        MultiVoice* voice{
+            MultiVoiceManager::GetInstance().AllocVoice(1, 0xff, VoiceCallbackFunc, &channel)};
 
         if (voice == nullptr) {
-            for (int i{channelIndex}; i > 0; --i) {
+            for (int i{0}; i < channelIndex; ++i) {
                 StreamChannel& c{m_Channels[i]};
                 if (c.m_pVoice != nullptr) {
                     c.m_pVoice->Free();
@@ -373,6 +372,8 @@ bool StreamSoundPlayer::AllocVoices() {
             }
             return false;
         }
+
+        channel.m_pVoice = voice;
     }
 
     return true;
