@@ -244,15 +244,26 @@ private:
 
         bool IsOverLastBlock(uint32_t blockIndex) { return blockIndex > lastBlockIndex; }
 
-        // TODO
-        uint32_t GetBlockOffsetFromLoopEnd(uint32_t blockIndex) {}
+        uint32_t GetBlockOffsetFromLoopEnd(uint32_t blockIndex) {
+            if (blockIndex - lastBlockIndex == 0)
+                return 0;
+
+            return (blockIndex - lastBlockIndex) - ((blockIndex - lastBlockIndex) / loopBlockCount) * loopBlockCount;
+        }
 
         bool IsLoopStartBlock(uint32_t blockIndex) { return loopStartInBlock == blockIndex; }
 
-        // TODO
         bool IsLastBlock(uint32_t blockIndex, uint32_t blockOffsetFromLoopEnd) {
-            if (blockOffsetFromLoopEnd == 0)
+            if (lastBlockIndex != 0)
                 return false;
+
+            if (blockIndex != lastBlockIndex)
+                return false;
+
+            if (blockOffsetFromLoopEnd == 0 || IsOverLastBlock(blockIndex))
+                return false;
+
+            return true;
         }
     };
     static_assert(sizeof(PrefetchIndexInfo) == 0x18);
