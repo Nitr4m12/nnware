@@ -488,8 +488,7 @@ bool StreamSoundPlayer::PreparePrefetchOnLoopStartBlock(PrefetchLoadDataParam* p
     m_PrefetchOffset = m_StreamDataInfo.blockSampleCount * (indexInfo.loopStartBlockIndex + 1);
 
     if (m_StreamDataInfo.sampleFormat == SampleFormat_DspAdpcm) {
-        if (!SetAdpcmLoopInfo(reader, m_StreamDataInfo, &m_PrefetchAdpcmParam[0],
-                              param->adpcmContext))
+        if (!SetAdpcmLoopInfo(reader, m_StreamDataInfo, m_PrefetchAdpcmParam, param->adpcmContext))
             return false;
 
         param->adpcmContextEnable = true;
@@ -506,6 +505,25 @@ void StreamSoundPlayer::PreparePrefetchOnLoopBlock(PrefetchLoadDataParam* param,
     param->prefetchBlockIndex = blockOffsetFromLoopEnd + indexInfo.loopStartBlockIndex - 1;
 
     m_PrefetchOffset += m_StreamDataInfo.blockSampleCount;
+}
+
+bool StreamSoundPlayer::PreparePrefetchOnNormalBlock(PrefetchLoadDataParam* param,
+                                                     uint32_t blockIndex,
+                                                     StreamSoundPrefetchFileReader& reader) {
+    param->samples = m_StreamDataInfo.blockSampleCount;
+    param->prefetchBlockBytes = m_StreamDataInfo.blockSize;
+    param->prefetchBlockIndex = blockIndex;
+
+    m_PrefetchOffset += m_StreamDataInfo.blockSampleCount;
+
+    if (m_StreamDataInfo.sampleFormat == SampleFormat_DspAdpcm && param->prefetchBlockIndex == 0) {
+        if (!SetAdpcmLoopInfo(reader, m_StreamDataInfo, m_PrefetchAdpcmParam, param->adpcmContext))
+            return false;
+
+        param->adpcmContextEnable = true;
+    }
+
+    return true;
 }
 
 }  // namespace nn::atk::detail::driver

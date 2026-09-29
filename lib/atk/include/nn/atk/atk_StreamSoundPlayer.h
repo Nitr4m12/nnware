@@ -355,7 +355,7 @@ private:
                                     uint32_t blockOffsetFromLoopEnd);
 
     bool PreparePrefetchOnNormalBlock(PrefetchLoadDataParam* param, uint32_t blockIndex,
-                                      StreamSoundPrefetchFileReader* reader);
+                                      StreamSoundPrefetchFileReader& reader);
 
     bool SetAdpcmInfo(StreamSoundPrefetchFileReader& reader,
                       const StreamDataInfoDetail& streamDataInfo, AdpcmParam* adpcmParam,
