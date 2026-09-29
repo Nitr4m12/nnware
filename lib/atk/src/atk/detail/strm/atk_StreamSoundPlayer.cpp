@@ -415,8 +415,21 @@ bool StreamSoundPlayer::LoadPrefetchBlocks(StreamSoundPrefetchFileReader& reader
     position_t sampleBeginPosition{0};
     size_t usedPrefetchMaxSize{0};
 
-    if (m_BufferBlockCount <= 0)
-        return false;
+    for (int blockIndex{0}; blockIndex < m_BufferBlockCount; ++blockIndex) {
+        PrefetchLoadDataParam loadDataParam;
+        loadDataParam.Initialize();
+
+        uint32_t blockOffsetFromLoopEnd{0};
+        if (!indexInfo.IsOverLastBlock(blockIndex))
+            blockOffsetFromLoopEnd = indexInfo.GetBlockOffsetFromLoopEnd(blockIndex);
+
+        if (indexInfo.IsLastBlock(blockIndex, blockOffsetFromLoopEnd)) {
+
+        }
+
+    }
+
+    return true;
 }
 
 bool StreamSoundPlayer::IsValidStartOffset(const StreamDataInfoDetail& streamDataInfo) {
@@ -449,7 +462,21 @@ void StreamSoundPlayer::PrefetchIndexInfo::Initialize(const StreamDataInfoDetail
     lastBlockIndex = streamDataInfo.GetLastBlockIndex();
     loopStartInBlock = streamDataInfo.GetLoopStartInBlock();
     loopStartBlockIndex = streamDataInfo.GetLoopStartBlockIndex(loopStartInBlock);
-    loopBlockCount = (1 - loopStartBlockIndex) + lastBlockIndex;
+    loopBlockCount = (lastBlockIndex + 1) - loopStartBlockIndex;
+}
+
+void StreamSoundPlayer::PreparePrefetchOnLastBlock(PrefetchLoadDataParam* param, const PrefetchIndexInfo& indexInfo) {
+    param->samples = m_StreamDataInfo.lastBlockSampleCount;
+    param->prefetchBlockBytes = m_StreamDataInfo.lastBlockSize;
+    param->prefetchBlockIndex = indexInfo.lastBlockIndex;
+
+    if (m_StreamDataInfo.loopFlag) {
+        ++param->loopCount;
+        m_PrefetchOffset = m_StreamDataInfo.loopStart;
+    } else {
+        param->lastBlockFlag = true;
+        m_PrefetchOffset = 0;
+    }
 }
 
 }  // namespace nn::atk::detail::driver

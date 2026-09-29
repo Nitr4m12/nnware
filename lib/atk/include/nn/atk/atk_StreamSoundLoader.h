@@ -89,9 +89,21 @@ struct LoadDataParam {
     bool lastBlockFlag;
     bool isStartOffsetOfLastBlockApplied;
 
-    LoadDataParam() = default;
+    LoadDataParam() {
+        Initialize();
+    }
 
-    void Initialize();
+    void Initialize() {
+        blockIndex = 0;
+        samples = 0;
+        sampleBegin = 0;
+        sampleOffset = 0;
+        sampleBytes = 0;
+        adpcmContextEnable = false;
+        loopCount = 0;
+        lastBlockFlag = false;
+        isStartOffsetOfLastBlockApplied = false;
+    }
 
     void Dump();
 };
