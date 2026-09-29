@@ -248,7 +248,8 @@ private:
             if (blockIndex - lastBlockIndex == 0)
                 return 0;
 
-            return (blockIndex - lastBlockIndex) - ((blockIndex - lastBlockIndex) / loopBlockCount) * loopBlockCount;
+            return (blockIndex - lastBlockIndex) -
+                   ((blockIndex - lastBlockIndex) / loopBlockCount) * loopBlockCount;
         }
 
         bool IsLoopStartBlock(uint32_t blockIndex) { return loopStartInBlock == blockIndex; }
@@ -345,7 +346,7 @@ private:
     void PreparePrefetchOnLastBlock(PrefetchLoadDataParam* param,
                                     const PrefetchIndexInfo& indexInfo);
 
-    void PreparePrefetchOnLoopStartBlock(PrefetchLoadDataParam* param,
+    bool PreparePrefetchOnLoopStartBlock(PrefetchLoadDataParam* param,
                                          const PrefetchIndexInfo& indexInfo,
                                          StreamSoundPrefetchFileReader& reader);
 
