@@ -424,9 +424,7 @@ bool StreamSoundPlayer::LoadPrefetchBlocks(StreamSoundPrefetchFileReader& reader
             blockOffsetFromLoopEnd = indexInfo.GetBlockOffsetFromLoopEnd(blockIndex);
 
         if (indexInfo.IsLastBlock(blockIndex, blockOffsetFromLoopEnd)) {
-
         }
-
     }
 
     return true;
@@ -465,7 +463,8 @@ void StreamSoundPlayer::PrefetchIndexInfo::Initialize(const StreamDataInfoDetail
     loopBlockCount = (lastBlockIndex + 1) - loopStartBlockIndex;
 }
 
-void StreamSoundPlayer::PreparePrefetchOnLastBlock(PrefetchLoadDataParam* param, const PrefetchIndexInfo& indexInfo) {
+void StreamSoundPlayer::PreparePrefetchOnLastBlock(PrefetchLoadDataParam* param,
+                                                   const PrefetchIndexInfo& indexInfo) {
     param->samples = m_StreamDataInfo.lastBlockSampleCount;
     param->prefetchBlockBytes = m_StreamDataInfo.lastBlockSize;
     param->prefetchBlockIndex = indexInfo.lastBlockIndex;
@@ -477,6 +476,26 @@ void StreamSoundPlayer::PreparePrefetchOnLastBlock(PrefetchLoadDataParam* param,
         param->lastBlockFlag = true;
         m_PrefetchOffset = 0;
     }
+}
+
+bool StreamSoundPlayer::PreparePrefetchOnLoopStartBlock(PrefetchLoadDataParam* param,
+                                                        const PrefetchIndexInfo& indexInfo,
+                                                        StreamSoundPrefetchFileReader& reader) {
+    param->samples = m_StreamDataInfo.blockSampleCount;
+    param->prefetchBlockBytes = m_StreamDataInfo.blockSize;
+    param->prefetchBlockIndex = indexInfo.loopStartBlockIndex;
+    param->sampleBegin = indexInfo.loopStartInBlock;
+    m_PrefetchOffset = m_StreamDataInfo.blockSampleCount * (indexInfo.loopStartBlockIndex + 1);
+
+    if (m_StreamDataInfo.sampleFormat == SampleFormat_DspAdpcm) {
+        if (!SetAdpcmLoopInfo(reader, m_StreamDataInfo, &m_PrefetchAdpcmParam[0],
+                              param->adpcmContext))
+            return false;
+
+        param->adpcmContextEnable = true;
+    }
+
+    return true;
 }
 
 }  // namespace nn::atk::detail::driver
