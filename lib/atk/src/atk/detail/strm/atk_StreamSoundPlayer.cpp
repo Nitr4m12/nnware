@@ -498,4 +498,14 @@ bool StreamSoundPlayer::PreparePrefetchOnLoopStartBlock(PrefetchLoadDataParam* p
     return true;
 }
 
+void StreamSoundPlayer::PreparePrefetchOnLoopBlock(PrefetchLoadDataParam* param,
+                                                   const PrefetchIndexInfo& indexInfo,
+                                                   uint32_t blockOffsetFromLoopEnd) {
+    param->samples = m_StreamDataInfo.blockSampleCount;
+    param->prefetchBlockBytes = m_StreamDataInfo.blockSize;
+    param->prefetchBlockIndex = blockOffsetFromLoopEnd + indexInfo.loopStartBlockIndex - 1;
+
+    m_PrefetchOffset += m_StreamDataInfo.blockSampleCount;
+}
+
 }  // namespace nn::atk::detail::driver
