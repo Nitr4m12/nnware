@@ -3,7 +3,7 @@ version: '3'
 # https://taskfile.dev
 
 vars:
-  NX_AARCH64: 22.1.8-1
+  NX_AARCH64: 22.1.8-3
   # Modules to check with clang-format/clang-tidy;
   MODULES: atk,font,g3d,ui2d,vfx
   _MODULES1: ',{{.MODULES}}'
@@ -55,13 +55,6 @@ tasks:
   check:
     desc: Run clang-format and clang-tidy checks
     cmds:
-      # print versions in CI so it's 'Works On My Machine' is debugable
-      - silent: true
-        cmd: |
-          if [ -n "$CI" ]; then
-            clang-format --version
-            clang-tidy --version
-          fi
       - task: clang-format
         vars: { ARGS: -n -Werror }
       - task: clang-tidy
@@ -80,18 +73,33 @@ tasks:
   clang-format:
     cmds:
       - silent: true
-        cmd: > 
-          echo 'running clang-format with {{numCPU}} cpus with args: {{.ARGS}}';
-          find {{.SOURCES}}
-          -regextype posix-extended
-          -regex '.*\.[ch](\+\+|pp|xx|c|h)?'
-          | xargs -P {{numCPU}} -n 1 clang-format {{.ARGS}}
+        cmd: | 
+          clang=$NX_CLANG
+          if [ ! -d "$clang" ]; then
+            clang="toolchain/nx-aarch64-$NX_AARCH64"
+          fi
+          if [ ! -d "$clang" ]; then
+            echo "cannot find nx-aarch64 - please run 'task configure'"
+            exit 1
+          fi
+          echo 'running clang-format with {{numCPU}} cpus with args: {{.ARGS}}'
+          clang_format="$clang/bin/clang-format"
+          find {{.SOURCES}} -regextype posix-extended -regex '.*\.[ch](\+\+|pp|xx|c|h)?' | xargs -P {{numCPU}} -n 1 $clang_format {{.ARGS}}
   clang-tidy:
     vars:
-      CMD: clang-tidy --warnings-as-errors="*" --header-filter="include/nn/({{.CLANG_TIDY_LIBS}})" -p build --quiet
+      ARGS: --warnings-as-errors="*" --header-filter="include/nn/({{.CLANG_TIDY_LIBS}})" -p build --quiet
     cmds:
       - silent: true
         cmd: |
+          clang=$NX_CLANG
+          if [ ! -d "$clang" ]; then
+            clang="toolchain/nx-aarch64-$NX_AARCH64"
+          fi
+          if [ ! -d "$clang" ]; then
+            echo "cannot find nx-aarch64 - please run 'task configure'"
+            exit 1
+          fi
           echo 'running clang-tidy with {{numCPU}} cpus';
-          find {{.SOURCES}} -regextype posix-extended -regex '.*\.[ch](\+\+|pp|xx|c|h)?' | xargs -P {{numCPU}} -n 1 sh -c 'printf "\r\033[Kclang-tidy: $1"; {{.CMD}} "$1"' _;
+          clang_tidy="$clang/bin/clang-tidy"
+          find {{.SOURCES}} -regextype posix-extended -regex '.*\.[ch](\+\+|pp|xx|c|h)?' | xargs -P {{numCPU}} -n 1 sh -c 'printf "\r\033[Kclang-tidy: $1"; '$clang_tidy' {{.ARGS}} "$1"' _;
           echo ''
