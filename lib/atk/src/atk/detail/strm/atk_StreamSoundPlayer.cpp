@@ -1,5 +1,7 @@
 #include <nn/atk/atk_StreamSoundPlayer.h>
 
+#include <algorithm>
+
 #include <nn/atk/atk_MultiVoiceManager.h>
 #include <nn/atk/atk_SoundSystem.h>
 #include <nn/atk/fnd/basis/atkfnd_Inlines.h>
@@ -320,6 +322,33 @@ void StreamSoundPlayer::PreparePrefetch(const PreparePrefetchArg& arg) {
 
     m_IsPreparedPrefetch = true;
     LoadPrefetchBlocks(reader);
+}
+
+bool StreamSoundPlayer::ReadPrefetchFile(StreamSoundPrefetchFileReader& reader) {
+    StreamSoundPrefetchFileReader::PrefetchDataInfo prefetchInfo;
+    if (!reader.ReadPrefetchDataInfo(&prefetchInfo, 0))
+        return false;
+
+    m_PrefetchDataInfo.startFrame = prefetchInfo.startFrame;
+    m_PrefetchDataInfo.prefetchSize = prefetchInfo.prefetchSize;
+    m_PrefetchDataInfo.dataAddress = prefetchInfo.dataAddress;
+
+    StreamSoundFile::StreamSoundInfo info;
+    reader.ReadStreamSoundInfo(&info);
+
+    m_StreamDataInfo.channelCount = reader.GetChannelCount();
+    m_StreamDataInfo.SetStreamSoundInfo(info, reader.IsCrc32CheckAvailable());
+
+    if (reader.IsCrc32CheckAvailable()) {
+        m_IsPrefetchRevisionCheckEnabled = true;
+        m_PrefetchRevisionValue = info.crc32Value;
+    } else {
+        m_IsPrefetchRevisionCheckEnabled = false;
+        m_PrefetchRevisionValue = 0;
+    }
+
+    m_ChannelCount = std::min<int32_t>(m_StreamDataInfo.channelCount, StreamChannelCount);
+    return true;
 }
 
 bool StreamSoundPlayer::ApplyStreamDataInfo(const StreamDataInfoDetail& streamDataInfo) {
