@@ -408,6 +408,17 @@ bool StreamSoundPlayer::AllocVoices() {
     return true;
 }
 
+bool StreamSoundPlayer::LoadPrefetchBlocks(StreamSoundPrefetchFileReader& reader) {
+    PrefetchIndexInfo indexInfo;
+    indexInfo.Initialize(m_StreamDataInfo);
+
+    position_t sampleBeginPosition{0};
+    size_t usedPrefetchMaxSize{0};
+
+    if (m_BufferBlockCount <= 0)
+        return false;
+}
+
 bool StreamSoundPlayer::IsValidStartOffset(const StreamDataInfoDetail& streamDataInfo) {
     if (!streamDataInfo.loopFlag) {
         if (GetStartOffsetSamples(streamDataInfo) >= streamDataInfo.sampleCount)
@@ -432,6 +443,13 @@ position_t StreamSoundPlayer::GetStartOffsetSamples(const StreamDataInfoDetail& 
     }
 
     return startOffsetSamples;
+}
+
+void StreamSoundPlayer::PrefetchIndexInfo::Initialize(const StreamDataInfoDetail& streamDataInfo) {
+    lastBlockIndex = streamDataInfo.GetLastBlockIndex();
+    loopStartInBlock = streamDataInfo.GetLoopStartInBlock();
+    loopStartBlockIndex = streamDataInfo.GetLoopStartBlockIndex(loopStartInBlock);
+    loopBlockCount = (1 - loopStartBlockIndex) + lastBlockIndex;
 }
 
 }  // namespace nn::atk::detail::driver
