@@ -951,7 +951,7 @@ bool StreamSoundPlayer::PreparePrefetchOnNormalBlock(PrefetchLoadDataParam* para
     m_PrefetchOffset += m_StreamDataInfo.blockSampleCount;
 
     if (m_StreamDataInfo.sampleFormat == SampleFormat_DspAdpcm && param->prefetchBlockIndex == 0) {
-        if (!SetAdpcmLoopInfo(reader, m_StreamDataInfo, m_PrefetchAdpcmParam, param->adpcmContext))
+        if (!SetAdpcmInfo(reader, m_StreamDataInfo, m_PrefetchAdpcmParam, param->adpcmContext))
             return false;
 
         param->adpcmContextEnable = true;
@@ -979,6 +979,29 @@ bool StreamSoundPlayer::SetAdpcmLoopInfo(StreamSoundPrefetchFileReader& reader,
         adpcmContext[ch].audioAdpcmContext.predScale = dspAdpcmLoopParam.loopPredScale;
         adpcmContext[ch].audioAdpcmContext.history[0] = dspAdpcmLoopParam.loopYn1;
         adpcmContext[ch].audioAdpcmContext.history[1] = dspAdpcmLoopParam.loopYn2;
+    }
+
+    return true;
+}
+
+bool StreamSoundPlayer::SetAdpcmInfo(StreamSoundPrefetchFileReader& reader,
+                                     const StreamDataInfoDetail& streamDataInfo,
+                                     AdpcmParam* adpcmParam, AdpcmContextNotAligned* adpcmContext) {
+    for (int ch{0}; ch < streamDataInfo.channelCount; ++ch) {
+        DspAdpcmParam dspAdpcmParam;
+        DspAdpcmLoopParam dspAdpcmLoopParam;
+        if (!reader.ReadDspAdpcmChannelInfo(&dspAdpcmParam, &dspAdpcmLoopParam, ch))
+            return false;
+
+        for (int i{0}; i < 8; ++i) {
+            for (int j{0}; j < 2; ++j)
+                adpcmParam[ch].coefficients[(i * 2) + j] = dspAdpcmParam.coef[i][j];
+        }
+
+        m_Channels[ch].m_pVoice->SetAdpcmParam(0, adpcmParam[ch]);
+        adpcmContext[ch].audioAdpcmContext.predScale = dspAdpcmParam.predScale;
+        adpcmContext[ch].audioAdpcmContext.history[0] = dspAdpcmParam.yn1;
+        adpcmContext[ch].audioAdpcmContext.history[1] = dspAdpcmParam.yn2;
     }
 
     return true;
