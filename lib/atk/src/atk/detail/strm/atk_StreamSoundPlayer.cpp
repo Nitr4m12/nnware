@@ -770,6 +770,28 @@ bool StreamSoundPlayer::CheckDiskDriveError() const {
     return SoundSystem::detail_IsStreamLoadWait();
 }
 
+void StreamSoundPlayer::TrackData::Set(const StreamTrack* track) {
+    volume = track->volume / 127.0f;
+    lpfFreq = track->lpfFreq / 64.0f;
+    biquadType = track->biquadType;
+    biquadValue = track->biquadValue / 127.0f;
+
+    if (track->pan < 2)
+        pan = (track->pan - 63) / 63.0f;
+    else
+        pan = (track->pan - 64) / 63.0f;
+
+    if (track->span < 64)
+        span = track->span / 63.0f;
+    else
+        span = (track->span + 1) / 64.0f;
+
+    mainSend = track->mainSend / 127.0f - 1.0f;
+
+    for (int i{0}; i < AuxBus_Count; ++i)
+        fxSend[i] = track->fxSend[i] / 127.0f;
+}
+
 bool StreamSoundPlayer::IsValidStartOffset(const StreamDataInfoDetail& streamDataInfo) {
     if (!streamDataInfo.loopFlag) {
         if (static_cast<size_t>(GetStartOffsetSamples(streamDataInfo)) >=
