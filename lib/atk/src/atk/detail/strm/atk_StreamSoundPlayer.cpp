@@ -815,6 +815,30 @@ void StreamSoundPlayer::SetOutputParam(OutputParam* pOutOutputParam, const Outpu
     }
 }
 
+// NON_MATCHING: bad register ordering
+position_t
+StreamSoundPlayer::GetOriginalPlaySamplePosition(position_t playSamplePosition,
+                                                 const StreamDataInfoDetail& streamDataInfo) const {
+    if (playSamplePosition > streamDataInfo.originalLoopEnd) {
+        position_t loopRegionSize{streamDataInfo.originalLoopEnd -
+                                  streamDataInfo.originalLoopStart};
+
+        if (loopRegionSize < LoopRegionSizeMin) {
+            loopRegionSize =
+                ((playSamplePosition - streamDataInfo.originalLoopStart) / loopRegionSize) *
+                loopRegionSize;
+            loopRegionSize = playSamplePosition - loopRegionSize - streamDataInfo.originalLoopStart;
+
+        } else {
+            loopRegionSize = playSamplePosition - streamDataInfo.originalLoopEnd;
+        }
+
+        playSamplePosition = streamDataInfo.originalLoopStart + loopRegionSize;
+    }
+
+    return playSamplePosition;
+}
+
 bool StreamSoundPlayer::IsValidStartOffset(const StreamDataInfoDetail& streamDataInfo) {
     if (!streamDataInfo.loopFlag) {
         if (static_cast<size_t>(GetStartOffsetSamples(streamDataInfo)) >=
@@ -823,6 +847,29 @@ bool StreamSoundPlayer::IsValidStartOffset(const StreamDataInfoDetail& streamDat
     }
 
     return true;
+}
+
+void StreamSoundPlayer::ApplyTrackDataInfo(const StreamDataInfoDetail& streamDataInfo) {
+    for (int i{0}; i < m_TrackCount; ++i) {
+        const TrackDataInfo& trackInfo{streamDataInfo.trackInfo[i]};
+
+        m_Tracks[i].volume = trackInfo.volume;
+        m_Tracks[i].pan = trackInfo.pan;
+        m_Tracks[i].span = trackInfo.span;
+        m_Tracks[i].mainSend = trackInfo.mainSend;
+
+        for (int j{0}; j < AuxBus_Count; ++j)
+            m_Tracks[i].fxSend[j] = trackInfo.fxSend[j];
+
+        m_Tracks[i].lpfFreq = trackInfo.lpfFreq;
+        m_Tracks[i].biquadType = trackInfo.biquadType;
+        m_Tracks[i].biquadValue = trackInfo.biquadValue;
+        m_Tracks[i].flags = trackInfo.flags;
+        m_Tracks[i].channelCount = trackInfo.channelCount;
+
+        for (int ch{0}; ch < trackInfo.channelCount; ++ch)
+            m_Tracks[i].m_pChannels[ch] = &m_Channels[trackInfo.channelIndex[ch]];
+    }
 }
 
 position_t StreamSoundPlayer::GetStartOffsetSamples(const StreamDataInfoDetail& streamDataInfo) {
