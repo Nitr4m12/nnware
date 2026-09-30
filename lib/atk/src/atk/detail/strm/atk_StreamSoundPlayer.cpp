@@ -644,6 +644,10 @@ int StreamSoundPlayer::GetBufferBlockCount(WaveBuffer::Status status) const {
     return count;
 }
 
+int StreamSoundPlayer::GetTotalBufferBlockCount() const {
+    return m_ChannelCount * m_BufferBlockCount;
+}
+
 bool StreamSoundPlayer::IsValidStartOffset(const StreamDataInfoDetail& streamDataInfo) {
     if (!streamDataInfo.loopFlag) {
         if (static_cast<size_t>(GetStartOffsetSamples(streamDataInfo)) >=
