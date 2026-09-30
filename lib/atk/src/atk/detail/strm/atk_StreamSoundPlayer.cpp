@@ -1031,4 +1031,12 @@ void StreamSoundPlayer::SetTrackOutputLine(uint32_t trackBitFlag, uint32_t outpu
     }
 }
 
+void StreamSoundPlayer::ResetTrackOutputLine(uint32_t trackBitFlag) {
+    for (int trackNo{0}; trackNo < m_TrackCount && trackBitFlag != 0;
+         ++trackNo, trackBitFlag >>= 1) {
+        if (trackBitFlag & 1)
+            m_Tracks[trackNo].m_OutputLine = -1;
+    }
+}
+
 }  // namespace nn::atk::detail::driver
