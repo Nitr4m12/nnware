@@ -1075,4 +1075,12 @@ void StreamSoundPlayer::SetTrackTvSurroundPan(uint32_t trackBitFlag, float span)
     }
 }
 
+void StreamSoundPlayer::SetTrackTvMainSend(uint32_t trackBitFlag, float send) {
+    for (int trackNo{0}; trackNo < m_TrackCount && trackBitFlag != 0;
+         ++trackNo, trackBitFlag >>= 1) {
+        if (trackBitFlag & 1)
+            m_Tracks[trackNo].m_TvParam.send[OutputDevice_Main] = send;
+    }
+}
+
 }  // namespace nn::atk::detail::driver
