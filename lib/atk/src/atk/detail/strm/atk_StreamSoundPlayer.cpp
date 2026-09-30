@@ -467,6 +467,36 @@ void StreamSoundPlayer::Start() {
         StartPlayer();
 }
 
+void StreamSoundPlayer::StartPlayer() {
+    for (int trackIndex{0}; trackIndex < m_TrackCount; ++trackIndex) {
+        StreamTrack& track{m_Tracks[trackIndex]};
+
+        if (!track.m_ActiveFlag)
+            continue;
+
+        for (int ch{0}; ch < track.channelCount; ++ch) {
+            StreamChannel* channel{track.m_pChannels[ch]};
+            if (channel == nullptr)
+                continue;
+
+            MultiVoice* voice{channel->m_pVoice};
+            if (voice == nullptr)
+                continue;
+
+            voice->SetSampleFormat(m_StreamDataInfo.sampleFormat);
+            voice->SetSampleRate(m_StreamDataInfo.sampleRate);
+            voice->SetUpdateType(m_UpdateType);
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+            voice->SetOutputReceiver(GetOutputReceiver());
+#endif
+            voice->Start();
+        }
+    }
+
+    UpdatePauseStatus();
+    SetStartedFlag(true);
+}
+
 void StreamSoundPlayer::UpdatePauseStatus() {
     bool pauseStatus{(IsPause() | m_LoadWaitFlag) != 0};
 
