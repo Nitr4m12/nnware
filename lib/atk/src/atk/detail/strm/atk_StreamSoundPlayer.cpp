@@ -719,6 +719,30 @@ void StreamSoundPlayer::UpdateLoadingBlockIndex() {
         m_LoadingBufferBlockIndex = 0;
 }
 
+bool StreamSoundPlayer::IsStoppedByLoadingDelay() const {
+    if (!m_IsPrepared)
+        return false;
+
+    if (m_BufferBlockCount <= 0)
+        return false;
+
+    // XXX: according to DWARF, this gets initialized to true
+    bool isStatusDoneExisted{false};
+
+    for (int i{0}; i < m_BufferBlockCount; ++i) {
+        // TODO: find a way to use switch statements for this
+        if (m_Channels[0].m_WaveBuffer[i].status != WaveBuffer::Status_Free) {
+            if (m_Channels[0].m_WaveBuffer[i].status != WaveBuffer::Status_Done) {
+                isStatusDoneExisted = false;
+                break;
+            }
+            isStatusDoneExisted = true;
+        }
+    }
+
+    return isStatusDoneExisted;
+}
+
 bool StreamSoundPlayer::IsValidStartOffset(const StreamDataInfoDetail& streamDataInfo) {
     if (!streamDataInfo.loopFlag) {
         if (static_cast<size_t>(GetStartOffsetSamples(streamDataInfo)) >=
