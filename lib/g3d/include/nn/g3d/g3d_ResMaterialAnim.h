@@ -6,15 +6,17 @@
 
 #include <cstdint>
 
-namespace nn::g3d {
+#include <nn/g3d/g3d_TextureRef.h>
 
-typedef void* TextureRef;
+namespace nn::g3d {
 
 class ResMaterialAnim {
 public:
     void ReleaseTexture();
-    int32_t BindTexture(nn::g3d::TextureRef (*)(char const*, void*), void*);
+    int32_t BindTexture(TextureBindCallback, void*);
     void Reset();
+
+    uint8_t _0[0x78];
 };
 
 }  // namespace nn::g3d

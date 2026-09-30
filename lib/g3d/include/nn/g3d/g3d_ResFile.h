@@ -6,9 +6,16 @@
 
 #include <cstdint>
 
-#include <nn/gfx/gfx_Types.h>
 #include <nn/util.h>
+#include <nn/util/util_AccessorBase.h>
 #include <nn/util/util_BinaryFormat.h>
+#include <nn/util/util_ResDic.h>
+
+#include <nn/gfx/gfx_BufferInfo.h>
+#include <nn/gfx/gfx_MemoryPoolInfo.h>
+#include <nn/gfx/gfx_Types.h>
+
+#include <nn/g3d/g3d_TextureRef.h>
 
 namespace nn {
 
@@ -18,53 +25,66 @@ class TDevice;
 }
 
 namespace g3d {
+
 class ResModel;
 class ResMaterialAnim;
 class ResShapeAnim;
 class ResSceneAnim;
-typedef void* TextureRef;
+class ResSkeletalAnim;
+class ResBoneVisibilityAnim;
 
-class ResFile : public nn::util::BinaryFileHeader {
+struct ResFileData {
+    util::BinaryFileHeader fileHeader;
+    util::BinTPtr<util::BinString> pFileName;
+    util::BinTPtr<ResModel> pModels;
+    util::BinTPtr<util::ResDic> pModelDict;
+    util::BinTPtr<ResSkeletalAnim> pSkeletalAnims;
+    util::BinTPtr<util::ResDic> pSkeletalAnimDict;
+    util::BinTPtr<ResMaterialAnim> pMaterialAnims;
+    util::BinTPtr<util::ResDic> pMaterialAnimsDict;
+    util::BinTPtr<ResBoneVisibilityAnim> pBoneVisibilityAnims;
+    util::BinTPtr<util::ResDic> pBoneVisiDict;
+    util::BinTPtr<ResShapeAnim> pShapeAnims;
+    util::BinTPtr<util::ResDic> pShapeAnimDict;
+    util::BinTPtr<ResSceneAnim> pSceneAnims;
+    util::BinTPtr<util::ResDic> pSceneAnimDict;
+    util::BinTPtr<gfx::MemoryPool> pMemoryPool;
+    util::BinTPtr<gfx::MemoryPoolInfo> pMemoryPoolInfo;
+    uint64_t embeddedFilesOffset;
+    util::BinTPtr<util::ResDic> pEmbeddedFilesDict;
+    uint64_t padding;
+    uint64_t strTableOffset;
+    uint32_t strTableSize;
+    uint16_t modelCount;
+    uint16_t skeletalAnimCount;
+    uint16_t materialAnimCount;
+    uint16_t boneAnimCount;
+    uint16_t shapeAnimCount;
+    uint16_t sceneAnimCount;
+    uint16_t externalFileCount;
+};
+
+class ResFile : public nn::util::AccessorBase<ResFileData> {
 public:
+    static const int64_t Signature = 0x2020202053455246;  // "FRES    "
+
     static bool IsValid(void const* modelSrc);
+
     void Relocate();
     void Unrelocate();
+
     static nn::g3d::ResFile* ResCast(void*);
-    int32_t BindTexture(nn::g3d::TextureRef (*ref)(char const*, void*), void*);
+
+    int32_t BindTexture(TextureBindCallback callback, void* callbackArg);
     void ReleaseTexture();
+
     void Setup(gfx::Device*);
     void Setup(gfx::Device*, gfx::MemoryPool*, int64_t, uint64_t);
+
     void Cleanup(gfx::Device*);
     void Reset();
-
-    uint64_t mFileNameLength;             // _20
-    nn::g3d::ResModel* mModels;           // _28
-    uint64_t mModelDictOffset;            // _30
-    uint64_t mSkeleAnimOffset;            // _38
-    uint64_t mSkeleAnimDictOffset;        // _40
-    nn::g3d::ResMaterialAnim* mMatAnims;  // _48
-    uint64_t mMatAnimsDictOffset;         // _50
-    uint64_t mBoneVisiOffset;             // _58
-    uint64_t mBoneVisiDictOffset;         // _60
-    nn::g3d::ResShapeAnim* mShapeAnims;   // _68
-    uint64_t mShapeAnimDictOffset;        // _70
-    nn::g3d::ResSceneAnim* mSceneAnims;   // _78
-    uint64_t mSceneAnimDictOffset;        // _80
-    uint64_t mMemoryPool;                 // _88
-    uint64_t mBufferSection;              // _90
-    uint64_t mEmbeddedFilesOffset;        // _98
-    uint64_t mEmbeddedFilesDictOffset;    // _A0
-    uint64_t mPadding;                    // _A8
-    uint64_t mStrTableOffset;             // _B0
-    uint32_t mStrTableSize;               // _B8
-    uint16_t mModelCount;                 // _BC
-    uint16_t mSkeleAnimCount;             // _BE
-    uint16_t mMatAnimCount;               // _C0
-    uint16_t mBoneAnimCount;              // _C2
-    uint16_t mShapeAnimCount;             // _C4
-    uint16_t mSceneAnimCount;             // _C6
-    uint16_t mExternalFileCount;          // _C8
-    uint8_t mPad[0x6];                    // _CA
 };
+static_assert(sizeof(ResFile) == 0xd0);
+
 }  // namespace g3d
 }  // namespace nn

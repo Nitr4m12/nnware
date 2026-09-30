@@ -6,21 +6,20 @@
 
 #include <cstdint>
 
+#include <nn/util/util_BinaryFormat.h>
+
 namespace nn::g3d {
 
 class ResLightAnim;
 class ResFogAnim;
 class BindFuncTable;
 
-class ResSceneAnim {
+class ResSceneAnim : public util::BinaryBlockHeader {
 public:
     int32_t Bind(nn::g3d::BindFuncTable const&);
     void Release();
     void Reset();
 
-    char mMagic[4];                      // _0
-    int32_t mBlockOffset;                // _4
-    uint64_t mBlockSize;                 // _8
     uint64_t mNameOffset;                // _10
     uint64_t mPathOffset;                // _18
     uint64_t mCameraAnimOffset;          // _20
