@@ -1,7 +1,7 @@
-#include <cstddef>
 #include <nn/atk/atk_StreamSoundPlayer.h>
 
 #include <algorithm>
+#include <cstddef>
 
 #include <nn/atk/atk_MultiVoiceManager.h>
 #include <nn/atk/atk_SoundSystem.h>
@@ -790,6 +790,29 @@ void StreamSoundPlayer::TrackData::Set(const StreamTrack* track) {
 
     for (int i{0}; i < AuxBus_Count; ++i)
         fxSend[i] = track->fxSend[i] / 127.0f;
+}
+
+void StreamSoundPlayer::SetOutputParam(OutputParam* pOutOutputParam, const OutputParam& trackParam,
+                                       const TrackData& trackData) {
+    pOutOutputParam->volume *= trackParam.volume;
+
+    for (int i{0}; i < WaveChannelMax; ++i) {
+        for (int j{0}; j < ChannelIndex_Count; ++j)
+            pOutOutputParam->mixParameter[i].ch[j] *= trackParam.mixParameter[i].ch[j];
+    }
+
+    pOutOutputParam->pan += trackData.pan + trackParam.pan;
+    pOutOutputParam->span += trackData.span + trackParam.span;
+
+    for (int i{0}; i < OutputDevice_Count; ++i) {
+        pOutOutputParam->send[i] += trackParam.send[i];
+        pOutOutputParam->send[i] += trackData.mainSend + m_ItemData.mainSend;
+    }
+
+    for (int i{0}; i < AuxBus_Count; ++i) {
+        pOutOutputParam->send[i + 1] += trackParam.send[i + 1];
+        pOutOutputParam->send[i + 1] += trackData.fxSend[i] + m_ItemData.fxSend[i];
+    }
 }
 
 bool StreamSoundPlayer::IsValidStartOffset(const StreamDataInfoDetail& streamDataInfo) {
