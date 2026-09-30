@@ -1007,4 +1007,12 @@ bool StreamSoundPlayer::SetAdpcmInfo(StreamSoundPrefetchFileReader& reader,
     return true;
 }
 
+void StreamSoundPlayer::SetTrackVolume(uint32_t trackBitFlag, float volume) {
+    for (int trackNo{0}; trackNo < m_TrackCount && trackBitFlag != 0;
+         ++trackNo, trackBitFlag >>= 1) {
+        if (trackBitFlag & 1)
+            m_Tracks[trackNo].m_Volume = volume;
+    }
+}
+
 }  // namespace nn::atk::detail::driver
