@@ -2,9 +2,10 @@
 
 #include <cstddef>
 #include <cstdint>
+
 #include <nn/audio/audio_MemoryPoolTypes.h>
+#include <nn/nn_Result.h>
 #include <nn/time.h>
-#include <vapours/results/results_common.hpp>
 
 #include <nn/atk/atk_AudioRendererPerformanceReader.h>
 #include <nn/atk/atk_EffectAux.h>
