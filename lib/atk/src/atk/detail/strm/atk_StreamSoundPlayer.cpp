@@ -551,9 +551,33 @@ bool StreamSoundPlayer::IsBufferEmpty() const {
     return true;
 }
 
+#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
+bool StreamSoundPlayer::ReadStreamDataInfo(StreamDataInfo* info) const {
+#else
+bool StreamSoundPlayer::ReadStreamSoundDataInfo(StreamSoundDataInfo* info) const {
+#endif
+    AtkStateAndParameterUpdateLock lock{};
+
+    if (!m_IsPrepared && !m_IsPreparedPrefetch)
+        return false;
+
+    info->loopFlag = m_StreamDataInfo.loopFlag;
+    info->sampleRate = m_StreamDataInfo.sampleRate;
+    info->loopStart = m_StreamDataInfo.originalLoopStart;
+    info->loopEnd = m_StreamDataInfo.originalLoopEnd;
+    info->compatibleLoopStart = m_StreamDataInfo.loopStart;
+    info->compatibleLoopEnd = m_StreamDataInfo.sampleCount;
+#if NN_WARE_VER >= NN_MAKE_VER(3, 0, 0)
+    info->channelCount = std::min(m_StreamDataInfo.channelCount, StreamChannelCount);
+#endif
+
+    return true;
+}
+
 bool StreamSoundPlayer::IsValidStartOffset(const StreamDataInfoDetail& streamDataInfo) {
     if (!streamDataInfo.loopFlag) {
-        if (GetStartOffsetSamples(streamDataInfo) >= streamDataInfo.sampleCount)
+        if (static_cast<size_t>(GetStartOffsetSamples(streamDataInfo)) >=
+            streamDataInfo.sampleCount)
             return false;
     }
 
