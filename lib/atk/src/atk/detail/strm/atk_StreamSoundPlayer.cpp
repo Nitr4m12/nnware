@@ -486,7 +486,9 @@ void StreamSoundPlayer::StartPlayer() {
             voice->SetSampleFormat(m_StreamDataInfo.sampleFormat);
             voice->SetSampleRate(m_StreamDataInfo.sampleRate);
             voice->SetUpdateType(m_UpdateType);
-#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+            voice->SetSubMixIndex(m_SubMixIndex);
+#else
             voice->SetOutputReceiver(GetOutputReceiver());
 #endif
             voice->Start();
@@ -522,6 +524,16 @@ void StreamSoundPlayer::UpdatePauseStatus() {
 
         m_PauseStatus = pauseStatus;
     }
+}
+
+bool StreamSoundPlayer::IsLoadingDelayState() const {
+    if (!m_IsPrepared)
+        return false;
+
+    if (m_pLoader->IsBusy() && IsBufferEmpty())
+        return true;
+
+    return m_IsStoppedByLoadingDelay;
 }
 
 bool StreamSoundPlayer::IsBufferEmpty() const {
