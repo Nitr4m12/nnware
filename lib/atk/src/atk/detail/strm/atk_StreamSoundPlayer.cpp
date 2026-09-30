@@ -1039,4 +1039,12 @@ void StreamSoundPlayer::ResetTrackOutputLine(uint32_t trackBitFlag) {
     }
 }
 
+void StreamSoundPlayer::SetTrackTvVolume(uint32_t trackBitFlag, float volume) {
+    for (int trackNo{0}; trackNo < m_TrackCount && trackBitFlag != 0;
+         ++trackNo, trackBitFlag >>= 1) {
+        if (trackBitFlag & 1)
+            m_Tracks[trackNo].m_TvParam.volume = volume;
+    }
+}
+
 }  // namespace nn::atk::detail::driver
