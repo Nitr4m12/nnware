@@ -462,6 +462,11 @@ bool StreamSoundPlayer::LoadPrefetchBlocks(StreamSoundPrefetchFileReader& reader
     return true;
 }
 
+void StreamSoundPlayer::Start() {
+    if (!m_UseDelayCount && !IsStarted())
+        StartPlayer();
+}
+
 bool StreamSoundPlayer::IsValidStartOffset(const StreamDataInfoDetail& streamDataInfo) {
     if (!streamDataInfo.loopFlag) {
         if (GetStartOffsetSamples(streamDataInfo) >= streamDataInfo.sampleCount)
