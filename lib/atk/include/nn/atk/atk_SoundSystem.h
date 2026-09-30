@@ -319,6 +319,8 @@ struct SoundSystem {
         return g_IsStreamOpenFailureHalt;
 #endif
     }
+
+    static bool detail_IsStreamLoadWait() { return g_IsStreamLoadWait; }
 };
 
 }  // namespace nn::atk

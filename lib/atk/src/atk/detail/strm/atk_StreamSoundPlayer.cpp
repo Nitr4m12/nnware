@@ -766,6 +766,10 @@ void StreamSoundPlayer::VoiceCallbackFunc(MultiVoice* voice, MultiVoice::VoiceCa
     }
 }
 
+bool StreamSoundPlayer::CheckDiskDriveError() const {
+    return SoundSystem::detail_IsStreamLoadWait();
+}
+
 bool StreamSoundPlayer::IsValidStartOffset(const StreamDataInfoDetail& streamDataInfo) {
     if (!streamDataInfo.loopFlag) {
         if (static_cast<size_t>(GetStartOffsetSamples(streamDataInfo)) >=
