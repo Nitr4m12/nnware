@@ -719,6 +719,12 @@ void StreamSoundPlayer::UpdateLoadingBlockIndex() {
         m_LoadingBufferBlockIndex = 0;
 }
 
+// bool StreamSoundPlayer::LoadStreamData(bool result, const LoadDataParam& loadDataParam, uint16_t
+// assignNumber, bool usePrefetchFlag, uint32_t currentPrefetchBlockIndex, size_t
+// currentPrefetchBlockBytes) {
+//
+// }
+
 bool StreamSoundPlayer::IsStoppedByLoadingDelay() const {
     if (!m_IsPrepared)
         return false;
@@ -741,6 +747,23 @@ bool StreamSoundPlayer::IsStoppedByLoadingDelay() const {
     }
 
     return isStatusDoneExisted;
+}
+
+void StreamSoundPlayer::VoiceCallbackFunc(MultiVoice* voice, MultiVoice::VoiceCallbackStatus status,
+                                          void* arg) {
+    auto* channel{static_cast<StreamChannel*>(arg)};
+
+    switch (status) {
+    case MultiVoice::VoiceCallbackStatus_FinishWave:
+    case MultiVoice::VoiceCallbackStatus_Cancel:
+        voice->Free();
+        channel->m_pVoice = nullptr;
+        break;
+    case MultiVoice::VoiceCallbackStatus_DropVoice:
+    case MultiVoice::VoiceCallbackStatus_DropDsp:
+        channel->m_pVoice = nullptr;
+        break;
+    }
 }
 
 bool StreamSoundPlayer::IsValidStartOffset(const StreamDataInfoDetail& streamDataInfo) {
