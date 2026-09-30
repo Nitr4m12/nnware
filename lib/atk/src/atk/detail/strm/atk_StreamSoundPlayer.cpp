@@ -1059,4 +1059,12 @@ void StreamSoundPlayer::SetTrackChannelTvMixParameter(uint32_t trackBitFlag, uin
     }
 }
 
+void StreamSoundPlayer::SetTrackTvPan(uint32_t trackBitFlag, float pan) {
+    for (int trackNo{0}; trackNo < m_TrackCount && trackBitFlag != 0;
+         ++trackNo, trackBitFlag >>= 1) {
+        if (trackBitFlag & 1)
+            m_Tracks[trackNo].m_TvParam.pan = pan;
+    }
+}
+
 }  // namespace nn::atk::detail::driver
