@@ -1086,7 +1086,11 @@ void StreamSoundPlayer::SetTrackTvFxSend(uint32_t trackBitFlag, AuxBus bus, floa
     for (int trackNo{0}; trackNo < m_TrackCount && trackBitFlag != 0;
          ++trackNo, trackBitFlag >>= 1) {
         if (trackBitFlag & 1)
+#if NN_WARE_VER < NN_MAKE_VER(4, 0 ,0)
             m_Tracks[trackNo].m_TvParam.send[bus + 1L] = send;
+#else
+            m_Tracks[trackNo].m_TvParam.send[bus + 1] = send;
+#endif
     }
 }
 
@@ -1102,6 +1106,17 @@ const StreamTrack* StreamSoundPlayer::GetPlayerTrack(int trackNo) const {
         return nullptr;
 
     return &m_Tracks[trackNo];
+}
+
+void StreamSoundPlayer::OnUpdateFrameSoundThread() {
+    Update();
+}
+
+void StreamSoundPlayer::OnUpdateFrameSoundThreadWithAudioFrameFrequency() {
+    if (m_UpdateType != UpdateType_AudioFrame)
+        return;
+
+    Update();
 }
 
 }  // namespace nn::atk::detail::driver
