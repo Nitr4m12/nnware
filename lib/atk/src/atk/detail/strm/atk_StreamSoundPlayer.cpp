@@ -648,7 +648,7 @@ int StreamSoundPlayer::GetTotalBufferBlockCount() const {
     return m_ChannelCount * m_BufferBlockCount;
 }
 
-// bool StreamSoundPlayer::LoadHeader(bool result, AdpcmParam** adpcmParam, uint16_t assignNumber)
+// TODO: bool StreamSoundPlayer::LoadHeader
 
 bool StreamSoundPlayer::CheckPrefetchRevision(const StreamDataInfoDetail& streamDataInfo) const {
     if (!m_IsPrefetchRevisionCheckEnabled)
@@ -719,11 +719,8 @@ void StreamSoundPlayer::UpdateLoadingBlockIndex() {
         m_LoadingBufferBlockIndex = 0;
 }
 
-// bool StreamSoundPlayer::LoadStreamData(bool result, const LoadDataParam& loadDataParam, uint16_t
-// assignNumber, bool usePrefetchFlag, uint32_t currentPrefetchBlockIndex, size_t
-// currentPrefetchBlockBytes) {
-//
-// }
+// TODO: bool StreamSoundPlayer::LoadStreamData
+// TODO: bool StreamSoundPlayer::LoadStreamData
 
 bool StreamSoundPlayer::IsStoppedByLoadingDelay() const {
     if (!m_IsPrepared)
@@ -765,6 +762,10 @@ void StreamSoundPlayer::VoiceCallbackFunc(MultiVoice* voice, MultiVoice::VoiceCa
         break;
     }
 }
+
+// TODO: void StreamSoundPlayer::Update()
+// TODO: void StreamSoundPlayer::UpdateBuffer()
+// TODO: void StreamSoundPlayer::UpdateVoiceParams(StreamTrack* track)
 
 bool StreamSoundPlayer::CheckDiskDriveError() const {
     return SoundSystem::detail_IsStreamLoadWait();
@@ -815,6 +816,9 @@ void StreamSoundPlayer::SetOutputParam(OutputParam* pOutOutputParam, const Outpu
     }
 }
 
+// TODO: void StreamSoundPlayer::ApplyTvOutputParamForMultiChannel
+// TODO: void StreamSoundPlayer::MixSettingForOutputParam
+
 // NON_MATCHING: bad register ordering
 position_t
 StreamSoundPlayer::GetOriginalPlaySamplePosition(position_t playSamplePosition,
@@ -838,6 +842,8 @@ StreamSoundPlayer::GetOriginalPlaySamplePosition(position_t playSamplePosition,
 
     return playSamplePosition;
 }
+
+// TODO: int StreamSoundPlayer::GetOriginalLoopCount
 
 bool StreamSoundPlayer::IsValidStartOffset(const StreamDataInfoDetail& streamDataInfo) {
     if (!streamDataInfo.loopFlag) {
@@ -1086,7 +1092,7 @@ void StreamSoundPlayer::SetTrackTvFxSend(uint32_t trackBitFlag, AuxBus bus, floa
     for (int trackNo{0}; trackNo < m_TrackCount && trackBitFlag != 0;
          ++trackNo, trackBitFlag >>= 1) {
         if (trackBitFlag & 1)
-#if NN_WARE_VER < NN_MAKE_VER(4, 0 ,0)
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
             m_Tracks[trackNo].m_TvParam.send[bus + 1L] = send;
 #else
             m_Tracks[trackNo].m_TvParam.send[bus + 1] = send;
@@ -1117,6 +1123,10 @@ void StreamSoundPlayer::OnUpdateFrameSoundThreadWithAudioFrameFrequency() {
         return;
 
     Update();
+}
+
+void StreamSoundPlayer::OnShutdownSoundThread() {
+    Stop();
 }
 
 }  // namespace nn::atk::detail::driver
