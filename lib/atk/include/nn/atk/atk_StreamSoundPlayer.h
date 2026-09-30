@@ -229,8 +229,6 @@ private:
     struct PrefetchLoadDataParam : LoadDataParam {
         uint32_t prefetchBlockIndex;
         size_t prefetchBlockBytes;
-
-        PrefetchLoadDataParam() = default;
     };
     // static_assert(sizeof(PrefetchLoadDataParam) == 0xa0);
 
@@ -245,9 +243,6 @@ private:
         bool IsOverLastBlock(uint32_t blockIndex) { return blockIndex > lastBlockIndex; }
 
         uint32_t GetBlockOffsetFromLoopEnd(uint32_t blockIndex) {
-            if (blockIndex - lastBlockIndex == 0)
-                return 0;
-
             return (blockIndex - lastBlockIndex) -
                    ((blockIndex - lastBlockIndex) / loopBlockCount) * loopBlockCount;
         }
@@ -255,16 +250,7 @@ private:
         bool IsLoopStartBlock(uint32_t blockIndex) { return loopStartInBlock == blockIndex; }
 
         bool IsLastBlock(uint32_t blockIndex, uint32_t blockOffsetFromLoopEnd) {
-            if (lastBlockIndex != 0)
-                return false;
-
-            if (blockIndex != lastBlockIndex)
-                return false;
-
-            if (blockOffsetFromLoopEnd == 0 || IsOverLastBlock(blockIndex))
-                return false;
-
-            return true;
+            return (lastBlockIndex == 0 || blockIndex == lastBlockIndex) || ((IsOverLastBlock(blockIndex)) && blockOffsetFromLoopEnd == 0);
         }
     };
     static_assert(sizeof(PrefetchIndexInfo) == 0x18);
