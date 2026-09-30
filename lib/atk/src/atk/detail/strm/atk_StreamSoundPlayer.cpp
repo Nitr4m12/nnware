@@ -623,7 +623,6 @@ float StreamSoundPlayer::GetFilledBufferPercentage() const {
         default:
             bufferSamples = m_StreamDataInfo.blockSampleCount;
             break;
-
         }
 
         entireSamples += bufferSamples;
@@ -631,6 +630,18 @@ float StreamSoundPlayer::GetFilledBufferPercentage() const {
 
     float percentage{restSamples * 100.0f / entireSamples};
     return percentage;
+}
+
+int StreamSoundPlayer::GetBufferBlockCount(WaveBuffer::Status status) const {
+    int count{0};
+    for (int channelIndex{0}; channelIndex < m_ChannelCount; ++channelIndex) {
+        for (int bufferIndex{0}; bufferIndex < m_BufferBlockCount; ++bufferIndex) {
+            if (m_Channels[channelIndex].m_WaveBuffer[bufferIndex].status == status)
+                ++count;
+        }
+    }
+
+    return count;
 }
 
 bool StreamSoundPlayer::IsValidStartOffset(const StreamDataInfoDetail& streamDataInfo) {
