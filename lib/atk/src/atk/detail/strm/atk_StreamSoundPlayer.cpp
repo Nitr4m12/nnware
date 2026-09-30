@@ -648,6 +648,18 @@ int StreamSoundPlayer::GetTotalBufferBlockCount() const {
     return m_ChannelCount * m_BufferBlockCount;
 }
 
+bool StreamSoundPlayer::CheckPrefetchRevision(const StreamDataInfoDetail& streamDataInfo) const {
+    if (!m_IsPrefetchRevisionCheckEnabled)
+        return true;
+
+    if (streamDataInfo.isRevisionCheckEnabled) {
+        bool result{streamDataInfo.revisionValue == m_PrefetchRevisionValue};
+        return result;
+    }
+
+    return true;
+}
+
 bool StreamSoundPlayer::IsValidStartOffset(const StreamDataInfoDetail& streamDataInfo) {
     if (!streamDataInfo.loopFlag) {
         if (static_cast<size_t>(GetStartOffsetSamples(streamDataInfo)) >=
