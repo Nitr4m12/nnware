@@ -590,6 +590,49 @@ position_t StreamSoundPlayer::GetPlaySamplePosition(bool isOriginalSamplePositio
     return m_PlaySamplePosition;
 }
 
+float StreamSoundPlayer::GetFilledBufferPercentage() const {
+    AtkStateAndParameterUpdateLock lock{};
+
+    if (!IsActive() || !m_Tracks[0].m_ActiveFlag)
+        return 0.0f;
+
+    if (m_LoadFinishFlag)
+        return 1.0f;
+
+    if (!m_IsPrepared) {
+        if (m_BufferBlockCount != 0)
+            return (m_BufferBlockCount - m_PrepareCounter) * 100.0f / m_BufferBlockCount;
+
+        return 0.0f;
+    }
+
+    size_t restSamples{0};
+    size_t entireSamples{0};
+    for (int i{0}; i < m_BufferBlockCount; ++i) {
+        size_t bufferSamples{static_cast<size_t>(m_Channels[0].m_WaveBuffer[i].sampleLength)};
+
+        switch (m_Channels[0].m_WaveBuffer[i].status) {
+        case WaveBuffer::Status_Play:
+            restSamples += bufferSamples - m_Channels[0].m_pVoice->GetCurrentPlayingSample();
+            break;
+
+        case WaveBuffer::Status_Wait:
+            restSamples += bufferSamples;
+            break;
+
+        default:
+            bufferSamples = m_StreamDataInfo.blockSampleCount;
+            break;
+
+        }
+
+        entireSamples += bufferSamples;
+    }
+
+    float percentage{restSamples * 100.0f / entireSamples};
+    return percentage;
+}
+
 bool StreamSoundPlayer::IsValidStartOffset(const StreamDataInfoDetail& streamDataInfo) {
     if (!streamDataInfo.loopFlag) {
         if (static_cast<size_t>(GetStartOffsetSamples(streamDataInfo)) >=
