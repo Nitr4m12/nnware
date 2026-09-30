@@ -682,6 +682,43 @@ bool StreamSoundPlayer::AllocStreamBuffers() {
     return true;
 }
 
+void StreamSoundPlayer::UpdateLoadingBlockIndex() {
+    void* bufferAddress[16];
+
+    for (int ch{0}; ch < m_ChannelCount; ++ch) {
+        bufferAddress[ch] =
+            util::BytePtr(m_Channels[ch].m_pBufferAddress,
+                          (StreamSoundLoader::DataBlockSizeMargin + m_StreamDataInfo.blockSize) *
+                              m_LoadingBufferBlockIndex)
+                .Get();
+    }
+
+    position_t startOffsetSamples{0};
+    switch (m_StartOffsetType) {
+    case StartOffsetType_Sample:
+        startOffsetSamples = m_StartOffset;
+        break;
+    case StartOffsetType_Millisec:
+        startOffsetSamples =
+            static_cast<size_t>(m_StartOffset) * m_StreamDataInfo.sampleRate / 1000;
+        startOffsetSamples = fnd::Clamp<position_t>(startOffsetSamples, 0, 0xffffffff);
+        break;
+    }
+
+    position_t prefetchOffsetSamples = m_PrefetchOffset;
+
+    m_StartOffset = 0;
+    m_PrefetchOffset = 0;
+
+    m_pLoader->RequestLoadData(bufferAddress, m_LoadingBufferBlockIndex, startOffsetSamples,
+                               prefetchOffsetSamples, !IsStarted() ? 1 : 2);
+
+    if (m_LoadingBufferBlockIndex + 1 < static_cast<uint32_t>(m_BufferBlockCount))
+        ++m_LoadingBufferBlockIndex;
+    else
+        m_LoadingBufferBlockIndex = 0;
+}
+
 bool StreamSoundPlayer::IsValidStartOffset(const StreamDataInfoDetail& streamDataInfo) {
     if (!streamDataInfo.loopFlag) {
         if (static_cast<size_t>(GetStartOffsetSamples(streamDataInfo)) >=
