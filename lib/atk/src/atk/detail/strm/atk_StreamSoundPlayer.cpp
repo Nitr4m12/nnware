@@ -413,18 +413,50 @@ bool StreamSoundPlayer::LoadPrefetchBlocks(StreamSoundPrefetchFileReader& reader
     indexInfo.Initialize(m_StreamDataInfo);
 
     position_t sampleBeginPosition{0};
-    size_t usedPrefetchMaxSize{0};
+
+    // Present in dwarf info, but maybe unused?
+    [[maybe_unused]] size_t usedPrefetchMaxSize{0};
 
     for (int blockIndex{0}; blockIndex < m_BufferBlockCount; ++blockIndex) {
         PrefetchLoadDataParam loadDataParam;
         loadDataParam.Initialize();
+        loadDataParam.prefetchBlockIndex = 0;
+        loadDataParam.prefetchBlockBytes = 0;
+
+        loadDataParam.sampleBegin = sampleBeginPosition;
 
         uint32_t blockOffsetFromLoopEnd{0};
-        if (!indexInfo.IsOverLastBlock(blockIndex))
+        if (indexInfo.IsOverLastBlock(blockIndex))
             blockOffsetFromLoopEnd = indexInfo.GetBlockOffsetFromLoopEnd(blockIndex);
 
         if (indexInfo.IsLastBlock(blockIndex, blockOffsetFromLoopEnd)) {
+            PreparePrefetchOnLastBlock(&loadDataParam, indexInfo);
+        } else if (m_StreamDataInfo.loopFlag && indexInfo.IsOverLastBlock(blockIndex)) {
+            if (blockOffsetFromLoopEnd != 1)
+                PreparePrefetchOnLoopBlock(&loadDataParam, indexInfo, blockOffsetFromLoopEnd);
+            else if (PreparePrefetchOnLoopStartBlock(&loadDataParam, indexInfo, reader))
+                sampleBeginPosition = 0;
+            else
+                return false;
+
+        } else {
+            if (!PreparePrefetchOnNormalBlock(&loadDataParam, blockIndex, reader))
+                return false;
         }
+
+        sampleBeginPosition += loadDataParam.samples;
+        loadDataParam.blockIndex = m_LoadingBufferBlockIndex;
+        loadDataParam.sampleOffset = 0;
+        LoadStreamData(true, loadDataParam, m_AssignNumber, true, loadDataParam.prefetchBlockIndex,
+                       loadDataParam.prefetchBlockBytes);
+
+        if (m_LoadingBufferBlockIndex + 1 < static_cast<uint32_t>(m_BufferBlockCount))
+            ++m_LoadingBufferBlockIndex;
+        else
+            m_LoadingBufferBlockIndex = 0;
+
+        if (loadDataParam.lastBlockFlag)
+            break;
     }
 
     return true;
@@ -485,6 +517,7 @@ bool StreamSoundPlayer::PreparePrefetchOnLoopStartBlock(PrefetchLoadDataParam* p
     param->prefetchBlockBytes = m_StreamDataInfo.blockSize;
     param->prefetchBlockIndex = indexInfo.loopStartBlockIndex;
     param->sampleBegin = indexInfo.loopStartInBlock;
+
     m_PrefetchOffset = m_StreamDataInfo.blockSampleCount * (indexInfo.loopStartBlockIndex + 1);
 
     if (m_StreamDataInfo.sampleFormat == SampleFormat_DspAdpcm) {
@@ -502,7 +535,7 @@ void StreamSoundPlayer::PreparePrefetchOnLoopBlock(PrefetchLoadDataParam* param,
                                                    uint32_t blockOffsetFromLoopEnd) {
     param->samples = m_StreamDataInfo.blockSampleCount;
     param->prefetchBlockBytes = m_StreamDataInfo.blockSize;
-    param->prefetchBlockIndex = blockOffsetFromLoopEnd + indexInfo.loopStartBlockIndex - 1;
+    param->prefetchBlockIndex = indexInfo.loopStartBlockIndex + blockOffsetFromLoopEnd - 1;
 
     m_PrefetchOffset += m_StreamDataInfo.blockSampleCount;
 }
