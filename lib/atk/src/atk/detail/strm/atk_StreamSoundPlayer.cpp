@@ -6,6 +6,7 @@
 #include <nn/atk/atk_MultiVoiceManager.h>
 #include <nn/atk/atk_SoundSystem.h>
 #include <nn/atk/fnd/basis/atkfnd_Inlines.h>
+#include "nn/atk/atk_Global.h"
 
 namespace {
 
@@ -1044,6 +1045,17 @@ void StreamSoundPlayer::SetTrackTvVolume(uint32_t trackBitFlag, float volume) {
          ++trackNo, trackBitFlag >>= 1) {
         if (trackBitFlag & 1)
             m_Tracks[trackNo].m_TvParam.volume = volume;
+    }
+}
+
+void StreamSoundPlayer::SetTrackChannelTvMixParameter(uint32_t trackBitFlag, uint32_t srcChNo,
+                                                      const MixParameter& param) {
+    for (int trackNo{0}; trackNo < m_TrackCount && trackBitFlag != 0;
+         ++trackNo, trackBitFlag >>= 1) {
+        if (trackBitFlag & 1) {
+            for (int i{0}; i < ChannelIndex_Count; ++i)
+                m_Tracks[trackNo].m_TvParam.mixParameter[srcChNo].ch[i] = param.ch[i];
+        }
     }
 }
 
