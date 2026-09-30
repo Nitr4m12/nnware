@@ -1015,4 +1015,12 @@ void StreamSoundPlayer::SetTrackVolume(uint32_t trackBitFlag, float volume) {
     }
 }
 
+void StreamSoundPlayer::SetTrackInitialVolume(uint32_t trackBitFlag, uint32_t volume) {
+    for (int trackNo{0}; trackNo < m_TrackCount && trackBitFlag != 0;
+         ++trackNo, trackBitFlag >>= 1) {
+        if (trackBitFlag & 1)
+            m_Tracks[trackNo].volume = volume;
+    }
+}
+
 }  // namespace nn::atk::detail::driver
