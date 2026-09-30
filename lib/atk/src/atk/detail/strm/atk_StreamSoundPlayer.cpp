@@ -648,6 +648,8 @@ int StreamSoundPlayer::GetTotalBufferBlockCount() const {
     return m_ChannelCount * m_BufferBlockCount;
 }
 
+// bool StreamSoundPlayer::LoadHeader(bool result, AdpcmParam** adpcmParam, uint16_t assignNumber)
+
 bool StreamSoundPlayer::CheckPrefetchRevision(const StreamDataInfoDetail& streamDataInfo) const {
     if (!m_IsPrefetchRevisionCheckEnabled)
         return true;
@@ -655,6 +657,26 @@ bool StreamSoundPlayer::CheckPrefetchRevision(const StreamDataInfoDetail& stream
     if (streamDataInfo.isRevisionCheckEnabled) {
         bool result{streamDataInfo.revisionValue == m_PrefetchRevisionValue};
         return result;
+    }
+
+    return true;
+}
+
+bool StreamSoundPlayer::AllocStreamBuffers() {
+    for (int index{0}; index < m_ChannelCount; ++index) {
+        void* strmBuffer{m_pBufferPool->Alloc()};
+
+        if (strmBuffer == nullptr) {
+            for (int i{0}; i < index; ++i) {
+                m_pBufferPool->Free(m_Channels[i].m_pBufferAddress);
+                m_Channels[i].m_pBufferAddress = nullptr;
+            }
+
+            return false;
+        }
+
+        m_Channels[index].m_pBufferAddress = strmBuffer;
+        m_Channels[index].m_UpdateType = m_UpdateType;
     }
 
     return true;
