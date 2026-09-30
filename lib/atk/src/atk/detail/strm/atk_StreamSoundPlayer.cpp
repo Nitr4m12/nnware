@@ -1083,4 +1083,12 @@ void StreamSoundPlayer::SetTrackTvMainSend(uint32_t trackBitFlag, float send) {
     }
 }
 
+void StreamSoundPlayer::SetTrackTvFxSend(uint32_t trackBitFlag, AuxBus bus, float send) {
+    for (int trackNo{0}; trackNo < m_TrackCount && trackBitFlag != 0;
+         ++trackNo, trackBitFlag >>= 1) {
+        if (trackBitFlag & 1)
+            m_Tracks[trackNo].m_TvParam.send[bus + 1L] = send;
+    }
+}
+
 }  // namespace nn::atk::detail::driver
