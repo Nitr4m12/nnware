@@ -467,6 +467,21 @@ void StreamSoundPlayer::Start() {
         StartPlayer();
 }
 
+void StreamSoundPlayer::UpdatePauseStatus() {
+    bool pauseStatus{(IsPause() | m_LoadWaitFlag) != 0};
+
+    if (pauseStatus != m_PauseStatus) {
+        for (int ch{0}; ch < m_ChannelCount; ++ch) {
+            MultiVoice* voice{m_Channels[ch].m_pVoice};
+
+            if (voice != nullptr)
+                voice->Pause(pauseStatus);
+        }
+
+        m_PauseStatus = pauseStatus;
+    }
+}
+
 bool StreamSoundPlayer::IsValidStartOffset(const StreamDataInfoDetail& streamDataInfo) {
     if (!streamDataInfo.loopFlag) {
         if (GetStartOffsetSamples(streamDataInfo) >= streamDataInfo.sampleCount)
