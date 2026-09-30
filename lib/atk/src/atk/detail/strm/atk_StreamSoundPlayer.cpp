@@ -960,4 +960,28 @@ bool StreamSoundPlayer::PreparePrefetchOnNormalBlock(PrefetchLoadDataParam* para
     return true;
 }
 
+bool StreamSoundPlayer::SetAdpcmLoopInfo(StreamSoundPrefetchFileReader& reader,
+                                         const StreamDataInfoDetail& streamDataInfo,
+                                         AdpcmParam* adpcmParam,
+                                         AdpcmContextNotAligned* adpcmContext) {
+    for (int ch{0}; ch < streamDataInfo.channelCount; ++ch) {
+        DspAdpcmParam dspAdpcmParam;
+        DspAdpcmLoopParam dspAdpcmLoopParam;
+        if (!reader.ReadDspAdpcmChannelInfo(&dspAdpcmParam, &dspAdpcmLoopParam, ch))
+            return false;
+
+        for (int i{0}; i < 8; ++i) {
+            for (int j{0}; j < 2; ++j)
+                adpcmParam[ch].coefficients[(i * 2) + j] = dspAdpcmParam.coef[i][j];
+        }
+
+        m_Channels[ch].m_pVoice->SetAdpcmParam(0, adpcmParam[ch]);
+        adpcmContext[ch].audioAdpcmContext.predScale = dspAdpcmLoopParam.loopPredScale;
+        adpcmContext[ch].audioAdpcmContext.history[0] = dspAdpcmLoopParam.loopYn1;
+        adpcmContext[ch].audioAdpcmContext.history[1] = dspAdpcmLoopParam.loopYn2;
+    }
+
+    return true;
+}
+
 }  // namespace nn::atk::detail::driver
