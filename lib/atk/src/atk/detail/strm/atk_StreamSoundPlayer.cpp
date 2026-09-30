@@ -497,6 +497,10 @@ void StreamSoundPlayer::StartPlayer() {
     SetStartedFlag(true);
 }
 
+void StreamSoundPlayer::Stop() {
+    FinishPlayer();
+}
+
 void StreamSoundPlayer::UpdatePauseStatus() {
     bool pauseStatus{(IsPause() | m_LoadWaitFlag) != 0};
 
