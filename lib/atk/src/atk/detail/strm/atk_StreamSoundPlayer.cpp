@@ -6,7 +6,6 @@
 #include <nn/atk/atk_MultiVoiceManager.h>
 #include <nn/atk/atk_SoundSystem.h>
 #include <nn/atk/fnd/basis/atkfnd_Inlines.h>
-#include "nn/atk/atk_Global.h"
 
 namespace {
 
@@ -1089,6 +1088,20 @@ void StreamSoundPlayer::SetTrackTvFxSend(uint32_t trackBitFlag, AuxBus bus, floa
         if (trackBitFlag & 1)
             m_Tracks[trackNo].m_TvParam.send[bus + 1L] = send;
     }
+}
+
+StreamTrack* StreamSoundPlayer::GetPlayerTrack(int trackNo) {
+    if (static_cast<uint32_t>(trackNo) >= StreamTrackCount)
+        return nullptr;
+
+    return &m_Tracks[trackNo];
+}
+
+const StreamTrack* StreamSoundPlayer::GetPlayerTrack(int trackNo) const {
+    if (static_cast<uint32_t>(trackNo) >= StreamTrackCount)
+        return nullptr;
+
+    return &m_Tracks[trackNo];
 }
 
 }  // namespace nn::atk::detail::driver
