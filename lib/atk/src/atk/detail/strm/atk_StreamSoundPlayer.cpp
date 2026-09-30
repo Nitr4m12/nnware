@@ -1,3 +1,4 @@
+#include <cstddef>
 #include <nn/atk/atk_StreamSoundPlayer.h>
 
 #include <algorithm>
@@ -572,6 +573,21 @@ bool StreamSoundPlayer::ReadStreamSoundDataInfo(StreamSoundDataInfo* info) const
 #endif
 
     return true;
+}
+
+position_t StreamSoundPlayer::GetPlaySamplePosition(bool isOriginalSamplePosition) const {
+    AtkStateAndParameterUpdateLock lock{};
+
+    if (!IsActive() || !m_Tracks[0].m_ActiveFlag)
+        return -1;
+
+    if (!m_IsPrepared)
+        return 0;
+
+    if (isOriginalSamplePosition)
+        return m_OriginalPlaySamplePosition;
+
+    return m_PlaySamplePosition;
 }
 
 bool StreamSoundPlayer::IsValidStartOffset(const StreamDataInfoDetail& streamDataInfo) {
