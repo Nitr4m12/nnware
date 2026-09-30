@@ -524,6 +524,21 @@ void StreamSoundPlayer::UpdatePauseStatus() {
     }
 }
 
+bool StreamSoundPlayer::IsBufferEmpty() const {
+    for (int i{0}; i < m_BufferBlockCount; ++i) {
+        switch (m_Channels[0].m_WaveBuffer[i].status) {
+        case WaveBuffer::Status_Wait:
+        case WaveBuffer::Status_Play:
+            return false;
+        case WaveBuffer::Status_Free:
+        case WaveBuffer::Status_Done:
+            continue;
+        }
+    }
+
+    return true;
+}
+
 bool StreamSoundPlayer::IsValidStartOffset(const StreamDataInfoDetail& streamDataInfo) {
     if (!streamDataInfo.loopFlag) {
         if (GetStartOffsetSamples(streamDataInfo) >= streamDataInfo.sampleCount)
