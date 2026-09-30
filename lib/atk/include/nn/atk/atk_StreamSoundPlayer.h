@@ -159,8 +159,11 @@ public:
     void SetTrackDrcMainSend(uint32_t, uint32_t, float);
     void SetTrackDrcFxSend(uint32_t, uint32_t, AuxBus, float);
 
-    bool ReadStreamSoundDataInfo(StreamDataInfo* info) const;
+#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
+    bool ReadStreamDataInfo(StreamDataInfo* info) const;
+#else
     bool ReadStreamSoundDataInfo(StreamSoundDataInfo* info) const;
+#endif
 
     int GetPlayLoopCount() const { return m_PlayingBlockLoopCounter; }
     position_t GetPlaySamplePosition(bool isOriginalSamplePosition) const;

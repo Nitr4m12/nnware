@@ -15,7 +15,6 @@
 namespace nn::atk::detail::driver {
 
 struct SoundThreadLock {};
-struct AtkStateAndParameterUpdateLock {};
 
 class SoundThread : fnd::Thread::Handler {
 public:
@@ -169,5 +168,19 @@ static_assert(sizeof(SoundThread) == 0x4c8);
 #else
 static_assert(sizeof(SoundThread) == 0x508);
 #endif
+
+class AtkStateAndParameterUpdateLock {
+public:
+    AtkStateAndParameterUpdateLock() {
+        SoundThread::GetInstance().LockAtkStateAndParameterUpdate();
+    }
+
+    ~AtkStateAndParameterUpdateLock() {
+        SoundThread::GetInstance().UnlockAtkStateAndParameterUpdate();
+    }
+
+private:
+    NN_NO_COPY(AtkStateAndParameterUpdateLock);
+};
 
 }  // namespace nn::atk::detail::driver
