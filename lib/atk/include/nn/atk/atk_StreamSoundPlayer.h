@@ -266,7 +266,7 @@ private:
     void UpdateBuffer();
     void UpdateVoiceParams(StreamTrack* track);
 
-    void SetOutputParam(const OutputParam* pOutOutputParam, const OutputParam& trackParam,
+    void SetOutputParam(OutputParam* pOutOutputParam, const OutputParam& trackParam,
                         const TrackData& trackData);
 
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
