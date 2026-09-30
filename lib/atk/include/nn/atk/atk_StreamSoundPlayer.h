@@ -189,6 +189,7 @@ public:
     const StreamTrack* GetPlayerTrack(int trackNo) const;
 
     bool LoadHeader(bool result, AdpcmParam** adpcmParam, uint16_t assignNumber);
+
     bool LoadStreamData(bool result, const LoadDataParam& loadDataParam, uint16_t assignNumber);
     bool LoadStreamData(bool result, const LoadDataParam& loadDataParam, uint16_t assignNumber,
                         bool usePrefetchFlag, uint32_t currentPrefetchBlockIndex,
@@ -198,7 +199,9 @@ public:
 
     os::Tick GetProcessTick(const SoundProfile& profile);
 
-    void* detail_SetFsAccessLog(fnd::FsAccessLog* fsAccessLog);
+    void* detail_SetFsAccessLog(fnd::FsAccessLog* fsAccessLog) {
+        return m_pLoader->detail_SetFsAccessLog(fsAccessLog);
+    }
 
 protected:
     void OnUpdateFrameSoundThread() override;
@@ -253,7 +256,8 @@ private:
         bool IsLoopStartBlock(uint32_t blockIndex) { return loopStartInBlock == blockIndex; }
 
         bool IsLastBlock(uint32_t blockIndex, uint32_t blockOffsetFromLoopEnd) {
-            return (lastBlockIndex == 0 || blockIndex == lastBlockIndex) || ((IsOverLastBlock(blockIndex)) && blockOffsetFromLoopEnd == 0);
+            return (lastBlockIndex == 0 || blockIndex == lastBlockIndex) ||
+                   ((IsOverLastBlock(blockIndex)) && blockOffsetFromLoopEnd == 0);
         }
     };
     static_assert(sizeof(PrefetchIndexInfo) == 0x18);
