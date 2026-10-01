@@ -958,7 +958,80 @@ void StreamSoundPlayer::Update() {
 }
 
 // TODO: void StreamSoundPlayer::UpdateBuffer()
-// TODO: void StreamSoundPlayer::UpdateVoiceParams(StreamTrack* track)
+
+void StreamSoundPlayer::UpdateVoiceParams(StreamTrack* track) {
+    if (!track->m_ActiveFlag)
+        return;
+
+    TrackData trackData;
+    trackData.Set(track);
+
+    float volume{1.0};
+    volume *= GetVolume();
+    volume *= trackData.volume;
+    volume *= track->m_Volume;
+
+    float pitchRatio{1.0};
+    pitchRatio *= GetPitch();
+    pitchRatio *= m_ItemData.pitch;
+
+    if (m_FileType == OpusFileType && pitchRatio > OpusPitchMax)
+        pitchRatio = OpusPitchMax;
+
+    float lpfFreq{trackData.lpfFreq};
+    lpfFreq += GetLpfFreq();
+
+    int biquadType;
+    float biquadValue;
+    int handleBiquadType{GetBiquadFilterType()};
+
+    if (handleBiquadType == BiquadFilterType_Inherit) {
+        biquadType = trackData.biquadType;
+        biquadValue = trackData.biquadValue;
+    } else {
+        biquadType = handleBiquadType;
+        biquadValue = GetBiquadFilterValue();
+    }
+
+    uint32_t outputLine{0};
+    if (track->m_OutputLine == -1)
+        outputLine = GetOutputLine();
+    else
+        outputLine = track->m_OutputLine;
+
+    OutputParam tvParam;
+
+    tvParam = GetTvParam();
+    SetOutputParam(&tvParam, track->m_TvParam, trackData);
+
+    for (int ch{0}; ch < track->channelCount; ++ch) {
+        MultiVoice* voice{track->m_pChannels[ch]->m_pVoice};
+
+        if (voice != nullptr) {
+            voice->SetVolume(volume);
+            voice->SetPitch(pitchRatio);
+            voice->SetLpfFreq(lpfFreq);
+            voice->SetBiquadFilter(biquadType, biquadValue);
+            voice->SetOutputLine(outputLine);
+
+            if (track->channelCount == 1) {
+                voice->SetTvParam(tvParam);
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+                if (GetTvAdditionalParamAddr() != nullptr)
+                    voice->SetTvAdditionalParam(*GetTvAdditionalParamAddr());
+#endif
+            } else if (track->channelCount == 2) {
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+                ApplyTvOutputParamForMultiChannel(tvParam, voice, ch,
+                                                  static_cast<MixMode>(tvParam.mixMode));
+#else
+                ApplyTvOutputParamForMultiChannel(tvParam, GetTvAdditionalParamAddr(), voice, ch,
+                                                  static_cast<MixMode>(tvParam.mixMode));
+#endif
+            }
+        }
+    }
+}
 
 bool StreamSoundPlayer::CheckDiskDriveError() const {
     return SoundSystem::detail_IsStreamLoadWait();
@@ -976,7 +1049,7 @@ void StreamSoundPlayer::TrackData::Set(const StreamTrack* track) {
         pan = (track->pan - 64) / 63.0f;
 
     if (track->span < 64)
-        span = track->span / 63.0f;
+        span = static_cast<uint32_t>(track->span) / 63.0f;
     else
         span = (track->span + 1) / 64.0f;
 
@@ -990,7 +1063,7 @@ void StreamSoundPlayer::SetOutputParam(OutputParam* pOutOutputParam, const Outpu
                                        const TrackData& trackData) {
     pOutOutputParam->volume *= trackParam.volume;
 
-    for (int i{0}; i < WaveChannelMax; ++i) {
+    for (int i{0}; i < static_cast<int>(WaveChannelMax); ++i) {
         for (int j{0}; j < ChannelIndex_Count; ++j)
             pOutOutputParam->mixParameter[i].ch[j] *= trackParam.mixParameter[i].ch[j];
     }
@@ -998,15 +1071,23 @@ void StreamSoundPlayer::SetOutputParam(OutputParam* pOutOutputParam, const Outpu
     pOutOutputParam->pan += trackData.pan + trackParam.pan;
     pOutOutputParam->span += trackData.span + trackParam.span;
 
-    for (int i{0}; i < OutputDevice_Count; ++i) {
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    for (int i{0}; i < OutputDevice_Count; ++i)
         pOutOutputParam->send[i] += trackParam.send[i];
-        pOutOutputParam->send[i] += trackData.mainSend + m_ItemData.mainSend;
-    }
+#else
+    for (int i{0}; i < DefaultBusCount; ++i)
+        pOutOutputParam->send[i] += trackParam.send[i];
+#endif
+
+    pOutOutputParam->send[0] += trackData.mainSend + m_ItemData.mainSend;
 
     for (int i{0}; i < AuxBus_Count; ++i) {
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
         pOutOutputParam->send[i + 1] += trackParam.send[i + 1];
+#endif
         pOutOutputParam->send[i + 1] += trackData.fxSend[i] + m_ItemData.fxSend[i];
     }
+
 }
 
 // TODO: void StreamSoundPlayer::ApplyTvOutputParamForMultiChannel

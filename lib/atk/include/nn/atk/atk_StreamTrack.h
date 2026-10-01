@@ -21,13 +21,13 @@ static_assert(sizeof(StreamChannel) == 0x1080);
 
 struct StreamTrack {
     bool m_ActiveFlag;
-    StreamChannel* m_pChannels[2];
+    StreamChannel* m_pChannels[WaveChannelMax];
     uint8_t channelCount;
     uint8_t volume;
     uint8_t pan;
     uint8_t span;
     uint8_t mainSend;
-    uint8_t fxSend[3];
+    uint8_t fxSend[AuxBus_Count];
     uint8_t lpfFreq;
     int8_t biquadType;
     uint8_t biquadValue;
