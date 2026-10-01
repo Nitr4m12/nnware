@@ -648,7 +648,67 @@ int StreamSoundPlayer::GetTotalBufferBlockCount() const {
     return m_ChannelCount * m_BufferBlockCount;
 }
 
-// TODO: bool StreamSoundPlayer::LoadHeader
+bool StreamSoundPlayer::LoadHeader(bool result, AdpcmParam** adpcmParam, uint16_t assignNumber) {
+    if (!m_IsInitialized)
+        return false;
+
+    if (m_AssignNumber != assignNumber)
+        return false;
+
+    if (!result) {
+        SetFinishFlag(true);
+        Stop();
+        return false;
+    }
+
+    m_ChannelCount = std::min(m_StreamDataInfo.channelCount, StreamChannelCount);
+
+    if (m_IsPreparedPrefetch) {
+        for (int ch{0}; ch < m_ChannelCount; ++ch) {
+            if (m_Channels[ch].m_pVoice == nullptr)
+                return false;
+        }
+
+        if (!CheckPrefetchRevision(m_StreamDataInfo))
+            return false;
+    }
+
+    if (!AllocStreamBuffers()) {
+        Finalize();
+        SetFinalizedForCannotAllocateResourceFlag(true);
+        return false;
+    }
+
+    if (!ApplyStreamDataInfo(m_StreamDataInfo))
+        return false;
+
+    if (m_IsPreparedPrefetch) {
+        m_IsPrepared = true;
+
+    } else {
+        if (!SetupPlayer())
+            return false;
+
+        if (!AllocVoices()) {
+            FreeStreamBuffers();
+            return false;
+        }
+
+        m_PrepareCounter = 0;
+        for (int i{0}; i < m_BufferBlockCount; ++i) {
+            UpdateLoadingBlockIndex();
+            ++m_PrepareCounter;
+        }
+    }
+
+    for (int ch{0}; ch < m_ChannelCount; ++ch) {
+        AdpcmParam* pAdpcmParam{adpcmParam[ch]};
+        if (pAdpcmParam != nullptr)
+            m_Channels[ch].m_pVoice->SetAdpcmParam(0, *pAdpcmParam);
+    }
+
+    return true;
+}
 
 bool StreamSoundPlayer::CheckPrefetchRevision(const StreamDataInfoDetail& streamDataInfo) const {
     if (!m_IsPrefetchRevisionCheckEnabled)
