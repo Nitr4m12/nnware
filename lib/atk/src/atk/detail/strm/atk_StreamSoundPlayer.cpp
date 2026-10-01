@@ -779,14 +779,99 @@ void StreamSoundPlayer::UpdateLoadingBlockIndex() {
         m_LoadingBufferBlockIndex = 0;
 }
 
-// TODO: bool StreamSoundPlayer::LoadStreamData
-// TODO: bool StreamSoundPlayer::LoadStreamData
+bool StreamSoundPlayer::LoadStreamData(bool result, const LoadDataParam& loadDataParam,
+                                       uint16_t assignNumber) {
+    return LoadStreamData(result, loadDataParam, assignNumber, false, 0, 0);
+}
+
+bool StreamSoundPlayer::LoadStreamData(bool result, const LoadDataParam& loadDataParam,
+                                       uint16_t assignNumber, bool usePrefetchFlag,
+                                       uint32_t currentPrefetchBlockIndex,
+                                       size_t currentPrefetchBlockBytes) {
+    if (!m_IsInitialized)
+        return false;
+
+    if (!result) {
+        SetFinishFlag(true);
+        Stop();
+        return false;
+    }
+
+    if (m_AssignNumber != assignNumber)
+        return false;
+
+    if (!m_LoadWaitFlag && IsStoppedByLoadingDelay()) {
+        m_ReportLoadingDelayFlag = true;
+        m_IsStoppedByLoadingDelay = true;
+        m_LoadWaitFlag = true;
+        UpdatePauseStatus();
+    }
+
+    if (loadDataParam.samples != 0) {
+        for (int ch{0}; ch < m_ChannelCount; ++ch) {
+            const void* bufferAddress;
+            if (usePrefetchFlag)
+                bufferAddress =
+                    util::ConstBytePtr(m_PrefetchDataInfo.dataAddress,
+                                       (currentPrefetchBlockBytes * ch) +
+                                           m_ChannelCount *
+                                               static_cast<ptrdiff_t>(currentPrefetchBlockIndex *
+                                                                      m_StreamDataInfo.blockSize))
+                        .Get();
+            else
+                bufferAddress = util::ConstBytePtr(m_Channels[ch].m_pBufferAddress,
+                                                   (m_StreamDataInfo.blockSize +
+                                                    StreamSoundLoader::DataBlockSizeMargin) *
+                                                       loadDataParam.blockIndex)
+                                    .Get();
+
+            WaveBuffer* waveBuffer{&m_Channels[ch].m_WaveBuffer[loadDataParam.blockIndex]};
+            AdpcmContext* pAdpcmContext{&m_Channels[ch].m_AdpcmContext[loadDataParam.blockIndex]};
+
+            if (loadDataParam.adpcmContextEnable)
+                pAdpcmContext->audioAdpcmContext = loadDataParam.adpcmContext[ch].audioAdpcmContext;
+            else
+                pAdpcmContext = nullptr;
+
+            waveBuffer->Initialize();
+
+            waveBuffer->bufferAddress = bufferAddress;
+
+            if (usePrefetchFlag)
+                waveBuffer->bufferSize = m_StreamDataInfo.blockSize;
+            else
+                waveBuffer->bufferSize = loadDataParam.sampleBytes;
+
+            waveBuffer->sampleLength = loadDataParam.samples;
+            waveBuffer->sampleOffset = loadDataParam.sampleOffset;
+            waveBuffer->pAdpcmContext = pAdpcmContext;
+
+            m_Channels[ch].AppendWaveBuffer(waveBuffer, loadDataParam.lastBlockFlag);
+        }
+
+        WaveBufferInfo* waveBufferInfo{&m_WaveBufferInfo[loadDataParam.blockIndex]};
+
+        waveBufferInfo->sampleBegin = loadDataParam.sampleBegin;
+        waveBufferInfo->sampleLength = loadDataParam.samples;
+        waveBufferInfo->loopCount = loadDataParam.loopCount;
+    }
+
+    if (loadDataParam.lastBlockFlag)
+        m_LoadFinishFlag = true;
+
+    if (m_IsPrepared || usePrefetchFlag)
+        return true;
+
+    --m_PrepareCounter;
+    if (m_PrepareCounter != 0 && !m_LoadFinishFlag)
+        return true;
+
+    m_IsPrepared = true;
+    return true;
+}
 
 bool StreamSoundPlayer::IsStoppedByLoadingDelay() const {
     if (!m_IsPrepared)
-        return false;
-
-    if (m_BufferBlockCount <= 0)
         return false;
 
     // XXX: according to DWARF, this gets initialized to true
