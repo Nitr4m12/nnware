@@ -75,14 +75,31 @@ using ProfileReaderList =
 
 struct TaskProfile;
 
-template <typename T>
+template <typename TProfile>
 class AtkProfileReader {
 public:
+    AtkProfileReader() = default;
+
+    size_t GetRequiredMemorySize(int32_t alignment);
+
+    size_t GetRequirdMemorySize(int32_t alignment);
+
+    void Initialize(void*, size_t, int);
+    void Finalize();
+
+    int Read(TProfile* pOutProfile, int readSize);
+
+    void Record(const TProfile& profile);
+
+    bool IsInitialized() const { return m_IsInitialized; }
+
     util::IntrusiveListNode m_List;
 
 private:
+    NN_NO_COPY(AtkProfileReader);
+
     bool m_IsInitialized;
-    TaskProfile* m_pProfile;
+    TProfile* m_pProfile;
     int32_t m_ProfileCount;
     int32_t m_RecordIndex;
     int32_t m_ReadIndex;

@@ -1,12 +1,11 @@
 #pragma once
 
-#include <nn/time.h>
+#include <nn/nn_TimeSpan.h>
 #include <nn/util/util_IntrusiveList.h>
 
 #include <nn/atk/atk_Config.h>
 #include <nn/atk/atk_ProfileReader.h>
 #include <nn/atk/detail/atk_IStreamDataDecoder.h>
-#include <nn/atk/fnd/os/atkfnd_CriticalSection.h>
 
 namespace nn::atk {
 
@@ -17,16 +16,11 @@ class StreamSoundPlayer;
 }  // namespace detail::driver
 
 struct TaskProfile {
-    enum TaskProfileType {
-        TaskProfileType_LoadStreamBlock,
-        TaskProfileType_LoadOpusStreamBlock,
-    };
-
-    class LoadStreamBlock {
+    struct LoadStreamBlock {
     public:
         TimeSpan GetTotalTime() const;
-        uint64_t GetBeginTick() const;
-        uint64_t GetEndTick() const;
+        os::Tick GetBeginTick() const;
+        os::Tick GetEndTick() const;
 
         float GetRemainingCachePercentage() const;
         size_t GetCachedLength() const;
@@ -58,11 +52,11 @@ struct TaskProfile {
     static_assert(sizeof(LoadStreamBlock) == 0x30);
 #endif
 
-    class LoadOpusStreamBlock {
+    struct LoadOpusStreamBlock {
     public:
         TimeSpan GetTotalTime() const;
-        uint64_t GetBeginTick() const;
-        uint64_t GetEndTick() const;
+        os::Tick GetBeginTick() const;
+        os::Tick GetEndTick() const;
 
         float GetRemainingCachePercentage() const;
         size_t GetCachedLength() const;
@@ -108,6 +102,11 @@ struct TaskProfile {
     static_assert(sizeof(LoadOpusStreamBlock) == 0x50);
 #endif
 
+    enum TaskProfileType {
+        TaskProfileType_LoadStreamBlock,
+        TaskProfileType_LoadOpusStreamBlock,
+    };
+
     TaskProfileType type;
     union {
         LoadStreamBlock loadStreamBlock;
@@ -124,24 +123,24 @@ using TaskProfileReader = AtkProfileReader<TaskProfile>;
 
 class TaskProfileLogger {
 public:
-    using TaskProfileReaderList = util::IntrusiveList<
-        TaskProfileReader,
-        util::IntrusiveListMemberNodeTraits<TaskProfileReader, &TaskProfileReader::m_List>>;
-
-    TaskProfileLogger();
+    TaskProfileLogger() = default;
 
     void Record(const TaskProfile& profile);
 
-    void RegisterReader(TaskProfileReader& profileReader);
-    void UnregisterReader(const TaskProfileReader& profileReader);
-
-    bool IsProfilingEnabled() const { return m_IsProfilingEnabled; }
+    void RegisterReader(TaskProfileReader& reader);
+    void UnregisterReader(const TaskProfileReader& reader);
 
     void SetProfilingEnabled(bool isEnabledProfiling);
+
+    bool IsProfilingEnabled() const { return m_IsProfilingEnabled; }
 
     void Finalize();
 
 private:
+    using TaskProfileReaderList = util::IntrusiveList<
+        TaskProfileReader,
+        util::IntrusiveListMemberNodeTraits<TaskProfileReader, &TaskProfileReader::m_List>>;
+
     TaskProfileReaderList m_List;
     detail::fnd::CriticalSection m_Lock;
     bool m_IsProfilingEnabled;
