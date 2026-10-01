@@ -908,7 +908,55 @@ void StreamSoundPlayer::VoiceCallbackFunc(MultiVoice* voice, MultiVoice::VoiceCa
     }
 }
 
-// TODO: void StreamSoundPlayer::Update()
+void StreamSoundPlayer::Update() {
+    if (!TryAllocLoader())
+        return;
+
+    if (!m_IsSucceedPrepare) {
+        m_pLoader->Initialize();
+        Setup(m_SetupArg);
+        Prepare(m_PrepareArg);
+    }
+
+    if (m_pLoader == nullptr)
+        return;
+
+    m_pLoader->Update();
+
+    if (m_DelayCount >= 1) {
+        --m_DelayCount;
+        return;
+    }
+
+    if (m_UseDelayCount && m_IsPrepared && !IsStarted())
+        StartPlayer();
+
+    UpdateBuffer();
+
+    if (IsStarted()) {
+        for (int ch{0}; ch < m_ChannelCount; ++ch) {
+            StreamChannel& channel{m_Channels[ch]};
+            if (channel.m_pVoice == nullptr) {
+                Stop();
+                SetFinishFlag(true);
+                return;
+            }
+        }
+
+        for (int trackIndex{0}; trackIndex < m_TrackCount; ++trackIndex)
+            UpdateVoiceParams(&m_Tracks[trackIndex]);
+    }
+
+    if (m_LoadWaitFlag && !m_pLoader->IsBusy() && !CheckDiskDriveError()) {
+        m_LoadWaitFlag = false;
+        m_IsStoppedByLoadingDelay = false;
+        UpdatePauseStatus();
+    }
+
+    if (m_ReportLoadingDelayFlag)
+        m_ReportLoadingDelayFlag = false;
+}
+
 // TODO: void StreamSoundPlayer::UpdateBuffer()
 // TODO: void StreamSoundPlayer::UpdateVoiceParams(StreamTrack* track)
 
