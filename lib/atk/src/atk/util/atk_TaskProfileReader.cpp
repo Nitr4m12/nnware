@@ -10,4 +10,8 @@ os::Tick TaskProfile::LoadStreamBlock::GetBeginTick() const {
     return m_BeginTick;
 }
 
+os::Tick TaskProfile::LoadStreamBlock::GetEndTick() const {
+    return m_EndTick;
+}
+
 }  // namespace nn::atk
