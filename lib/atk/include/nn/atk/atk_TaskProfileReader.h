@@ -1,6 +1,6 @@
 #pragma once
 
-#include <nn/nn_TimeSpan.h>
+#include <nn/time.h>
 #include <nn/util/util_IntrusiveList.h>
 
 #include <nn/atk/atk_Config.h>
