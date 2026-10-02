@@ -52,7 +52,7 @@ class ProfileReader {
 public:
     ProfileReader();
 
-    size_t Read(SoundProfile* profile, int32_t maxCount);
+    int32_t Read(SoundProfile* profile, int32_t maxCount);
 
     void Record(const SoundProfile& src);
 
