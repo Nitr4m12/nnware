@@ -14,8 +14,6 @@
 
 namespace nn::atk::detail::driver {
 
-struct SoundThreadLock {};
-
 class SoundThread : public fnd::Thread::Handler {
 public:
     using ProfileFunc = void (*)(os::Tick*);
@@ -98,8 +96,9 @@ public:
     void RegisterPlayerCallback(PlayerCallback* callback);
     void UnregisterPlayerCallback(PlayerCallback* callback);
 
-    void Lock();
-    void Unlock();
+    void Lock() { m_CriticalSection.Lock(); }
+
+    void Unlock() { m_CriticalSection.Unlock(); }
 
     void LockAtkStateAndParameterUpdate();
     void UnlockAtkStateAndParameterUpdate();
@@ -184,6 +183,16 @@ static_assert(sizeof(SoundThread) == 0x4f8);
 #else
 static_assert(sizeof(SoundThread) == 0x508);
 #endif
+
+class SoundThreadLock {
+public:
+    SoundThreadLock() { SoundThread::GetInstance().Lock(); }
+
+    ~SoundThreadLock() { SoundThread::GetInstance().Unlock(); }
+
+private:
+    NN_NO_COPY(SoundThreadLock);
+};
 
 class AtkStateAndParameterUpdateLock {
 public:
