@@ -105,4 +105,30 @@ detail::driver::StreamSoundPlayer* TaskProfile::LoadOpusStreamBlock::GetStreamSo
     return m_pPlayer;
 }
 #endif
+
+#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
+void TaskProfile::LoadOpusStreamBlock::SetData(
+    const os::Tick& beginTick, const os::Tick& endTick,
+    const detail::IStreamDataDecoder::DecodeProfile& decodeProfile)
+#else
+void TaskProfile::LoadOpusStreamBlock::SetData(
+    const os::Tick& beginTick, const os::Tick& endTick,
+    const detail::IStreamDataDecoder::DecodeProfile& decodeProfile,
+    const detail::IStreamDataDecoder::CacheProfile& cacheProfile)
+#endif
+{
+    m_BeginTick = beginTick.GetInt64Value();
+    m_EndTick = endTick.GetInt64Value();
+    m_DecodeTick = decodeProfile.decodeTick.GetInt64Value();
+    m_FsAccessTick = decodeProfile.fsAccessTick.GetInt64Value();
+    m_FsReadSize = decodeProfile.fsReadSize;
+    m_DecodedSampleCount = decodeProfile.decodedSampleCount;
+#if NN_WARE_VER >= NN_MAKE_VER(3, 0, 0)
+    m_CacheStartPosition = cacheProfile.cacheStartPosition;
+    m_CachedLength = cacheProfile.cachedLength;
+    m_CacheCurrentPosition = cacheProfile.cacheCurrentPosition;
+    m_pPlayer = cacheProfile.player;
+#endif
+}
+
 }  // namespace nn::atk
