@@ -59,4 +59,8 @@ int32_t Thread::GetPriority() const {
     return m_Priority;
 }
 
+Thread::State Thread::GetState() const {
+    return static_cast<State>(m_State);
+}
+
 }  // namespace nn::atk::detail::fnd
