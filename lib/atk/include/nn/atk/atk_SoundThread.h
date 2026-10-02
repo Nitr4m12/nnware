@@ -62,7 +62,7 @@ public:
                     bool isProfilingEnabled);
 #elif NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
     void Initialize(void* performanceFrameBuffer, size_t performanceFrameBufferSize,
-                    bool isProfilingEnabled, bool isDetailSoundThreadProfilerEnabled);
+                    bool isProfilingEnabled, bool isUserThreadRenderingEnabled);
 #else
     void Initialize(void* performanceFrameBuffer, size_t performanceFrameBufferSize,
                     bool isProfilingEnabled, bool isDetailSoundThreadProfilerEnabled,
@@ -177,8 +177,10 @@ private:
     fnd::CriticalSection m_LockUpdateProfile;
     std::atomic_int m_RendererEventWaitTimeMilliSeconds{0};
 };
-#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
 static_assert(sizeof(SoundThread) == 0x4c8);
+#elif NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+static_assert(sizeof(SoundThread) == 0x4f8);
 #else
 static_assert(sizeof(SoundThread) == 0x508);
 #endif
