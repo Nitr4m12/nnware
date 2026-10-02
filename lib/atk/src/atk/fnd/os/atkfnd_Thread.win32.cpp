@@ -99,4 +99,8 @@ void Thread::SetAffinityMask(int32_t idealCoreNumber, AffinityMask value) {
 
 void Thread::Resume() {}
 
+void Thread::Join() {
+    os::WaitThread(&m_Handle);
+}
+
 }  // namespace nn::atk::detail::fnd
