@@ -1,6 +1,6 @@
 #include <nn/atk/atk_SoundThread.h>
-#include "nn/atk/fnd/os/atkfnd_Thread.h"
 
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
 namespace {
 
 void GetTick(nn::os::Tick* pVariable) {
@@ -10,6 +10,7 @@ void GetTick(nn::os::Tick* pVariable) {
 void DoNothing([[maybe_unused]] nn::os::Tick* pVariable) {}
 
 }  // anonymous namespace
+#endif
 
 namespace nn::atk::detail::driver {
 
@@ -148,6 +149,13 @@ void SoundThread::RegisterThreadEndUserCallback(SoundThreadUserCallback callback
 
     m_ThreadEndUserCallbackArg = arg;
     m_ThreadEndUserCallback = callback;
+}
+
+void SoundThread::ClearThreadEndUserCallback() {
+    SoundThreadLock lock{};
+
+    m_ThreadEndUserCallback = nullptr;
+    m_ThreadEndUserCallbackArg = 0;
 }
 
 }  // namespace nn::atk::detail::driver
