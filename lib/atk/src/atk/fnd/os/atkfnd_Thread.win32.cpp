@@ -103,4 +103,8 @@ void Thread::Join() {
     os::WaitThread(&m_Handle);
 }
 
+bool Thread::IsTerminated() const {
+    return m_IsTerminated;
+}
+
 }  // namespace nn::atk::detail::fnd
