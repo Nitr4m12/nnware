@@ -84,4 +84,8 @@ size_t TaskProfile::LoadOpusStreamBlock::GetCachedLength() const {
 }
 #endif
 
+TimeSpan TaskProfile::LoadOpusStreamBlock::GetDecodeTime() const {
+    return os::Tick(m_DecodeTick).ToTimeSpan();
+}
+
 }  // namespace nn::atk
