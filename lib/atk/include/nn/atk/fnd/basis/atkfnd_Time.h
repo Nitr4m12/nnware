@@ -17,6 +17,8 @@ public:
     static TimeSpan FromMicroSeconds(TickType);
     static TimeSpan FromMilliSeconds(TickType);
 
+    TickType GetTick() const { return m_TickSpan; }
+
     TickType ToNanoSeconds() const;
     TickType ToMicroSeconds() const;
     TickType ToMilliSeconds() const;
