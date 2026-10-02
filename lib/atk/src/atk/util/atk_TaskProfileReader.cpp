@@ -96,4 +96,8 @@ TimeSpan TaskProfile::LoadOpusStreamBlock::GetFsAccessTime() const {
     return os::Tick(m_FsAccessTick).ToTimeSpan();
 }
 
+size_t TaskProfile::LoadOpusStreamBlock::GetFsReadSize() const {
+    return m_FsReadSize;
+}
+
 }  // namespace nn::atk
