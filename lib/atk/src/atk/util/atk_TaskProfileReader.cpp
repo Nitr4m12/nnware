@@ -78,6 +78,10 @@ float TaskProfile::LoadOpusStreamBlock::GetRemainingCachePercentage() const {
             m_CachedLength) *
            100.0f;
 }
+
+size_t TaskProfile::LoadOpusStreamBlock::GetCachedLength() const {
+    return m_CachedLength;
+}
 #endif
 
 }  // namespace nn::atk
