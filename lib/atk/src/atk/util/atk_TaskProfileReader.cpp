@@ -62,4 +62,8 @@ os::Tick TaskProfile::LoadOpusStreamBlock::GetBeginTick() const {
     return m_BeginTick;
 }
 
+os::Tick TaskProfile::LoadOpusStreamBlock::GetEndTick() const {
+    return m_EndTick;
+}
+
 }  // namespace nn::atk
