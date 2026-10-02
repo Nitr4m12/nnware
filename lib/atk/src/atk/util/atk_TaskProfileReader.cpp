@@ -142,4 +142,9 @@ void TaskProfileLogger::Record(const TaskProfile& profile) {
         itr->Record(profile);
 }
 
+void TaskProfileLogger::RegisterReader(TaskProfileReader& reader) {
+    detail::fnd::ScopedLock<detail::fnd::CriticalSection> lock{m_Lock};
+    m_List.push_back(reader);
+}
+
 }  // namespace nn::atk
