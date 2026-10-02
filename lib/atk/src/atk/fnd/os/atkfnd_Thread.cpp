@@ -43,6 +43,14 @@ void Thread::WaitForExit() {
     Join();
 }
 
+void Thread::Release() {
+    if (m_State != State_Exited)
+        return;
+
+    Detach();
+    SetState(State_Released);
+}
+
 void Thread::SetState(State value) {
     m_State = value;
 }
