@@ -17,4 +17,6 @@ bool Thread::RunArgs::IsValid() const {
     return handler != nullptr;
 }
 
+Thread::~Thread() = default;
+
 }  // namespace nn::atk::detail::fnd
