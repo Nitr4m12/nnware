@@ -39,4 +39,8 @@ bool Thread::Run(const RunArgs& args) {
     return true;
 }
 
+void Thread::WaitForExit() {
+    Join();
+}
+
 }  // namespace nn::atk::detail::fnd
