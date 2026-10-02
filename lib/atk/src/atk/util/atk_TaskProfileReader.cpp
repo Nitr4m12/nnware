@@ -144,6 +144,7 @@ void TaskProfileLogger::Record(const TaskProfile& profile) {
 
 void TaskProfileLogger::RegisterReader(TaskProfileReader& reader) {
     detail::fnd::ScopedLock<detail::fnd::CriticalSection> lock{m_Lock};
+
     m_List.push_back(reader);
 }
 
@@ -154,6 +155,12 @@ void TaskProfileLogger::UnregisterReader(const TaskProfileReader& reader) {
 
 void TaskProfileLogger::SetProfilingEnabled(bool isEnabledProfiling) {
     m_IsProfilingEnabled = isEnabledProfiling;
+}
+
+void TaskProfileLogger::Finalize() {
+    detail::fnd::ScopedLock<detail::fnd::CriticalSection> lock{m_Lock};
+
+    m_List.clear();
 }
 
 }  // namespace nn::atk
