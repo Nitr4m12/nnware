@@ -115,4 +115,11 @@ void SoundThread::ForceWakeup() {
     m_BlockingQueue.TrySend(Message_ForceWakeup);
 }
 
+void SoundThread::RegisterSoundFrameUserCallback(SoundFrameUserCallback callback, uintptr_t arg) {
+    SoundThreadLock lock{};
+
+    m_UserCallbackArg = arg;
+    m_UserCallback = callback;
+}
+
 }  // namespace nn::atk::detail::driver
