@@ -1,4 +1,5 @@
 #include <nn/atk/atk_SoundThread.h>
+#include "nn/atk/fnd/os/atkfnd_Thread.h"
 
 namespace {
 
@@ -72,6 +73,22 @@ void SoundThread::Initialize(void* performanceFrameBuffer, size_t performanceFra
         m_pPerformanceFrameUpdateBuffer[i] = reinterpret_cast<void*>(ptr);
         ptr += bufferSize;
     }
+}
+
+void SoundThread::Destroy() {
+    if (!m_CreateFlag)
+        return;
+
+    m_BlockingQueue.Jam(Message_Shutdown);
+
+    if (m_IsUserThreadRenderingEnabled)
+        HardwareManager::GetInstance().ExecuteAudioRendererRendering();
+
+    m_Thread.WaitForExit();
+    m_Thread.Release();
+
+    m_SoundThreadAffinityMask = fnd::Thread::AffinityMask_CoreDefault;
+    m_CreateFlag = false;
 }
 
 }  // namespace nn::atk::detail::driver
