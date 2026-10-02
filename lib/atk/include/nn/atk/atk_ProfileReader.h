@@ -17,6 +17,12 @@ struct TimeRange {
 static_assert(sizeof(TimeRange) == 0x10);
 
 struct SoundProfile {
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    static const int DetailVoiceTableCount{96};
+#else
+    static const int DetailVoiceTableCount{192};
+#endif
+
     TimeRange nwFrameProcess;
     TimeRange mainMixProcess;
     TimeRange finalMixProcess;
@@ -29,8 +35,10 @@ struct SoundProfile {
     uint32_t nwVoiceCount;
     uint64_t nwFrameProcessTick;
     TimeRange _additionalSubMixProcess;
-    TimeRange _voiceProcessTable[detail::driver::HardwareManager::AtkVoiceCountMax];
-    audio::NodeId _voiceIdTable[detail::driver::HardwareManager::AtkVoiceCountMax];
+    TimeRange _voiceProcessTable[DetailVoiceTableCount];
+    audio::NodeId _voiceIdTable[DetailVoiceTableCount];
+
+    TimeSpan GetNwFrameProcessInterval(const os::Tick& tick) const;
 };
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
 static_assert(sizeof(SoundProfile) == 0x818);

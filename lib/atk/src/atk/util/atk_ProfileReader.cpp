@@ -20,4 +20,15 @@ int32_t ProfileReader::Read(SoundProfile* profile, int32_t maxCount) {
     return count;
 }
 
+void ProfileReader::Record(const SoundProfile& src) {
+    SoundProfile& dst{m_ProfileBuffer[m_ProfileBufferWrite]};
+
+    dst = src;
+
+    if (m_ProfileBufferWrite >= StreamDataLoadTaskMax - 1)
+        m_ProfileBufferWrite = 0;
+    else
+        ++m_ProfileBufferWrite;
+}
+
 }  // namespace nn::atk
