@@ -97,4 +97,6 @@ void Thread::SetAffinityMask(int32_t idealCoreNumber, AffinityMask value) {
     os::SetThreadCoreMask(&m_Handle, idealCoreNumber, value);
 }
 
+void Thread::Resume() {}
+
 }  // namespace nn::atk::detail::fnd
