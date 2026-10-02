@@ -133,7 +133,6 @@ public:
     void UnregisterReader(const TaskProfileReader& reader);
 
     void SetProfilingEnabled(bool isEnabledProfiling);
-
     bool IsProfilingEnabled() const { return m_IsProfilingEnabled; }
 
     void Finalize();
