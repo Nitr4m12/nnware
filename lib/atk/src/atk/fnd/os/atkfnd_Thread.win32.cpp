@@ -85,4 +85,8 @@ bool Thread::Create(Handle& handle, [[maybe_unused]] int64_t& id, const RunArgs&
     }
 }
 
+void Thread::Detach() {
+    os::DestroyThread(&m_Handle);
+}
+
 }  // namespace nn::atk::detail::fnd
