@@ -67,4 +67,8 @@ void Thread::OnRun() {
     SetState(State_Running);
 }
 
+void Thread::OnExit() {
+    SetState(State_Exited);
+}
+
 }  // namespace nn::atk::detail::fnd
