@@ -165,4 +165,10 @@ void SoundThread::RegisterSoundThreadInfoRecorder(ThreadInfoRecorder& recorder) 
     m_InfoRecorderList.push_back(recorder);
 }
 
+void SoundThread::UnregisterSoundThreadInfoRecorder(ThreadInfoRecorder& recorder) {
+    fnd::ScopedLock<fnd::CriticalSection> lock{m_LockRecordInfo};
+
+    m_InfoRecorderList.erase(m_InfoRecorderList.iterator_to(recorder));
+}
+
 }  // namespace nn::atk::detail::driver
