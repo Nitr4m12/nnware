@@ -29,9 +29,9 @@ public:
         FsPriority_Low,
     };
 
-    enum AffinityMask {
+    enum AffinityMask : uint32_t {
         AffinityMask_CoreDefault = 0,
-        AffinityMask_CoreAll = -1,
+        AffinityMask_CoreAll = 0xffffffff,
         AffinityMask_Core0 = 1 << 0,
         AffinityMask_Core1 = 1 << 1,
         AffinityMask_Core2 = 1 << 2,
@@ -63,7 +63,7 @@ public:
         AffinityMask_Core28 = 1 << 28,
         AffinityMask_Core29 = 1 << 29,
         AffinityMask_Core30 = 1 << 30,
-        AffinityMask_Core31 = 1 << 31,
+        AffinityMask_Core31 = static_cast<uint32_t>(1 << 31),
     };
 
     class Handler {
