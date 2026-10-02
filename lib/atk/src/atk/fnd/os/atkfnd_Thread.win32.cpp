@@ -3,6 +3,7 @@
 #include <nn/fs.h>
 #include <nn/fs/fs_Priority.h>
 #include <nn/os.h>
+#include <nn/util.h>
 
 #include <nn/atk/fnd/basis/atkfnd_Time.h>
 
@@ -25,7 +26,28 @@ namespace nn::atk::detail::fnd {
 
 class Thread::ThreadMain {
 public:
-    static void Run(void* ptrArg);
+    static void Run(void* ptrArg) {
+        Thread* owner{static_cast<Thread*>(ptrArg)};
+
+        owner->m_IsTerminated = false;
+        owner->OnRun();
+#if NN_WARE_VER >= NN_MAKE_VER(5, 0, 0)
+        switch (owner->GetFsPriority()) {
+        default:
+            NN_UNEXPECTED_DEFAULT;
+        case FsPriority_RealTime:
+        case FsPriority_Normal:
+        case FsPriority_Low:
+            owner->SetFsPriority(owner->GetFsPriority());
+#endif
+            owner->m_Handler->Run(owner->m_Param);
+            owner->OnExit();
+            owner->m_IsTerminated = true;
+#if NN_WARE_VER >= NN_MAKE_VER(5, 0, 0)
+            break;
+        }
+#endif
+    }
 };
 
 Thread::Thread() = default;
@@ -51,10 +73,10 @@ bool Thread::Create(Handle& handle, [[maybe_unused]] int64_t& id, const RunArgs&
     if (os::CreateThread(&handle, ThreadMain::Run, this, args.stack, args.stackSize, args.priority,
                          args.idealCoreNumber)
             .IsSuccess()) {
-#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER >= NN_MAKE_VER(5, 0, 0)
         m_FsPriority = args.fsPriority;
-        os::StartThread(&handle);
 #endif
+        os::StartThread(&handle);
         m_Id = reinterpret_cast<int64_t>(&handle);
         return true;
     } else {

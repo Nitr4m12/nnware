@@ -84,7 +84,7 @@ public:
         int32_t idealCoreNumber{-1};
         AffinityMask affinityMask{AffinityMask_CoreDefault};
         int32_t priority{DefaultThreadPriority};
-#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER >= NN_MAKE_VER(5, 0, 0)
         FsPriority fsPriority{FsPriority_Normal};
 #endif
         void* param{};
