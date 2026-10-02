@@ -30,6 +30,10 @@ float TaskProfile::LoadStreamBlock::GetRemainingCachePercentage() const {
 size_t TaskProfile::LoadStreamBlock::GetCachedLength() const {
     return m_CachedLength;
 }
+
+detail::driver::StreamSoundPlayer* TaskProfile::LoadStreamBlock::GetStreamSoundPlayer() const {
+    return m_pPlayer;
+}
 #endif
 
 }  // namespace nn::atk
