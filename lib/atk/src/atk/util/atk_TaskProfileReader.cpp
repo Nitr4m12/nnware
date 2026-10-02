@@ -100,4 +100,9 @@ size_t TaskProfile::LoadOpusStreamBlock::GetFsReadSize() const {
     return m_FsReadSize;
 }
 
+#if NN_WARE_VER >= NN_MAKE_VER(3, 0, 0)
+detail::driver::StreamSoundPlayer* TaskProfile::LoadOpusStreamBlock::GetStreamSoundPlayer() const {
+    return m_pPlayer;
+}
+#endif
 }  // namespace nn::atk
