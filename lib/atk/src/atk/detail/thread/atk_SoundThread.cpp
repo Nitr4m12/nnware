@@ -91,4 +91,18 @@ void SoundThread::Destroy() {
     m_CreateFlag = false;
 }
 
+void SoundThread::Finalize() {
+    for (auto itr{m_PlayerCallbackList.begin()}; itr != m_PlayerCallbackList.end();) {
+        auto curItr{itr++};
+        curItr->OnShutdownSoundThread();
+    }
+
+    m_pAudioRendererPerformanceReader = nullptr;
+    m_CurrentPerformanceFrameBufferIndex = 0;
+    m_PerformanceFrameUpdateBufferSize = 0;
+
+    for (int i{0}; i < 3; ++i)
+        m_pPerformanceFrameUpdateBuffer[i] = nullptr;
+}
+
 }  // namespace nn::atk::detail::driver
