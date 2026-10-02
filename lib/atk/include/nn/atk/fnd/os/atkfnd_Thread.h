@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+
 #include <nn/os/os_ThreadTypes.h>
 
 namespace nn::atk::detail::fnd {
@@ -10,9 +11,25 @@ class TimeSpan;
 
 class Thread {
 public:
+    static const int64_t InvalidId{0xffffffff};
+
+    static const int DefaultThreadPriority{16};
+    static const int MinThreadPriority{0};
+    static const int MaxThreadPriority{31};
+
+    static const int StackAlignment{4096};
+
+    using Handle = os::ThreadType;
+
+    enum FsPriority {
+        FsPriority_RealTime,
+        FsPriority_Normal,
+        FsPriority_Low,
+    };
+
     enum AffinityMask {
+        AffinityMask_CoreDefault = 0,
         AffinityMask_CoreAll = -1,
-        AffinityMask_CoreDefault,
         AffinityMask_Core0 = 1 << 0,
         AffinityMask_Core1 = 1 << 1,
         AffinityMask_Core2 = 1 << 2,
@@ -47,32 +64,9 @@ public:
         AffinityMask_Core31 = 1 << 31,
     };
 
-    enum FsPriority {
-        FsPriority_RealTime,
-        FsPriority_Normal,
-        FsPriority_Low,
-    };
-
-    enum State {
-        State_NotRun,
-        State_Running,
-        State_Exited,
-        State_Released,
-    };
-
-    using Handle = os::ThreadType;
-
-    constexpr static uint64_t InvalidId = 0xFFFFFFFF;
-
-    constexpr static uint32_t DefaultThreadPriority = 16;
-    constexpr static uint32_t MinThreadPriority = 0;
-    constexpr static uint32_t MaxThreadPriority = 31;
-
-    constexpr static uint32_t StackAlignment = 4096;
-
     class Handler {
     public:
-        virtual ~Handler() = 0;
+        virtual ~Handler() = default;
         virtual uint32_t Run(void* param) = 0;
     };
     static_assert(sizeof(Handler) == 0x8);
@@ -82,18 +76,28 @@ public:
 
         bool IsValid() const;
 
-        char* name;
-        void* stack;
-        size_t stackSize;
-        int32_t idealCoreNumber;
-        AffinityMask affinityMask;
-        int32_t priority;
-        FsPriority fsPriority;
-        void* param;
-        Handler* handler;
+        const char* name{""};
+        void* stack{};
+        size_t stackSize{0};
+        int32_t idealCoreNumber{-1};
+        AffinityMask affinityMask{AffinityMask_CoreDefault};
+        int32_t priority{DefaultThreadPriority};
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+        FsPriority fsPriority{FsPriority_Normal};
+#endif
+        void* param{};
+        Handler* handler{};
     };
     static_assert(sizeof(RunArgs) == 0x38);
 
+    enum State {
+        State_NotRun,
+        State_Running,
+        State_Exited,
+        State_Released,
+    };
+
+    Thread();
     ~Thread();
 
     bool Run(const RunArgs& args);
@@ -102,33 +106,33 @@ public:
 
     void Release();
 
-    void SetState(State state);
-
     int32_t GetPriority() const;
+    FsPriority GetFsPriority() const;
+    void SetPriority(int32_t value);
+
     State GetState() const;
 
-    void OnRun();
-    void OnExit();
+    static void Sleep(const fnd::TimeSpan& timeSpan);
 
-    Thread();
-
-    void SetPriority(int32_t priority);
-
-    static void Sleep(const TimeSpan& timeSpan);
-
-    bool Create(const Handle& handle, int64_t& id, const RunArgs& args);
+private:
+    bool Create(Handle& handle, int64_t& id, const RunArgs& args);
 
     void Detach();
 
     void SetName(const char* name);
     void SetAffinityMask(int32_t idealCoreNumber, AffinityMask value);
+    void SetFsPriority(FsPriority value);
 
     void Resume();
     void Join();
 
     bool IsTerminated() const;
 
-private:
+    void SetState(State value);
+
+    void OnRun();
+    void OnExit();
+
     uint32_t m_State;
     Handle m_Handle;
     int64_t m_Id;
@@ -136,7 +140,7 @@ private:
     FsPriority m_FsPriority;
     void* m_Param;
     Handler* m_Handler;
-    bool m_IsTerminated;
+    volatile bool m_IsTerminated;
 };
 static_assert(sizeof(Thread) == 0x1f0);
 
