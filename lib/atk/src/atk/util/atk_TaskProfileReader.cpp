@@ -147,4 +147,9 @@ void TaskProfileLogger::RegisterReader(TaskProfileReader& reader) {
     m_List.push_back(reader);
 }
 
+void TaskProfileLogger::UnregisterReader(const TaskProfileReader& reader) {
+    detail::fnd::ScopedLock<detail::fnd::CriticalSection> lock{m_Lock};
+    m_List.erase(m_List.iterator_to(reader));
+}
+
 }  // namespace nn::atk
