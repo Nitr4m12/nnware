@@ -11,6 +11,8 @@ class TimeSpan;
 
 class Thread {
 public:
+    class ThreadMain;
+
     static const int64_t InvalidId{0xffffffff};
 
     static const int DefaultThreadPriority{16};
@@ -133,14 +135,14 @@ private:
     void OnRun();
     void OnExit();
 
-    uint32_t m_State;
+    uint32_t m_State{State_NotRun};
     Handle m_Handle;
-    int64_t m_Id;
-    int32_t m_Priority;
+    int64_t m_Id{InvalidId};
+    int32_t m_Priority{DefaultThreadPriority};
     FsPriority m_FsPriority;
     void* m_Param;
-    Handler* m_Handler;
-    volatile bool m_IsTerminated;
+    Handler* m_Handler{};
+    volatile bool m_IsTerminated{false};
 };
 static_assert(sizeof(Thread) == 0x1f0);
 
