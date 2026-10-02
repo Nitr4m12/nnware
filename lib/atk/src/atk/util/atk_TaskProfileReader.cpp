@@ -66,4 +66,18 @@ os::Tick TaskProfile::LoadOpusStreamBlock::GetEndTick() const {
     return m_EndTick;
 }
 
+#if NN_WARE_VER >= NN_MAKE_VER(3, 0, 0)
+float TaskProfile::LoadOpusStreamBlock::GetRemainingCachePercentage() const {
+    if (m_CachedLength == 0)
+        return 0.0f;
+
+    if (m_CacheCurrentPosition < m_CacheStartPosition)
+        return 0.0f;
+
+    return ((static_cast<float>(m_CacheStartPosition) + m_CachedLength - m_CacheCurrentPosition) /
+            m_CachedLength) *
+           100.0f;
+}
+#endif
+
 }  // namespace nn::atk
