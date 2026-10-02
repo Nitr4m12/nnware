@@ -152,4 +152,8 @@ void TaskProfileLogger::UnregisterReader(const TaskProfileReader& reader) {
     m_List.erase(m_List.iterator_to(reader));
 }
 
+void TaskProfileLogger::SetProfilingEnabled(bool isEnabledProfiling) {
+    m_IsProfilingEnabled = isEnabledProfiling;
+}
+
 }  // namespace nn::atk
