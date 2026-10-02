@@ -16,85 +16,81 @@ namespace nn::atk::detail::driver {
 
 struct SoundThreadLock {};
 
-class SoundThread : fnd::Thread::Handler {
+class SoundThread : public fnd::Thread::Handler {
 public:
-    enum Message {
-        Message_HwCallback = 0x10000000,
-        Message_Shutdown = 0x20000000,
-        Message_ForceWakeup = 0x30000000,
-    };
-
     using ProfileFunc = void (*)(os::Tick*);
-
-    constexpr static uint32_t ThreadMessageBuffferSize = 32;
-
-    constexpr static uint32_t RendererEventWaitTimeoutMilliSeconds = 100;
 
     class SoundFrameCallback {
     public:
-        virtual ~SoundFrameCallback();
+        util::IntrusiveListNode m_Link;
+
+        virtual ~SoundFrameCallback() = default;
 
         virtual void OnBeginSoundFrame();
         virtual void OnEndSoundFrame();
-
-    private:
-        friend SoundThread;
-
-        util::IntrusiveListNode m_Link;
     };
-
-    using SoundFrameCallbackList = util::IntrusiveList<
-        SoundFrameCallback,
-        util::IntrusiveListMemberNodeTraits<SoundFrameCallback, &SoundFrameCallback::m_Link>>;
 
     class PlayerCallback {
     public:
+        util::IntrusiveListNode m_Link;
+
         virtual ~PlayerCallback() = default;
 
-        virtual void OnUpdateFrameSoundThread() = 0;
-        virtual void OnUpdateFrameSoundThreadWithAudioFrameFrequency() = 0;
-        virtual void OnShutdownSoundThread() = 0;
+        virtual void OnUpdateFrameSoundThread();
+        virtual void OnUpdateFrameSoundThreadWithAudioFrameFrequency();
+        virtual void OnShutdownSoundThread();
+    };
 
-    private:
-        friend SoundThread;
+    static const int32_t ThreadMessageBufferSize{32};
+    static const int32_t RendererEventWaitTimeoutMilliSeconds{100};
 
-        util::IntrusiveListNode m_Link;
+    enum Message {
+        Message_HwCallback = 1 << 28,
+        Message_Shutdown = 2 << 28,
+        Message_ForceWakeup = 3 << 28,
     };
 
     static SoundThread& GetInstance();
 
-    using PlayerCallbackList = util::IntrusiveList<
-        PlayerCallback,
-        util::IntrusiveListMemberNodeTraits<PlayerCallback, &PlayerCallback::m_Link>>;
-
-    ~SoundThread() override;
-
     bool CreateSoundThread(int32_t threadPriority, void* stackBase, size_t stackSize,
                            int32_t idealCoreNumber, uint32_t affinityMask);
 
+    void Destroy();
+
+#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
     void Initialize(void* performanceFrameBuffer, size_t performanceFrameBufferSize,
                     bool isProfilingEnabled);
+#elif NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    void Initialize(void* performanceFrameBuffer, size_t performanceFrameBufferSize,
+                    bool isProfilingEnabled, bool isDetailSoundThreadProfilerEnabled);
+#else
     void Initialize(void* performanceFrameBuffer, size_t performanceFrameBufferSize,
                     bool isProfilingEnabled, bool isDetailSoundThreadProfilerEnabled,
                     bool isUserThreadRenderingEnabled);
-
-    void Destroy();
+#endif
 
     void Finalize();
 
+    void Pause(bool flag);
+
+    uint32_t GetAxCallbackCounter() const { return m_AxCallbackCounter; }
+
     void UpdateLowLevelVoices();
 
-    void ForceWakeup();
+    void FrameProcess(UpdateType updateType);
+    void EffectFrameProcess();
 
-    void RegisterSoundFrameUserCallback(SoundFrameUserCallback callback,
-                                        std::uintptr_t callbackArg);
+    void RegisterSoundFrameUserCallback(SoundFrameUserCallback callback, uintptr_t arg);
     void ClearSoundFrameUserCallback();
 
-    void RegisterThreadBeginUserCallback(SoundThreadUserCallback, std::uintptr_t callbackArg);
+    void RegisterThreadBeginUserCallback(SoundThreadUserCallback callback, uintptr_t arg);
     void ClearThreadBeginUserCallback();
 
-    void RegisterThreadEndUserCallback(SoundThreadUserCallback, std::uintptr_t callbackArg);
+    void RegisterThreadEndUserCallback(SoundThreadUserCallback callback, uintptr_t arg);
     void ClearThreadEndUserCallback();
+
+    void RegisterSoundThreadInfoRecorder(ThreadInfoRecorder& recorder);
+    void UnregisterSoundThreadInfoRecorder(ThreadInfoRecorder& recorder);
 
     void RegisterSoundFrameCallback(SoundFrameCallback* callback);
     void UnregisterSoundFrameCallback(SoundFrameCallback* callback);
@@ -102,58 +98,74 @@ public:
     void RegisterPlayerCallback(PlayerCallback* callback);
     void UnregisterPlayerCallback(PlayerCallback* callback);
 
+    void Lock();
+    void Unlock();
+
     void LockAtkStateAndParameterUpdate();
     void UnlockAtkStateAndParameterUpdate();
 
+    void RegisterProfileReader(ProfileReader& profileReader);
+    void UnregisterProfileReader(ProfileReader& profileReader);
+
     void RegisterAudioRendererPerformanceReader(AudioRendererPerformanceReader& performanceReader);
+    void
+    UnregisterAudioRendererPerformanceReader(AudioRendererPerformanceReader& performanceReader);
 
     void RegisterSoundThreadUpdateProfileReader(SoundThreadUpdateProfileReader& profileReader);
     void UnregisterSoundThreadUpdateProfileReader(SoundThreadUpdateProfileReader& profileReader);
 
-    void RegisterSoundThreadInfoRecorder(ThreadInfoRecorder& recorder);
-    void UnregisterSoundThreadInfoRecorder(ThreadInfoRecorder& recorder);
+    void ForceWakeup();
 
-    void FrameProcess(UpdateType updateType);
+    int32_t GetRendererEventWaitTimeMilliSeconds();
 
-    void RecordPerformanceInfo(audio::PerformanceInfo* src, os::Tick beginTick, os::Tick endTick,
-                               uint32_t nwVoiceCount);
+private:
+    using SoundFrameCallbackList = util::IntrusiveList<
+        SoundFrameCallback,
+        util::IntrusiveListMemberNodeTraits<SoundFrameCallback, &SoundFrameCallback::m_Link>>;
 
-    void EffectFrameProcess();
+    using PlayerCallbackList = util::IntrusiveList<
+        PlayerCallback,
+        util::IntrusiveListMemberNodeTraits<PlayerCallback, &PlayerCallback::m_Link>>;
 
-    void RecordUpdateProfile(const SoundThreadUpdateProfile& threadUpdateProfile);
+    SoundThread();
+    ~SoundThread() override;
 
     uint32_t Run(void* param) override;
 
-private:
+    void RecordPerformanceInfo(audio::PerformanceInfo& src, os::Tick beginTick, os::Tick endTick,
+                               uint32_t nwVoiceCount);
+
+    void RecordUpdateProfile(const SoundThreadUpdateProfile& updateProfile);
+
     fnd::Thread m_Thread;
-    os::MessageQueue m_BlockingQueue;
-    std::uintptr_t m_MsgBuffer[ThreadMessageBuffferSize];
+    os::MessageQueue m_BlockingQueue{m_MsgBuffer, ThreadMessageBufferSize};
+    uintptr_t m_MsgBuffer[ThreadMessageBufferSize];
     uint32_t m_AxCallbackCounter;
     fnd::CriticalSection m_CriticalSection;
     fnd::CriticalSection m_UpdateAtkStateAndParameterSection;
     SoundFrameCallbackList m_SoundFrameCallbackList;
     PlayerCallbackList m_PlayerCallbackList;
-    SoundFrameUserCallback m_UserCallback;
-    std::uintptr_t m_UserCallbackArg;
-    SoundThreadUserCallback m_ThreadBeginUserCallback;
-    std::uintptr_t m_ThreadBeginUserCallbackArg;
-    SoundThreadUserCallback m_ThreadEndUserCallback;
-    std::uintptr_t m_ThreadEndUserCallbackArg;
+    volatile SoundFrameUserCallback m_UserCallback;
+    volatile uintptr_t m_UserCallbackArg;
+    volatile SoundThreadUserCallback m_ThreadBeginUserCallback;
+    volatile uintptr_t m_ThreadBeginUserCallbackArg;
+    volatile SoundThreadUserCallback m_ThreadEndUserCallback;
+    volatile uintptr_t m_ThreadEndUserCallbackArg;
     int32_t m_SoundThreadAffinityMask;
-    bool m_CreateFlag;
-    bool m_PauseFlag;
-    os::Tick m_LastPerformanceFrameBegin;
-    os::Tick m_LastPerformanceFrameEnd;
+    bool m_CreateFlag{false};
+    bool m_PauseFlag{false};
+    os::Tick m_LastPerformanceFrameBegin{0};
+    os::Tick m_LastPerformanceFrameEnd{0};
     void* m_pPerformanceFrameUpdateBuffer[3];
     size_t m_PerformanceFrameUpdateBufferSize;
-    int32_t m_CurrentPerformanceFrameBufferIndex;
-    bool m_IsProfilingEnabled;
+    int32_t m_CurrentPerformanceFrameBufferIndex{0};
+    bool m_IsProfilingEnabled{false};
 #if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
-    ProfileFunc m_pSoundThreadProfileFunc;
-    bool m_IsUserThreadRenderingEnabled;
+    ProfileFunc m_pSoundThreadProfileFunc{};
+    bool m_IsUserThreadRenderingEnabled{false};
 #endif
     ProfileReaderList m_ProfileReaderList;
-    AudioRendererPerformanceReader* m_pAudioRendererPerformanceReader;
+    AudioRendererPerformanceReader* m_pAudioRendererPerformanceReader{};
 #if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
     SoundThreadInfoRecorderList m_InfoRecorderList;
     fnd::CriticalSection m_LockRecordInfo;
@@ -161,7 +173,7 @@ private:
     SoundThreadUpdateProfile m_LastUpdateProfile;
     SoundThreadUpdateProfileReaderList m_UpdateProfileReaderList;
     fnd::CriticalSection m_LockUpdateProfile;
-    std::atomic_int m_RendererEventWaitTimeMilliSeconds;
+    std::atomic_int m_RendererEventWaitTimeMilliSeconds{0};
 };
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
 static_assert(sizeof(SoundThread) == 0x4c8);
