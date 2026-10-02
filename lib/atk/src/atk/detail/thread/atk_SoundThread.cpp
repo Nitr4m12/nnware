@@ -1,4 +1,5 @@
 #include <nn/atk/atk_SoundThread.h>
+#include "nn/atk/fnd/os/atkfnd_ScopedLock.h"
 
 #if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
 namespace {
@@ -156,6 +157,12 @@ void SoundThread::ClearThreadEndUserCallback() {
 
     m_ThreadEndUserCallback = nullptr;
     m_ThreadEndUserCallbackArg = 0;
+}
+
+void SoundThread::RegisterSoundThreadInfoRecorder(ThreadInfoRecorder& recorder) {
+    fnd::ScopedLock<fnd::CriticalSection> lock{m_LockRecordInfo};
+
+    m_InfoRecorderList.push_back(recorder);
 }
 
 }  // namespace nn::atk::detail::driver
