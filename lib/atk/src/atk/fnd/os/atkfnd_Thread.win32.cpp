@@ -90,7 +90,11 @@ void Thread::Detach() {
 }
 
 void Thread::SetName(const char* name) {
-    os::SetThreadNamePointer(&m_Handle, name != nullptr ? name : "");
+    os::SetThreadNamePointer(&m_Handle, name == nullptr ? "" : name);
+}
+
+void Thread::SetAffinityMask(int32_t idealCoreNumber, AffinityMask value) {
+    os::SetThreadCoreMask(&m_Handle, idealCoreNumber, value);
 }
 
 }  // namespace nn::atk::detail::fnd
