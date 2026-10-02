@@ -11,8 +11,8 @@
 namespace nn::atk {
 
 struct TimeRange {
-    os::Tick begin;
-    os::Tick end;
+    os::Tick begin{0};
+    os::Tick end{0};
 };
 static_assert(sizeof(TimeRange) == 0x10);
 
@@ -52,16 +52,16 @@ class ProfileReader {
 public:
     ProfileReader();
 
-    size_t Read(SoundProfile*, int32_t);
+    size_t Read(SoundProfile* profile, int32_t maxCount);
 
     void Record(const SoundProfile& src);
 
     util::IntrusiveListNode m_Link;
 
 private:
-    SoundProfile m_ProfileBuffer[32];
-    int32_t m_ProfileBufferRead;
-    int32_t m_ProfileBufferWrite;
+    SoundProfile m_ProfileBuffer[StreamDataLoadTaskMax];
+    int32_t m_ProfileBufferRead{0};
+    int32_t m_ProfileBufferWrite{0};
 };
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
 static_assert(sizeof(ProfileReader) == 0x10318);
