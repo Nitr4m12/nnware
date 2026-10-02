@@ -125,7 +125,7 @@ using TaskProfileReader = AtkProfileReader<TaskProfile>;
 
 class TaskProfileLogger {
 public:
-    TaskProfileLogger() = default;
+    TaskProfileLogger();
 
     void Record(const TaskProfile& profile);
 
@@ -145,7 +145,7 @@ private:
 
     TaskProfileReaderList m_List;
     detail::fnd::CriticalSection m_Lock;
-    bool m_IsProfilingEnabled;
+    bool m_IsProfilingEnabled{false};
 };
 static_assert(sizeof(TaskProfileLogger) == 0x38);
 

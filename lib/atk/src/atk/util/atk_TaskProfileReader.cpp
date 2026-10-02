@@ -131,4 +131,6 @@ void TaskProfile::LoadOpusStreamBlock::SetData(
 #endif
 }
 
+TaskProfileLogger::TaskProfileLogger() = default;
+
 }  // namespace nn::atk
