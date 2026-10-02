@@ -1,5 +1,7 @@
 #include <nn/atk/atk_TaskProfileReader.h>
 
+#include <nn/atk/fnd/os/atkfnd_ScopedLock.h>
+
 namespace nn::atk {
 
 TimeSpan TaskProfile::LoadStreamBlock::GetTotalTime() const {
@@ -132,5 +134,12 @@ void TaskProfile::LoadOpusStreamBlock::SetData(
 }
 
 TaskProfileLogger::TaskProfileLogger() = default;
+
+void TaskProfileLogger::Record(const TaskProfile& profile) {
+    detail::fnd::ScopedLock<detail::fnd::CriticalSection> lock{m_Lock};
+
+    for (auto itr{m_List.begin()}; itr != m_List.end(); ++itr)
+        itr->Record(profile);
+}
 
 }  // namespace nn::atk
