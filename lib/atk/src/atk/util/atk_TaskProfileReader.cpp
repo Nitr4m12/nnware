@@ -54,4 +54,8 @@ void TaskProfile::LoadStreamBlock::SetData(
 #endif
 }
 
+TimeSpan TaskProfile::LoadOpusStreamBlock::GetTotalTime() const {
+    return os::Tick(m_EndTick - m_BeginTick).ToTimeSpan();
+}
+
 }  // namespace nn::atk
