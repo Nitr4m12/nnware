@@ -36,4 +36,22 @@ detail::driver::StreamSoundPlayer* TaskProfile::LoadStreamBlock::GetStreamSoundP
 }
 #endif
 
+#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
+void TaskProfile::LoadStreamBlock::SetTick(const os::Tick& beginTick, const os::Tick& endTick)
+#else
+void TaskProfile::LoadStreamBlock::SetData(
+    const os::Tick& beginTick, const os::Tick& endTick,
+    const detail::IStreamDataDecoder::CacheProfile& cacheProfile)
+#endif
+{
+    m_BeginTick = beginTick.GetInt64Value();
+    m_EndTick = endTick.GetInt64Value();
+#if NN_WARE_VER >= NN_MAKE_VER(3, 0, 0)
+    m_CacheStartPosition = cacheProfile.cacheStartPosition;
+    m_CachedLength = cacheProfile.cachedLength;
+    m_CacheCurrentPosition = cacheProfile.cacheCurrentPosition;
+    m_pPlayer = cacheProfile.player;
+#endif
+}
+
 }  // namespace nn::atk
