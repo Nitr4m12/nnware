@@ -143,4 +143,11 @@ void SoundThread::ClearThreadBeginUserCallback() {
     m_ThreadBeginUserCallbackArg = 0;
 }
 
+void SoundThread::RegisterThreadEndUserCallback(SoundThreadUserCallback callback, uintptr_t arg) {
+    SoundThreadLock lock{};
+
+    m_ThreadEndUserCallbackArg = arg;
+    m_ThreadEndUserCallback = callback;
+}
+
 }  // namespace nn::atk::detail::driver
