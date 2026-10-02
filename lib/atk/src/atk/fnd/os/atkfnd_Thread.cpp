@@ -43,4 +43,8 @@ void Thread::WaitForExit() {
     Join();
 }
 
+void Thread::SetState(State value) {
+    m_State = value;
+}
+
 }  // namespace nn::atk::detail::fnd
