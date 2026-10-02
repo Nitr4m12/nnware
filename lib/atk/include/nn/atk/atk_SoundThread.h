@@ -162,11 +162,13 @@ private:
     bool m_IsProfilingEnabled{false};
 #if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
     ProfileFunc m_pSoundThreadProfileFunc{};
+#endif
+#if NN_WARE_VER >= NN_MAKE_VER(3, 0, 0)
     bool m_IsUserThreadRenderingEnabled{false};
 #endif
     ProfileReaderList m_ProfileReaderList;
     AudioRendererPerformanceReader* m_pAudioRendererPerformanceReader{};
-#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER >= NN_MAKE_VER(3, 0, 0)
     SoundThreadInfoRecorderList m_InfoRecorderList;
     fnd::CriticalSection m_LockRecordInfo;
 #endif
