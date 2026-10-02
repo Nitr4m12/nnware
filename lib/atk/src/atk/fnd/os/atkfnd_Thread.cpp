@@ -63,4 +63,8 @@ Thread::State Thread::GetState() const {
     return static_cast<State>(m_State);
 }
 
+void Thread::OnRun() {
+    SetState(State_Running);
+}
+
 }  // namespace nn::atk::detail::fnd
