@@ -878,7 +878,7 @@ bool StreamSoundPlayer::IsStoppedByLoadingDelay() const {
     bool isStatusDoneExisted{false};
 
     for (int i{0}; i < m_BufferBlockCount; ++i) {
-        // TODO: find a way to use switch statements for this
+        // TODO: check if switch statements can be used for this
         if (m_Channels[0].m_WaveBuffer[i].status != WaveBuffer::Status_Free) {
             if (m_Channels[0].m_WaveBuffer[i].status != WaveBuffer::Status_Done) {
                 isStatusDoneExisted = false;
@@ -1087,31 +1087,26 @@ void StreamSoundPlayer::SetOutputParam(OutputParam* pOutOutputParam, const Outpu
 #endif
         pOutOutputParam->send[i + 1] += trackData.fxSend[i] + m_ItemData.fxSend[i];
     }
-
 }
 
 // TODO: void StreamSoundPlayer::ApplyTvOutputParamForMultiChannel
 // TODO: void StreamSoundPlayer::MixSettingForOutputParam
 
-// NON_MATCHING: bad register ordering
 position_t
 StreamSoundPlayer::GetOriginalPlaySamplePosition(position_t playSamplePosition,
                                                  const StreamDataInfoDetail& streamDataInfo) const {
-    if (playSamplePosition > streamDataInfo.originalLoopEnd) {
-        position_t loopRegionSize{streamDataInfo.originalLoopEnd -
-                                  streamDataInfo.originalLoopStart};
+    if (playSamplePosition <= streamDataInfo.originalLoopEnd)
+        return playSamplePosition;
 
-        if (loopRegionSize < LoopRegionSizeMin) {
-            loopRegionSize =
-                ((playSamplePosition - streamDataInfo.originalLoopStart) / loopRegionSize) *
-                loopRegionSize;
-            loopRegionSize = playSamplePosition - loopRegionSize - streamDataInfo.originalLoopStart;
+    position_t loopRegionSize{streamDataInfo.originalLoopEnd - streamDataInfo.originalLoopStart};
 
-        } else {
-            loopRegionSize = playSamplePosition - streamDataInfo.originalLoopEnd;
-        }
+    if (loopRegionSize < LoopRegionSizeMin) {
+        playSamplePosition =
+            streamDataInfo.originalLoopStart +
+            (playSamplePosition - streamDataInfo.originalLoopStart) % loopRegionSize;
 
-        playSamplePosition = streamDataInfo.originalLoopStart + loopRegionSize;
+    } else {
+        playSamplePosition += streamDataInfo.originalLoopStart - streamDataInfo.originalLoopEnd;
     }
 
     return playSamplePosition;
