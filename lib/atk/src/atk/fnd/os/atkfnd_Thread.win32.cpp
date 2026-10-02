@@ -64,10 +64,9 @@ Thread::FsPriority Thread::GetFsPriority() const {
     return m_FsPriority;
 }
 
-// TODO: implement nn::TimeSpan and nn::TimeSpanType in nnsdk
-// void Thread::Sleep(const fnd::TimeSpan& timeSpan) {
-//     os::SleepThread(timeSpan.ToNanoSeconds());
-// }
+void Thread::Sleep(const fnd::TimeSpan& timeSpan) {
+    os::SleepThread(TimeSpanType{timeSpan.ToNanoSeconds()});
+}
 
 bool Thread::Create(Handle& handle, [[maybe_unused]] int64_t& id, const RunArgs& args) {
     if (os::CreateThread(&handle, ThreadMain::Run, this, args.stack, args.stackSize, args.priority,
