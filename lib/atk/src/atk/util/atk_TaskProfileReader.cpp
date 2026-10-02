@@ -88,4 +88,8 @@ TimeSpan TaskProfile::LoadOpusStreamBlock::GetDecodeTime() const {
     return os::Tick(m_DecodeTick).ToTimeSpan();
 }
 
+int32_t TaskProfile::LoadOpusStreamBlock::GetDecodedSampleCount() const {
+    return m_DecodedSampleCount;
+}
+
 }  // namespace nn::atk
