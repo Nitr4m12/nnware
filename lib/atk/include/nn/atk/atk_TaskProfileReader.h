@@ -66,8 +66,8 @@ struct TaskProfile {
         TimeSpan GetDecodeTime() const;
         int32_t GetDecodedSampleCount() const;
 
-        TimeSpan GetFsAccessTime();
-        size_t GetFsReadSize();
+        TimeSpan GetFsAccessTime() const;
+        size_t GetFsReadSize() const;
 
 #if NN_WARE_VER >= NN_MAKE_VER(3, 0, 0)
         detail::driver::StreamSoundPlayer* GetStreamSoundPlayer() const;

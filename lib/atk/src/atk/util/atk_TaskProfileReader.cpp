@@ -92,4 +92,8 @@ int32_t TaskProfile::LoadOpusStreamBlock::GetDecodedSampleCount() const {
     return m_DecodedSampleCount;
 }
 
+TimeSpan TaskProfile::LoadOpusStreamBlock::GetFsAccessTime() const {
+    return os::Tick(m_FsAccessTick).ToTimeSpan();
+}
+
 }  // namespace nn::atk
