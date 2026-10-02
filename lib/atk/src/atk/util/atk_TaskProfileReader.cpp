@@ -14,4 +14,16 @@ os::Tick TaskProfile::LoadStreamBlock::GetEndTick() const {
     return m_EndTick;
 }
 
+float TaskProfile::LoadStreamBlock::GetRemainingCachePercentage() const {
+    if (m_CachedLength == 0)
+        return 0.0f;
+
+    if (m_CacheCurrentPosition < m_CacheStartPosition)
+        return 0.0f;
+
+    return ((static_cast<float>(m_CacheStartPosition) + m_CachedLength - m_CacheCurrentPosition) /
+            m_CachedLength) *
+           100.0f;
+}
+
 }  // namespace nn::atk

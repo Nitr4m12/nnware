@@ -22,10 +22,10 @@ struct TaskProfile {
         os::Tick GetBeginTick() const;
         os::Tick GetEndTick() const;
 
+#if NN_WARE_VER >= NN_MAKE_VER(3, 0, 0)
         float GetRemainingCachePercentage() const;
         size_t GetCachedLength() const;
 
-#if NN_WARE_VER >= NN_MAKE_VER(3, 0, 0)
         detail::driver::StreamSoundPlayer* GetStreamSoundPlayer() const;
 #endif
 
@@ -58,8 +58,10 @@ struct TaskProfile {
         os::Tick GetBeginTick() const;
         os::Tick GetEndTick() const;
 
+#if NN_WARE_VER >= NN_MAKE_VER(3, 0, 0)
         float GetRemainingCachePercentage() const;
         size_t GetCachedLength() const;
+#endif
 
         TimeSpan GetDecodeTime() const;
         int32_t GetDecodedSampleCount() const;
