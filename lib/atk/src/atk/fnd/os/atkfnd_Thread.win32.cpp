@@ -89,4 +89,8 @@ void Thread::Detach() {
     os::DestroyThread(&m_Handle);
 }
 
+void Thread::SetName(const char* name) {
+    os::SetThreadNamePointer(&m_Handle, name != nullptr ? name : "");
+}
+
 }  // namespace nn::atk::detail::fnd
