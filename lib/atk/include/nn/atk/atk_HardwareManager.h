@@ -241,12 +241,16 @@ public:
     bool IsEffectInitialized() const { return m_IsInitializedEffect; }
     bool IsPresetSubMixEnabled() const { return m_IsPresetSubMixEnabled; }
 
+    OutputMode GetOutputMode(OutputDevice device) const { return m_OutputMode[device]; }
+
+    LowLevelVoiceAllocator& GetLowLevelVoiceAllocator() { return m_LowLevelVoiceAllocator; }
+
 private:
     bool m_IsInitialized;
-#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
-    audio::AudioRendererHandle m_RendererHandle;
-#else
+#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
     audio::AudioRendererHandle* m_RendererHandle;
+#else
+    audio::AudioRendererHandle m_RendererHandle;
 #endif
     audio::AudioRendererConfig m_Config;
     os::SystemEvent m_SystemEvent;

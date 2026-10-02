@@ -105,4 +105,14 @@ void SoundThread::Finalize() {
         m_pPerformanceFrameUpdateBuffer[i] = nullptr;
 }
 
+// UNCHECKED
+void SoundThread::UpdateLowLevelVoices() {
+    OutputMode outputMode{HardwareManager::GetInstance().GetOutputMode(OutputDevice_Main)};
+    HardwareManager::GetInstance().GetLowLevelVoiceAllocator().UpdateAllVoiceState(outputMode);
+}
+
+void SoundThread::ForceWakeup() {
+    m_BlockingQueue.TrySend(Message_ForceWakeup);
+}
+
 }  // namespace nn::atk::detail::driver
