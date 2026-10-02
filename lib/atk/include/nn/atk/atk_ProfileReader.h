@@ -89,7 +89,16 @@ public:
 
     int Read(TProfile* pOutProfile, int readSize);
 
-    void Record(const TProfile& profile);
+    void Record(const TProfile& profile) {
+        if (m_ReadableCount < m_ProfileCount) {
+            m_pProfile[m_RecordIndex++] = profile;
+
+            if (m_RecordIndex == m_ProfileCount)
+                m_RecordIndex = 0;
+
+            ++m_ReadableCount;
+        }
+    }
 
     bool IsInitialized() const { return m_IsInitialized; }
 
