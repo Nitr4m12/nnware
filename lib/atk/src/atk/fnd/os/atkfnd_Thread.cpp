@@ -55,4 +55,8 @@ void Thread::SetState(State value) {
     m_State = value;
 }
 
+int32_t Thread::GetPriority() const {
+    return m_Priority;
+}
+
 }  // namespace nn::atk::detail::fnd
