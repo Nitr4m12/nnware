@@ -180,6 +180,10 @@ void SoundThread::RegisterPlayerCallback(PlayerCallback* callback) {
     m_PlayerCallbackList.push_back(*callback);
 }
 
+void SoundThread::UnregisterPlayerCallback(PlayerCallback* callback) {
+    m_PlayerCallbackList.erase(m_PlayerCallbackList.iterator_to(*callback));
+}
+
 void SoundThread::RegisterSoundThreadInfoRecorder(ThreadInfoRecorder& recorder) {
     fnd::ScopedLock<fnd::CriticalSection> lock{m_LockRecordInfo};
 
