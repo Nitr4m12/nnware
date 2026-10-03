@@ -184,6 +184,10 @@ void SoundThread::UnregisterPlayerCallback(PlayerCallback* callback) {
     m_PlayerCallbackList.erase(m_PlayerCallbackList.iterator_to(*callback));
 }
 
+void SoundThread::LockAtkStateAndParameterUpdate() {
+    m_UpdateAtkStateAndParameterSection.Lock();
+}
+
 void SoundThread::RegisterSoundThreadInfoRecorder(ThreadInfoRecorder& recorder) {
     fnd::ScopedLock<fnd::CriticalSection> lock{m_LockRecordInfo};
 
