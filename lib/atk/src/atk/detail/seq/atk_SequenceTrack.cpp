@@ -157,4 +157,66 @@ void SequenceTrack::UpdateChannelRelease(Channel* channel) {
         channel->NoteOff();
 }
 
+// NON_MATCHING
+int SequenceTrack::ParseNextTick(bool doNoteOn) {
+    if (!m_OpenFlag)
+        return 0;
+
+    m_ParserTrackParam.volume.Update();
+    m_ParserTrackParam.volume2.Update();
+    m_ParserTrackParam.pan.Update();
+    m_ParserTrackParam.surroundPan.Update();
+    m_ParserTrackParam.pitchBend.Update();
+
+    if (m_ParserTrackParam.noteFinishWait) {
+        if (m_pChannelList != nullptr)
+            return 1;
+
+        m_ParserTrackParam.noteFinishWait = false;
+    }
+
+    if (m_ParserTrackParam.wait > 0) {
+        --m_ParserTrackParam.wait;
+        if (m_ParserTrackParam.wait != 0)
+            return 1;
+    }
+
+    if (m_ParserTrackParam.currentAddr != nullptr && m_ParserTrackParam.wait == 0) {
+        int counter{0};
+        const int CounterMax{10000};
+
+        while (m_ParserTrackParam.wait == 0) {
+            if (m_ParserTrackParam.noteFinishWait)
+                return 1;
+
+            if (counter > CounterMax - 1)
+                return 1;
+
+            ParseResult result{Parse(doNoteOn)};
+            if (result == ParseResult_Finish)
+                return -1;
+
+            ++counter;
+        }
+    }
+
+    return 1;
+}
+
+void SequenceTrack::StopAllChannel() {
+    Channel* channel{m_pChannelList};
+
+    while (channel != nullptr) {
+        Channel* nextChannel{channel->GetNextTrackChannel()};
+
+        channel->Stop();
+        channel->CallChannelCallback(Channel::ChannelCallbackStatus_Stopped);
+        channel->FreeChannel(channel);
+
+        channel = nextChannel;
+    }
+
+    m_pChannelList = nullptr;
+}
+
 }  // namespace nn::atk::detail::driver
