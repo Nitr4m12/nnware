@@ -347,4 +347,8 @@ void SequenceTrack::SetTvMixParameter(uint32_t srcChNo, int mixChNo, float param
     m_TvParam.mixParameter[srcChNo].ch[mixChNo] = param;
 }
 
+int16_t SequenceTrack::GetTrackVariable(int varNo) const {
+    return m_TrackVariable[varNo];
+}
+
 }  // namespace nn::atk::detail::driver
