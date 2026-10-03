@@ -232,4 +232,9 @@ void SequenceTrack::PauseAllChannel(bool flag) {
     }
 }
 
+void SequenceTrack::AddChannel(Channel *channel) {
+    channel->SetNextTrackChannel(m_pChannelList);
+    m_pChannelList = channel;
+}
+
 }  // namespace nn::atk::detail::driver
