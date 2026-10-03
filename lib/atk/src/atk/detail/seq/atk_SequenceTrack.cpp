@@ -4,6 +4,10 @@
 
 namespace nn::atk::detail::driver {
 
+void SequenceTrack::SetPlayerTrackNo(int playerTrackNo) {
+    m_PlayerTrackNo = playerTrackNo;
+}
+
 SequenceTrack::SequenceTrack()
     : m_OpenFlag{false}, m_pSequenceSoundPlayer{nullptr}, m_pChannelList{nullptr} {
     InitParam();
