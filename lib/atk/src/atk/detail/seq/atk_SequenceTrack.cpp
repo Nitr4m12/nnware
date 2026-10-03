@@ -331,4 +331,8 @@ void SequenceTrack::SetBankIndex(int bankIndex) {
     m_ParserTrackParam.bankIndex = bankIndex;
 }
 
+void SequenceTrack::SetTranspose(int8_t transpose) {
+    m_ParserTrackParam.transpose = transpose;
+}
+
 }  // namespace nn::atk::detail::driver
