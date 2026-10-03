@@ -131,4 +131,9 @@ void SequenceTrack::FreeAllChannel() {
     m_pChannelList = nullptr;
 }
 
+void SequenceTrack::UpdateChannelRelease(Channel* channel) {
+    if (channel->GetLength() == 0 && !channel->IsRelease() && !m_ParserTrackParam.damperFlag)
+        channel->NoteOff();
+}
+
 }  // namespace nn::atk::detail::driver
