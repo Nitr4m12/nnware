@@ -1,5 +1,7 @@
 #include <nn/atk/atk_SequenceTrack.h>
 
+#include <nn/atk/atk_SequenceSoundPlayer.h>
+
 namespace nn::atk::detail::driver {
 
 SequenceTrack::SequenceTrack()
@@ -247,6 +249,59 @@ int SequenceTrack::GetChannelCount() const {
     }
 
     return count;
+}
+
+// NON_MATCHING: the logic inside the channel != nullptr loop seems to be missing something
+void SequenceTrack::ChannelCallbackFunc(Channel* dropChannel,
+                                        [[maybe_unused]] Channel::ChannelCallbackStatus status,
+                                        void* userData) {
+    SequenceTrack* track{static_cast<SequenceTrack*>(userData)};
+
+    if (track->m_pSequenceSoundPlayer != nullptr)
+        track->m_pSequenceSoundPlayer->ChannelCallback(dropChannel);
+
+    Channel* channel{track->m_pChannelList};
+    if (channel == dropChannel) {
+        track->m_pChannelList = dropChannel->GetNextTrackChannel();
+        return;
+    }
+
+    while (channel != nullptr) {
+        if (channel == dropChannel) {
+            channel->SetNextTrackChannel(dropChannel->GetNextTrackChannel());
+            return;
+        }
+
+        channel = channel->GetNextTrackChannel();
+    }
+}
+
+void SequenceTrack::SetMute(SequenceMute mute) {
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+    if (m_ForceMute)
+        return;
+#endif
+
+    switch (mute) {
+    case SequenceMute_NoStop:
+        m_ParserTrackParam.muteFlag = true;
+        return;
+
+    case SequenceMute_Off:
+        m_ParserTrackParam.muteFlag = false;
+        return;
+
+    case SequenceMute_Release:
+        ReleaseAllChannel(-1);
+        FreeAllChannel();
+        m_ParserTrackParam.muteFlag = true;
+        return;
+
+    case SequenceMute_Stop:
+        StopAllChannel();
+        m_ParserTrackParam.muteFlag = true;
+        return;
+    }
 }
 
 }  // namespace nn::atk::detail::driver

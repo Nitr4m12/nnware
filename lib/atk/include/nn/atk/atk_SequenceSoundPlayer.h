@@ -275,7 +275,7 @@ public:
     static void SetSkipIntervalTick(int32_t);
     static int32_t GetSkipIntervalTick();
 
-    void ChannelCallback(Channel* channel);
+    virtual void ChannelCallback(Channel* channel);
 
     void OnUpdateFrameSoundThread() override;
     void OnUpdateFrameSoundThreadWithAudioFrameFrequency() override;

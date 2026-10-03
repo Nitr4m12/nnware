@@ -87,7 +87,7 @@ public:
     static const int PauseReleaseValue{127};
     static const int MuteReleaseValue{127};
 
-    static void ChannelCallbackFunc(Channel* dropChannel, Channel::ChannelCallbackStatus,
+    static void ChannelCallbackFunc(Channel* dropChannel, Channel::ChannelCallbackStatus status,
                                     void* userData);
 
     SequenceTrack();
