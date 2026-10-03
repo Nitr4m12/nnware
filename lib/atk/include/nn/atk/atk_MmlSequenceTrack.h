@@ -5,7 +5,7 @@
 namespace nn::atk::detail::driver {
 
 class MmlParser;
-class MmlSequenceTrack : SequenceTrack {
+class MmlSequenceTrack : public SequenceTrack {
 public:
     MmlSequenceTrack();
 
