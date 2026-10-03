@@ -339,4 +339,8 @@ void SequenceTrack::SetVelocityRange(uint8_t range) {
     m_ParserTrackParam.velocityRange = range;
 }
 
+void SequenceTrack::SetOutputLine(int outputLine) {
+    m_ParserTrackParam.outputLine = outputLine;
+}
+
 }  // namespace nn::atk::detail::driver
