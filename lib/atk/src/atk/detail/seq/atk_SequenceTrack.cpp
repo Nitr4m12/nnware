@@ -322,4 +322,9 @@ void SequenceTrack::SetSilence(bool silenceFlag, int fadeTimes) {
     }
 }
 
+void SequenceTrack::SetBiquadFilter(int type, float value) {
+    m_ParserTrackParam.biquadType = type;
+    m_ParserTrackParam.biquadValue = value;
+}
+
 }  // namespace nn::atk::detail::driver
