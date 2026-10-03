@@ -97,4 +97,15 @@ void SequenceTrack::ReleaseAllChannel(int release) {
     }
 }
 
+void SequenceTrack::FreeAllChannel() {
+    Channel* channel{m_pChannelList};
+
+    while (channel != nullptr) {
+        channel->DetachChannel(channel);
+        channel = channel->GetNextTrackChannel();
+    }
+
+    m_pChannelList = nullptr;
+}
+
 }  // namespace nn::atk::detail::driver
