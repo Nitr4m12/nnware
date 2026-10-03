@@ -327,4 +327,8 @@ void SequenceTrack::SetBiquadFilter(int type, float value) {
     m_ParserTrackParam.biquadValue = value;
 }
 
+void SequenceTrack::SetBankIndex(int bankIndex) {
+    m_ParserTrackParam.bankIndex = bankIndex;
+}
+
 }  // namespace nn::atk::detail::driver
