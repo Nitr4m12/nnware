@@ -175,7 +175,9 @@ private:
 
     uint8_t m_PlayerTrackNo;
     bool m_OpenFlag;
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
     bool m_ForceMute;
+#endif
     float m_ExtVolume;
     float m_ExtPitch;
     float m_PanRange;

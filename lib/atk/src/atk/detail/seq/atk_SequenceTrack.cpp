@@ -79,7 +79,9 @@ void SequenceTrack::InitParam() {
     for (int varNo{0}; varNo < TrackVariableCount; ++varNo)
         m_TrackVariable[varNo] = -1;
 
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
     m_ForceMute = false;
+#endif
 }
 
 SequenceTrack::~SequenceTrack() {
@@ -129,6 +131,25 @@ void SequenceTrack::FreeAllChannel() {
     }
 
     m_pChannelList = nullptr;
+}
+
+void SequenceTrack::UpdateChannelLength() {
+    if (!m_OpenFlag)
+        return;
+
+    Channel* channel{m_pChannelList};
+
+    while (channel != nullptr) {
+        if (channel->GetLength() > 0)
+            channel->SetLength(channel->GetLength() - 1);
+
+        UpdateChannelRelease(channel);
+
+        if (!channel->IsAutoUpdateSweep())
+            channel->UpdateSweep(1);
+
+        channel = channel->GetNextTrackChannel();
+    }
 }
 
 void SequenceTrack::UpdateChannelRelease(Channel* channel) {
