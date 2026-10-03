@@ -219,4 +219,17 @@ void SequenceTrack::StopAllChannel() {
     m_pChannelList = nullptr;
 }
 
+// TODO: SequenceTrack::UpdateChannelParam
+
+void SequenceTrack::PauseAllChannel(bool flag) {
+    Channel* channel{m_pChannelList};
+
+    while (channel != nullptr) {
+        if (channel->IsActive() && channel->IsPause() != flag)
+            channel->Pause(flag);
+
+        channel = channel->GetNextTrackChannel();
+    }
+}
+
 }  // namespace nn::atk::detail::driver
