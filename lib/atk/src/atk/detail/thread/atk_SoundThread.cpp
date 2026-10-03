@@ -188,6 +188,10 @@ void SoundThread::LockAtkStateAndParameterUpdate() {
     m_UpdateAtkStateAndParameterSection.Lock();
 }
 
+void SoundThread::UnlockAtkStateAndParameterUpdate() {
+    m_UpdateAtkStateAndParameterSection.Unlock();
+}
+
 void SoundThread::RegisterSoundThreadInfoRecorder(ThreadInfoRecorder& recorder) {
     fnd::ScopedLock<fnd::CriticalSection> lock{m_LockRecordInfo};
 
