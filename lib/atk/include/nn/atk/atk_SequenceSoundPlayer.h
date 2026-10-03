@@ -80,7 +80,7 @@ public:
     };
     static_assert(sizeof(DataLoadTask) == 0x118);
 
-    class FreePlayerHeapTask : public Task {  // 197
+    class FreePlayerHeapTask : public Task {
     public:
         void Initialize();
         void Execute(TaskProfileLogger& logger) override;

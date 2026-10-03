@@ -21,12 +21,12 @@ void DoNothing([[maybe_unused]] nn::os::Tick* pVariable) {}
 
 namespace nn::atk::detail::driver {
 
+SoundThread::SoundThread() = default;
+
 SoundThread& SoundThread::GetInstance() {
     static SoundThread instance;
     return instance;
 }
-
-SoundThread::SoundThread() = default;
 
 SoundThread::~SoundThread() = default;
 
@@ -204,6 +204,13 @@ void SoundThread::RegisterSoundThreadUpdateProfileReader(
     m_UpdateProfileReaderList.push_back(profileReader);
 }
 
+void SoundThread::UnregisterSoundThreadUpdateProfileReader(
+    SoundThreadUpdateProfileReader& profileReader) {
+    fnd::ScopedLock<fnd::CriticalSection> lock{m_LockUpdateProfile};
+
+    m_UpdateProfileReaderList.erase(m_UpdateProfileReaderList.iterator_to(profileReader));
+}
+
 void SoundThread::RegisterSoundThreadInfoRecorder(ThreadInfoRecorder& recorder) {
     fnd::ScopedLock<fnd::CriticalSection> lock{m_LockRecordInfo};
 
@@ -335,5 +342,7 @@ void SoundThread::RecordUpdateProfile(const SoundThreadUpdateProfile& updateProf
         }
     }
 }
+
+// TODO: SoundThread::Run
 
 }  // namespace nn::atk::detail::driver
