@@ -335,4 +335,8 @@ void SequenceTrack::SetTranspose(int8_t transpose) {
     m_ParserTrackParam.transpose = transpose;
 }
 
+void SequenceTrack::SetVelocityRange(uint8_t range) {
+    m_ParserTrackParam.velocityRange = range;
+}
+
 }  // namespace nn::atk::detail::driver
