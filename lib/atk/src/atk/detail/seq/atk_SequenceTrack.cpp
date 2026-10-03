@@ -82,6 +82,10 @@ void SequenceTrack::InitParam() {
     m_ForceMute = false;
 }
 
+SequenceTrack::~SequenceTrack() {
+    Close();
+}
+
 void SequenceTrack::Close() {
     ReleaseAllChannel(-1);
     FreeAllChannel();
