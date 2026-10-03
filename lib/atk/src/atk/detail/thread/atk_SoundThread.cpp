@@ -192,6 +192,11 @@ void SoundThread::UnlockAtkStateAndParameterUpdate() {
     m_UpdateAtkStateAndParameterSection.Unlock();
 }
 
+void SoundThread::RegisterAudioRendererPerformanceReader(
+    AudioRendererPerformanceReader& performanceReader) {
+    m_pAudioRendererPerformanceReader = &performanceReader;
+}
+
 void SoundThread::RegisterSoundThreadInfoRecorder(ThreadInfoRecorder& recorder) {
     fnd::ScopedLock<fnd::CriticalSection> lock{m_LockRecordInfo};
 
