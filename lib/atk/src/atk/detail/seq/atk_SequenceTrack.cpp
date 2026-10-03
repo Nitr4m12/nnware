@@ -97,6 +97,14 @@ void SequenceTrack::SetSeqData(const void* seqBase, int seqOffset) {
     m_ParserTrackParam.currentAddr = m_ParserTrackParam.baseAddr + seqOffset;
 }
 
+void SequenceTrack::Open() {
+    m_ParserTrackParam.noteFinishWait = false;
+    m_ParserTrackParam.callStackDepth = 0;
+    m_ParserTrackParam.wait = 0;
+
+    m_OpenFlag = true;
+}
+
 void SequenceTrack::ReleaseAllChannel(int release) {
     UpdateChannelParam();
 
