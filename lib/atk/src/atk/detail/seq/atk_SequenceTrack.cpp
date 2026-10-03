@@ -82,4 +82,19 @@ void SequenceTrack::InitParam() {
     m_ForceMute = false;
 }
 
+void SequenceTrack::ReleaseAllChannel(int release) {
+    UpdateChannelParam();
+
+    Channel* channel{m_pChannelList};
+    while (channel != nullptr) {
+        if (channel->IsActive()) {
+            if (release >= 0)
+                channel->SetRelease(static_cast<uint8_t>(release));
+            channel->Release();
+        }
+
+        channel = channel->GetNextTrackChannel();
+    }
+}
+
 }  // namespace nn::atk::detail::driver
