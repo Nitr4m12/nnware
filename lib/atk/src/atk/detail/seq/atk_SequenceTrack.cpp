@@ -343,4 +343,8 @@ void SequenceTrack::SetOutputLine(int outputLine) {
     m_ParserTrackParam.outputLine = outputLine;
 }
 
+void SequenceTrack::SetTvMixParameter(uint32_t srcChNo, int mixChNo, float param) {
+    m_TvParam.mixParameter[srcChNo].ch[mixChNo] = param;
+}
+
 }  // namespace nn::atk::detail::driver
