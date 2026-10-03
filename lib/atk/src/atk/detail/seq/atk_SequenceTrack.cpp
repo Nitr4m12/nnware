@@ -304,4 +304,22 @@ void SequenceTrack::SetMute(SequenceMute mute) {
     }
 }
 
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+void SequenceTrack::ForceMute() {
+    m_ForceMute = true;
+    m_ParserTrackParam.muteFlag = true;
+}
+#endif
+
+void SequenceTrack::SetSilence(bool silenceFlag, int fadeTimes) {
+    m_ParserTrackParam.silenceFlag = silenceFlag;
+
+    Channel* channel{m_pChannelList};
+
+    while (channel != nullptr) {
+        channel->SetSilence(silenceFlag, static_cast<uint32_t>(fadeTimes + 4) / 5);
+        channel = channel->GetNextTrackChannel();
+    }
+}
+
 }  // namespace nn::atk::detail::driver
