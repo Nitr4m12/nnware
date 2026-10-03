@@ -8,12 +8,15 @@ class MmlParser;
 class MmlSequenceTrack : SequenceTrack {
 public:
     MmlSequenceTrack();
-    ~MmlSequenceTrack() override;
 
+    void SetMmlParser(const MmlParser* parser) { m_pParser = parser; }
+    const MmlParser* GetMmlParser() const { return m_pParser; }
+
+protected:
     ParseResult Parse(bool doNoteOn) override;
 
 private:
-    MmlParser* m_pParser;
+    const MmlParser* m_pParser;
 };
 static_assert(sizeof(MmlSequenceTrack) == 0x1f0);
 
