@@ -50,22 +50,22 @@ void SequenceTrack::InitParam() {
     m_ParserTrackParam.velocityRange = 127;
 
     m_ParserTrackParam.pitchBend.InitValue(0);
-    m_ParserTrackParam.bendRange = 2;
+    m_ParserTrackParam.bendRange = DefaultBendRange;
     m_ParserTrackParam.initPan = 0;
 
     m_ParserTrackParam.transpose = 0;
-    m_ParserTrackParam.priority = 64;
+    m_ParserTrackParam.priority = DefaultPriority;
 
-    m_ParserTrackParam.portaKey = 60;
+    m_ParserTrackParam.portaKey = DefaultPortaKey;
     m_ParserTrackParam.portaTime = 0;
 
-    m_ParserTrackParam.attack = 255;
-    m_ParserTrackParam.decay = 255;
-    m_ParserTrackParam.sustain = 255;
-    m_ParserTrackParam.release = 255;
-    m_ParserTrackParam.envHold = 255;
+    m_ParserTrackParam.attack = InvalidEnvelope;
+    m_ParserTrackParam.decay = InvalidEnvelope;
+    m_ParserTrackParam.sustain = InvalidEnvelope;
+    m_ParserTrackParam.release = InvalidEnvelope;
+    m_ParserTrackParam.envHold = InvalidEnvelope;
 
-    m_ParserTrackParam.mainSend = 127;
+    m_ParserTrackParam.mainSend = MaxEnvelopeValue;
     for (int i{0}; i < AuxBus_Count; ++i)
         m_ParserTrackParam.fxSend[i] = 0;
 
@@ -80,6 +80,12 @@ void SequenceTrack::InitParam() {
         m_TrackVariable[varNo] = -1;
 
     m_ForceMute = false;
+}
+
+void SequenceTrack::Close() {
+    ReleaseAllChannel(-1);
+    FreeAllChannel();
+    m_OpenFlag = false;
 }
 
 void SequenceTrack::ReleaseAllChannel(int release) {
