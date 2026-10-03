@@ -274,4 +274,10 @@ void SoundThread::FrameProcess(UpdateType updateType) {
     m_LastPerformanceFrameEnd = endTick;
 }
 
+// TODO: SoundThread::RecordPerformanceInfo
+
+void SoundThread::EffectFrameProcess() {
+    HardwareManager::GetInstance().UpdateEffect();
+}
+
 }  // namespace nn::atk::detail::driver

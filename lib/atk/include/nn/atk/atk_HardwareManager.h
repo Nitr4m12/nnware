@@ -249,6 +249,7 @@ public:
 
     bool IsEffectInitialized() const { return m_IsInitializedEffect; }
     bool IsPresetSubMixEnabled() const { return m_IsPresetSubMixEnabled; }
+    bool IsAdditionalEffectEnabled() const { return m_IsAdditionalEffectEnabled; }
 
     OutputMode GetOutputMode(OutputDevice device) const { return m_OutputMode[device]; }
 

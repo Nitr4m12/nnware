@@ -144,6 +144,9 @@ public:
     void SetMuteUnusedEffectChannel(bool isUnusedEffectChannelMuted);
     void IsUnusedEffectChannelMuted() const;
 
+    audio::SubMixType* GetAudioSubMixInstance() { return &m_SubMix; }
+    const audio::SubMixType* GetAudioSubMixInstance() const { return &m_SubMix; }
+
     void MuteUnusedEffectChannel(ChannelIndex* effectChannelIndex, int32_t effectChannelCount,
                                  int32_t bus);
 
