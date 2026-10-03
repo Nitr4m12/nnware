@@ -1,5 +1,11 @@
 #include <nn/atk/atk_SoundThread.h>
-#include "nn/atk/fnd/os/atkfnd_ScopedLock.h"
+
+#include <nn/audio.h>
+
+#include <nn/atk/atk_ChannelManager.h>
+#include <nn/atk/atk_DriverCommand.h>
+#include <nn/atk/atk_MultiVoiceManager.h>
+#include <nn/atk/fnd/os/atkfnd_ScopedLock.h>
 
 #if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
 namespace {
@@ -107,7 +113,6 @@ void SoundThread::Finalize() {
         m_pPerformanceFrameUpdateBuffer[i] = nullptr;
 }
 
-// UNCHECKED
 void SoundThread::UpdateLowLevelVoices() {
     OutputMode outputMode{HardwareManager::GetInstance().GetOutputMode(OutputDevice_Main)};
     HardwareManager::GetInstance().GetLowLevelVoiceAllocator().UpdateAllVoiceState(outputMode);
@@ -169,6 +174,104 @@ void SoundThread::UnregisterSoundThreadInfoRecorder(ThreadInfoRecorder& recorder
     fnd::ScopedLock<fnd::CriticalSection> lock{m_LockRecordInfo};
 
     m_InfoRecorderList.erase(m_InfoRecorderList.iterator_to(recorder));
+}
+
+void SoundThread::FrameProcess(UpdateType updateType) {
+    m_CriticalSection.Lock();
+
+    audio::AudioRendererConfig& config{HardwareManager::GetInstance().GetAudioRendererConfig()};
+    void* performanceFrameBuffer{};
+
+    if (m_IsProfilingEnabled) {
+        {
+            HardwareManager::UpdateAudioRendererScopedLock lock{};
+            performanceFrameBuffer = audio::SetPerformanceFrameBuffer(
+                &config, m_pPerformanceFrameUpdateBuffer[m_CurrentPerformanceFrameBufferIndex],
+                m_PerformanceFrameUpdateBufferSize);
+        }
+
+        ++m_CurrentPerformanceFrameBufferIndex;
+        if (m_CurrentPerformanceFrameBufferIndex > 2)
+            m_CurrentPerformanceFrameBufferIndex = 0;
+    }
+
+    os::Tick beginTick{os::GetSystemTick()};
+
+    m_UpdateAtkStateAndParameterSection.Lock();
+
+    for (auto itr{m_SoundFrameCallbackList.begin()}; itr != m_SoundFrameCallbackList.end();) {
+        auto curItr{itr++};
+        curItr->OnBeginSoundFrame();
+    }
+
+    uint32_t nwVoiceCount{0};
+
+    if (updateType == UpdateType_AudioFrame)
+        MultiVoiceManager::GetInstance().UpdateAudioFrameVoiceStatus();
+    else
+        MultiVoiceManager::GetInstance().UpdateAllVoiceStatus();
+
+    while (DriverCommand::GetInstanceForTaskThread().ProcessCommand()) {
+    };
+    while (DriverCommand::GetInstance().ProcessCommand()) {
+    };
+
+    for (auto itr{m_PlayerCallbackList.begin()}; itr != m_PlayerCallbackList.end();) {
+        auto curItr{itr++};
+        if (updateType == UpdateType_AudioFrame)
+            curItr->OnUpdateFrameSoundThreadWithAudioFrameFrequency();
+        else
+            curItr->OnUpdateFrameSoundThread();
+    }
+
+    if (updateType == UpdateType_AudioFrame) {
+        ChannelManager::GetInstance().UpdateAudioFrameChannel();
+        MultiVoiceManager::GetInstance().UpdateAudioFrameVoices();
+    } else {
+        ChannelManager::GetInstance().UpdateAllChannel();
+        MultiVoiceManager::GetInstance().UpdateAllVoices();
+    }
+
+    m_UpdateAtkStateAndParameterSection.Unlock();
+
+    HardwareManager::GetInstance().Update();
+    Util::CalcRandom();
+
+    m_UpdateAtkStateAndParameterSection.Lock();
+
+    for (auto itr{m_SoundFrameCallbackList.begin()}; itr != m_SoundFrameCallbackList.end();) {
+        auto curItr{itr++};
+        curItr->OnEndSoundFrame();
+    }
+
+    m_UpdateAtkStateAndParameterSection.Unlock();
+
+    if (m_UserCallback != nullptr)
+        m_UserCallback(m_UserCallbackArg);
+
+    HardwareManager::GetInstance().UpdateRecorder();
+
+    m_CriticalSection.Unlock();
+
+    os::Tick endTick{os::GetSystemTick()};
+
+    if (performanceFrameBuffer != nullptr && m_IsProfilingEnabled) {
+        audio::PerformanceInfo performanceInfo;
+
+        if (performanceInfo.SetBuffer(performanceFrameBuffer, m_PerformanceFrameUpdateBufferSize)) {
+            do {
+                RecordPerformanceInfo(performanceInfo, m_LastPerformanceFrameBegin,
+                                      m_LastPerformanceFrameEnd, nwVoiceCount);
+            } while (performanceInfo.MoveToNextFrame());
+        }
+
+        if (m_pAudioRendererPerformanceReader != nullptr)
+            m_pAudioRendererPerformanceReader->Record(
+                performanceFrameBuffer, m_PerformanceFrameUpdateBufferSize, beginTick);
+    }
+
+    m_LastPerformanceFrameBegin = beginTick;
+    m_LastPerformanceFrameEnd = endTick;
 }
 
 }  // namespace nn::atk::detail::driver

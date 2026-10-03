@@ -33,7 +33,7 @@ uint8_t GetNwInterpolationTypeFromHardwareManager() {
 
 Channel* Channel::AllocChannel(int voiceChannelCount, int priority, ChannelCallback callback,
                                void* callbackData) {
-    Channel* channel{ChannelManager::GetInstance()->Alloc()};
+    Channel* channel{ChannelManager::GetInstance().Alloc()};
 
     if (channel == nullptr) {
         Util::WarningLogger::GetInstance().Log(0, 0, 0);
@@ -57,7 +57,7 @@ Channel* Channel::AllocChannel(int voiceChannelCount, int priority, ChannelCallb
 }
 
 void Channel::FreeChannel(Channel* channel) {
-    ChannelManager::GetInstance()->Free(channel);
+    ChannelManager::GetInstance().Free(channel);
 }
 
 void Channel::DetachChannel(Channel* channel) {

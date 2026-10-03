@@ -415,14 +415,13 @@ bool StreamSoundPlayer::LoadPrefetchBlocks(StreamSoundPrefetchFileReader& reader
 
     position_t sampleBeginPosition{0};
 
-    // Present in dwarf info, but maybe unused?
-    [[maybe_unused]] size_t usedPrefetchMaxSize{0};
+    size_t usedPrefetchMaxSize{0};
 
     for (int blockIndex{0}; blockIndex < m_BufferBlockCount; ++blockIndex) {
         PrefetchLoadDataParam loadDataParam;
         loadDataParam.Initialize();
         loadDataParam.prefetchBlockIndex = 0;
-        loadDataParam.prefetchBlockBytes = 0;
+        loadDataParam.prefetchBlockBytes = usedPrefetchMaxSize;
 
         loadDataParam.sampleBegin = sampleBeginPosition;
 

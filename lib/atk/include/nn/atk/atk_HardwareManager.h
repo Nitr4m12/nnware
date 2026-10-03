@@ -89,8 +89,13 @@ public:
 
     class UpdateAudioRendererScopedLock {
     public:
-        UpdateAudioRendererScopedLock();
-        ~UpdateAudioRendererScopedLock();
+        UpdateAudioRendererScopedLock() {
+            HardwareManager::GetInstance().LockUpdateAudioRenderer();
+        }
+
+        ~UpdateAudioRendererScopedLock() {
+            HardwareManager::GetInstance().UnlockUpdateAudioRenderer();
+        }
     };
 
     class HardwareManagerParameter {
@@ -167,6 +172,10 @@ public:
     Result RequestUpdateAudioRenderer();
 
     void DetachMemoryPool(audio::MemoryPoolType* pPool, bool isSoundThreadEnabled);
+
+    void LockUpdateAudioRenderer() { m_UpdateAudioRendererLock.Lock(); }
+
+    void UnlockUpdateAudioRenderer() { m_UpdateAudioRendererLock.Unlock(); }
 
     void ExecuteAudioRendererRendering();
 
@@ -258,28 +267,34 @@ private:
     std::atomic_ulong m_AudioRendererUpdateCount;
     void* m_pAudioRendererWorkBuffer;
     void* m_pAudioRendererConfigWorkBuffer;
-    OutputMode m_OutputMode[1];
-    OutputMode m_EndUserOutputMode[1];
+    OutputMode m_OutputMode[OutputDevice_Count];
+    OutputMode m_EndUserOutputMode[OutputDevice_Count];
     SampleRateConverterType m_SrcType;
     MoveValue<float, int32_t> m_MasterVolume;
     MoveValue<float, int32_t> m_VolumeForReset;
-    BiquadFilterCallback* m_BiquadFilterCallbackTable[128];
-    uint8_t m_OutputDeviceFlag[32];
-    LowLevelVoiceAllocator m_LowLevelVoiceAllocator;
-    FinalMix m_FinalMix;
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
-    SubMix m_SubMix;
-#else
+    SubMixList _1[14];  // There's some kind of intrusive list array here, but it's not SubMix
+                        // (because SubMix does not exist on versions prior to 4.0.0)
+#endif
+    BiquadFilterCallback* m_BiquadFilterCallbackTable[BiquadFilterType_Max +
+                                                      1];  // SMO: 0x1e8 = 488, BTD5: 0x108 = 264
+    uint8_t m_OutputDeviceFlag[OutputLineIndex_Max];
+    LowLevelVoiceAllocator m_LowLevelVoiceAllocator;  // SMO: 0x608 = 1544, BTD5: 0x528 = 1320
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+    FinalMix m_FinalMix;
     SubMix m_SubMix[SubMixCountMax];
     SubMix m_AdditionalSubMix;
-#endif
     SubMixList m_SubMixList;
     fnd::CriticalSection m_SubMixListLock;
+#endif
     audio::AudioRendererParameter m_AudioRendererParameter;
     audio::DeviceSinkType m_Sink;
     MoveValue<float, int32_t> m_AuxUserVolume[MixerCount];
     MoveValue<float, int32_t> m_AuxUserVolumeForAdditionalEffect[AuxBusCountForAdditionalEffect];
-    bool m_IsInitializedEffect;
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    uint8_t _0[298];
+#endif
+    bool m_IsInitializedEffect;  // SMO: 0x7f0 = 2040, BTD5: 0x948 = 2376
     bool m_IsPresetSubMixEnabled;
     bool m_IsAdditionalEffectEnabled;
     bool m_IsAdditionalSubMixEnabled;
@@ -287,7 +302,7 @@ private:
     bool m_IsInitializedSoundThread;
     bool m_IsPreviousSdkVersionLowPassFilterCompatible;
     bool m_IsMemoryPoolAttachCheckEnabled;
-    fnd::CriticalSection m_UpdateAudioRendererLock;
+    fnd::CriticalSection m_UpdateAudioRendererLock;  // SMO: 0x7f8 = 2048, BTD5: 0x950 = 2384
     fnd::CriticalSection m_UpdateHardwareManagerLock;
     fnd::CriticalSection m_EffectAuxListLock;
     fnd::CriticalSection m_EffectAuxListForFinalMixLock;
@@ -308,6 +323,8 @@ private:
     bool m_IsCompatibleBusVolumeEnabled;
     bool m_IsUserThreadRenderingEnabled;
 };
-// static_assert(sizeof(HardwareManager) == 0xa58);
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+static_assert(sizeof(HardwareManager) == 0xa58);
+#endif
 
 }  // namespace nn::atk::detail::driver
