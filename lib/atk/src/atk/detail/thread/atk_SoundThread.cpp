@@ -170,6 +170,12 @@ void SoundThread::RegisterSoundFrameCallback(SoundFrameCallback* callback) {
     m_SoundFrameCallbackList.push_back(*callback);
 }
 
+void SoundThread::UnregisterSoundFrameCallback(SoundFrameCallback* callback) {
+    fnd::ScopedLock<fnd::CriticalSection> lock{m_CriticalSection};
+
+    m_SoundFrameCallbackList.erase(m_SoundFrameCallbackList.iterator_to(*callback));
+}
+
 void SoundThread::RegisterSoundThreadInfoRecorder(ThreadInfoRecorder& recorder) {
     fnd::ScopedLock<fnd::CriticalSection> lock{m_LockRecordInfo};
 
