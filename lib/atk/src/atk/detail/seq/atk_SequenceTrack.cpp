@@ -351,4 +351,8 @@ int16_t SequenceTrack::GetTrackVariable(int varNo) const {
     return m_TrackVariable[varNo];
 }
 
+void SequenceTrack::SetTrackVariable(int varNo, int16_t var) {
+    m_TrackVariable[varNo] = var;
+}
+
 }  // namespace nn::atk::detail::driver
