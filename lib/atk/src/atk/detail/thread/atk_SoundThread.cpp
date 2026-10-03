@@ -197,6 +197,13 @@ void SoundThread::RegisterAudioRendererPerformanceReader(
     m_pAudioRendererPerformanceReader = &performanceReader;
 }
 
+void SoundThread::RegisterSoundThreadUpdateProfileReader(
+    SoundThreadUpdateProfileReader& profileReader) {
+    fnd::ScopedLock<fnd::CriticalSection> lock{m_LockUpdateProfile};
+
+    m_UpdateProfileReaderList.push_back(profileReader);
+}
+
 void SoundThread::RegisterSoundThreadInfoRecorder(ThreadInfoRecorder& recorder) {
     fnd::ScopedLock<fnd::CriticalSection> lock{m_LockRecordInfo};
 
