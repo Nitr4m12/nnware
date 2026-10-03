@@ -280,4 +280,20 @@ void SoundThread::EffectFrameProcess() {
     HardwareManager::GetInstance().UpdateEffect();
 }
 
+void SoundThread::RecordUpdateProfile(const SoundThreadUpdateProfile& updateProfile) {
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+    if (m_UpdateProfileReaderList.empty())
+        return;
+#endif
+
+    {
+        fnd::ScopedLock<fnd::CriticalSection> lock{m_LockUpdateProfile};
+
+        for (auto itr{m_UpdateProfileReaderList.begin()}; itr != m_UpdateProfileReaderList.end();
+             ++itr) {
+            itr->Record(updateProfile);
+        }
+    }
+}
+
 }  // namespace nn::atk::detail::driver
