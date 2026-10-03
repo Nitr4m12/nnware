@@ -355,4 +355,13 @@ void SequenceTrack::SetTrackVariable(int varNo, int16_t var) {
     m_TrackVariable[varNo] = var;
 }
 
+volatile int16_t* SequenceTrack::GetVariablePtr(int varNo) {
+    if (varNo < TrackVariableCount)
+        return m_TrackVariable + varNo;
+
+    return nullptr;
+}
+
+// TODO: SequenceTrack::NoteOn
+
 }  // namespace nn::atk::detail::driver
