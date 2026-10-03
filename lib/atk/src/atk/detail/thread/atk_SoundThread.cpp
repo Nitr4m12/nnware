@@ -164,6 +164,12 @@ void SoundThread::ClearThreadEndUserCallback() {
     m_ThreadEndUserCallbackArg = 0;
 }
 
+void SoundThread::RegisterSoundFrameCallback(SoundFrameCallback* callback) {
+    fnd::ScopedLock<fnd::CriticalSection> lock{m_CriticalSection};
+
+    m_SoundFrameCallbackList.push_back(*callback);
+}
+
 void SoundThread::RegisterSoundThreadInfoRecorder(ThreadInfoRecorder& recorder) {
     fnd::ScopedLock<fnd::CriticalSection> lock{m_LockRecordInfo};
 
