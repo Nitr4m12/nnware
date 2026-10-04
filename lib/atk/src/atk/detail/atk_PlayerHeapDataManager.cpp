@@ -4,6 +4,10 @@ namespace nn::atk::detail {
 
 PlayerHeapDataManager::PlayerHeapDataManager() = default;
 
+PlayerHeapDataManager::~PlayerHeapDataManager() {
+    Finalize();
+}
+
 void PlayerHeapDataManager::Finalize() {
     if (m_IsFinalized)
         return;
