@@ -179,9 +179,6 @@ void StreamSoundLoader::RequestLoadData(void** bufferAddress, uint32_t bufferBlo
                                         position_t prefetchOffsetSamples, int priority) {
     StreamDataLoadTask* task{m_StreamDataLoadTaskPool.Alloc()};
 
-    if (task != nullptr)
-        new (task) StreamDataLoadTask();
-
     task->m_pLoader = this;
     task->m_BufferBlockIndex = bufferBlockIndex;
     task->m_PrefetchOffsetSamples = prefetchOffsetSamples;

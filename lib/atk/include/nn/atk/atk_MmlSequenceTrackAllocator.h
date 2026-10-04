@@ -6,19 +6,22 @@
 
 namespace nn::atk::detail::driver {
 
-class MmlSequenceTrackAllocator : SequenceTrackAllocator {
+class MmlSequenceTrackAllocator : public SequenceTrackAllocator {
 public:
     using MmlSequenceTrackPool = InstancePool<MmlSequenceTrack>;
 
-    SequenceTrack* AllocTrack(SequenceSoundPlayer* player) override;
+    MmlSequenceTrackAllocator(MmlParser* parser) : m_pParser(parser) {};
 
+    void SetMmlParser(MmlParser* parser) { m_pParser = parser; }
+    MmlParser* GetMmlParser() { return m_pParser; }
+
+    SequenceTrack* AllocTrack(SequenceSoundPlayer* player) override;
     void FreeTrack(SequenceTrack* track) override;
+    int32_t GetAllocatableTrackCount() const override;
 
     int32_t Create(void* buffer, size_t size);
 
     void Destroy();
-
-    int32_t GetAllocatableTrackCount() const override;
 
 private:
     MmlParser* m_pParser;

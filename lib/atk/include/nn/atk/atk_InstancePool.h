@@ -70,7 +70,14 @@ public:
 
     int Count() const { return Count(); }
 
-    T* Alloc() { return reinterpret_cast<T*>(AllocImpl()); }
+    T* Alloc() {
+        void* ptr{AllocImpl()};
+
+        if (ptr != nullptr)
+            new (ptr) T();
+
+        return static_cast<T*>(ptr);
+    }
 
     void Free(T* obj) {
         obj->~T();

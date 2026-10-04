@@ -12,7 +12,7 @@ public:
 
     virtual SequenceTrack* AllocTrack(SequenceSoundPlayer* player) = 0;
     virtual void FreeTrack(SequenceTrack* track) = 0;
-    virtual int GetAllocatableTrackCount() const = 0;
+    virtual int32_t GetAllocatableTrackCount() const = 0;
 };
 static_assert(sizeof(SequenceTrackAllocator) == 0x8);
 
