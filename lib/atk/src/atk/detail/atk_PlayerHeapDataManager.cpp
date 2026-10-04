@@ -37,4 +37,8 @@ const void* PlayerHeapDataManager::SetFileAddress(SoundArchive::FileId fileId,
     return SetFileAddressToTable(fileId, address);
 }
 
+const void* PlayerHeapDataManager::GetFileAddress(SoundArchive::FileId fileId) const {
+    return GetFileAddressFromTable(fileId);
+}
+
 }  // namespace nn::atk::detail
