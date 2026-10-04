@@ -1,12 +1,13 @@
 #include <nn/atk/atk_MmlParser.h>
 
 #include <nn/atk/atk_SequenceSoundPlayer.h>
+#include "nn/util/util_BytePtr.h"
 
 namespace nn::atk::detail::driver {
 
 namespace {
 
-const float ModSpeedBase{1 / 2.56};
+// const float ModSpeedBase{1 / 2.56};
 
 }  // anonymous namespace
 
@@ -100,6 +101,19 @@ int32_t MmlParser::ReadVar(const uint8_t** ptr) const {
     }
 
     return ret;
+}
+
+uint32_t MmlParser::ParseAllocTrack(const void* baseAddress, uint32_t seqOffset,
+                                    uint32_t* allocTrack) {
+    const uint8_t* ptr{util::ConstBytePtr(baseAddress, seqOffset).Get<uint8_t>()};
+
+    if (ptr[0] != 0xfe) {
+        *allocTrack = 1;
+        return seqOffset;
+    }
+
+    *allocTrack = (ptr[1] << 8) | ptr[2] | 1;
+    return seqOffset + 3;
 }
 
 }  // namespace nn::atk::detail::driver
