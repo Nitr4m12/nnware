@@ -12,6 +12,27 @@ const float ModSpeedBase{1 / 2.56};
 
 // TODO: SequenceTrack::ParseResult MmlParser::Parse
 
+int32_t MmlParser::ReadArg(const uint8_t** ptr, SequenceSoundPlayer* player, SequenceTrack* track,
+                           SeqArgType argType) const {
+    int32_t var{0};
+
+    switch (argType) {
+    case SeqArgType_U8:
+        var = ReadByte(ptr);
+        break;
+    case SeqArgType_S16:
+        var = Read16(ptr);
+        break;
+    case SeqArgType_Vmidi: {
+    }
+    case SeqArgType_Random:
+    case SeqArgType_Variable:
+    case SeqArgType_None:
+        break;
+    }
+    return var;
+}
+
 uint32_t MmlParser::Read24(const uint8_t** ptr) const {
     uint32_t ret{ReadByte(ptr)};
     ret |= ReadByte(ptr) << 8;
@@ -34,6 +55,24 @@ volatile int16_t* MmlParser::GetVariablePtr(SequenceSoundPlayer* player, Sequenc
         return track->GetVariablePtr(varNo - 32);
 
     return nullptr;
+}
+
+int32_t MmlParser::ReadVar(const uint8_t** ptr) const {
+    int32_t ret{0};
+    uint8_t b;
+    [[maybe_unused]] int i{0};
+
+    while (true) {
+        b = ReadByte(ptr);
+        ret <<= 7;
+        ret |= b & 0x7f;
+        ++i;
+
+        if (!(b & 0x80))
+            break;
+    }
+
+    return ret;
 }
 
 }  // namespace nn::atk::detail::driver
