@@ -66,6 +66,8 @@ uint16_t MmlParser::Read16(const uint8_t** ptr) const {
     return ret;
 }
 
+// TODO: MmlParser::CommandProc
+
 volatile int16_t* MmlParser::GetVariablePtr(SequenceSoundPlayer* player, SequenceTrack* track,
                                             int32_t varNo) const {
     if (varNo < 32)
@@ -75,6 +77,11 @@ volatile int16_t* MmlParser::GetVariablePtr(SequenceSoundPlayer* player, Sequenc
         return track->GetVariablePtr(varNo - 32);
 
     return nullptr;
+}
+
+void MmlParser::NoteOnCommandProc(MmlSequenceTrack* track, int32_t key, int32_t velocity,
+                                  int32_t length, bool tieFlag) const {
+    track->NoteOn(key, velocity, length, tieFlag);
 }
 
 int32_t MmlParser::ReadVar(const uint8_t** ptr) const {
