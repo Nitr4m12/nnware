@@ -79,4 +79,8 @@ const void* PlayerHeapDataManager::GetFileAddressFromTable(SoundArchive::FileId 
     return nullptr;
 }
 
+const void* PlayerHeapDataManager::GetFileAddressImpl(SoundArchive::FileId fileId) const {
+    return GetFileAddressFromTable(fileId);
+}
+
 }  // namespace nn::atk::detail
