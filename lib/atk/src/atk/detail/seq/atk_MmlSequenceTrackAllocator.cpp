@@ -18,4 +18,8 @@ void MmlSequenceTrackAllocator::FreeTrack(SequenceTrack* track) {
     m_TrackPool.Free(static_cast<MmlSequenceTrack*>(track));
 }
 
+int32_t MmlSequenceTrackAllocator::Create(void* buffer, size_t size) {
+    return m_TrackPool.Create(buffer, size);
+}
+
 }  // namespace nn::atk::detail::driver
