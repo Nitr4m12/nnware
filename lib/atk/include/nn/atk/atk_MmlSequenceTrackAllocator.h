@@ -17,7 +17,8 @@ public:
 
     SequenceTrack* AllocTrack(SequenceSoundPlayer* player) override;
     void FreeTrack(SequenceTrack* track) override;
-    int32_t GetAllocatableTrackCount() const override;
+
+    int32_t GetAllocatableTrackCount() const override { return m_TrackPool.Count(); }
 
     int32_t Create(void* buffer, size_t size);
 

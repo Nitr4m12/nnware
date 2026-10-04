@@ -68,7 +68,7 @@ public:
 
     void Destroy() { DestroyImpl(); }
 
-    int Count() const { return Count(); }
+    int Count() const { return CountImpl(); }
 
     T* Alloc() {
         void* ptr{AllocImpl()};
