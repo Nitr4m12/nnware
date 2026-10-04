@@ -13,4 +13,9 @@ SequenceTrack* MmlSequenceTrackAllocator::AllocTrack(SequenceSoundPlayer* player
     return track;
 }
 
+void MmlSequenceTrackAllocator::FreeTrack(SequenceTrack* track) {
+    track->SetSequenceSoundPlayer(nullptr);
+    m_TrackPool.Free(static_cast<MmlSequenceTrack*>(track));
+}
+
 }  // namespace nn::atk::detail::driver

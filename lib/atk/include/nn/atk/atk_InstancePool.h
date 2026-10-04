@@ -80,8 +80,10 @@ public:
     }
 
     void Free(T* obj) {
-        obj->~T();
-        FreeImpl(obj);
+        if (obj != nullptr) {
+            obj->~T();
+            FreeImpl(obj);
+        }
     }
 };
 
