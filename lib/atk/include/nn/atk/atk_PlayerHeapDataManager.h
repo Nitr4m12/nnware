@@ -6,25 +6,20 @@
 
 namespace nn::atk::detail {
 
-class PlayerHeapDataManager : driver::DisposeCallback, SoundArchiveLoader {
+class PlayerHeapDataManager : public driver::DisposeCallback, public SoundArchiveLoader {
 public:
-    constexpr static uint8_t FileAddressCount = 9;
-
-    struct FileAddress {
-        SoundArchive::FileId fileId;
-        void* address;
-    };
-    static_assert(sizeof(FileAddress) == 0x10);
+    static const int FileAddressCount{9};
 
     PlayerHeapDataManager();
     ~PlayerHeapDataManager() override;
 
-    void Finalize();
     void Initialize(const SoundArchive* arc);
+    void Finalize();
 
-    void* SetFileAddress(SoundArchive::FileId fileId, const void* address);
-    void* GetFileAddress(SoundArchive::FileId fileId) const;
+    const void* SetFileAddress(SoundArchive::FileId fileId, const void* address);
+    const void* GetFileAddress(SoundArchive::FileId fileId) const;
 
+protected:
     void InvalidateData(const void* start, const void* end) override;
 
     const void* SetFileAddressToTable(SoundArchive::FileId fileId, const void* address) override;
@@ -32,9 +27,15 @@ public:
     const void* GetFileAddressImpl(SoundArchive::FileId fileId) const override;
 
 private:
+    struct FileAddress {
+        SoundArchive::FileId fileId;
+        const void* address;
+    };
+    static_assert(sizeof(FileAddress) == 0x10);
+
     FileAddress m_FileAddress[FileAddressCount];
-    bool m_IsInitialized;
-    bool m_IsFinalized;
+    bool m_IsInitialized{false};
+    bool m_IsFinalized{true};
 };
 static_assert(sizeof(PlayerHeapDataManager) == 0x2c8);
 
