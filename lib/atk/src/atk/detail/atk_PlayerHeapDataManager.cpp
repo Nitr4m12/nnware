@@ -32,4 +32,9 @@ void PlayerHeapDataManager::Initialize(const SoundArchive* arc) {
     SetSoundArchive(arc);
 }
 
+const void* PlayerHeapDataManager::SetFileAddress(SoundArchive::FileId fileId,
+                                                  const void* address) {
+    return SetFileAddressToTable(fileId, address);
+}
+
 }  // namespace nn::atk::detail
