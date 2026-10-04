@@ -22,4 +22,8 @@ int32_t MmlSequenceTrackAllocator::Create(void* buffer, size_t size) {
     return m_TrackPool.Create(buffer, size);
 }
 
+void MmlSequenceTrackAllocator::Destroy() {
+    m_TrackPool.Destroy();
+}
+
 }  // namespace nn::atk::detail::driver
