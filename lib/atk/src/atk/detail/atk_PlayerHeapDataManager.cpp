@@ -41,4 +41,12 @@ const void* PlayerHeapDataManager::GetFileAddress(SoundArchive::FileId fileId) c
     return GetFileAddressFromTable(fileId);
 }
 
+void PlayerHeapDataManager::InvalidateData([[maybe_unused]] const void* start,
+                                           [[maybe_unused]] const void* end) {
+    for (int i{0}; i < FileAddressCount; ++i) {
+        m_FileAddress[i].fileId = SoundArchive::InvalidId;
+        m_FileAddress[i].address = nullptr;
+    }
+}
+
 }  // namespace nn::atk::detail
