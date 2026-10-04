@@ -23,10 +23,30 @@ int32_t MmlParser::ReadArg(const uint8_t** ptr, SequenceSoundPlayer* player, Seq
     case SeqArgType_S16:
         var = Read16(ptr);
         break;
-    case SeqArgType_Vmidi: {
+    case SeqArgType_Vmidi:
+        var = ReadVar(ptr);
+        break;
+    case SeqArgType_Random: {
+        int32_t rand;
+        int16_t min;
+        int16_t max;
+
+        min = Read16(ptr);
+        max = Read16(ptr);
+
+        rand = Util::CalcRandom();
+
+        var = min + ((((1 - min) + max) * rand) >> 0x10);
+        break;
     }
-    case SeqArgType_Random:
-    case SeqArgType_Variable:
+    case SeqArgType_Variable: {
+        uint8_t varNo{ReadByte(ptr)};
+        const volatile int16_t* varPtr{GetVariablePtr(player, track, varNo)};
+
+        if (varPtr != nullptr)
+            var = *varPtr;
+        break;
+    }
     case SeqArgType_None:
         break;
     }
