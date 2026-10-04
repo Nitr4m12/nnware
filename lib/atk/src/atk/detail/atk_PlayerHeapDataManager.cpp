@@ -17,4 +17,19 @@ void PlayerHeapDataManager::Finalize() {
     SetSoundArchive(nullptr);
 }
 
+void PlayerHeapDataManager::Initialize(const SoundArchive* arc) {
+    if (m_IsInitialized)
+        return;
+
+    m_IsInitialized = true;
+    m_IsFinalized = false;
+
+    for (int i{0}; i < FileAddressCount; ++i) {
+        m_FileAddress[i].address = nullptr;
+        m_FileAddress[i].fileId = SoundArchive::InvalidId;
+    }
+
+    SetSoundArchive(arc);
+}
+
 }  // namespace nn::atk::detail
