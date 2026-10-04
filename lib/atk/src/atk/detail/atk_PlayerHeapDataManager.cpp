@@ -70,4 +70,13 @@ const void* PlayerHeapDataManager::SetFileAddressToTable(SoundArchive::FileId fi
     return nullptr;
 }
 
+const void* PlayerHeapDataManager::GetFileAddressFromTable(SoundArchive::FileId fileId) const {
+    for (int i{0}; i < FileAddressCount; ++i) {
+        if (m_FileAddress[i].fileId == fileId)
+            return m_FileAddress[i].address;
+    }
+
+    return nullptr;
+}
+
 }  // namespace nn::atk::detail
