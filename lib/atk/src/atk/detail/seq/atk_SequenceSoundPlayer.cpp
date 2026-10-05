@@ -452,6 +452,11 @@ void SequenceSoundLoader::FreePlayerHeapTask::Initialize() {
     InitializeStatus();
 }
 
+SequenceSoundLoader::~SequenceSoundLoader() {
+    m_Task.Wait();
+    m_FreePlayerHeapTask.Wait();
+}
+
 void SequenceSoundLoader::Finalize() {
     m_FreePlayerHeapTask.m_pPlayerHeap = m_Task.m_pPlayerHeap;
     TaskManager::GetInstance().AppendTask(&m_FreePlayerHeapTask, TaskManager::TaskPriority_Middle);
