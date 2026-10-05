@@ -83,4 +83,8 @@ void SequenceSoundLoader::Finalize() {
     TaskManager::GetInstance().AppendTask(&m_FreePlayerHeapTask, TaskManager::TaskPriority_Middle);
 }
 
+bool SequenceSoundLoader::IsInUse() {
+    return !m_Task.TryWait() || !m_FreePlayerHeapTask.TryWait();
+}
+
 }  // namespace nn::atk::detail::driver
