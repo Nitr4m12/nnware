@@ -211,6 +211,10 @@ void SequenceSoundPlayer::SetChannelPriority(int priority) {
     m_ParserParam.priority = priority;
 }
 
+void SequenceSoundPlayer::SetReleasePriorityFix(bool fix) {
+    m_ReleasePriorityFixFlag = fix;
+}
+
 const SequenceTrack* SequenceSoundPlayer::GetPlayerTrack(int32_t trackNo) const {
     if (trackNo > TrackCountPerPlayer - 1)
         return nullptr;
