@@ -248,6 +248,10 @@ volatile int16_t* SequenceSoundPlayer::GetVariablePtr(int32_t varNo) {
     return nullptr;
 }
 
+int16_t SequenceSoundPlayer::GetLocalVariable(int32_t varNo) const {
+    return m_LocalVariable[varNo];
+}
+
 const SequenceTrack* SequenceSoundPlayer::GetPlayerTrack(int32_t trackNo) const {
     if (trackNo > TrackCountPerPlayer - 1)
         return nullptr;
