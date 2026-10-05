@@ -297,6 +297,10 @@ bool SequenceSoundPlayer::SetTrackBankIndex(uint32_t trackBitFlag, int32_t bankI
     return true;
 }
 
+void SequenceSoundPlayer::SetTrackTranspose(uint32_t trackBitFlag, int8_t transpose) {
+    SetTrackParam(trackBitFlag, &SequenceTrack::SetTranspose, transpose);
+}
+
 const SequenceTrack* SequenceSoundPlayer::GetPlayerTrack(int32_t trackNo) const {
     if (trackNo > TrackCountPerPlayer - 1)
         return nullptr;
