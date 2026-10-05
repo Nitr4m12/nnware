@@ -113,6 +113,21 @@ void SequenceSoundPlayer::FinishPlayer() {
         CloseTrack(trackNo);
 }
 
+void SequenceSoundPlayer::FreeLoader() {
+    if (m_pLoader != nullptr) {
+        m_pLoaderManager->Free(m_pLoader);
+        m_pLoader = nullptr;
+    }
+}
+
+void SequenceSoundPlayer::SetPlayerTrack(int32_t trackNo, SequenceTrack* track) {
+    if (trackNo > TrackCountPerPlayer - 1)
+        return;
+
+    m_pTracks[trackNo] = track;
+    track->SetPlayerTrackNo(trackNo);
+}
+
 SequenceTrack* SequenceSoundPlayer::GetPlayerTrack(int32_t trackNo) {
     if (trackNo > TrackCountPerPlayer - 1)
         return nullptr;
@@ -134,13 +149,6 @@ void SequenceSoundPlayer::CloseTrack(int32_t trackNo) {
         m_pTracks[trackNo]->Close();
         m_pSequenceTrackAllocator->FreeTrack(m_pTracks[trackNo]);
         m_pTracks[trackNo] = nullptr;
-    }
-}
-
-void SequenceSoundPlayer::FreeLoader() {
-    if (m_pLoader != nullptr) {
-        m_pLoaderManager->Free(m_pLoader);
-        m_pLoader = nullptr;
     }
 }
 
