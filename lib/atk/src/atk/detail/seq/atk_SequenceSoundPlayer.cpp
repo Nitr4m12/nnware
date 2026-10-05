@@ -392,6 +392,26 @@ void SequenceSoundPlayer::UpdateChannelParam() {
     }
 }
 
+int32_t SequenceSoundPlayer::ParseNextTick(bool doNoteOn) {
+    m_ParserParam.volume.Update();
+
+    bool activeFlag{false};
+
+    for (int trackNo{0}; trackNo < TrackCountPerPlayer; ++trackNo) {
+        SequenceTrack* track{GetPlayerTrack(trackNo)};
+
+        if (track != nullptr) {
+            track->UpdateChannelLength();
+            if (track->ParseNextTick(doNoteOn) < 0)
+                CloseTrack(trackNo);
+
+            activeFlag |= track->IsOpened();
+        }
+    }
+
+    return !activeFlag;
+}
+
 void SequenceSoundLoader::Finalize() {
     m_FreePlayerHeapTask.m_pPlayerHeap = m_Task.m_pPlayerHeap;
     TaskManager::GetInstance().AppendTask(&m_FreePlayerHeapTask, TaskManager::TaskPriority_Middle);
