@@ -301,6 +301,10 @@ void SequenceSoundPlayer::SetTrackTranspose(uint32_t trackBitFlag, int8_t transp
     SetTrackParam(trackBitFlag, &SequenceTrack::SetTranspose, transpose);
 }
 
+void SequenceSoundPlayer::SetTrackVelocityRange(uint32_t trackBitFlag, uint8_t range) {
+    SetTrackParam(trackBitFlag, &SequenceTrack::SetVelocityRange, range);
+}
+
 const SequenceTrack* SequenceSoundPlayer::GetPlayerTrack(int32_t trackNo) const {
     if (trackNo > TrackCountPerPlayer - 1)
         return nullptr;
