@@ -1,4 +1,7 @@
 #include <nn/atk/atk_SequenceSoundPlayer.h>
+#include "nn/atk/atk_BasicSoundPlayer.h"
+#include "nn/atk/atk_DisposeCallbackManager.h"
+#include "nn/atk/atk_TaskManager.h"
 
 namespace {
 
@@ -73,6 +76,11 @@ void SequenceSoundPlayer::Initialize(OutputReceiver* pOutputReceiver)
 
     m_IsInitialized = true;
     m_IsRegisterPlayerCallback = false;
+}
+
+void SequenceSoundLoader::Finalize() {
+    m_FreePlayerHeapTask.m_pPlayerHeap = m_Task.m_pPlayerHeap;
+    TaskManager::GetInstance().AppendTask(&m_FreePlayerHeapTask, TaskManager::TaskPriority_Middle);
 }
 
 }  // namespace nn::atk::detail::driver
