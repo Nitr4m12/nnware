@@ -309,6 +309,10 @@ void SequenceSoundPlayer::SetTrackOutputLine(uint32_t trackBitFlag, uint32_t out
     SetTrackParam(trackBitFlag, &SequenceTrack::SetOutputLine, static_cast<int32_t>(outputLine));
 }
 
+void SequenceSoundPlayer::ResetTrackOutputLine(uint32_t trackBitFlag) {
+    SetTrackParam(trackBitFlag, &SequenceTrack::SetOutputLine, -1);
+}
+
 const SequenceTrack* SequenceSoundPlayer::GetPlayerTrack(int32_t trackNo) const {
     if (trackNo > TrackCountPerPlayer - 1)
         return nullptr;
