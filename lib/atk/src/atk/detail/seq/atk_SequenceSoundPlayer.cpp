@@ -273,6 +273,10 @@ void SequenceSoundPlayer::SetTrackSilence(uint64_t trackBitFlag, bool silenceFla
     SetTrackParam(trackBitFlag, &SequenceTrack::SetSilence, silenceFlag, fadeTimes);
 }
 
+void SequenceSoundPlayer::SetTrackVolume(uint32_t trackBitFlag, float volume) {
+    SetTrackParam(trackBitFlag, &SequenceTrack::SetVolume, volume);
+}
+
 const SequenceTrack* SequenceSoundPlayer::GetPlayerTrack(int32_t trackNo) const {
     if (trackNo > TrackCountPerPlayer - 1)
         return nullptr;
