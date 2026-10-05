@@ -203,6 +203,10 @@ void SequenceSoundPlayer::SetTempoRatio(float tempoRatio) {
     m_TempoRatio = tempoRatio;
 }
 
+void SequenceSoundPlayer::SetPanRange(float panRange) {
+    m_PanRange = panRange;
+}
+
 const SequenceTrack* SequenceSoundPlayer::GetPlayerTrack(int32_t trackNo) const {
     if (trackNo > TrackCountPerPlayer - 1)
         return nullptr;
