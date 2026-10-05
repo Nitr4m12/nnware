@@ -26,4 +26,53 @@ SequenceSoundPlayer::~SequenceSoundPlayer() {
     Finalize();
 }
 
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+void SequenceSoundPlayer::Initialize()
+#else
+void SequenceSoundPlayer::Initialize(OutputReceiver* pOutputReceiver)
+#endif
+{
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    BasicSoundPlayer::Initialize();
+#else
+    BasicSoundPlayer::Initialize(pOutputReceiver);
+#endif
+
+    SetPauseFlag(false);
+    m_ReleasePriorityFixFlag = false;
+
+    SetStartedFlag(false);
+    SetActiveFlag(false);
+
+    m_TickFraction = 0.0f;
+    m_SkipTickCounter = 0;
+    m_SkipTimeCounter = 0.0f;
+
+    m_PanRange = 1.0f;
+    m_TempoRatio = 1.0f;
+
+    m_DelayCount = 0;
+    m_TickCounter = 0;
+
+    m_UpdateType = UpdateType_AudioFrame;
+
+    m_SequenceUserprocCallback = nullptr;
+    m_pSequenceUserprocCallbackArg = nullptr;
+
+    m_ParserParam.tempo = DefaultTempo;
+    m_ParserParam.volume.InitValue(127);
+    m_ParserParam.priority = 64;
+    m_ParserParam.timebase = DefaultTimebase;
+    m_ParserParam.callback = nullptr;
+
+    for (int varNo{0}; varNo < PlayerVariableCount; ++varNo)
+        m_LocalVariable[varNo] = VariableDefaultValue;
+
+    for (int trackNo{0}; trackNo < TrackCountPerPlayer; ++trackNo)
+        m_pTracks[trackNo] = nullptr;
+
+    m_IsInitialized = true;
+    m_IsRegisterPlayerCallback = false;
+}
+
 }  // namespace nn::atk::detail::driver
