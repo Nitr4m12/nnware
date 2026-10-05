@@ -572,6 +572,11 @@ void SequenceSoundPlayer::UpdateTick() {
         tickPerMsec * static_cast<float>(nextMsec - restMsec) / IntervalMsecDenominator;
 }
 
+Channel* SequenceSoundPlayer::NoteOn(uint8_t bankIndex, const NoteOnInfo& noteOnInfo) {
+    Channel* channel{m_ParserParam.callback->NoteOn(this, bankIndex, noteOnInfo)};
+    return channel;
+}
+
 void SequenceSoundLoader::DataLoadTask::Initialize() {
     InitializeStatus();
     m_Data.Initialize();
