@@ -6,8 +6,8 @@
 namespace nn::atk::detail {
 
 struct LoadItemInfo {
-    SoundArchive::ItemId itemId;
-    const void* address;
+    SoundArchive::ItemId itemId{SoundArchive::InvalidId};
+    const void* address{};
 
     LoadItemInfo() = default;
 };

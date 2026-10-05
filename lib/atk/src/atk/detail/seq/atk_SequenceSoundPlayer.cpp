@@ -14,4 +14,12 @@ void SequenceSoundPlayer::InitSequenceSoundPlayer() {
         m_GlobalVariable[variableNo] = VariableDefaultValue;
 }
 
+SequenceSoundPlayer::SequenceSoundPlayer() {
+    for (int varNo{0}; varNo < PlayerVariableCount; ++varNo)
+        m_LocalVariable[varNo] = VariableDefaultValue;
+
+    for (int trackNo{0}; trackNo < TrackCountPerPlayer; ++trackNo)
+        m_pTracks[trackNo] = nullptr;
+}
+
 }  // namespace nn::atk::detail::driver

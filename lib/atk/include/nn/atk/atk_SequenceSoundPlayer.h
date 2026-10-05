@@ -54,9 +54,9 @@ public:
     static_assert(sizeof(Data) == 0x50);
 
     struct Arg {
-        const SoundArchive* soundArchive;
-        const SoundDataManager* soundDataManager;
-        SoundPlayer* soundPlayer;
+        const SoundArchive* soundArchive{};
+        const SoundDataManager* soundDataManager{};
+        SoundPlayer* soundPlayer{};
         LoadItemInfo loadInfoSeq;
         LoadItemInfo loadInfoBanks[SeqBankMax];
 
@@ -131,13 +131,15 @@ public:
     static const uint32_t DefaultSkipIntervalTick{DefaultTimebase * 16};
 
     struct ParserPlayerParam {
-        uint8_t priority;
-        uint8_t timebase;
-        uint16_t tempo;
+        uint8_t priority{64};
+        uint8_t timebase{DefaultTimebase};
+        uint16_t tempo{DefaultTempo};
         MoveValue<uint8_t, int16_t> volume;
-        NoteOnCallback* callback;
+        NoteOnCallback* callback{};
 
-        ParserPlayerParam() = default;
+        ParserPlayerParam() {
+            volume.InitValue(127);
+        }
     };
     static_assert(sizeof(ParserPlayerParam) == 0x18);
 
@@ -320,21 +322,21 @@ private:
     static volatile int16_t m_GlobalVariable[GlobalVariableCount];
     static volatile int32_t m_SkipIntervalTickPerFrame;
 
-    bool m_ReleasePriorityFixFlag;
+    bool m_ReleasePriorityFixFlag{false};
     bool m_IsPrepared;
-    float m_PanRange;
-    float m_TempoRatio;
-    float m_TickFraction;
+    float m_PanRange{1.0f};
+    float m_TempoRatio{1.0f};
+    float m_TickFraction{0.0f};
     uint32_t m_SkipTickCounter;
-    float m_SkipTimeCounter;
-    int32_t m_DelayCount;
+    float m_SkipTimeCounter{0.0f};
+    int32_t m_DelayCount{0};
     ParserPlayerParam m_ParserParam;
     SequenceTrackAllocator* m_pSequenceTrackAllocator;
-    SequenceUserProcCallback m_SequenceUserprocCallback;
-    void* m_pSequenceUserprocCallbackArg;
+    SequenceUserProcCallback m_SequenceUserprocCallback{};
+    void* m_pSequenceUserprocCallbackArg{};
     SequenceTrack* m_pTracks[TrackCountPerPlayer];
     volatile int16_t m_LocalVariable[PlayerVariableCount];
-    uint32_t m_TickCounter;
+    volatile uint32_t m_TickCounter{0};
     WaveArchiveFileReader m_WarcFileReader[SeqBankMax];
     BankFileReader m_BankFileReader[SeqBankMax];
 
@@ -346,12 +348,12 @@ private:
     };
 
     uint8_t m_ResState;
-    bool m_IsInitialized;
-    bool m_IsRegisterPlayerCallback;
+    bool m_IsInitialized{false};
+    bool m_IsRegisterPlayerCallback{false};
     uint8_t m_Padding[1];
     StartInfo m_StartInfo;
-    SequenceSoundLoaderManager* m_pLoaderManager;
-    SequenceSoundLoader* m_pLoader;
+    SequenceSoundLoaderManager* m_pLoaderManager{};
+    SequenceSoundLoader* m_pLoader{};
     SequenceSoundLoader::Arg m_LoaderArg;
     UpdateType m_UpdateType;
 
