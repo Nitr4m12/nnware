@@ -281,6 +281,10 @@ void SequenceSoundPlayer::SetTrackPitch(uint32_t trackBitFlag, float pitch) {
     SetTrackParam(trackBitFlag, &SequenceTrack::SetPitch, pitch);
 }
 
+void SequenceSoundPlayer::SetTrackLpfFreq(uint32_t trackBitFlag, float lpfFreq) {
+    SetTrackParam(trackBitFlag, &SequenceTrack::SetLpfFreq, lpfFreq);
+}
+
 const SequenceTrack* SequenceSoundPlayer::GetPlayerTrack(int32_t trackNo) const {
     if (trackNo > TrackCountPerPlayer - 1)
         return nullptr;
