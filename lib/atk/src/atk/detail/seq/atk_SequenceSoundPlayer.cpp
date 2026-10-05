@@ -179,7 +179,7 @@ void SequenceSoundPlayer::Pause(bool flag) {
 }
 
 SequenceTrack* SequenceSoundPlayer::GetPlayerTrack(int32_t trackNo) {
-    if (trackNo > TrackCountPerPlayer - 1)
+    if (trackNo >= TrackCountPerPlayer)
         return nullptr;
 
     return m_pTracks[trackNo];
@@ -339,8 +339,33 @@ void SequenceSoundPlayer::SetTrackTvFxSend(uint32_t trackBitFlag, AuxBus bus, fl
     SetTrackParam(trackBitFlag, &SequenceTrack::SetTvFxSend, bus, send);
 }
 
+void SequenceSoundPlayer::InvalidateData(const void* start, const void* end) {
+    if (!IsActive())
+        return;
+
+    for (int trackNo{0}; trackNo < TrackCountPerPlayer; ++trackNo) {
+        SequenceTrack* track{GetPlayerTrack(trackNo)};
+
+        if (track != nullptr) {
+            const uint8_t* cur{track->GetParserTrackParam().baseAddr};
+
+            if (start <= cur && cur <= end) {
+                Finalize();
+                break;
+            }
+        }
+    }
+
+    for (int i{0}; i < static_cast<int>(SeqBankMax); ++i) {
+        const void* cur{m_BankFileReader[i].GetBankFileAddress()};
+
+        if (start <= cur && cur <= end)
+            m_BankFileReader[i].Finalize();
+    }
+}
+
 const SequenceTrack* SequenceSoundPlayer::GetPlayerTrack(int32_t trackNo) const {
-    if (trackNo > TrackCountPerPlayer - 1)
+    if (trackNo >= TrackCountPerPlayer)
         return nullptr;
 
     return m_pTracks[trackNo];
