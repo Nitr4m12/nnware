@@ -100,6 +100,20 @@ void SequenceSoundPlayer::Finalize() {
     FreeLoader();
 }
 
+SequenceTrack* SequenceSoundPlayer::GetPlayerTrack(int32_t trackNo) {
+    if (trackNo > TrackCountPerPlayer - 1)
+        return nullptr;
+
+    return m_pTracks[trackNo];
+}
+
+const SequenceTrack* SequenceSoundPlayer::GetPlayerTrack(int32_t trackNo) const {
+    if (trackNo > TrackCountPerPlayer - 1)
+        return nullptr;
+
+    return m_pTracks[trackNo];
+}
+
 void SequenceSoundPlayer::FreeLoader() {
     if (m_pLoader != nullptr) {
         m_pLoaderManager->Free(m_pLoader);
