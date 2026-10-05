@@ -356,28 +356,28 @@ private:
     template <typename T>
     void SetTrackParam(uint32_t trackBitFlag, void (SequenceTrack::*func)(T), T param) {
         for (int trackNo{0}; trackBitFlag != 0; ++trackNo, trackBitFlag >>= 1) {
+            if (trackNo > TrackCountPerPlayer - 1)
+                return;
+
             if (trackBitFlag & 1) {
                 SequenceTrack* track{GetPlayerTrack(trackNo)};
                 if (track != nullptr)
                     (track->*func)(param);
             }
-
-            if (trackNo > 14)
-                return;
         }
     }
 
     template <typename T1, typename T2>
     void SetTrackParam(uint32_t trackBitFlag, void (SequenceTrack::*func)(T1, T2), T1 t1, T2 t2) {
         for (int trackNo{0}; trackBitFlag != 0; ++trackNo, trackBitFlag >>= 1) {
+            if (trackNo > TrackCountPerPlayer - 1)
+                return;
+
             if (trackBitFlag & 1) {
                 SequenceTrack* track{GetPlayerTrack(trackNo)};
                 if (track != nullptr)
                     (track->*func)(t1, t2);
             }
-
-            if (trackNo > 14)
-                return;
         }
     }
 

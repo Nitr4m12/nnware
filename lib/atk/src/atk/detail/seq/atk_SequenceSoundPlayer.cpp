@@ -289,6 +289,14 @@ void SequenceSoundPlayer::SetTrackBiquadFilter(uint32_t trackBitFlag, int32_t ty
     SetTrackParam(trackBitFlag, &SequenceTrack::SetBiquadFilter, type, value);
 }
 
+bool SequenceSoundPlayer::SetTrackBankIndex(uint32_t trackBitFlag, int32_t bankIndex) {
+    if (!m_BankFileReader[bankIndex].IsInitialized())
+        return false;
+
+    SetTrackParam(trackBitFlag, &SequenceTrack::SetBankIndex, bankIndex);
+    return true;
+}
+
 const SequenceTrack* SequenceSoundPlayer::GetPlayerTrack(int32_t trackNo) const {
     if (trackNo > TrackCountPerPlayer - 1)
         return nullptr;
