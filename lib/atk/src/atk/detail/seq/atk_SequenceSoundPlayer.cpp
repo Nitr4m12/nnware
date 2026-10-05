@@ -185,6 +185,20 @@ SequenceTrack* SequenceSoundPlayer::GetPlayerTrack(int32_t trackNo) {
     return m_pTracks[trackNo];
 }
 
+void SequenceSoundPlayer::Skip(StartOffsetType offsetType, int32_t offset) {
+    if (!IsActive())
+        return;
+
+    switch (offsetType) {
+    case StartOffsetType_Tick:
+        m_SkipTickCounter += offset;
+        break;
+    case StartOffsetType_Millisec:
+        m_SkipTimeCounter += offset;
+        break;
+    }
+}
+
 const SequenceTrack* SequenceSoundPlayer::GetPlayerTrack(int32_t trackNo) const {
     if (trackNo > TrackCountPerPlayer - 1)
         return nullptr;
