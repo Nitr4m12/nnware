@@ -207,6 +207,10 @@ void SequenceSoundPlayer::SetPanRange(float panRange) {
     m_PanRange = panRange;
 }
 
+void SequenceSoundPlayer::SetChannelPriority(int priority) {
+    m_ParserParam.priority = priority;
+}
+
 const SequenceTrack* SequenceSoundPlayer::GetPlayerTrack(int32_t trackNo) const {
     if (trackNo > TrackCountPerPlayer - 1)
         return nullptr;
