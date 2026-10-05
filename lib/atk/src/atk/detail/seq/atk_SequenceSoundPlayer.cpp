@@ -331,6 +331,10 @@ void SequenceSoundPlayer::SetTrackTvSurroundPan(uint32_t trackBitFlag, float sur
     SetTrackParam(trackBitFlag, &SequenceTrack::SetTvSurroundPan, surroundPan);
 }
 
+void SequenceSoundPlayer::SetTrackTvMainSend(uint32_t trackBitFlag, float send) {
+    SetTrackParam(trackBitFlag, &SequenceTrack::SetTvMainSend, send);
+}
+
 const SequenceTrack* SequenceSoundPlayer::GetPlayerTrack(int32_t trackNo) const {
     if (trackNo > TrackCountPerPlayer - 1)
         return nullptr;
