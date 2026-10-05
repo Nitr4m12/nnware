@@ -199,6 +199,10 @@ void SequenceSoundPlayer::Skip(StartOffsetType offsetType, int32_t offset) {
     }
 }
 
+void SequenceSoundPlayer::SetTempoRatio(float tempoRatio) {
+    m_TempoRatio = tempoRatio;
+}
+
 const SequenceTrack* SequenceSoundPlayer::GetPlayerTrack(int32_t trackNo) const {
     if (trackNo > TrackCountPerPlayer - 1)
         return nullptr;
