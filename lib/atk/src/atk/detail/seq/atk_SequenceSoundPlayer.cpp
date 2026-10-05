@@ -22,4 +22,8 @@ SequenceSoundPlayer::SequenceSoundPlayer() {
         m_pTracks[trackNo] = nullptr;
 }
 
+SequenceSoundPlayer::~SequenceSoundPlayer() {
+    Finalize();
+}
+
 }  // namespace nn::atk::detail::driver
