@@ -425,6 +425,21 @@ bool SequenceSoundPlayer::TryAllocLoader() {
     return true;
 }
 
+void SequenceSoundLoader::Initialize(const Arg& arg) {
+    m_Task.Wait();
+    m_FreePlayerHeapTask.Wait();
+
+    m_Task.Initialize();
+    m_Task.m_Arg = arg;
+    m_Task.m_pPlayerHeap = nullptr;
+    m_Task.m_pPlayerHeapDataManager = &m_PlayerHeapDataManager;
+
+    m_FreePlayerHeapTask.Initialize();
+    m_FreePlayerHeapTask.m_Arg = arg;
+    m_FreePlayerHeapTask.m_pPlayerHeap = nullptr;
+    m_FreePlayerHeapTask.m_pPlayerHeapDataManager = &m_PlayerHeapDataManager;
+}
+
 void SequenceSoundLoader::Finalize() {
     m_FreePlayerHeapTask.m_pPlayerHeap = m_Task.m_pPlayerHeap;
     TaskManager::GetInstance().AppendTask(&m_FreePlayerHeapTask, TaskManager::TaskPriority_Middle);
