@@ -440,4 +440,8 @@ void SequenceSoundLoader::DataLoadTask::Initialize() {
     m_IsLoadSuccess = false;
 }
 
+void SequenceSoundLoader::FreePlayerHeapTask::Initialize() {
+    InitializeStatus();
+}
+
 }  // namespace nn::atk::detail::driver
