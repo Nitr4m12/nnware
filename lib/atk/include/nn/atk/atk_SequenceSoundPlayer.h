@@ -320,8 +320,13 @@ private:
 
     void FinishPlayer();
 
-    float CalcTickPerMinute();
-    float CalcTickPerMsec();
+    float CalcTickPerMinute() {
+        return static_cast<float>(m_ParserParam.timebase * m_ParserParam.tempo) * m_TempoRatio;
+    }
+
+    float CalcTickPerMsec() {
+        return CalcTickPerMinute() / (60 * 1000);
+    }
 
     static volatile int16_t m_GlobalVariable[GlobalVariableCount];
     static volatile int32_t m_SkipIntervalTickPerFrame;

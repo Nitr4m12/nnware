@@ -14,6 +14,8 @@ const uint32_t IntervalMsecDenominator{1 << 16};
 
 namespace nn::atk::detail::driver {
 
+volatile int32_t SequenceSoundPlayer::m_SkipIntervalTickPerFrame{768};
+
 void SequenceSoundPlayer::InitSequenceSoundPlayer() {
     for (int variableNo{0}; variableNo < GlobalVariableCount; ++variableNo)
         m_GlobalVariable[variableNo] = VariableDefaultValue;
@@ -152,7 +154,7 @@ void SequenceSoundPlayer::Setup(const SetupArg& arg) {
 }
 
 void SequenceSoundPlayer::SetPlayerTrack(int32_t trackNo, SequenceTrack* track) {
-    if (trackNo > TrackCountPerPlayer - 1)
+    if (trackNo >= TrackCountPerPlayer)
         return;
 
     m_pTracks[trackNo] = track;
@@ -496,6 +498,80 @@ void SequenceSoundPlayer::PrepareForPlayerHeap(const PrepareArg& arg) {
     m_UpdateType = arg.updateType;
 }
 
+// NON_MATCHING: wrong order of ldr when inlining CalcTickPerMsec and branch
+// being set to b.mi instead of b.lt on 1.0f > m_SkipTimeCounter * CalcTickPerMsec()
+void SequenceSoundPlayer::SkipTick() {
+    for (int trackNo{0}; trackNo < TrackCountPerPlayer; ++trackNo) {
+        SequenceTrack* track{GetPlayerTrack(trackNo)};
+
+        if (track != nullptr) {
+            track->ReleaseAllChannel(SequenceTrack::MaxEnvelopeValue);
+            track->FreeAllChannel();
+        }
+    }
+
+    int skipCount{0};
+
+    while (true) {
+        if (m_SkipTickCounter == 0 && 1.0f > m_SkipTimeCounter * CalcTickPerMsec()) {
+            m_SkipTimeCounter = 0.0f;
+            return;
+        }
+
+        if (skipCount >= m_SkipIntervalTickPerFrame)
+            return;
+
+        float tickPerMsec{CalcTickPerMsec()};
+        float msecPerTick{1.0f / tickPerMsec};
+
+        if (m_SkipTickCounter != 0)
+            --m_SkipTickCounter;
+        else
+            m_SkipTimeCounter -= msecPerTick;
+
+        if (ParseNextTick(false) != 0)
+            break;
+
+        ++skipCount;
+        m_TickCounter += 1;
+    }
+
+    FinishPlayer();
+    SetFinishFlag(true);
+}
+
+void SequenceSoundPlayer::UpdateTick() {
+    float tickPerMsec{CalcTickPerMsec()};
+    if (tickPerMsec == 0.0f)
+        return;
+
+    uint64_t restMsec{IntervalMsecNumerator};
+    uint64_t nextMsec{
+        static_cast<uint64_t>((m_TickFraction * IntervalMsecDenominator) / tickPerMsec)};
+
+    while (nextMsec < restMsec) {
+        restMsec -= nextMsec;
+
+        bool result{ParseNextTick(true) == 0};
+
+        if (!result) {
+            FinishPlayer();
+            SetFinishFlag(true);
+            return;
+        }
+
+        m_TickCounter += 1;
+        tickPerMsec = CalcTickPerMsec();
+        if (tickPerMsec == 0.0f)
+            return;
+
+        nextMsec = IntervalMsecDenominator / tickPerMsec;
+    }
+
+    m_TickFraction =
+        tickPerMsec * static_cast<float>(nextMsec - restMsec) / IntervalMsecDenominator;
+}
+
 void SequenceSoundLoader::DataLoadTask::Initialize() {
     InitializeStatus();
     m_Data.Initialize();
@@ -532,7 +608,7 @@ bool SequenceSoundLoader::IsInUse() {
 
 // TODO: SequenceSoundLoader::DataLoadTask::Execute
 
-void SequenceSoundLoader::FreePlayerHeapTask::Execute(TaskProfileLogger& logger) {
+void SequenceSoundLoader::FreePlayerHeapTask::Execute([[maybe_unused]] TaskProfileLogger& logger) {
     if (m_pPlayerHeap != nullptr) {
         m_pPlayerHeap->Clear();
         m_Arg.soundPlayer->detail_FreePlayerHeap(m_pPlayerHeap);
