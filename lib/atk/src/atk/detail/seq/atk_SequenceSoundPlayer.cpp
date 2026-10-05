@@ -100,6 +100,19 @@ void SequenceSoundPlayer::Finalize() {
     FreeLoader();
 }
 
+void SequenceSoundPlayer::FinishPlayer() {
+    if (m_IsRegisterPlayerCallback) {
+        SoundThread::GetInstance().UnregisterPlayerCallback(this);
+        m_IsRegisterPlayerCallback = false;
+    }
+
+    if (IsStarted())
+        SetStartedFlag(false);
+
+    for (int trackNo{0}; trackNo < TrackCountPerPlayer; ++trackNo)
+        CloseTrack(trackNo);
+}
+
 SequenceTrack* SequenceSoundPlayer::GetPlayerTrack(int32_t trackNo) {
     if (trackNo > TrackCountPerPlayer - 1)
         return nullptr;
