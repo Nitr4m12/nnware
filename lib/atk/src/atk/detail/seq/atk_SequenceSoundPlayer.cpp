@@ -87,7 +87,7 @@ void SequenceSoundPlayer::Finalize() {
         SetActiveFlag(false);
     }
 
-    for (int i{0}; i < SeqBankMax; ++i) {
+    for (int i{0}; i < static_cast<int>(SeqBankMax); ++i) {
         m_BankFileReader[i].Finalize();
         m_WarcFileReader[i].Finalize();
     }
@@ -266,6 +266,11 @@ void SequenceSoundPlayer::SetGlobalVariable(int32_t varNo, int16_t var) {
 
 void SequenceSoundPlayer::SetTrackMute(uint32_t trackBitFlag, SequenceMute mute) {
     SetTrackParam(trackBitFlag, &SequenceTrack::SetMute, mute);
+}
+
+void SequenceSoundPlayer::SetTrackSilence(uint64_t trackBitFlag, bool silenceFlag,
+                                          int32_t fadeTimes) {
+    SetTrackParam(trackBitFlag, &SequenceTrack::SetSilence, silenceFlag, fadeTimes);
 }
 
 const SequenceTrack* SequenceSoundPlayer::GetPlayerTrack(int32_t trackNo) const {
