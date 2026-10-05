@@ -1,6 +1,7 @@
 #include <nn/atk/atk_SequenceSoundPlayer.h>
 
 #include <nn/atk/atk_DisposeCallbackManager.h>
+#include <nn/atk/atk_SoundPlayer.h>
 #include <nn/atk/atk_TaskManager.h>
 
 namespace {
@@ -440,15 +441,6 @@ void SequenceSoundLoader::Initialize(const Arg& arg) {
     m_FreePlayerHeapTask.m_pPlayerHeapDataManager = &m_PlayerHeapDataManager;
 }
 
-void SequenceSoundLoader::Finalize() {
-    m_FreePlayerHeapTask.m_pPlayerHeap = m_Task.m_pPlayerHeap;
-    TaskManager::GetInstance().AppendTask(&m_FreePlayerHeapTask, TaskManager::TaskPriority_Middle);
-}
-
-bool SequenceSoundLoader::IsInUse() {
-    return !m_Task.TryWait() || !m_FreePlayerHeapTask.TryWait();
-}
-
 void SequenceSoundLoader::DataLoadTask::Initialize() {
     InitializeStatus();
     m_Data.Initialize();
@@ -457,6 +449,25 @@ void SequenceSoundLoader::DataLoadTask::Initialize() {
 
 void SequenceSoundLoader::FreePlayerHeapTask::Initialize() {
     InitializeStatus();
+}
+
+void SequenceSoundLoader::Finalize() {
+    m_FreePlayerHeapTask.m_pPlayerHeap = m_Task.m_pPlayerHeap;
+    TaskManager::GetInstance().AppendTask(&m_FreePlayerHeapTask, TaskManager::TaskPriority_Middle);
+}
+
+bool SequenceSoundLoader::DataLoadTask::TryAllocPlayerHeap() {
+    if (m_pPlayerHeap == nullptr) {
+        m_pPlayerHeap = m_Arg.soundPlayer->detail_AllocPlayerHeap();
+        if (m_pPlayerHeap == nullptr)
+            return false;
+    }
+
+    return true;
+}
+
+bool SequenceSoundLoader::IsInUse() {
+    return !m_Task.TryWait() || !m_FreePlayerHeapTask.TryWait();
 }
 
 }  // namespace nn::atk::detail::driver
