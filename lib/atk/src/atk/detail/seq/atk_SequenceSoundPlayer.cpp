@@ -78,6 +78,13 @@ void SequenceSoundPlayer::Initialize(OutputReceiver* pOutputReceiver)
     m_IsRegisterPlayerCallback = false;
 }
 
+void SequenceSoundPlayer::FreeLoader() {
+    if (m_pLoader != nullptr) {
+        m_pLoaderManager->Free(m_pLoader);
+        m_pLoader = nullptr;
+    }
+}
+
 void SequenceSoundLoader::Finalize() {
     m_FreePlayerHeapTask.m_pPlayerHeap = m_Task.m_pPlayerHeap;
     TaskManager::GetInstance().AppendTask(&m_FreePlayerHeapTask, TaskManager::TaskPriority_Middle);
