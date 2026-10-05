@@ -317,6 +317,12 @@ void SequenceSoundPlayer::SetTrackTvVolume(uint32_t trackBitFlag, float volume) 
     SetTrackParam(trackBitFlag, &SequenceTrack::SetTvVolume, volume);
 }
 
+void SequenceSoundPlayer::SetTrackChannelTvMixParameter(uint32_t trackBitFlag, uint32_t srcChNo,
+                                                        const MixParameter& param) {
+    for (int32_t ch{0}; ch < ChannelIndex_Count; ++ch)
+        SetTrackParam(trackBitFlag, &SequenceTrack::SetTvMixParameter, srcChNo, ch, param.ch[ch]);
+}
+
 const SequenceTrack* SequenceSoundPlayer::GetPlayerTrack(int32_t trackNo) const {
     if (trackNo > TrackCountPerPlayer - 1)
         return nullptr;
