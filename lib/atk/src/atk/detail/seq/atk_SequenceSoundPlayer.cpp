@@ -114,6 +114,16 @@ const SequenceTrack* SequenceSoundPlayer::GetPlayerTrack(int32_t trackNo) const 
     return m_pTracks[trackNo];
 }
 
+void SequenceSoundPlayer::CloseTrack(int32_t trackNo) {
+    SequenceTrack* track{GetPlayerTrack(trackNo)};
+
+    if (track != nullptr) {
+        m_pTracks[trackNo]->Close();
+        m_pSequenceTrackAllocator->FreeTrack(m_pTracks[trackNo]);
+        m_pTracks[trackNo] = nullptr;
+    }
+}
+
 void SequenceSoundPlayer::FreeLoader() {
     if (m_pLoader != nullptr) {
         m_pLoaderManager->Free(m_pLoader);
