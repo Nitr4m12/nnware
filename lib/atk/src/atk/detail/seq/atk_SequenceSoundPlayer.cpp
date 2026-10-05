@@ -381,6 +381,17 @@ void SequenceSoundPlayer::CloseTrack(int32_t trackNo) {
     }
 }
 
+void SequenceSoundPlayer::UpdateChannelParam() {
+    SequenceTrack* track;
+
+    for (int trackNo{0}; trackNo < TrackCountPerPlayer; ++trackNo) {
+        track = GetPlayerTrack(trackNo);
+
+        if (track != nullptr)
+            track->UpdateChannelParam();
+    }
+}
+
 void SequenceSoundLoader::Finalize() {
     m_FreePlayerHeapTask.m_pPlayerHeap = m_Task.m_pPlayerHeap;
     TaskManager::GetInstance().AppendTask(&m_FreePlayerHeapTask, TaskManager::TaskPriority_Middle);
