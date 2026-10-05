@@ -120,6 +120,35 @@ void SequenceSoundPlayer::FreeLoader() {
     }
 }
 
+void SequenceSoundPlayer::Setup(const SetupArg& arg) {
+    m_ParserParam.callback = arg.callback;
+
+    {
+        int trackCount{0};
+        for (uint32_t trackBitMask{arg.allocTracks}; trackBitMask != 0; trackBitMask >>= 1)
+            trackCount += trackBitMask & 1;
+
+        int allocatableCount{arg.trackAllocator->GetAllocatableTrackCount()};
+
+        if (trackCount > allocatableCount) {
+            Finalize();
+            return;
+        }
+    }
+
+    {
+        uint32_t trackBitMask{arg.allocTracks};
+        for (int trackNo{0}; trackBitMask != 0; ++trackNo, trackBitMask >>= 1) {
+            if (trackBitMask & 1) {
+                SequenceTrack* track{arg.trackAllocator->AllocTrack(this)};
+                SetPlayerTrack(trackNo, track);
+            }
+        }
+    }
+
+    m_pSequenceTrackAllocator = arg.trackAllocator;
+}
+
 void SequenceSoundPlayer::SetPlayerTrack(int32_t trackNo, SequenceTrack* track) {
     if (trackNo > TrackCountPerPlayer - 1)
         return;
