@@ -1,9 +1,9 @@
 #include <nn/atk/atk_SequenceSoundPlayer.h>
 
 #include <nn/atk/atk_DisposeCallbackManager.h>
+#include <nn/atk/atk_SequenceSoundFileReader.h>
 #include <nn/atk/atk_SoundPlayer.h>
 #include <nn/atk/atk_TaskManager.h>
-#include "nn/atk/atk_Global.h"
 
 namespace {
 
@@ -461,6 +461,39 @@ bool SequenceSoundLoader::TryWait() {
     }
 
     return false;
+}
+
+void SequenceSoundPlayer::PrepareForPlayerHeap(const PrepareArg& arg) {
+    if (IsActive())
+        FinishPlayer();
+
+    SequenceTrack* seqTrack{GetPlayerTrack(0)};
+    if (seqTrack == nullptr) {
+        Finalize();
+        return;
+    }
+
+    {
+        SequenceSoundFileReader reader{arg.seqFile};
+        const void* seqData{reader.GetSequenceData()};
+        seqTrack->SetSeqData(seqData, arg.seqOffset);
+    }
+
+    seqTrack->Open();
+    for (int i{0}; i < static_cast<int>(SeqBankMax); ++i) {
+        m_BankFileReader[i].Initialize(arg.bankFiles[i]);
+        m_WarcFileReader[i].Initialize(arg.warcFiles[i], arg.warcIsIndividuals[i]);
+    }
+
+    m_ResState = ResState_Assigned;
+    m_DelayCount = arg.delayCount != 0 ? arg.delayCount : ToDelayCount(arg.delayTime);
+
+    SetActiveFlag(true);
+
+    DisposeCallbackManager::GetInstance().RegisterDisposeCallback(this);
+    m_IsRegisterPlayerCallback = true;
+
+    m_UpdateType = arg.updateType;
 }
 
 void SequenceSoundLoader::DataLoadTask::Initialize() {
