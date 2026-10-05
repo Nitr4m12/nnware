@@ -165,6 +165,19 @@ void SequenceSoundPlayer::Stop() {
     FinishPlayer();
 }
 
+void SequenceSoundPlayer::Pause(bool flag) {
+    SetPauseFlag(flag);
+
+    SequenceTrack* track;
+
+    for (int trackNo{0}; trackNo < TrackCountPerPlayer; ++trackNo) {
+        track = GetPlayerTrack(trackNo);
+
+        if (track != nullptr)
+            track->PauseAllChannel(flag);
+    }
+}
+
 SequenceTrack* SequenceSoundPlayer::GetPlayerTrack(int32_t trackNo) {
     if (trackNo > TrackCountPerPlayer - 1)
         return nullptr;
