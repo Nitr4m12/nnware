@@ -260,6 +260,10 @@ void SequenceSoundPlayer::SetLocalVariable(int32_t varNo, int16_t var) {
     m_LocalVariable[varNo] = var;
 }
 
+void SequenceSoundPlayer::SetGlobalVariable(int32_t varNo, int16_t var) {
+    m_GlobalVariable[varNo] = var;
+}
+
 const SequenceTrack* SequenceSoundPlayer::GetPlayerTrack(int32_t trackNo) const {
     if (trackNo > TrackCountPerPlayer - 1)
         return nullptr;
