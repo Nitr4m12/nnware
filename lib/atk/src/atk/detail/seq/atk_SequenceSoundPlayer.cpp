@@ -161,6 +161,10 @@ void SequenceSoundPlayer::Start() {
     SetStartedFlag(true);
 }
 
+void SequenceSoundPlayer::Stop() {
+    FinishPlayer();
+}
+
 SequenceTrack* SequenceSoundPlayer::GetPlayerTrack(int32_t trackNo) {
     if (trackNo > TrackCountPerPlayer - 1)
         return nullptr;
