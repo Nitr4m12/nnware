@@ -305,6 +305,10 @@ void SequenceSoundPlayer::SetTrackVelocityRange(uint32_t trackBitFlag, uint8_t r
     SetTrackParam(trackBitFlag, &SequenceTrack::SetVelocityRange, range);
 }
 
+void SequenceSoundPlayer::SetTrackOutputLine(uint32_t trackBitFlag, uint32_t outputLine) {
+    SetTrackParam(trackBitFlag, &SequenceTrack::SetOutputLine, static_cast<int32_t>(outputLine));
+}
+
 const SequenceTrack* SequenceSoundPlayer::GetPlayerTrack(int32_t trackNo) const {
     if (trackNo > TrackCountPerPlayer - 1)
         return nullptr;
