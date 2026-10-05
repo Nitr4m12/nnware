@@ -1,7 +1,7 @@
 #include <nn/atk/atk_SequenceSoundPlayer.h>
-#include "nn/atk/atk_BasicSoundPlayer.h"
-#include "nn/atk/atk_DisposeCallbackManager.h"
-#include "nn/atk/atk_TaskManager.h"
+
+#include <nn/atk/atk_DisposeCallbackManager.h>
+#include <nn/atk/atk_TaskManager.h>
 
 namespace {
 
@@ -219,6 +219,23 @@ void SequenceSoundPlayer::SetSequenceUserprocCallback(SequenceUserProcCallback c
                                                       void* arg) {
     m_SequenceUserprocCallback = callback;
     m_pSequenceUserprocCallbackArg = arg;
+}
+
+void SequenceSoundPlayer::CallSequenceUserprocCallback(uint16_t procId, SequenceTrack* track) {
+    if (m_SequenceUserprocCallback == nullptr)
+        return;
+
+    SequenceTrack::ParserTrackParam& trackParam{track->GetParserTrackParam()};
+
+    SequenceUserProcCallbackParam param;
+    param.localVariable = GetVariablePtr(0);
+    param.globalVariable = GetVariablePtr(16);
+    param.trackVariable = track->GetVariablePtr(0);
+    param.cmpFlag = trackParam.cmpFlag;
+
+    m_SequenceUserprocCallback(procId, &param, m_pSequenceUserprocCallbackArg);
+
+    trackParam.cmpFlag = param.cmpFlag;
 }
 
 volatile int16_t* SequenceSoundPlayer::GetVariablePtr(int32_t varNo) {

@@ -222,7 +222,7 @@ public:
 
     void SetTempoRatio(float tempoRatio);
     void SetPanRange(float panRange);
-    void SetChannelPriority(int32_t priority);
+    void SetChannelPriority(int priority);
     void SetReleasePriorityFix(bool fix);
 
     float GetTempoRatio() const { return m_TempoRatio; }
