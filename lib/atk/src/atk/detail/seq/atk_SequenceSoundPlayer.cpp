@@ -483,4 +483,8 @@ void SequenceSoundLoader::FreePlayerHeapTask::Execute(TaskProfileLogger& logger)
 
 void SequenceSoundPlayer::ChannelCallback([[maybe_unused]] Channel* channel) {}
 
+void SequenceSoundPlayer::OnUpdateFrameSoundThread() {
+    Update();
+}
+
 }  // namespace nn::atk::detail::driver
