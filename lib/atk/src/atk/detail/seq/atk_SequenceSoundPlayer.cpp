@@ -335,6 +335,10 @@ void SequenceSoundPlayer::SetTrackTvMainSend(uint32_t trackBitFlag, float send) 
     SetTrackParam(trackBitFlag, &SequenceTrack::SetTvMainSend, send);
 }
 
+void SequenceSoundPlayer::SetTrackTvFxSend(uint32_t trackBitFlag, AuxBus bus, float send) {
+    SetTrackParam(trackBitFlag, &SequenceTrack::SetTvFxSend, bus, send);
+}
+
 const SequenceTrack* SequenceSoundPlayer::GetPlayerTrack(int32_t trackNo) const {
     if (trackNo > TrackCountPerPlayer - 1)
         return nullptr;

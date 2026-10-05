@@ -126,19 +126,19 @@ public:
     void SetPitch(float pitch) { m_ExtPitch = pitch; }
     void SetPanRange(float panRange) { m_PanRange = panRange; }
 
-    void SetLpfFreq(float lpfFreq) { m_ParserTrackParam.lpfFreq = lpfFreq; };
+    void SetLpfFreq(float lpfFreq) { m_ParserTrackParam.lpfFreq = lpfFreq; }
     void SetBiquadFilter(int type, float value);
     void SetBankIndex(int bankIndex);
     void SetTranspose(int8_t transpose);
     void SetVelocityRange(uint8_t range);
     void SetOutputLine(int outputLine);
 
-    void SetTvVolume(float volume) { m_TvParam.volume = volume; };
+    void SetTvVolume(float volume) { m_TvParam.volume = volume; }
     void SetTvMixParameter(uint32_t srcChNo, int mixChNo, float param);
     void SetTvPan(float pan) { m_TvParam.pan = pan; }
     void SetTvSurroundPan(float span) { m_TvParam.span = span; }
     void SetTvMainSend(float mainSend) { m_TvParam.send[0] = mainSend; }
-    void SetTvFxSend(AuxBus bus, float send) { m_TvParam.send[bus] = send; };
+    void SetTvFxSend(AuxBus bus, float send) { m_TvParam.send[bus + 1] = send; }
 
     float GetVolume() const { return m_ExtVolume; }
     float GetPitch() const { return m_ExtPitch; }
@@ -169,7 +169,7 @@ protected:
     virtual ParseResult Parse(bool doNoteOn) = 0;
 
 private:
-    Channel* GetLastChannel() const { return m_pChannelList; };
+    Channel* GetLastChannel() const { return m_pChannelList; }
 
     void AddChannel(Channel* channel);
 
