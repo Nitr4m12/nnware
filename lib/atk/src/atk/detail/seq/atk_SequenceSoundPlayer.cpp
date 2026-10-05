@@ -412,6 +412,19 @@ int32_t SequenceSoundPlayer::ParseNextTick(bool doNoteOn) {
     return !activeFlag;
 }
 
+bool SequenceSoundPlayer::TryAllocLoader() {
+    if (m_pLoaderManager == nullptr)
+        return false;
+
+    SequenceSoundLoader* loader{m_pLoaderManager->Alloc()};
+    if (loader == nullptr)
+        return false;
+
+    m_pLoader = loader;
+    m_ResState = ResState_AppendLoadTask;
+    return true;
+}
+
 void SequenceSoundLoader::Finalize() {
     m_FreePlayerHeapTask.m_pPlayerHeap = m_Task.m_pPlayerHeap;
     TaskManager::GetInstance().AppendTask(&m_FreePlayerHeapTask, TaskManager::TaskPriority_Middle);
