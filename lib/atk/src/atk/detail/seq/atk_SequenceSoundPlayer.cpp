@@ -221,6 +221,16 @@ void SequenceSoundPlayer::SetSequenceUserprocCallback(SequenceUserProcCallback c
     m_pSequenceUserprocCallbackArg = arg;
 }
 
+volatile int16_t* SequenceSoundPlayer::GetVariablePtr(int32_t varNo) {
+    if (varNo < PlayerVariableCount)
+        return &m_LocalVariable[varNo];
+
+    if (varNo < PlayerVariableCount + GlobalVariableCount)
+        return &m_GlobalVariable[varNo - GlobalVariableCount];
+
+    return nullptr;
+}
+
 const SequenceTrack* SequenceSoundPlayer::GetPlayerTrack(int32_t trackNo) const {
     if (trackNo > TrackCountPerPlayer - 1)
         return nullptr;
