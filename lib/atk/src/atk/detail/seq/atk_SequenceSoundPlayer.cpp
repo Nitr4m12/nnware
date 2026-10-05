@@ -78,6 +78,28 @@ void SequenceSoundPlayer::Initialize(OutputReceiver* pOutputReceiver)
     m_IsRegisterPlayerCallback = false;
 }
 
+void SequenceSoundPlayer::Finalize() {
+    SetFinishFlag(true);
+    FinishPlayer();
+
+    if (IsActive()) {
+        DisposeCallbackManager::GetInstance().UnregisterDisposeCallback(this);
+        SetActiveFlag(false);
+    }
+
+    for (int i{0}; i < SeqBankMax; ++i) {
+        m_BankFileReader[i].Finalize();
+        m_WarcFileReader[i].Finalize();
+    }
+
+    if (m_IsInitialized) {
+        BasicSoundPlayer::Finalize();
+        m_IsInitialized = false;
+    }
+
+    FreeLoader();
+}
+
 void SequenceSoundPlayer::FreeLoader() {
     if (m_pLoader != nullptr) {
         m_pLoaderManager->Free(m_pLoader);
