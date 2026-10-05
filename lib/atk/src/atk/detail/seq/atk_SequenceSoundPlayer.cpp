@@ -285,6 +285,10 @@ void SequenceSoundPlayer::SetTrackLpfFreq(uint32_t trackBitFlag, float lpfFreq) 
     SetTrackParam(trackBitFlag, &SequenceTrack::SetLpfFreq, lpfFreq);
 }
 
+void SequenceSoundPlayer::SetTrackBiquadFilter(uint32_t trackBitFlag, int32_t type, float value) {
+    SetTrackParam(trackBitFlag, &SequenceTrack::SetBiquadFilter, type, value);
+}
+
 const SequenceTrack* SequenceSoundPlayer::GetPlayerTrack(int32_t trackNo) const {
     if (trackNo > TrackCountPerPlayer - 1)
         return nullptr;
