@@ -493,4 +493,8 @@ void SequenceSoundPlayer::OnUpdateFrameSoundThreadWithAudioFrameFrequency() {
         Update();
 }
 
+void SequenceSoundPlayer::OnShutdownSoundThread() {
+    Stop();
+}
+
 }  // namespace nn::atk::detail::driver
