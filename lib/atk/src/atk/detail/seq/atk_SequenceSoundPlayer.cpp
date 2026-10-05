@@ -470,4 +470,15 @@ bool SequenceSoundLoader::IsInUse() {
     return !m_Task.TryWait() || !m_FreePlayerHeapTask.TryWait();
 }
 
+// TODO: SequenceSoundLoader::DataLoadTask::Execute
+
+void SequenceSoundLoader::FreePlayerHeapTask::Execute(TaskProfileLogger& logger) {
+    if (m_pPlayerHeap != nullptr) {
+        m_pPlayerHeap->Clear();
+        m_Arg.soundPlayer->detail_FreePlayerHeap(m_pPlayerHeap);
+    }
+
+    m_pPlayerHeapDataManager->Finalize();
+}
+
 }  // namespace nn::atk::detail::driver
