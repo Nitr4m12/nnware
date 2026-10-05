@@ -64,8 +64,7 @@ public:
     void Free(Instance* instance) {
         if (instance->IsInUse()) {
             m_FreeReqList.push_back(*instance);
-        }
-        else {
+        } else {
             instance->Finalize();
             m_FreeList.push_back(*instance);
         }

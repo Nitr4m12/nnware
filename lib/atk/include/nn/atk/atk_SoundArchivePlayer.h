@@ -141,8 +141,7 @@ public:
     Result ReadWaveSoundDataInfo(detail::WaveSoundDataInfo*, uint32_t) const;
     Result ReadWaveSoundDataInfo(detail::WaveSoundDataInfo*, const char*) const;
 
-    Result ReadStreamSoundDataInfo(StreamSoundDataInfo*, const SoundArchive*,
-                                   uint32_t) const;
+    Result ReadStreamSoundDataInfo(StreamSoundDataInfo*, const SoundArchive*, uint32_t) const;
     Result ReadStreamSoundDataInfo(StreamSoundDataInfo*, uint32_t, const char*) const;
     Result ReadStreamSoundDataInfo(StreamSoundDataInfo*, const char*, const char*) const;
     Result ReadStreamSoundDataInfo(StreamSoundDataInfo*, uint32_t) const;
@@ -150,28 +149,25 @@ public:
 
     static size_t GetRequiredWorkBufferSizeToReadStreamSoundHeader();
 
-    Result ReadStreamSoundRegionDataInfo(StreamSoundRegionDataInfo*, uint32_t,
-                                         const char* const*, int32_t, const SoundArchive*, void*,
+    Result ReadStreamSoundRegionDataInfo(StreamSoundRegionDataInfo*, uint32_t, const char* const*,
+                                         int32_t, const SoundArchive*, void*, size_t) const;
+    Result ReadStreamSoundRegionDataInfo(StreamSoundRegionDataInfo*, uint32_t, const char*, void*,
                                          size_t) const;
-    Result ReadStreamSoundRegionDataInfo(StreamSoundRegionDataInfo*, uint32_t, const char*,
+    Result ReadStreamSoundRegionDataInfo(StreamSoundRegionDataInfo*, uint32_t, const char* const*,
+                                         int32_t, void*, size_t, const char*) const;
+    Result ReadStreamSoundRegionDataInfo(StreamSoundRegionDataInfo*, const char*, const char*,
                                          void*, size_t) const;
-    Result ReadStreamSoundRegionDataInfo(StreamSoundRegionDataInfo*, uint32_t,
-                                         const char* const*, int32_t, void*, size_t,
-                                         const char*) const;
-    Result ReadStreamSoundRegionDataInfo(StreamSoundRegionDataInfo*, const char*,
-                                         const char*, void*, size_t) const;
     Result ReadStreamSoundRegionDataInfo(StreamSoundRegionDataInfo*, const char*,
                                          const char* const*, int32_t, void*, size_t,
                                          const char*) const;
-    Result ReadStreamSoundRegionDataInfo(StreamSoundRegionDataInfo*, uint32_t,
-                                         const char* const*, int32_t, void*, size_t) const;
+    Result ReadStreamSoundRegionDataInfo(StreamSoundRegionDataInfo*, uint32_t, const char* const*,
+                                         int32_t, void*, size_t) const;
     Result ReadStreamSoundRegionDataInfo(StreamSoundRegionDataInfo*, const char*,
                                          const char* const*, int32_t, void*, size_t) const;
-    Result ReadStreamSoundRegionDataInfo(StreamSoundRegionDataInfo*, const char*,
-                                         const char*, void*, size_t,
-                                         const char* soundArchiveName) const;
-    Result ReadStreamSoundRegionDataInfo(StreamSoundRegionDataInfo*, uint32_t, const char*,
+    Result ReadStreamSoundRegionDataInfo(StreamSoundRegionDataInfo*, const char*, const char*,
                                          void*, size_t, const char* soundArchiveName) const;
+    Result ReadStreamSoundRegionDataInfo(StreamSoundRegionDataInfo*, uint32_t, const char*, void*,
+                                         size_t, const char* soundArchiveName) const;
 
     void DumpMemory() const;
 

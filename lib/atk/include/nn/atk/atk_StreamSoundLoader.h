@@ -89,9 +89,7 @@ struct LoadDataParam {
     bool lastBlockFlag;
     bool isStartOffsetOfLastBlockApplied;
 
-    LoadDataParam() {
-        Initialize();
-    }
+    LoadDataParam() { Initialize(); }
 
     void Initialize() {
         blockIndex = 0;

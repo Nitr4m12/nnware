@@ -577,6 +577,41 @@ Channel* SequenceSoundPlayer::NoteOn(uint8_t bankIndex, const NoteOnInfo& noteOn
     return channel;
 }
 
+void SequenceSoundPlayer::Prepare(const PrepareArg& arg) {
+    if (IsActive())
+        FinishPlayer();
+
+    SequenceTrack* seqTrack{GetPlayerTrack(0)};
+    if (seqTrack == nullptr) {
+        Finalize();
+        return;
+    }
+
+    {
+        SequenceSoundFileReader reader{arg.seqFile};
+        const void* seqData{reader.GetSequenceData()};
+        seqTrack->SetSeqData(seqData, arg.seqOffset);
+    }
+
+    seqTrack->Open();
+    for (int i{0}; i < static_cast<int>(SeqBankMax); ++i) {
+        m_BankFileReader[i].Initialize(arg.bankFiles[i]);
+        m_WarcFileReader[i].Initialize(arg.warcFiles[i], arg.warcIsIndividuals[i]);
+    }
+
+    m_ResState = ResState_Assigned;
+    m_DelayCount = arg.delayCount != 0 ? arg.delayCount : ToDelayCount(arg.delayTime);
+
+    SetActiveFlag(true);
+
+    DisposeCallbackManager::GetInstance().RegisterDisposeCallback(this);
+    SoundThread::GetInstance().RegisterPlayerCallback(this);
+
+    m_IsRegisterPlayerCallback = true;
+
+    m_UpdateType = arg.updateType;
+}
+
 void SequenceSoundLoader::DataLoadTask::Initialize() {
     InitializeStatus();
     m_Data.Initialize();
