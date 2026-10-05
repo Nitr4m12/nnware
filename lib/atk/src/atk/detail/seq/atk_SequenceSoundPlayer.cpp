@@ -215,6 +215,12 @@ void SequenceSoundPlayer::SetReleasePriorityFix(bool fix) {
     m_ReleasePriorityFixFlag = fix;
 }
 
+void SequenceSoundPlayer::SetSequenceUserprocCallback(SequenceUserProcCallback callback,
+                                                      void* arg) {
+    m_SequenceUserprocCallback = callback;
+    m_pSequenceUserprocCallbackArg = arg;
+}
+
 const SequenceTrack* SequenceSoundPlayer::GetPlayerTrack(int32_t trackNo) const {
     if (trackNo > TrackCountPerPlayer - 1)
         return nullptr;
