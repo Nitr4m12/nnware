@@ -3,6 +3,7 @@
 #include <nn/atk/atk_DisposeCallbackManager.h>
 #include <nn/atk/atk_SoundPlayer.h>
 #include <nn/atk/atk_TaskManager.h>
+#include "nn/atk/atk_Global.h"
 
 namespace {
 
@@ -485,6 +486,11 @@ void SequenceSoundPlayer::ChannelCallback([[maybe_unused]] Channel* channel) {}
 
 void SequenceSoundPlayer::OnUpdateFrameSoundThread() {
     Update();
+}
+
+void SequenceSoundPlayer::OnUpdateFrameSoundThreadWithAudioFrameFrequency() {
+    if (m_UpdateType == UpdateType_AudioFrame)
+        Update();
 }
 
 }  // namespace nn::atk::detail::driver
