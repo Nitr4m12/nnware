@@ -442,6 +442,27 @@ void SequenceSoundLoader::Initialize(const Arg& arg) {
     m_FreePlayerHeapTask.m_pPlayerHeapDataManager = &m_PlayerHeapDataManager;
 }
 
+bool SequenceSoundLoader::TryWait() {
+    if (!m_Task.TryAllocPlayerHeap())
+        return false;
+
+    Task::Status status{m_Task.GetStatus()};
+
+    switch (status) {
+    case Task::Status_Free:
+        TaskManager::GetInstance().AppendTask(&m_Task, TaskManager::TaskPriority_Middle);
+        break;
+    case Task::Status_Append:
+    case Task::Status_Execute:
+        break;
+    case Task::Status_Done:
+    case Task::Status_Cancel:
+        return true;
+    }
+
+    return false;
+}
+
 void SequenceSoundLoader::DataLoadTask::Initialize() {
     InitializeStatus();
     m_Data.Initialize();
