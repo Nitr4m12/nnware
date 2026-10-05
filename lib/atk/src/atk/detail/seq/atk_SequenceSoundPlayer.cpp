@@ -481,4 +481,6 @@ void SequenceSoundLoader::FreePlayerHeapTask::Execute(TaskProfileLogger& logger)
     m_pPlayerHeapDataManager->Finalize();
 }
 
+void SequenceSoundPlayer::ChannelCallback([[maybe_unused]] Channel* channel) {}
+
 }  // namespace nn::atk::detail::driver
