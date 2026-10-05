@@ -434,4 +434,10 @@ bool SequenceSoundLoader::IsInUse() {
     return !m_Task.TryWait() || !m_FreePlayerHeapTask.TryWait();
 }
 
+void SequenceSoundLoader::DataLoadTask::Initialize() {
+    InitializeStatus();
+    m_Data.Initialize();
+    m_IsLoadSuccess = false;
+}
+
 }  // namespace nn::atk::detail::driver

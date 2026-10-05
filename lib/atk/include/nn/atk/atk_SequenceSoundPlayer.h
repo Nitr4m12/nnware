@@ -49,7 +49,15 @@ public:
 
         Data() = default;
 
-        void Initialize();
+        void Initialize() {
+            seqFile = {};
+
+            for (int i{0}; i < static_cast<int>(SeqBankMax); ++i) {
+                bankFiles[i] = nullptr;
+                warcFiles[i] = nullptr;
+                warcIsIndividuals[i] = false;
+            }
+        }
     };
     static_assert(sizeof(Data) == 0x50);
 
