@@ -137,9 +137,7 @@ public:
         MoveValue<uint8_t, int16_t> volume;
         NoteOnCallback* callback{};
 
-        ParserPlayerParam() {
-            volume.InitValue(127);
-        }
+        ParserPlayerParam() { volume.InitValue(127); }
     };
     static_assert(sizeof(ParserPlayerParam) == 0x18);
 
@@ -173,9 +171,7 @@ public:
 #endif
     void Finalize() override;
 
-    void SetLoaderManager(SequenceSoundLoaderManager* manager) {
-        m_pLoaderManager = manager;
-    }
+    void SetLoaderManager(SequenceSoundLoaderManager* manager) { m_pLoaderManager = manager; }
 
     struct SetupArg {
         SequenceTrackAllocator* trackAllocator;
@@ -358,7 +354,18 @@ private:
     UpdateType m_UpdateType;
 
     template <typename T>
-    void SetTrackParam(uint32_t trackBitFlag, void (SequenceTrack::*func)(T), T param);
+    void SetTrackParam(uint32_t trackBitFlag, void (SequenceTrack::*func)(T), T param) {
+        for (int trackNo{0}; trackBitFlag != 0; ++trackNo, trackBitFlag >>= 1) {
+            if (trackBitFlag & 1) {
+                SequenceTrack* track{GetPlayerTrack(trackNo)};
+                if (track != nullptr)
+                    (track->*func)(param);
+            }
+
+            if (trackNo > 14)
+                return;
+        }
+    }
 
     template <typename T1, typename T2>
     void SetTrackParam(uint32_t trackBitFlag, void (SequenceTrack::*func)(T1, T2), T1 t1, T2 t2);

@@ -264,6 +264,10 @@ void SequenceSoundPlayer::SetGlobalVariable(int32_t varNo, int16_t var) {
     m_GlobalVariable[varNo] = var;
 }
 
+void SequenceSoundPlayer::SetTrackMute(uint32_t trackBitFlag, SequenceMute mute) {
+    SetTrackParam(trackBitFlag, &SequenceTrack::SetMute, mute);
+}
+
 const SequenceTrack* SequenceSoundPlayer::GetPlayerTrack(int32_t trackNo) const {
     if (trackNo > TrackCountPerPlayer - 1)
         return nullptr;
