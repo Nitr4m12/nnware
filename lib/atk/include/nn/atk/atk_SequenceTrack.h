@@ -161,7 +161,18 @@ public:
 
     void UpdateChannelRelease(Channel* channel);
 
-    os::Tick GetProcessTick(const SoundProfile& profile);
+    os::Tick GetProcessTick(const SoundProfile& profile) {
+        if (!IsOpened())
+            return 0;
+
+        os::Tick totalTick{0};
+
+        for (Channel* channel{m_pChannelList}; channel != nullptr;
+             channel = channel->GetNextTrackChannel())
+            totalTick += channel->GetProcessTick(profile);
+
+        return totalTick;
+    }
 
     void ForceMute();
 

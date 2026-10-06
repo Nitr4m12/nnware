@@ -3,6 +3,7 @@
 #include <nn/util/util_BitFlagSet.h>
 
 #include <nn/atk/atk_LowLevelVoice.h>
+#include <nn/atk/atk_ProfileReader.h>
 #include <nn/atk/atk_Util.h>
 
 namespace nn::atk::detail {
@@ -38,6 +39,19 @@ public:
     void SetBiquadFilter(bool enable, const BiquadFilterCoefficients* coef);
 
     void UpdateVoiceStatus();
+
+    os::Tick GetProcessTick(const SoundProfile& profile) {
+        if (m_pLowLevelVoice != nullptr) {
+            audio::NodeId voiceNodeId{m_pLowLevelVoice->GetNodeId()};
+            for (uint32_t voiceIndex{0}; voiceIndex < profile.rendererVoiceCount; ++voiceIndex) {
+                if (profile._voiceIdTable[voiceIndex] == voiceNodeId)
+                    return profile._voiceProcessTable[voiceIndex].end -
+                           profile._voiceProcessTable[voiceIndex].begin;
+            }
+        }
+
+        return 0;
+    }
 
 private:
     uint32_t m_Priority;

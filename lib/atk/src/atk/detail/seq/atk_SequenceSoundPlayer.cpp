@@ -625,6 +625,18 @@ void SequenceSoundPlayer::RequestLoad(const StartInfo& info, const SequenceSound
     m_IsRegisterPlayerCallback = true;
 }
 
+os::Tick SequenceSoundPlayer::GetProcessTick(const SoundProfile& profile) {
+    os::Tick totalTick{0};
+    for (int trackIndex{0}; trackIndex < TrackCountPerPlayer; ++trackIndex) {
+        SequenceTrack* pTrack{m_pTracks[trackIndex]};
+
+        if (pTrack != nullptr)
+            totalTick += pTrack->GetProcessTick(profile);
+    }
+
+    return totalTick;
+}
+
 void SequenceSoundLoader::DataLoadTask::Initialize() {
     InitializeStatus();
     m_Data.Initialize();

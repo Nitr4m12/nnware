@@ -160,7 +160,14 @@ public:
     static void CalcOffsetAdpcmParam(AdpcmContext* context, const AdpcmParam& param,
                                      position_t offsetSamples, const void* dataAddress);
 
-    os::Tick GetProcessTick(const SoundProfile& profile);
+    os::Tick GetProcessTick(const SoundProfile& profile) {
+        os::Tick totalTick{0};
+
+        for (int channelIndex{0}; channelIndex < m_ChannelCount; ++channelIndex)
+            totalTick += m_Voice[channelIndex].GetProcessTick(profile);
+
+        return totalTick;
+    }
 
 private:
     friend MultiVoiceManager;
