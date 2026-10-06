@@ -661,6 +661,10 @@ void SequenceSoundPlayer::SetSkipIntervalTick(int32_t intervalTick) {
     m_SkipIntervalTickPerFrame = intervalTick;
 }
 
+int32_t SequenceSoundPlayer::GetSkipIntervalTick() {
+    return m_SkipIntervalTickPerFrame;
+}
+
 void SequenceSoundLoader::DataLoadTask::Initialize() {
     InitializeStatus();
     m_Data.Initialize();
