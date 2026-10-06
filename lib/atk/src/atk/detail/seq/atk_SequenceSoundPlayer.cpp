@@ -657,6 +657,10 @@ void SequenceSoundPlayer::PrepareForMidi(const void** banks, const void** warcs,
     SoundThread::GetInstance().RegisterPlayerCallback(this);
 }
 
+void SequenceSoundPlayer::SetSkipIntervalTick(int32_t intervalTick) {
+    m_SkipIntervalTickPerFrame = intervalTick;
+}
+
 void SequenceSoundLoader::DataLoadTask::Initialize() {
     InitializeStatus();
     m_Data.Initialize();
