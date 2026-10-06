@@ -637,6 +637,26 @@ os::Tick SequenceSoundPlayer::GetProcessTick(const SoundProfile& profile) {
     return totalTick;
 }
 
+void SequenceSoundPlayer::PrepareForMidi(const void** banks, const void** warcs,
+                                         bool* warcIsIndividuals) {
+    for (int i{0}; i < static_cast<int>(SeqBankMax); ++i) {
+        m_BankFileReader[i].Initialize(banks[i]);
+        m_WarcFileReader[i].Initialize(warcs[i], warcIsIndividuals[i]);
+    }
+
+    m_ResState = ResState_Assigned;
+
+    if (IsActive())
+        return;
+
+    DisposeCallbackManager::GetInstance().RegisterDisposeCallback(this);
+    m_IsRegisterPlayerCallback = true;
+
+    SetActiveFlag(true);
+
+    SoundThread::GetInstance().RegisterPlayerCallback(this);
+}
+
 void SequenceSoundLoader::DataLoadTask::Initialize() {
     InitializeStatus();
     m_Data.Initialize();
