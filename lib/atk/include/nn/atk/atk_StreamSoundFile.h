@@ -29,7 +29,7 @@ struct StreamSoundFile {
 
         const InfoBlock* GetInfoBlock() const {
             return util::ConstBytePtr(this).Advance(GetInfoBlockOffset()).Get<InfoBlock>();
-        };
+        }
 
     private:
         const Util::ReferenceWithSize* GetReferenceBy(uint16_t typeId) const;

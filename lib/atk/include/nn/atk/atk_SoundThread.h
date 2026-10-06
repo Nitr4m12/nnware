@@ -24,8 +24,8 @@ public:
 
         virtual ~SoundFrameCallback() = default;
 
-        virtual void OnBeginSoundFrame() {};
-        virtual void OnEndSoundFrame() {};
+        virtual void OnBeginSoundFrame() {}
+        virtual void OnEndSoundFrame() {}
     };
 
     class PlayerCallback {
@@ -34,9 +34,9 @@ public:
 
         virtual ~PlayerCallback() = default;
 
-        virtual void OnUpdateFrameSoundThread() {};
-        virtual void OnUpdateFrameSoundThreadWithAudioFrameFrequency() {};
-        virtual void OnShutdownSoundThread() {};
+        virtual void OnUpdateFrameSoundThread() {}
+        virtual void OnUpdateFrameSoundThreadWithAudioFrameFrequency() {}
+        virtual void OnShutdownSoundThread() {}
     };
 
     static const int32_t ThreadMessageBufferSize{32};

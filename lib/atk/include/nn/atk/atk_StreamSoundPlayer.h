@@ -195,7 +195,7 @@ public:
                         bool usePrefetchFlag, uint32_t currentPrefetchBlockIndex,
                         size_t currentPrefetchBlockBytes);
 
-    void ForceFinish() { SetFinishFlag(true); };
+    void ForceFinish() { SetFinishFlag(true); }
 
     os::Tick GetProcessTick(const SoundProfile& profile);
 

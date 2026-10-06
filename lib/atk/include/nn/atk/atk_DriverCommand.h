@@ -220,7 +220,11 @@ struct DriverCommandSequenceSoundLoad : Command {
     driver::SequenceSoundPlayer::StartInfo startInfo;
     driver::SequenceSoundLoader::Arg arg;
 };
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+static_assert(sizeof(DriverCommandSequenceSoundLoad) == 0xa8);
+#else
 static_assert(sizeof(DriverCommandSequenceSoundLoad) == 0xa0);
+#endif
 
 struct DriverCommandSequenceSoundPrepare : Command {
     driver::SequenceSoundPlayer* player;

@@ -10,7 +10,7 @@ class MmlSequenceTrackAllocator : public SequenceTrackAllocator {
 public:
     using MmlSequenceTrackPool = InstancePool<MmlSequenceTrack>;
 
-    MmlSequenceTrackAllocator(MmlParser* parser) : m_pParser(parser) {};
+    MmlSequenceTrackAllocator(MmlParser* parser) : m_pParser(parser) {}
 
     void SetMmlParser(MmlParser* parser) { m_pParser = parser; }
     MmlParser* GetMmlParser() { return m_pParser; }

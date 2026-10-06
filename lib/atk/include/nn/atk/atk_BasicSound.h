@@ -281,7 +281,7 @@ static_assert(sizeof(SoundActorParam) == 0x1c);
 #endif
 
 class BasicSound {
-    NN_ATK_RTTI_BASE(BasicSound);
+    NN_ATK_RTTI_BASE(BasicSound)
 
 public:
     struct AmbientParamUpdateCallback {

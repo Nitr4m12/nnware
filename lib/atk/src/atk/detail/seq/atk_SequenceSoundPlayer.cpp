@@ -610,6 +610,19 @@ void SequenceSoundPlayer::Prepare(const PrepareArg& arg) {
     m_IsRegisterPlayerCallback = true;
 
     m_UpdateType = arg.updateType;
+
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    m_SubMixIndex = arg.subMixIndex;
+#endif
+}
+
+void SequenceSoundPlayer::RequestLoad(const StartInfo& info, const SequenceSoundLoader::Arg& arg) {
+    m_StartInfo = info;
+    m_LoaderArg = arg;
+    m_ResState = ResState_RecvLoadReq;
+    m_DelayCount = 0;
+    SoundThread::GetInstance().RegisterPlayerCallback(this);
+    m_IsRegisterPlayerCallback = true;
 }
 
 void SequenceSoundLoader::DataLoadTask::Initialize() {

@@ -87,7 +87,7 @@ public:
         SequenceSoundInfo() {
             for (int i{0}; i < static_cast<int>(SequenceBankMax); ++i)
                 bankIds[i] = InvalidId;
-        };
+        }
     };
     static_assert(sizeof(SequenceSoundInfo) == 0x1c);
 

@@ -36,9 +36,9 @@ class FndResult {
 public:
     FndResult() = default;
 
-    explicit FndResult(uint32_t value) : value{value} {};
+    explicit FndResult(uint32_t value) : value{value} {}
 
-    explicit FndResult(FndResultType value) : value(value) {};
+    explicit FndResult(FndResultType value) : value(value) {}
 
     bool IsSucceeded() const { return !IsFailed(); }
 

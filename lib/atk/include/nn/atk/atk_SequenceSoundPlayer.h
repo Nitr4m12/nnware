@@ -161,8 +161,15 @@ public:
         int32_t delayTime;
         int32_t delayCount;
         UpdateType updateType;
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+        int32_t subMixIndex;
+#endif
     };
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    static_assert(sizeof(StartInfo) == 0x1c);
+#else
     static_assert(sizeof(StartInfo) == 0x18);
+#endif
 
     static void InitSequenceSoundPlayer();
 
@@ -203,6 +210,9 @@ public:
         int32_t delayTime;
         int32_t delayCount;
         UpdateType updateType;
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+        int32_t subMixIndex;
+#endif
 
         PrepareArg() = default;
     };
@@ -363,6 +373,9 @@ private:
     SequenceSoundLoader* m_pLoader{};
     SequenceSoundLoader::Arg m_LoaderArg;
     UpdateType m_UpdateType;
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    int32_t m_SubMixIndex;
+#endif
 
     template <typename T>
     void SetTrackParam(uint32_t trackBitFlag, void (SequenceTrack::*func)(T), T param) {

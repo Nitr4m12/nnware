@@ -41,7 +41,7 @@ public:
     }
 
     // UNCHECKED
-    int GetCount() const { return m_Count; };
+    int GetCount() const { return m_Count; }
 
     // UNCHECKED
     void SetValue(int index, T value) { m_pValue[index] = value; }

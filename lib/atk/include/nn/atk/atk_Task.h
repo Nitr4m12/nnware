@@ -23,7 +23,7 @@ public:
     virtual ~Task();
 
     void SetId(uint32_t id) { m_Id = id; }
-    Status GetStatus() const { return m_Status; };
+    Status GetStatus() const { return m_Status; }
 
     void Wait() { m_Event.Wait(); }
     bool TryWait() { return m_Event.TryWait(); }

@@ -27,7 +27,7 @@ struct WaveSoundNoteInfo {
     uint8_t volume;
     float pitch;
 
-    WaveSoundNoteInfo() : adshr(0, 0, 0, 0, 0) {};
+    WaveSoundNoteInfo() : adshr(0, 0, 0, 0, 0) {}
 };
 static_assert(sizeof(WaveSoundNoteInfo) == 0x18);
 

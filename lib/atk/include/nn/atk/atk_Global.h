@@ -295,7 +295,7 @@ struct WaveBuffer {
     Status status;
     WaveBuffer* next;
 
-    WaveBuffer() { Initialize(); };
+    WaveBuffer() { Initialize(); }
     ~WaveBuffer() = default;
 
     void Initialize() {

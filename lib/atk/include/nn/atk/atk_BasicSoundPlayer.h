@@ -85,7 +85,7 @@ public:
 #if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
     void SetTvAdditionalParamAddr(OutputAdditionalParam* pParam) { m_pTvAdditionalParam = pParam; }
 
-    const OutputAdditionalParam* GetTvAdditionalParamAddr() const { return m_pTvAdditionalParam; };
+    const OutputAdditionalParam* GetTvAdditionalParamAddr() const { return m_pTvAdditionalParam; }
 
     void SetTvAdditionalSend(int bus, float send);
     void SetTvBusMixVolumeUsed(bool isUsed);
@@ -97,7 +97,7 @@ public:
 
     void SetTvAdditionalParam(const OutputAdditionalParam& param) {
         *m_pTvAdditionalParam = param;
-    };
+    }
 #endif
 
     bool TryWaitInstanceFree() { return m_Event.TryWait(); }

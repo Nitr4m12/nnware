@@ -26,7 +26,7 @@ public:
         uint32_t padding2[8];
 
         IndividualWaveInfo(uint32_t _fileId, uint32_t _waveIndex)
-            : fileId{_fileId}, waveIndex{_waveIndex} {};
+            : fileId{_fileId}, waveIndex{_waveIndex} {}
     };
     static_assert(sizeof(IndividualWaveInfo) == 0x40);
 

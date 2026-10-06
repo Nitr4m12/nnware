@@ -15,7 +15,7 @@ struct SequenceSoundFile {
     struct DataBlockBody {
         uint8_t sequenceData[1];
 
-        const void* GetSequenceData() const { return &sequenceData; };
+        const void* GetSequenceData() const { return &sequenceData; }
     };
 
     struct DataBlock {
