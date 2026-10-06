@@ -202,19 +202,25 @@ public:
     bool IsPrepared() const { return m_IsPrepared; }
 
     struct PrepareArg {
-        const void* seqFile;
+        const void* seqFile{};
         const void* bankFiles[SeqBankMax];
         const void* warcFiles[SeqBankMax];
         bool warcIsIndividuals[SeqBankMax];
-        int32_t seqOffset;
-        int32_t delayTime;
-        int32_t delayCount;
-        UpdateType updateType;
+        int32_t seqOffset{0};
+        int32_t delayTime{0};
+        int32_t delayCount{0};
+        UpdateType updateType{UpdateType_AudioFrame};
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
-        int32_t subMixIndex;
+        int32_t subMixIndex{0};
 #endif
 
-        PrepareArg() = default;
+        PrepareArg() {
+            for (int i{0}; i < static_cast<int>(SeqBankMax); ++i) {
+                bankFiles[i] = nullptr;
+                warcFiles[i] = nullptr;
+                warcIsIndividuals[i] = false;
+            }
+        }
     };
     static_assert(sizeof(PrepareArg) == 0x60);
 

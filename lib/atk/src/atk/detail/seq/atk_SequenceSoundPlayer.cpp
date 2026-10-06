@@ -431,7 +431,55 @@ int32_t SequenceSoundPlayer::ParseNextTick(bool doNoteOn) {
     return !activeFlag;
 }
 
-// TODO: SequenceSoundPlayer::Update
+void SequenceSoundPlayer::Update() {
+    switch (m_ResState) {
+    case ResState_RecvLoadReq:
+        if (!TryAllocLoader())
+            return;
+
+        m_pLoader->Initialize(m_LoaderArg);
+    case ResState_AppendLoadTask: {
+        if (!m_pLoader->TryWait())
+            return;
+
+        if (!m_pLoader->IsLoadSuccess()) {
+            SetFinishFlag(true);
+            FinishPlayer();
+            return;
+        }
+
+        const SequenceSoundLoader::Data& data{m_pLoader->GetData()};
+        PrepareArg arg;
+        arg.seqFile = data.seqFile;
+        arg.seqOffset = m_StartInfo.seqOffset;
+        arg.delayTime = m_StartInfo.delayTime;
+        arg.delayCount = m_StartInfo.delayCount;
+        arg.updateType = m_StartInfo.updateType;
+
+        for (int i{0}; i < static_cast<int>(SeqBankMax); ++i) {
+            arg.bankFiles[i] = data.bankFiles[i];
+            arg.warcFiles[i] = data.warcFiles[i];
+            arg.warcIsIndividuals[i] = data.warcIsIndividuals[i];
+        }
+
+        PrepareForPlayerHeap(arg);
+
+        Skip(m_StartInfo.startOffsetType, m_StartInfo.startOffset);
+    }
+    default:
+        if (m_DelayCount > 0) {
+            --m_DelayCount;
+        } else {
+            if (IsActive() && IsStarted()) {
+                if (m_SkipTickCounter != 0 || m_SkipTimeCounter > 0.0f)
+                    SkipTick();
+                else if (!IsPause())
+                    UpdateTick();
+                UpdateChannelParam();
+            }
+        }
+    }
+}
 
 bool SequenceSoundPlayer::TryAllocLoader() {
     if (m_pLoaderManager == nullptr)
