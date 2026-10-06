@@ -515,7 +515,6 @@ void SequenceSoundPlayer::PrepareForPlayerHeap(const PrepareArg& arg) {
     m_UpdateType = arg.updateType;
 }
 
-// NON_MATCHING(>=4.0.0): incorrect register
 void SequenceSoundPlayer::SkipTick() {
     for (int trackNo{0}; trackNo < TrackCountPerPlayer; ++trackNo) {
         SequenceTrack* track{GetPlayerTrack(trackNo)};
@@ -531,14 +530,15 @@ void SequenceSoundPlayer::SkipTick() {
         if (skipCount >= m_SkipIntervalTickPerFrame)
             return;
 
-        float tickPerMsec{(m_ParserParam.timebase * m_ParserParam.tempo) * m_TempoRatio /
-                          (60 * 1000)};
-        float msecPerTick{1.0f / tickPerMsec};
+        // TODO: According to dwarf from BTD5, there are two variables here,
+        // but using them as the function is now leads to a mismatch
+        // float tickPerMsec{CalcTickPerMsec()};
+        // float msecPerTick{1.0f / tickPerMsec};
 
         if (m_SkipTickCounter != 0)
             --m_SkipTickCounter;
         else
-            m_SkipTimeCounter -= msecPerTick;
+            m_SkipTimeCounter -= 1.0f / CalcTickPerMsec();
 
         if (ParseNextTick(false) != 0) {
             FinishPlayer();
