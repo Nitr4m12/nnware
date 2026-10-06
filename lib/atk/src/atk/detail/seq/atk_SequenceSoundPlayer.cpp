@@ -161,6 +161,20 @@ void SequenceSoundPlayer::SetPlayerTrack(int32_t trackNo, SequenceTrack* track) 
     track->SetPlayerTrackNo(trackNo);
 }
 
+// UNCHECKED
+void SequenceSoundPlayer::ForceTrackMute(uint32_t trackMask) {
+    for (int trackNo{0}; trackMask != 0; ++trackNo, trackMask >>= 1) {
+        if (trackNo >= TrackCountPerPlayer)
+            return;
+
+        if (trackMask & 1) {
+            SequenceTrack* track{GetPlayerTrack(trackNo)};
+            if (track != nullptr)
+                track->ForceMute();
+        }
+    }
+}
+
 void SequenceSoundPlayer::Start() {
     SetStartedFlag(true);
 }
@@ -409,12 +423,15 @@ int32_t SequenceSoundPlayer::ParseNextTick(bool doNoteOn) {
             if (track->ParseNextTick(doNoteOn) < 0)
                 CloseTrack(trackNo);
 
-            activeFlag |= track->IsOpened();
+            if (track->IsOpened())
+                activeFlag = true;
         }
     }
 
     return !activeFlag;
 }
+
+// TODO: SequenceSoundPlayer::Update
 
 bool SequenceSoundPlayer::TryAllocLoader() {
     if (m_pLoaderManager == nullptr)
@@ -498,8 +515,7 @@ void SequenceSoundPlayer::PrepareForPlayerHeap(const PrepareArg& arg) {
     m_UpdateType = arg.updateType;
 }
 
-// NON_MATCHING: wrong order of ldr when inlining CalcTickPerMsec and branch
-// being set to b.mi instead of b.lt on 1.0f > m_SkipTimeCounter * CalcTickPerMsec()
+// NON_MATCHING(>=4.0.0): incorrect register
 void SequenceSoundPlayer::SkipTick() {
     for (int trackNo{0}; trackNo < TrackCountPerPlayer; ++trackNo) {
         SequenceTrack* track{GetPlayerTrack(trackNo)};
@@ -511,17 +527,12 @@ void SequenceSoundPlayer::SkipTick() {
     }
 
     int skipCount{0};
-
-    while (true) {
-        if (m_SkipTickCounter == 0 && 1.0f > m_SkipTimeCounter * CalcTickPerMsec()) {
-            m_SkipTimeCounter = 0.0f;
-            return;
-        }
-
+    while (m_SkipTickCounter != 0 || m_SkipTimeCounter * CalcTickPerMsec() >= 1.0f) {
         if (skipCount >= m_SkipIntervalTickPerFrame)
             return;
 
-        float tickPerMsec{CalcTickPerMsec()};
+        float tickPerMsec{(m_ParserParam.timebase * m_ParserParam.tempo) * m_TempoRatio /
+                          (60 * 1000)};
         float msecPerTick{1.0f / tickPerMsec};
 
         if (m_SkipTickCounter != 0)
@@ -529,15 +540,17 @@ void SequenceSoundPlayer::SkipTick() {
         else
             m_SkipTimeCounter -= msecPerTick;
 
-        if (ParseNextTick(false) != 0)
-            break;
+        if (ParseNextTick(false) != 0) {
+            FinishPlayer();
+            SetFinishFlag(true);
+            return;
+        }
 
         ++skipCount;
         m_TickCounter += 1;
     }
 
-    FinishPlayer();
-    SetFinishFlag(true);
+    m_SkipTimeCounter = 0.0f;
 }
 
 void SequenceSoundPlayer::UpdateTick() {
@@ -665,6 +678,18 @@ int32_t SequenceSoundPlayer::GetSkipIntervalTick() {
     return m_SkipIntervalTickPerFrame;
 }
 
+SequenceSoundLoader::LoadInfo::LoadInfo(const SoundArchive* arc, const SoundDataManager* mgr,
+                                        LoadItemInfo* seq, LoadItemInfo* banks, SoundPlayer* player)
+    : soundArchive{arc}, soundDataManager{mgr}, loadInfoSeq{seq}, soundPlayer{player} {
+    for (int i{0}; i < static_cast<int>(SeqBankMax); ++i)
+        loadInfoBanks[i] = &banks[i];
+}
+
+SequenceSoundLoader::~SequenceSoundLoader() {
+    m_Task.Wait();
+    m_FreePlayerHeapTask.Wait();
+}
+
 void SequenceSoundLoader::DataLoadTask::Initialize() {
     InitializeStatus();
     m_Data.Initialize();
@@ -673,11 +698,6 @@ void SequenceSoundLoader::DataLoadTask::Initialize() {
 
 void SequenceSoundLoader::FreePlayerHeapTask::Initialize() {
     InitializeStatus();
-}
-
-SequenceSoundLoader::~SequenceSoundLoader() {
-    m_Task.Wait();
-    m_FreePlayerHeapTask.Wait();
 }
 
 void SequenceSoundLoader::Finalize() {

@@ -331,7 +331,7 @@ private:
     void FinishPlayer();
 
     float CalcTickPerMinute() {
-        return static_cast<float>(m_ParserParam.timebase * m_ParserParam.tempo) * m_TempoRatio;
+        return (m_ParserParam.timebase * m_ParserParam.tempo) * m_TempoRatio;
     }
 
     float CalcTickPerMsec() { return CalcTickPerMinute() / (60 * 1000); }
@@ -379,10 +379,8 @@ private:
 
     template <typename T>
     void SetTrackParam(uint32_t trackBitFlag, void (SequenceTrack::*func)(T), T param) {
-        for (int trackNo{0}; trackBitFlag != 0; ++trackNo, trackBitFlag >>= 1) {
-            if (trackNo >= TrackCountPerPlayer)
-                return;
-
+        for (int trackNo{0}; trackBitFlag != 0 && trackNo < TrackCountPerPlayer;
+             ++trackNo, trackBitFlag >>= 1) {
             if (trackBitFlag & 1) {
                 SequenceTrack* track{GetPlayerTrack(trackNo)};
                 if (track != nullptr)
@@ -393,10 +391,8 @@ private:
 
     template <typename T1, typename T2>
     void SetTrackParam(uint32_t trackBitFlag, void (SequenceTrack::*func)(T1, T2), T1 t1, T2 t2) {
-        for (int trackNo{0}; trackBitFlag != 0; ++trackNo, trackBitFlag >>= 1) {
-            if (trackNo >= TrackCountPerPlayer)
-                return;
-
+        for (int trackNo{0}; trackBitFlag != 0 && trackNo < TrackCountPerPlayer;
+             ++trackNo, trackBitFlag >>= 1) {
             if (trackBitFlag & 1) {
                 SequenceTrack* track{GetPlayerTrack(trackNo)};
                 if (track != nullptr)
@@ -408,10 +404,8 @@ private:
     template <typename T1, typename T2, typename T3>
     void SetTrackParam(uint32_t trackBitFlag, void (SequenceTrack::*func)(T1, T2, T3), T1 t1, T2 t2,
                        T3 t3) {
-        for (int trackNo{0}; trackBitFlag != 0; ++trackNo, trackBitFlag >>= 1) {
-            if (trackNo >= TrackCountPerPlayer)
-                return;
-
+        for (int trackNo{0}; trackBitFlag != 0 && trackNo < TrackCountPerPlayer;
+             ++trackNo, trackBitFlag >>= 1) {
             if (trackBitFlag & 1) {
                 SequenceTrack* track{GetPlayerTrack(trackNo)};
                 if (track != nullptr)
