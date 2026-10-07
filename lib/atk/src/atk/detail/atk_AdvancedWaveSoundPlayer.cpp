@@ -45,4 +45,14 @@ void AdvancedWaveSoundPlayer::TearDownPlayer() {
         SetStartedFlag(false);
 }
 
+void AdvancedWaveSoundPlayer::ReleaseClip(ClipParam* pClipParam) {
+    Channel* pChannel{pClipParam->pChannel};
+    if (pChannel != nullptr) {
+        if (pChannel->IsActive())
+            pChannel->Release();
+
+        pClipParam->pChannel = nullptr;
+    }
+}
+
 }  // namespace nn::atk::detail::driver
