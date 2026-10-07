@@ -197,4 +197,8 @@ void WaveSoundPlayer::SetChannelPriority(int32_t priority) {
     m_Priority = priority;
 }
 
+void WaveSoundPlayer::SetReleasePriorityFix(bool fix) {
+    m_ReleasePriorityFixFlag = fix;
+}
+
 }  // namespace nn::atk::detail::driver
