@@ -65,7 +65,9 @@ void AdvancedWaveSoundPlayer::ReleaseTracks() {
 
     for (int trackIndex{0}; trackIndex < trackCount; ++trackIndex) {
         AdvancedWaveSoundTrackInfo& trackInfo{
-            m_AdvancedWaveSoundTrackInfoSet.waveSoundTrackInfo[trackIndex]};
+            m_AdvancedWaveSoundTrackInfoSet.waveSoundTrackInfo[trackIndex],
+        };
+
         TrackParam& trackParam{m_TrackParamSet.trackParam[trackIndex]};
 
         for (int clipIndex{0}; clipIndex < trackInfo.waveSoundClipCount; ++clipIndex) {
@@ -94,6 +96,26 @@ void AdvancedWaveSoundPlayer::SetupPlayer() {
     }
 
     m_CurrentTime = 0;
+}
+
+void AdvancedWaveSoundPlayer::InitializeTrackParams() {
+    m_TrackParamSet.isPlayed = false;
+    int trackCount{m_AdvancedWaveSoundTrackInfoSet.waveSoundTrackCount};
+
+    for (int trackIndex{0}; trackIndex < trackCount; ++trackIndex) {
+        TrackParam& trackParam{m_TrackParamSet.trackParam[trackIndex]};
+        trackParam.isPlayed = false;
+
+        int clipCount{
+            m_AdvancedWaveSoundTrackInfoSet.waveSoundTrackInfo[trackIndex].waveSoundClipCount,
+        };
+
+        for (int clipIndex{0}; clipIndex < clipCount; ++clipIndex) {
+            ClipParam& clipParam{trackParam.clipParam[clipIndex]};
+            clipParam.isPlayed = false;
+            clipParam.pChannel = nullptr;
+        }
+    }
 }
 
 void AdvancedWaveSoundPlayer::ReleaseClip(ClipParam* pClipParam) {
