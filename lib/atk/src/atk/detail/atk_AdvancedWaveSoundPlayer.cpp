@@ -10,4 +10,8 @@ namespace nn::atk::detail::driver {
 
 AdvancedWaveSoundPlayer::AdvancedWaveSoundPlayer() = default;
 
+AdvancedWaveSoundPlayer::~AdvancedWaveSoundPlayer() {
+    Finalize();
+}
+
 }  // namespace nn::atk::detail::driver
