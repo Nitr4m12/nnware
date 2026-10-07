@@ -19,7 +19,7 @@ struct BinaryTypes {
     };
     static_assert(sizeof(Reference) == 0x4);
 
-    template <typename ItemType, typename CountType = int>
+    template <typename ItemType, typename CountType = int32_t>
     struct Table {
         CountType count;
         ItemType item[1];
