@@ -77,7 +77,6 @@ public:
         void Initialize();
         void Execute(TaskProfileLogger& logger) override;
         bool TryAllocPlayerHeap();
-        ~DataLoadTask() override = default;
 
         Arg m_Arg;
         Data m_Data;
@@ -92,7 +91,6 @@ public:
     public:
         void Initialize();
         void Execute(TaskProfileLogger& logger) override;
-        ~FreePlayerHeapTask() override = default;
 
         Arg m_Arg;
         PlayerHeap* m_pPlayerHeap;

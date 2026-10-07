@@ -13,40 +13,45 @@ using WaveSoundLoaderManager = LoaderManager<WaveSoundLoader>;
 
 class WaveSoundLoader {
 public:
-    struct Arg {
-        SoundArchive* soundArchive;
-        SoundDataManager* soundDataManager;
-        SoundPlayer* soundPlayer;
-        LoadItemInfo loadInfoWsd;
-        int32_t index;
-    };
-    static_assert(sizeof(Arg) == 0x30);
-
-    struct Data {
-        void* wsdFile;
-        void* waveFile;
-    };
-    static_assert(sizeof(Data) == 0x10);
-
     struct LoadInfo {
-        SoundArchive* soundArchive;
-        SoundDataManager* soundDataManager;
-        LoadItemInfo* loadInfoWsd;
+        const SoundArchive* soundArchive;
+        const SoundDataManager* soundDataManager;
+        const LoadItemInfo* loadInfoWsd;
         SoundPlayer* soundPlayer;
+
+        LoadInfo(const SoundArchive* arc, const SoundDataManager* mgr, const LoadItemInfo* wsd,
+                 SoundPlayer* player)
+            : soundArchive{arc}, soundDataManager{mgr}, loadInfoWsd{wsd}, soundPlayer{player} {}
     };
     static_assert(sizeof(LoadInfo) == 0x20);
 
-    class DataLoadTask : Task {
-    public:
-        ~DataLoadTask() override;
+    struct Data {
+        const void* wsdFile;
+        const void* waveFile;
+
+        Data() = default;
 
         void Initialize();
+    };
+    static_assert(sizeof(Data) == 0x10);
 
+    struct Arg {
+        const SoundArchive* soundArchive;
+        const SoundDataManager* soundDataManager;
+        SoundPlayer* soundPlayer;
+        LoadItemInfo loadInfoWsd;
+        int32_t index;
+
+        Arg() = default;
+    };
+    static_assert(sizeof(Arg) == 0x30);
+
+    class DataLoadTask : public Task {
+    public:
+        void Initialize();
+        void Execute(TaskProfileLogger& logger) override;
         bool TryAllocPlayerHeap();
 
-        void Execute(TaskProfileLogger& logger) override;
-
-    private:
         Arg m_Arg;
         Data m_Data;
         PlayerHeap* m_pPlayerHeap;
@@ -56,36 +61,37 @@ public:
     };
     static_assert(sizeof(DataLoadTask) == 0xa0);
 
-    class FreePlayerHeapTask : Task {
+    class FreePlayerHeapTask : public Task {
     public:
-        ~FreePlayerHeapTask() override;
-
         void Initialize();
-
         void Execute(TaskProfileLogger& logger) override;
 
-    private:
         Arg m_Arg;
         PlayerHeap* m_pPlayerHeap;
         PlayerHeapDataManager* m_pPlayerHeapDataManager;
     };
 
-    WaveSoundLoader();
+    WaveSoundLoader() = default;
     ~WaveSoundLoader();
+
+    bool IsInUse();
 
     void Initialize(const Arg& arg);
     void Finalize();
 
     bool TryWait();
 
-    bool IsInUse();
+    bool IsLoadSuccess() const { return m_Task.m_IsLoadSuccess; }
+
+    const void* GetWsdFile() const { return m_Task.m_Data.wsdFile; }
+    const void* GetWaveFile() const { return m_Task.m_Data.waveFile; }
 
 private:
-    friend WaveSoundLoaderManager;
-
     DataLoadTask m_Task;
     FreePlayerHeapTask m_FreePlayerHeapTask;
     PlayerHeapDataManager m_PlayerHeapDataManager;
+
+public:
     util::IntrusiveListNode m_LinkForLoaderManager;
 };
 

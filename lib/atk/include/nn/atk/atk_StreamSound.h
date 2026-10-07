@@ -1,10 +1,14 @@
 #pragma once
 
+#include <nn/atk/atk_SoundHandle.h>
 #include <nn/atk/atk_SoundInstanceManager.h>
-#include <nn/atk/atk_StreamSoundHandle.h>
 #include <nn/atk/atk_StreamSoundPlayer.h>
 
-namespace nn::atk::detail {
+namespace nn::atk {
+
+class StreamSoundHandle;
+
+namespace detail {
 
 class StreamSound;
 using StreamSoundInstanceManager = SoundInstanceManager<StreamSound>;
@@ -86,4 +90,5 @@ static_assert(sizeof(StreamSound) == 0x11a00);
 static_assert(sizeof(StreamSound) == 0x11a40);
 #endif
 
-}  // namespace nn::atk::detail
+}  // namespace detail
+}  // namespace nn::atk
