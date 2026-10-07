@@ -28,4 +28,12 @@ AdvancedWaveSoundFile::WaveSoundTrack::GetClipReferenceTable() const {
     return *bytePtr.Get<BinaryTypes::ReferenceTable>();
 }
 
+const AdvancedWaveSoundFile::WaveSoundClip&
+AdvancedWaveSoundFile::WaveSoundTrack::GetWaveSoundClip(int32_t index) const {
+    const void* pReferedItem{GetClipReferenceTable().GetReferedItem(index)};
+
+    const WaveSoundClip* pWaveSoundClip{static_cast<const WaveSoundClip*>(pReferedItem)};
+    return *pWaveSoundClip;
+}
+
 }  // namespace nn::atk::detail
