@@ -21,9 +21,8 @@ void WaveSoundPlayer::Initialize(OutputReceiver* pOutputReceiver)
 #endif
 
     m_ReleasePriorityFixFlag = false;
-    m_Priority = DefaultPriority;
-
     m_PanRange = 1.0f;
+    m_Priority = DefaultPriority;
 
     m_pWsdFile = nullptr;
     m_pWaveFile = nullptr;
@@ -31,6 +30,9 @@ void WaveSoundPlayer::Initialize(OutputReceiver* pOutputReceiver)
     m_WaveSoundIndex = -1;
     m_DelayCount = 0;
     m_UpdateType = UpdateType_AudioFrame;
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    m_SubMixIndex = 0;
+#endif
 
     m_WaveSoundInfo.pitch = 1.0f;
     m_WaveSoundInfo.pan = DefaultPriority;
@@ -42,13 +44,25 @@ void WaveSoundPlayer::Initialize(OutputReceiver* pOutputReceiver)
 
     m_LfoParam.Initialize();
 
-    m_WaveType = WaveType_Invalid;
     m_WavePlayFlag = false;
 
     m_pChannel = nullptr;
-    m_IsRegisterPlayerCallback = false;
+
+    m_WaveType = WaveType_Invalid;
     m_ResState = ResState_Invalid;
+    m_IsRegisterPlayerCallback = false;
     m_IsInitialized = true;
+}
+
+void WaveSoundPlayer::FinishPlayer() {
+    SetFinishFlag(true);
+    if (m_IsRegisterPlayerCallback) {
+        SoundThread::GetInstance().UnregisterPlayerCallback(this);
+        m_IsRegisterPlayerCallback = false;
+    }
+
+    if (IsStarted())
+        SetStartedFlag(false);
 }
 
 }  // namespace nn::atk::detail::driver
