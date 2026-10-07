@@ -217,6 +217,48 @@ position_t WaveSoundPlayer::GetPlaySamplePosition(bool isOriginalSamplePosition)
     return m_pChannel->GetCurrentPlayingSample(isOriginalSamplePosition);
 }
 
+void WaveSoundPlayer::Update() {
+    switch (m_ResState) {
+    case ResState_ReceiveLoadReq:
+        if (!TryAllocLoader())
+            return;
+
+        m_pLoader->Initialize(m_LoaderArg);
+    case ResState_AppendLoadTask: {
+        if (!m_pLoader->TryWait())
+            return;
+
+        if (!m_pLoader->IsLoadSuccess()) {
+            FinishPlayer();
+            return;
+        }
+
+        PrepareArg arg;
+        arg.wsdFile = m_pLoader->GetWsdFile();
+        arg.waveFile = m_pLoader->GetWaveFile();
+
+        PrepareForPlayerHeap(arg);
+    }
+    default:
+        if (m_DelayCount > 0) {
+            --m_DelayCount;
+        } else if (IsActive() && IsStarted()) {
+            if (!IsPause()) {
+                if (!m_WavePlayFlag) {
+                    if (!StartChannel()) {
+                        FinishPlayer();
+                        return;
+                    }
+                } else if (m_pChannel == nullptr) {
+                    FinishPlayer();
+                    return;
+                }
+            }
+            UpdateChannel();
+        }
+    }
+}
+
 bool WaveSoundPlayer::TryAllocLoader() {
     if (m_pLoaderManager == nullptr)
         return false;

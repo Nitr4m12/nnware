@@ -54,9 +54,9 @@ public:
     static_assert(sizeof(StartInfo) == 0x24);
 
     struct PrepareArg {
-        const void* wsdFile;
-        const void* waveFile;
-        int8_t waveType;
+        const void* wsdFile{};
+        const void* waveFile{};
+        int8_t waveType{WaveType_Nwwav};
         uint8_t padding[3];
 
         PrepareArg() = default;
