@@ -45,6 +45,21 @@ void AdvancedWaveSoundPlayer::TearDownPlayer() {
         SetStartedFlag(false);
 }
 
+void AdvancedWaveSoundPlayer::ReleaseTracks() {
+    int trackCount{m_AdvancedWaveSoundTrackInfoSet.waveSoundTrackCount};
+
+    for (int trackIndex{0}; trackIndex < trackCount; ++trackIndex) {
+        AdvancedWaveSoundTrackInfo& trackInfo{
+            m_AdvancedWaveSoundTrackInfoSet.waveSoundTrackInfo[trackIndex]};
+        TrackParam& trackParam{m_TrackParamSet.trackParam[trackIndex]};
+
+        for (int clipIndex{0}; clipIndex < trackInfo.waveSoundClipCount; ++clipIndex) {
+            ClipParam& clipParam{trackParam.clipParam[clipIndex]};
+            ReleaseClip(&clipParam);
+        }
+    }
+}
+
 void AdvancedWaveSoundPlayer::ReleaseClip(ClipParam* pClipParam) {
     Channel* pChannel{pClipParam->pChannel};
     if (pChannel != nullptr) {
