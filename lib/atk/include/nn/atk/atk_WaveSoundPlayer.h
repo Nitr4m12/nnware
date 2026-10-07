@@ -116,7 +116,12 @@ private:
 
     void Update();
 
-    bool IsChannelActive() { return m_pChannel->IsActive(); }
+    bool IsChannelActive() {
+        if (m_pChannel == nullptr)
+            return false;
+
+        return m_pChannel->IsActive();
+    }
 
     bool StartChannel();
     void CloseChannel();

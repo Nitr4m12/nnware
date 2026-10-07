@@ -181,4 +181,12 @@ void WaveSoundPlayer::Stop() {
     FinishPlayer();
 }
 
+void WaveSoundPlayer::Pause(bool flag) {
+    SetPauseFlag(flag);
+
+    if (IsChannelActive() && m_pChannel->IsPause() != flag) {
+        m_pChannel->Pause(flag);
+    }
+}
+
 }  // namespace nn::atk::detail::driver
