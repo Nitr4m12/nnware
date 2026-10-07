@@ -128,6 +128,14 @@ bool AdvancedWaveSoundPlayer::SetupTracks() {
     return true;
 }
 
+void AdvancedWaveSoundPlayer::Update() {
+    if (!IsActive() || !IsStarted())
+        return;
+
+    if (!IsPause() && UpdateTracks())
+        TearDownPlayer();
+}
+
 void AdvancedWaveSoundPlayer::InitializeTrackParams() {
     m_TrackParamSet.isPlayed = false;
     int trackCount{m_AdvancedWaveSoundTrackInfoSet.waveSoundTrackCount};
