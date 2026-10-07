@@ -176,6 +176,10 @@ void AdvancedWaveSoundPlayer::StopClip(ClipParam* pClipParam) {
     }
 }
 
+void AdvancedWaveSoundPlayer::OnUpdateFrameSoundThread() {
+    Update();
+}
+
 void AdvancedWaveSoundPlayer::OnShutdownSoundThread() {
     Stop();
 }
