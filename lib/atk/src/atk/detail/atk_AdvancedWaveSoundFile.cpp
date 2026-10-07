@@ -1,5 +1,4 @@
 #include <nn/atk/detail/atk_AdvancedWaveSoundFile.h>
-#include "nn/util/util_BytePtr.h"
 
 namespace nn::atk::detail {
 
@@ -12,6 +11,14 @@ AdvancedWaveSoundFile::InfoBlockBody::GetTrackReferenceTable() const {
     util::ConstBytePtr bytePtr{util::ConstBytePtr(this, offsetToTrackTableReference)};
 
     return *bytePtr.Get<BinaryTypes::ReferenceTable>();
+}
+
+const AdvancedWaveSoundFile::WaveSoundTrack&
+AdvancedWaveSoundFile::InfoBlockBody::GetWaveSoundTrack(int32_t index) const {
+    const void* pReferedItem{GetTrackReferenceTable().GetReferedItem(index)};
+
+    const WaveSoundTrack* pWaveSoundTrack{static_cast<const WaveSoundTrack*>(pReferedItem)};
+    return *pWaveSoundTrack;
 }
 
 }  // namespace nn::atk::detail

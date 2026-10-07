@@ -3,6 +3,7 @@
 #include <cstdint>
 
 #include <nn/util.h>
+#include <nn/util/util_BytePtr.h>
 
 namespace nn::atk::detail {
 
@@ -26,7 +27,12 @@ struct BinaryTypes {
     };
 
     struct ReferenceTable : Table<Reference> {
-        const void* GetReferedItem(int index) const;
+        const void* GetReferedItem(int index) const {
+            if (count <= index)
+                return nullptr;
+
+            return util::ConstBytePtr(this, item[index].offset).Get();
+        }
     };
 };
 
