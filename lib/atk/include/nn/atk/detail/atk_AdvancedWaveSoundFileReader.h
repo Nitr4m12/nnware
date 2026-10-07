@@ -16,7 +16,7 @@ struct AdvancedWaveSoundClipInfo {
 static_assert(sizeof(AdvancedWaveSoundClipInfo) == 0x18);
 
 struct AdvancedWaveSoundTrackInfo {
-    constexpr static uint32_t AdvancedWaveSoundClipInfoCountMax = 10;
+    static const int32_t AdvancedWaveSoundClipInfoCountMax{10};
 
     int32_t waveSoundClipCount;
     AdvancedWaveSoundClipInfo waveSoundClipInfo[AdvancedWaveSoundClipInfoCountMax];
@@ -24,7 +24,7 @@ struct AdvancedWaveSoundTrackInfo {
 static_assert(sizeof(AdvancedWaveSoundTrackInfo) == 0xf4);
 
 struct AdvancedWaveSoundTrackInfoSet {
-    constexpr static uint32_t AdvancedWaveSoundTrackInfoCountMax = 4;
+    static const int32_t AdvancedWaveSoundTrackInfoCountMax{4};
 
     int32_t waveSoundTrackCount;
     AdvancedWaveSoundTrackInfo waveSoundTrackInfo[AdvancedWaveSoundTrackInfoCountMax];
@@ -35,13 +35,15 @@ class AdvancedWaveSoundFileReader {
 public:
     explicit AdvancedWaveSoundFileReader(const void* pFile);
 
-    int32_t GetWaveSoundTrackCount();
-    int32_t GetWaveSoundClipCount(int32_t index);
+    bool IsAvailable() const { return m_pInfoBlockBody != nullptr; }
+
+    int32_t GetWaveSoundTrackCount() const;
+    int32_t GetWaveSoundClipCount(int32_t trackIndex) const;
 
     bool ReadWaveSoundTrackInfoSet(AdvancedWaveSoundTrackInfoSet* pTrackInfoSet);
 
 private:
-    AdvancedWaveSoundFile::InfoBlockBody* m_pInfoBlockBody;
+    const AdvancedWaveSoundFile::InfoBlockBody* m_pInfoBlockBody;
 };
 static_assert(sizeof(AdvancedWaveSoundFileReader) == 0x8);
 
