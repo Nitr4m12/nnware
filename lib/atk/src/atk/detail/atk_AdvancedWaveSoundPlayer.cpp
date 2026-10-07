@@ -176,4 +176,8 @@ void AdvancedWaveSoundPlayer::StopClip(ClipParam* pClipParam) {
     }
 }
 
+void AdvancedWaveSoundPlayer::OnShutdownSoundThread() {
+    Stop();
+}
+
 }  // namespace nn::atk::detail::driver
