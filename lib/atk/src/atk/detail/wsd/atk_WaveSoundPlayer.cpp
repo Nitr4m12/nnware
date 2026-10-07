@@ -419,4 +419,8 @@ void WaveSoundPlayer::OnUpdateFrameSoundThreadWithAudioFrameFrequency() {
         Update();
 }
 
+void WaveSoundPlayer::OnShutdownSoundThread() {
+    Stop();
+}
+
 }  // namespace nn::atk::detail::driver
