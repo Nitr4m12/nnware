@@ -201,4 +201,13 @@ void WaveSoundPlayer::SetReleasePriorityFix(bool fix) {
     m_ReleasePriorityFixFlag = fix;
 }
 
+void WaveSoundPlayer::InvalidateData(const void* start, const void* end) {
+    if (IsActive()) {
+        const void* current{m_pWsdFile};
+
+        if (start <= current && current <= end)
+            FinishPlayer();
+    }
+}
+
 }  // namespace nn::atk::detail::driver
