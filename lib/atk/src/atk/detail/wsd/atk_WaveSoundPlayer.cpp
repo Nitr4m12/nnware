@@ -1,6 +1,7 @@
 #include <nn/atk/atk_WaveSoundPlayer.h>
 
 #include <nn/atk/atk_DisposeCallbackManager.h>
+#include "nn/atk/atk_Global.h"
 #include "nn/atk/atk_WaveFileReader.h"
 
 namespace nn::atk::detail::driver {
@@ -411,6 +412,11 @@ void WaveSoundPlayer::ChannelCallbackFunc([[maybe_unused]] Channel* dropChannel,
 
 void WaveSoundPlayer::OnUpdateFrameSoundThread() {
     Update();
+}
+
+void WaveSoundPlayer::OnUpdateFrameSoundThreadWithAudioFrameFrequency() {
+    if (m_UpdateType == UpdateType_AudioFrame)
+        Update();
 }
 
 }  // namespace nn::atk::detail::driver
