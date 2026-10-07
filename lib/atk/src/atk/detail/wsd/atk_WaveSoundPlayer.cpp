@@ -217,4 +217,17 @@ position_t WaveSoundPlayer::GetPlaySamplePosition(bool isOriginalSamplePosition)
     return m_pChannel->GetCurrentPlayingSample(isOriginalSamplePosition);
 }
 
+bool WaveSoundPlayer::TryAllocLoader() {
+    if (m_pLoaderManager == nullptr)
+        return false;
+
+    WaveSoundLoader* loader{m_pLoaderManager->Alloc()};
+    if (loader == nullptr)
+        return false;
+
+    m_pLoader = loader;
+    m_ResState = ResState_AppendLoadTask;
+    return true;
+}
+
 }  // namespace nn::atk::detail::driver
