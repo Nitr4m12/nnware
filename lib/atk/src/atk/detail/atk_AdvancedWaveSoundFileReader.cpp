@@ -1,4 +1,5 @@
 #include <nn/atk/detail/atk_AdvancedWaveSoundFileReader.h>
+#include "nn/atk/detail/atk_AdvancedWaveSoundFile.h"
 
 namespace nn::atk::detail {
 
@@ -56,6 +57,14 @@ AdvancedWaveSoundFileReader::AdvancedWaveSoundFileReader(const void* pFile) {
 
 int32_t AdvancedWaveSoundFileReader::GetWaveSoundTrackCount() const {
     return m_pInfoBlockBody->GetTrackCount();
+}
+
+int32_t AdvancedWaveSoundFileReader::GetWaveSoundClipCount(int32_t trackIndex) const {
+    const AdvancedWaveSoundFile::WaveSoundTrack& waveSoundTrack{
+        m_pInfoBlockBody->GetWaveSoundTrack(trackIndex),
+    };
+
+    return waveSoundTrack.GetClipCount();
 }
 
 }  // namespace nn::atk::detail
