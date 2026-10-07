@@ -87,6 +87,15 @@ void AdvancedWaveSoundPlayer::Pause(bool isPauseEnabled) {
     SetPauseFlag(isPauseEnabled);
 }
 
+void AdvancedWaveSoundPlayer::SetupPlayer() {
+    if (!m_IsRegisterPlayerCallback) {
+        SoundThread::GetInstance().RegisterPlayerCallback(this);
+        m_IsRegisterPlayerCallback = true;
+    }
+
+    m_CurrentTime = 0;
+}
+
 void AdvancedWaveSoundPlayer::ReleaseClip(ClipParam* pClipParam) {
     Channel* pChannel{pClipParam->pChannel};
     if (pChannel != nullptr) {
