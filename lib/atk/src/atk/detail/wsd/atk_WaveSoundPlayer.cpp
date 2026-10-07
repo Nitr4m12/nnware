@@ -409,4 +409,8 @@ void WaveSoundPlayer::ChannelCallbackFunc([[maybe_unused]] Channel* dropChannel,
     player->m_pChannel = nullptr;
 }
 
+void WaveSoundPlayer::OnUpdateFrameSoundThread() {
+    Update();
+}
+
 }  // namespace nn::atk::detail::driver
