@@ -54,4 +54,8 @@ AdvancedWaveSoundFileReader::AdvancedWaveSoundFileReader(const void* pFile) {
         m_pInfoBlockBody = &pInfoBlock->body;
 }
 
+int32_t AdvancedWaveSoundFileReader::GetWaveSoundTrackCount() const {
+    return m_pInfoBlockBody->GetTrackCount();
+}
+
 }  // namespace nn::atk::detail
