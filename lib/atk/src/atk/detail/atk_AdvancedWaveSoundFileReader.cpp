@@ -1,5 +1,4 @@
 #include <nn/atk/detail/atk_AdvancedWaveSoundFileReader.h>
-#include "nn/atk/detail/atk_AdvancedWaveSoundFile.h"
 
 namespace nn::atk::detail {
 
@@ -65,6 +64,36 @@ int32_t AdvancedWaveSoundFileReader::GetWaveSoundClipCount(int32_t trackIndex) c
     };
 
     return waveSoundTrack.GetClipCount();
+}
+
+bool AdvancedWaveSoundFileReader::ReadWaveSoundTrackInfoSet(
+    AdvancedWaveSoundTrackInfoSet* pTrackInfoSet) {
+    pTrackInfoSet->waveSoundTrackCount = GetWaveSoundTrackCount();
+    for (int trackIndex{0}; trackIndex < pTrackInfoSet->waveSoundTrackCount; ++trackIndex) {
+        AdvancedWaveSoundTrackInfo& trackInfo{pTrackInfoSet->waveSoundTrackInfo[trackIndex]};
+
+        const AdvancedWaveSoundFile::WaveSoundTrack& waveSoundTrack{
+            m_pInfoBlockBody->GetWaveSoundTrack(trackIndex),
+        };
+
+        trackInfo.waveSoundClipCount = waveSoundTrack.GetClipCount();
+        for (int index{0}; index < trackInfo.waveSoundClipCount; ++index) {
+            const AdvancedWaveSoundFile::WaveSoundClip& waveSoundClip{
+                waveSoundTrack.GetWaveSoundClip(index),
+            };
+
+            AdvancedWaveSoundClipInfo& waveSoundClipInfo{trackInfo.waveSoundClipInfo[index]};
+
+            waveSoundClipInfo.waveIndex = waveSoundClip.waveIndex;
+            waveSoundClipInfo.position = waveSoundClip.position;
+            waveSoundClipInfo.duration = waveSoundClip.duration;
+            waveSoundClipInfo.startOffset = waveSoundClip.startOffset;
+            waveSoundClipInfo.pitch = waveSoundClip.pitch;
+            waveSoundClipInfo.volume = waveSoundClip.volume;
+            waveSoundClipInfo.pan = waveSoundClip.pan;
+        }
+    }
+    return true;
 }
 
 }  // namespace nn::atk::detail
