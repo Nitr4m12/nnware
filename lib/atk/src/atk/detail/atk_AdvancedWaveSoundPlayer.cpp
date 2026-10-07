@@ -166,4 +166,14 @@ void AdvancedWaveSoundPlayer::ReleaseClip(ClipParam* pClipParam) {
     }
 }
 
+void AdvancedWaveSoundPlayer::StopClip(ClipParam* pClipParam) {
+    Channel* pChannel{pClipParam->pChannel};
+    if (pChannel != nullptr) {
+        if (pChannel->IsActive())
+            pChannel->Stop();
+
+        pClipParam->pChannel = nullptr;
+    }
+}
+
 }  // namespace nn::atk::detail::driver
