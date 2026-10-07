@@ -98,6 +98,15 @@ void AdvancedWaveSoundPlayer::SetupPlayer() {
     m_CurrentTime = 0;
 }
 
+bool AdvancedWaveSoundPlayer::SetupTracks() {
+    AdvancedWaveSoundFileReader reader{m_pAwsdFile};
+    if (!reader.ReadWaveSoundTrackInfoSet(&m_AdvancedWaveSoundTrackInfoSet))
+        return false;
+
+    InitializeTrackParams();
+    return true;
+}
+
 void AdvancedWaveSoundPlayer::InitializeTrackParams() {
     m_TrackParamSet.isPlayed = false;
     int trackCount{m_AdvancedWaveSoundTrackInfoSet.waveSoundTrackCount};
