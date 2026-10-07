@@ -6,7 +6,7 @@ namespace nn::atk::detail {
 
 struct WaveSoundInfo {
     float pitch;
-    AdshrCurve adshr;
+    AdshrCurve adshr{0, 0, 0, 0, 0};
     uint8_t pan;
     uint8_t surroundPan;
     uint8_t mainSend;

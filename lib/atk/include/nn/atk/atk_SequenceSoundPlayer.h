@@ -367,8 +367,8 @@ private:
         ResState_AppendLoadTask,
         ResState_Assigned,
     };
-
     uint8_t m_ResState;
+
     bool m_IsInitialized{false};
     bool m_IsRegisterPlayerCallback{false};
     uint8_t m_Padding[1];

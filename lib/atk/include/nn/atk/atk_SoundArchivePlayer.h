@@ -134,12 +134,12 @@ public:
     static void SetSequenceSkipIntervalTick(int32_t tick);
     static int32_t GetSequenceSkipIntervalTick();
 
-    Result ReadWaveSoundDataInfo(detail::WaveSoundDataInfo*, uint32_t, const SoundArchive*,
+    Result ReadWaveSoundDataInfo(WaveSoundDataInfo*, uint32_t, const SoundArchive*,
                                  const SoundDataManager*) const;
-    Result ReadWaveSoundDataInfo(detail::WaveSoundDataInfo*, uint32_t, const char*) const;
-    Result ReadWaveSoundDataInfo(detail::WaveSoundDataInfo*, const char*, const char*) const;
-    Result ReadWaveSoundDataInfo(detail::WaveSoundDataInfo*, uint32_t) const;
-    Result ReadWaveSoundDataInfo(detail::WaveSoundDataInfo*, const char*) const;
+    Result ReadWaveSoundDataInfo(WaveSoundDataInfo*, uint32_t, const char*) const;
+    Result ReadWaveSoundDataInfo(WaveSoundDataInfo*, const char*, const char*) const;
+    Result ReadWaveSoundDataInfo(WaveSoundDataInfo*, uint32_t) const;
+    Result ReadWaveSoundDataInfo(WaveSoundDataInfo*, const char*) const;
 
     Result ReadStreamSoundDataInfo(StreamSoundDataInfo*, const SoundArchive*, uint32_t) const;
     Result ReadStreamSoundDataInfo(StreamSoundDataInfo*, uint32_t, const char*) const;

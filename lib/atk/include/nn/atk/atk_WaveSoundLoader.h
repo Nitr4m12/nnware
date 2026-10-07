@@ -39,11 +39,11 @@ public:
     static_assert(sizeof(Data) == 0x10);
 
     struct Arg {
-        const SoundArchive* soundArchive;
-        const SoundDataManager* soundDataManager;
-        SoundPlayer* soundPlayer;
+        const SoundArchive* soundArchive{};
+        const SoundDataManager* soundDataManager{};
+        SoundPlayer* soundPlayer{};
         LoadItemInfo loadInfoWsd;
-        int32_t index;
+        int32_t index{0};
 
         Arg() = default;
     };

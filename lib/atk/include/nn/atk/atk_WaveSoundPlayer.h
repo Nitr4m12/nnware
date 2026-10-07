@@ -5,7 +5,7 @@
 #include <nn/atk/atk_WaveSoundFileReader.h>
 #include <nn/atk/atk_WaveSoundLoader.h>
 
-namespace nn::atk::detail {
+namespace nn::atk {
 
 struct WaveSoundDataInfo {
     bool loopFlag;
@@ -15,30 +15,25 @@ struct WaveSoundDataInfo {
     int64_t compatibleLoopStart;
     int64_t compatibleLoopEnd;
     int32_t channelCount;
+
+    void Dump();
 };
 static_assert(sizeof(WaveSoundDataInfo) == 0x30);
 
-namespace driver {
+namespace detail::driver {
 
-class WaveSoundPlayer : BasicSoundPlayer, DisposeCallback, SoundThread::PlayerCallback {
+class WaveSoundPlayer : public BasicSoundPlayer,
+                        public DisposeCallback,
+                        public SoundThread::PlayerCallback {
 public:
+    static const int PauseReleaseValue{127};
+    static const int MuteReleaseValue{127};
+    static const int DefaultPriority{64};
+
     enum StartOffsetType {
         StartOffsetType_Sample,
         StartOffsetType_Millisec,
     };
-
-    enum ResState {
-        ResState_Invalid,
-        ResState_ReceiveLoadReq,
-        ResState_AppendLoadTask,
-        ResState_Assigned,
-    };
-
-    constexpr static int32_t SignatureFile = 0x44535746;  // FWSD
-
-    constexpr static uint32_t PauseReleaseValue = 127;
-    constexpr static uint32_t MuteReleaseValue = 127;
-    constexpr static uint32_t DefaultPriority = 64;
 
     struct StartInfo {
         int32_t index;
@@ -54,10 +49,12 @@ public:
     static_assert(sizeof(StartInfo) == 0x24);
 
     struct PrepareArg {
-        void* wsdFile;
-        void* waveFile;
+        const void* wsdFile;
+        const void* waveFile;
         int8_t waveType;
         uint8_t padding[3];
+
+        PrepareArg() = default;
     };
     static_assert(sizeof(PrepareArg) == 0x18);
 
@@ -71,15 +68,11 @@ public:
 #endif
     void Finalize() override;
 
-    void FinishPlayer();
+    bool IsPrepared() const;
 
-    void CloseChannel();
-
-    void FreeLoader();
+    void SetLoaderManager(WaveSoundLoaderManager* manager) { m_pLoaderManager = manager; }
 
     void Prepare(const StartInfo& info, const PrepareArg& arg);
-    void PrepareForPlayerHeap(const PrepareArg& arg);
-
     void RequestLoad(const StartInfo& info, const WaveSoundLoader::Arg& arg);
 
     void Start() override;
@@ -90,32 +83,50 @@ public:
     void SetChannelPriority(int32_t priority);
     void SetReleasePriorityFix(bool fix);
 
+    float GetPanRange() const { return m_PanRange; }
+    int32_t GetChannelPriority() const { return m_Priority; }
+
     void InvalidateData(const void* start, const void* end) override;
 
-    position_t GetPlaySamplePosition(bool) const;
+    position_t GetPlaySamplePosition(bool isOriginalSamplePosition) const;
+
+    const void* GetWaveFile() const { return m_pWaveFile; }
+    UpdateType GetUpdateType() const { return m_UpdateType; }
+
+    os::Tick GetProcessTick(const SoundProfile& profile);
+
+    void DebugUpdate();
+
+private:
+    void OnUpdateFrameSoundThread() override;
+    void OnUpdateFrameSoundThreadWithAudioFrameFrequency() override;
+    void OnShutdownSoundThread() override;
+
+    void PrepareForPlayerHeap(const PrepareArg& arg);
+
+    bool TryAllocLoader();
+    void FreeLoader();
+
+    void FinishPlayer();
 
     void Update();
 
-    bool TryAllocLoader();
+    bool IsChannelActive();
 
     bool StartChannel();
+    void CloseChannel();
     void UpdateChannel();
 
     static void ChannelCallbackFunc(Channel* dropChannel, Channel::ChannelCallbackStatus status,
                                     void* userData);
 
-    void OnUpdateFrameSoundThread() override;
-    void OnUpdateFrameSoundThreadWithAudioFrameFrequency() override;
-    void OnShutdownSoundThread() override;
-
-private:
     bool m_WavePlayFlag;
     bool m_ReleasePriorityFixFlag;
     uint8_t m_Priority;
     int8_t m_WaveType;
     float m_PanRange;
-    void* m_pWsdFile;
-    void* m_pWaveFile;
+    const void* m_pWsdFile;
+    const void* m_pWaveFile;
     int32_t m_WaveSoundIndex;
     StartOffsetType m_StartOffsetType;
     position_t m_StartOffset;
@@ -132,12 +143,20 @@ private:
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
     uint32_t m_SubMixIndex;
 #endif
+
+    enum ResState {
+        ResState_Invalid,
+        ResState_ReceiveLoadReq,
+        ResState_AppendLoadTask,
+        ResState_Assigned,
+    };
     uint8_t m_ResState;
-    bool m_IsInitialized;
-    bool m_IsRegisterPlayerCallback;
+
+    bool m_IsInitialized{false};
+    bool m_IsRegisterPlayerCallback{false};
     uint8_t m_Padding[1];
-    WaveSoundLoaderManager* m_pLoaderManager;
-    WaveSoundLoader* m_pLoader;
+    WaveSoundLoaderManager* m_pLoaderManager{};
+    WaveSoundLoader* m_pLoader{};
     WaveSoundLoader::Arg m_LoaderArg;
 };
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)

@@ -578,15 +578,15 @@ void SequenceSoundPlayer::SkipTick() {
         if (skipCount >= m_SkipIntervalTickPerFrame)
             return;
 
-        // TODO: According to dwarf from BTD5, there are two variables here,
-        // but using them as the function is now leads to a mismatch
-        // float tickPerMsec{CalcTickPerMsec()};
-        // float msecPerTick{1.0f / tickPerMsec};
-
-        if (m_SkipTickCounter != 0)
+        if (m_SkipTickCounter != 0) {
             --m_SkipTickCounter;
-        else
-            m_SkipTimeCounter -= 1.0f / CalcTickPerMsec();
+        }
+        else {
+            float tickPerMsec{CalcTickPerMsec()};
+            float msecPerTick{1.0f / tickPerMsec};
+
+            m_SkipTimeCounter -= msecPerTick;
+        }
 
         if (ParseNextTick(false) != 0) {
             FinishPlayer();
