@@ -210,4 +210,11 @@ void WaveSoundPlayer::InvalidateData(const void* start, const void* end) {
     }
 }
 
+position_t WaveSoundPlayer::GetPlaySamplePosition(bool isOriginalSamplePosition) const {
+    if (m_pChannel == nullptr)
+        return 0;
+
+    return m_pChannel->GetCurrentPlayingSample(isOriginalSamplePosition);
+}
+
 }  // namespace nn::atk::detail::driver
