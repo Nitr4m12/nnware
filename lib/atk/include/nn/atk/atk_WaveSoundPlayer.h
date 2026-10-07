@@ -84,7 +84,7 @@ public:
     void Stop() override;
     void Pause(bool flag) override;
 
-    void SetPanRange(float range);
+    void SetPanRange(float panRange);
     void SetChannelPriority(int32_t priority);
     void SetReleasePriorityFix(bool fix);
 

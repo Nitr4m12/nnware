@@ -189,4 +189,8 @@ void WaveSoundPlayer::Pause(bool flag) {
     }
 }
 
+void WaveSoundPlayer::SetPanRange(float panRange) {
+    m_PanRange = panRange;
+}
+
 }  // namespace nn::atk::detail::driver
