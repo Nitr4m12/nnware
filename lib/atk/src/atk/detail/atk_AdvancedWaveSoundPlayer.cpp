@@ -1,4 +1,5 @@
 #include <nn/atk/detail/atk_AdvancedWaveSoundPlayer.h>
+#include "nn/atk/atk_BasicSoundPlayer.h"
 #include "nn/atk/atk_SoundThread.h"
 
 namespace {
@@ -31,6 +32,20 @@ void AdvancedWaveSoundPlayer::Initialize(OutputReceiver* pOutputReceiver)
     }
 
     m_IsPrepared = false;
+}
+
+void AdvancedWaveSoundPlayer::Finalize() {
+    TearDownPlayer();
+
+    if (IsActive()) {
+        SetActiveFlag(false);
+        ReleaseTracks();
+    }
+
+    if (m_IsInitialized) {
+        BasicSoundPlayer::Finalize();
+        m_IsInitialized = false;
+    }
 }
 
 void AdvancedWaveSoundPlayer::TearDownPlayer() {
