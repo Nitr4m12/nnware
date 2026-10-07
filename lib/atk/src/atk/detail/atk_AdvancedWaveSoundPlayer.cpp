@@ -1,6 +1,4 @@
 #include <nn/atk/detail/atk_AdvancedWaveSoundPlayer.h>
-#include "nn/atk/atk_BasicSoundPlayer.h"
-#include "nn/atk/atk_SoundThread.h"
 
 namespace {
 
@@ -178,6 +176,11 @@ void AdvancedWaveSoundPlayer::StopClip(ClipParam* pClipParam) {
 
 void AdvancedWaveSoundPlayer::OnUpdateFrameSoundThread() {
     Update();
+}
+
+void AdvancedWaveSoundPlayer::OnUpdateFrameSoundThreadWithAudioFrameFrequency() {
+    if (m_UpdateType == UpdateType_AudioFrame)
+        Update();
 }
 
 void AdvancedWaveSoundPlayer::OnShutdownSoundThread() {
