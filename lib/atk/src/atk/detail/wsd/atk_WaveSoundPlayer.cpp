@@ -1,5 +1,7 @@
 #include <nn/atk/atk_WaveSoundPlayer.h>
 
+#include <nn/atk/atk_DisposeCallbackManager.h>
+
 namespace nn::atk::detail::driver {
 
 WaveSoundPlayer::WaveSoundPlayer() = default;
@@ -52,6 +54,23 @@ void WaveSoundPlayer::Initialize(OutputReceiver* pOutputReceiver)
     m_ResState = ResState_Invalid;
     m_IsRegisterPlayerCallback = false;
     m_IsInitialized = true;
+}
+
+void WaveSoundPlayer::Finalize() {
+    FinishPlayer();
+
+    if (IsActive()) {
+        DisposeCallbackManager::GetInstance().UnregisterDisposeCallback(this);
+        CloseChannel();
+        SetActiveFlag(false);
+    }
+
+    if (m_IsInitialized) {
+        BasicSoundPlayer::Finalize();
+        m_IsInitialized = false;
+    }
+
+    FreeLoader();
 }
 
 void WaveSoundPlayer::FinishPlayer() {
