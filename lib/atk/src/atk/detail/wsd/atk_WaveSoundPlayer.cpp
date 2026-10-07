@@ -177,4 +177,8 @@ void WaveSoundPlayer::Start() {
     SetStartedFlag(true);
 }
 
+void WaveSoundPlayer::Stop() {
+    FinishPlayer();
+}
+
 }  // namespace nn::atk::detail::driver
