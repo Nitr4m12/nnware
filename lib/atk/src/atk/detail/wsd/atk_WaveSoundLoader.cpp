@@ -40,6 +40,27 @@ void WaveSoundLoader::Finalize() {
     TaskManager::GetInstance().AppendTask(&m_FreePlayerHeapTask, TaskManager::TaskPriority_Middle);
 }
 
+bool WaveSoundLoader::TryWait() {
+    if (!m_Task.TryAllocPlayerHeap())
+        return false;
+
+    Task::Status status{m_Task.GetStatus()};
+
+    switch (status) {
+    case Task::Status_Free:
+        TaskManager::GetInstance().AppendTask(&m_Task, TaskManager::TaskPriority_Middle);
+        break;
+    case Task::Status_Append:
+    case Task::Status_Execute:
+        break;
+    case Task::Status_Done:
+    case Task::Status_Cancel:
+        return true;
+    }
+
+    return false;
+}
+
 bool WaveSoundLoader::DataLoadTask::TryAllocPlayerHeap() {
     if (m_pPlayerHeap == nullptr) {
         m_pPlayerHeap = m_Arg.soundPlayer->detail_AllocPlayerHeap();
