@@ -1,6 +1,7 @@
 #include <nn/atk/atk_WaveSoundPlayer.h>
 
 #include <nn/atk/atk_DisposeCallbackManager.h>
+#include "nn/atk/atk_WaveFileReader.h"
 
 namespace nn::atk::detail::driver {
 
@@ -269,6 +270,69 @@ bool WaveSoundPlayer::TryAllocLoader() {
 
     m_pLoader = loader;
     m_ResState = ResState_AppendLoadTask;
+    return true;
+}
+
+bool WaveSoundPlayer::StartChannel() {
+    const int priority{GetChannelPriority() + DefaultPriority};
+
+    WaveInfo waveInfo;
+    {
+        WaveFileReader reader{m_pWaveFile, m_WaveType};
+        if (!reader.ReadWaveInfo(&waveInfo, nullptr))
+            return false;
+    }
+
+    position_t startOffsetSamples{0};
+    switch (m_StartOffsetType) {
+    case StartOffsetType_Sample:
+        startOffsetSamples = m_StartOffset;
+        break;
+    case StartOffsetType_Millisec:
+        startOffsetSamples = (m_StartOffset * waveInfo.sampleRate) / 1000;
+        break;
+    }
+
+    if (static_cast<uint32_t>(startOffsetSamples) > waveInfo.loopEndFrame)
+        return false;
+
+    Channel* channel{Channel::AllocChannel(waveInfo.channelCount <= 2 ? waveInfo.channelCount : 2,
+                                           priority, ChannelCallbackFunc, this)};
+    if (channel == nullptr)
+        return false;
+
+    int release{0};
+    {
+        WaveSoundFileReader reader{m_pWsdFile};
+        if (!reader.ReadWaveSoundInfo(&m_WaveSoundInfo, m_WaveSoundIndex))
+            return false;
+
+        if ((m_WaveSoundParameterFlag & 1) != 0)
+            release = m_Release;
+        else
+            release = m_WaveSoundInfo.adshr.GetRelease();
+    }
+
+    channel->SetAttack(m_WaveSoundInfo.adshr.GetAttack());
+    channel->SetHold(m_WaveSoundInfo.adshr.GetHold());
+    channel->SetDecay(m_WaveSoundInfo.adshr.GetDecay());
+    channel->SetSustain(m_WaveSoundInfo.adshr.GetSustain());
+    channel->SetRelease(release);
+
+    channel->SetReleasePriorityFix(m_ReleasePriorityFixFlag);
+    channel->SetUpdateType(m_UpdateType);
+
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    channel->SetSubMixIndex(m_SubMixIndex);
+    channel->Start(waveInfo, -1, static_cast<uint32_t>(startOffsetSamples));
+#else
+    channel->SetOutputReceiver(GetOutputReceiver());
+    channel->Start(waveInfo, -1, static_cast<uint32_t>(startOffsetSamples),
+                   m_IsContextCalculationSkipMode);
+#endif
+
+    m_pChannel = channel;
+    m_WavePlayFlag = true;
     return true;
 }
 
