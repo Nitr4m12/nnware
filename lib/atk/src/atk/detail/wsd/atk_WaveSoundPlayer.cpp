@@ -173,4 +173,8 @@ void WaveSoundPlayer::RequestLoad(const StartInfo& info, const WaveSoundLoader::
     m_IsRegisterPlayerCallback = true;
 }
 
+void WaveSoundPlayer::Start() {
+    SetStartedFlag(true);
+}
+
 }  // namespace nn::atk::detail::driver
