@@ -104,4 +104,36 @@ void WaveSoundPlayer::FreeLoader() {
     }
 }
 
+void WaveSoundPlayer::Prepare(const StartInfo& info, const PrepareArg& arg) {
+    if (IsActive())
+        FinishPlayer();
+
+    m_WaveSoundIndex = info.index;
+    m_StartOffsetType = info.startOffsetType;
+    m_StartOffset = info.startOffset;
+    m_DelayCount = info.delayCount != 0 ? info.delayCount : ToDelayCount(info.delayTime);
+    m_WaveSoundParameterFlag = info.waveSoundParameterFlag;
+    m_Release = info.release;
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+    m_IsContextCalculationSkipMode = static_cast<int64_t>(info.isContextCalculationSkipMode) &
+                                     ((m_WaveSoundParameterFlag << 30) >> 31);
+#endif
+    m_UpdateType = info.updateType;
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    m_SubMixIndex = info.subMixIndex;
+#endif
+
+    m_pWsdFile = arg.wsdFile;
+    m_pWaveFile = arg.waveFile;
+    m_WaveType = arg.waveType;
+
+    m_ResState = ResState_Assigned;
+
+    SetActiveFlag(true);
+
+    DisposeCallbackManager::GetInstance().RegisterDisposeCallback(this);
+    SoundThread::GetInstance().RegisterPlayerCallback(this);
+    m_IsRegisterPlayerCallback = true;
+}
+
 }  // namespace nn::atk::detail::driver

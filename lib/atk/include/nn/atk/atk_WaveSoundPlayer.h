@@ -43,8 +43,13 @@ public:
         int32_t delayCount;
         int32_t waveSoundParameterFlag;
         int32_t release;
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+        UpdateType updateType;
+        int32_t subMixIndex;
+#else
         bool isContextCalculationSkipMode;
         UpdateType updateType;
+#endif
     };
     static_assert(sizeof(StartInfo) == 0x24);
 
