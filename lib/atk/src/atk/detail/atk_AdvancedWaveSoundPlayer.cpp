@@ -89,6 +89,27 @@ void AdvancedWaveSoundPlayer::Pause(bool isPauseEnabled) {
     SetPauseFlag(isPauseEnabled);
 }
 
+void AdvancedWaveSoundPlayer::Prepare(const PrepareParameter& parameter) {
+    if (IsActive())
+        TearDownPlayer();
+
+    m_AdvancedWaveSoundInfo = parameter.advancedWaveSoundInfo;
+    m_UpdateType = parameter.updateType;
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    m_SubMixIndex = parameter.subMixIndex;
+#endif
+    m_pAwsdFile = parameter.pAwsdFile;
+    m_pWarcFile = parameter.pWarcFile;
+
+    SetActiveFlag(true);
+    SetupPlayer();
+
+    if (!SetupTracks())
+        TearDownPlayer();
+    else
+        m_IsPrepared = true;
+}
+
 void AdvancedWaveSoundPlayer::SetupPlayer() {
     if (!m_IsRegisterPlayerCallback) {
         SoundThread::GetInstance().RegisterPlayerCallback(this);
