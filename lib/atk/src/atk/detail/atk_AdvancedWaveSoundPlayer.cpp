@@ -1,4 +1,5 @@
 #include <nn/atk/detail/atk_AdvancedWaveSoundPlayer.h>
+#include "nn/atk/atk_SoundThread.h"
 
 namespace {
 
@@ -30,6 +31,18 @@ void AdvancedWaveSoundPlayer::Initialize(OutputReceiver* pOutputReceiver)
     }
 
     m_IsPrepared = false;
+}
+
+void AdvancedWaveSoundPlayer::TearDownPlayer() {
+    SetFinishFlag(true);
+
+    if (m_IsRegisterPlayerCallback) {
+        SoundThread::GetInstance().UnregisterPlayerCallback(this);
+        m_IsRegisterPlayerCallback = false;
+    }
+
+    if (IsStarted())
+        SetStartedFlag(false);
 }
 
 }  // namespace nn::atk::detail::driver
