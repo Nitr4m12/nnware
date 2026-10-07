@@ -193,4 +193,8 @@ void WaveSoundPlayer::SetPanRange(float panRange) {
     m_PanRange = panRange;
 }
 
+void WaveSoundPlayer::SetChannelPriority(int32_t priority) {
+    m_Priority = priority;
+}
+
 }  // namespace nn::atk::detail::driver
