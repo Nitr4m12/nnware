@@ -136,4 +136,19 @@ void WaveSoundPlayer::Prepare(const StartInfo& info, const PrepareArg& arg) {
     m_IsRegisterPlayerCallback = true;
 }
 
+void WaveSoundPlayer::PrepareForPlayerHeap(const PrepareArg& arg) {
+    if (IsActive())
+        FinishPlayer();
+
+    m_pWsdFile = arg.wsdFile;
+    m_pWaveFile = arg.waveFile;
+    m_WaveType = arg.waveType;
+
+    m_ResState = ResState_Assigned;
+
+    SetActiveFlag(true);
+
+    DisposeCallbackManager::GetInstance().RegisterDisposeCallback(this);
+}
+
 }  // namespace nn::atk::detail::driver
