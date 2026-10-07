@@ -75,4 +75,44 @@ bool WaveSoundLoader::IsInUse() {
     return !m_Task.TryWait() || !m_FreePlayerHeapTask.TryWait();
 }
 
+void WaveSoundLoader::DataLoadTask::Execute([[maybe_unused]] TaskProfileLogger& logger) {
+    m_pPlayerHeapDataManager->Initialize(m_Arg.soundArchive);
+
+    if (m_Arg.loadInfoWsd.address == nullptr) {
+        SoundArchive::ItemId soundId{m_Arg.loadInfoWsd.itemId};
+        if (soundId != SoundArchive::InvalidId) {
+            if (!m_pPlayerHeapDataManager->LoadData(soundId, m_pPlayerHeap,
+                                                    SoundArchiveLoader::LoadFlag_Wsd, 0)) {
+                m_pPlayerHeap->SetState(PlayerHeap::State_TaskFinished);
+                m_IsLoadSuccess = false;
+                return;
+            }
+
+            m_Arg.loadInfoWsd.address =
+                m_pPlayerHeapDataManager->detail_GetFileAddressByItemId(soundId);
+        }
+    }
+
+    const void* waveFile{Util::GetWaveFileOfWaveSound(
+        m_Arg.loadInfoWsd.address, m_Arg.index, *m_Arg.soundArchive, *m_Arg.soundDataManager)};
+
+    if (waveFile == nullptr) {
+        if (!m_pPlayerHeapDataManager->detail_LoadWaveArchiveByWaveSoundFile(
+                m_Arg.loadInfoWsd.address, m_Arg.index, m_pPlayerHeap)) {
+            m_pPlayerHeap->SetState(PlayerHeap::State_TaskFinished);
+            m_IsLoadSuccess = false;
+            return;
+        }
+
+        waveFile = Util::GetWaveFileOfWaveSound(m_Arg.loadInfoWsd.address, m_Arg.index,
+                                                *m_Arg.soundArchive, *m_pPlayerHeapDataManager);
+    }
+
+    m_Data.wsdFile = m_Arg.loadInfoWsd.address;
+    m_Data.waveFile = waveFile;
+
+    m_pPlayerHeap->SetState(PlayerHeap::State_TaskFinished);
+    m_IsLoadSuccess = true;
+}
+
 }  // namespace nn::atk::detail::driver
