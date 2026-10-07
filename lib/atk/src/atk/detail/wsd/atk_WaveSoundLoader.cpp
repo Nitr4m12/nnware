@@ -71,4 +71,8 @@ bool WaveSoundLoader::DataLoadTask::TryAllocPlayerHeap() {
     return true;
 }
 
+bool WaveSoundLoader::IsInUse() {
+    return !m_Task.TryWait() || !m_FreePlayerHeapTask.TryWait();
+}
+
 }  // namespace nn::atk::detail::driver
