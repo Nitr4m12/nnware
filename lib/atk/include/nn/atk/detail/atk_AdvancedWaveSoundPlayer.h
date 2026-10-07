@@ -2,44 +2,21 @@
 
 #include <nn/atk/atk_BasicSoundPlayer.h>
 #include <nn/atk/atk_Channel.h>
-#include <nn/atk/atk_OutputReceiver.h>
 #include <nn/atk/atk_SoundThread.h>
 #include <nn/atk/detail/atk_AdvancedWaveSoundFileReader.h>
 
 namespace nn::atk::detail::driver {
 
-class AdvancedWaveSoundPlayer : BasicSoundPlayer, SoundThread::PlayerCallback {
+class AdvancedWaveSoundPlayer : public BasicSoundPlayer, public SoundThread::PlayerCallback {
 public:
-    struct ClipParam {
-        bool isPlayed;
-        Channel* pChannel;
-    };
-    static_assert(sizeof(ClipParam) == 0x10);
-
-    struct TrackParam {
-        constexpr static uint32_t ClipParamCountMax = 10;
-
-        bool isPlayed;
-        ClipParam clipParam[ClipParamCountMax];
-    };
-    static_assert(sizeof(TrackParam) == 0xa8);
-
-    struct TrackParamSet {
-        constexpr static uint32_t TrackParamCountMax = 4;
-
-        bool isPlayed;
-        TrackParam trackParam[TrackParamCountMax];
-    };
-    static_assert(sizeof(TrackParamSet) == 0x2a8);
-
     struct PrepareParameter {
         SoundArchive::AdvancedWaveSoundInfo advancedWaveSoundInfo;
         UpdateType updateType;
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
         int32_t subMixIndex;
 #endif
-        void* pAwsdFile;
-        void* pWarcFile;
+        const void* pAwsdFile;
+        const void* pWarcFile;
     };
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
     static_assert(sizeof(PrepareParameter) == 0x20);
@@ -57,46 +34,73 @@ public:
 #endif
     void Finalize() override;
 
-    void TearDownPlayer();
-    void ReleaseTracks();
-
     void Start() override;
     void Stop() override;
     void Pause(bool isPauseEnabled) override;
 
     void Prepare(const PrepareParameter& parameter);
 
-    void SetupPlayer();
-    bool SetupTracks();
+    bool IsPrepared() const { return m_IsPrepared; }
+
+    UpdateType GetUpdateType() const { return m_UpdateType; }
+
+protected:
+    void OnUpdateFrameSoundThread() override;
+    void OnUpdateFrameSoundThreadWithAudioFrameFrequency() override;
+
+private:
+    struct ClipParam {
+        bool isPlayed;
+        Channel* pChannel;
+    };
+    static_assert(sizeof(ClipParam) == 0x10);
+
+    struct TrackParam {
+        static const int32_t ClipParamCountMax{10};
+
+        bool isPlayed;
+        ClipParam clipParam[ClipParamCountMax];
+    };
+    static_assert(sizeof(TrackParam) == 0xa8);
+
+    struct TrackParamSet {
+        static const int32_t TrackParamCountMax{4};
+
+        bool isPlayed;
+        TrackParam trackParam[TrackParamCountMax];
+    };
+    static_assert(sizeof(TrackParamSet) == 0x2a8);
+
+    void OnShutdownSoundThread() override;
 
     void Update();
-    bool UpdateTracks();
+    void SetupPlayer();
+    void TearDownPlayer();
 
-    void InitializeTrackParams();
+    bool SetupTracks();
+    bool UpdateTracks();
+    void ReleaseTracks();
 
     bool StartClip(ClipParam* pClipParam, SoundArchive::AdvancedWaveSoundInfo* pWaveSoundClipInfo);
     bool UpdateClip(ClipParam* pClipParam, SoundArchive::AdvancedWaveSoundInfo* pWaveSoundClipInfo);
     void ReleaseClip(ClipParam* pClipParam);
     void StopClip(ClipParam* pClipParam);
 
-    void OnUpdateFrameSoundThread() override;
-    void OnUpdateFrameSoundThreadWithAudioFrameFrequency() override;
-    void OnShutdownSoundThread() override;
+    void InitializeTrackParams();
 
-private:
     SoundArchive::AdvancedWaveSoundInfo m_AdvancedWaveSoundInfo;
     AdvancedWaveSoundTrackInfoSet m_AdvancedWaveSoundTrackInfoSet;
     TrackParamSet m_TrackParamSet;
-    void* m_pAwsdFile;
-    void* m_pWarcFile;
+    const void* m_pAwsdFile{};
+    const void* m_pWarcFile{};
     UpdateType m_UpdateType;
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
     int32_t m_SubMixIndex;
 #endif
-    uint32_t m_CurrentTime;
-    bool m_IsPrepared;
-    bool m_IsInitialized;
-    bool m_IsRegisterPlayerCallback;
+    uint32_t m_CurrentTime{0};
+    bool m_IsPrepared{false};
+    bool m_IsInitialized{false};
+    bool m_IsRegisterPlayerCallback{false};
 };
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
 static_assert(sizeof(AdvancedWaveSoundPlayer) == 0x768);
