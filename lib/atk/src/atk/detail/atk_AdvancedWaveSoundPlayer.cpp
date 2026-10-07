@@ -79,6 +79,10 @@ void AdvancedWaveSoundPlayer::Start() {
     SetStartedFlag(true);
 }
 
+void AdvancedWaveSoundPlayer::Stop() {
+    TearDownPlayer();
+}
+
 void AdvancedWaveSoundPlayer::ReleaseClip(ClipParam* pClipParam) {
     Channel* pChannel{pClipParam->pChannel};
     if (pChannel != nullptr) {
