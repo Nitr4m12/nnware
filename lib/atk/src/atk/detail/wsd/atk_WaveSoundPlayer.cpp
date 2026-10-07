@@ -65,4 +65,11 @@ void WaveSoundPlayer::FinishPlayer() {
         SetStartedFlag(false);
 }
 
+void WaveSoundPlayer::FreeLoader() {
+    if (m_pLoader != nullptr) {
+        m_pLoaderManager->Free(m_pLoader);
+        m_pLoader = nullptr;
+    }
+}
+
 }  // namespace nn::atk::detail::driver
