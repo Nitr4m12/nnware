@@ -336,4 +336,77 @@ bool WaveSoundPlayer::StartChannel() {
     return true;
 }
 
+// NON_MATCHING: operations seem to be fine, but it's where they happen that's the issue
+void WaveSoundPlayer::UpdateChannel() {
+    if (m_pChannel == nullptr)
+        return;
+
+    float volume{1.0f};
+    volume *= GetVolume();
+
+    float pitchRatio{1.0f};
+    pitchRatio *= GetPitch();
+    pitchRatio *= m_WaveSoundInfo.pitch;
+
+    float lpfFreq{GetLpfFreq()};
+    lpfFreq += (m_WaveSoundInfo.lpfFreq - DefaultPriority) / 64.0f;
+
+    int biquadType;
+    float biquadValue;
+    int handleBiquadType{GetBiquadFilterType()};
+
+    if (handleBiquadType == BiquadFilterType_Inherit) {
+        biquadType = m_WaveSoundInfo.biquadType;
+        biquadValue = m_WaveSoundInfo.biquadValue / 127.0f;
+    } else {
+        biquadType = handleBiquadType;
+        biquadValue = GetBiquadFilterValue();
+    }
+
+    float panBase{0.0f};
+    panBase += m_WaveSoundInfo.pan;
+    panBase += panBase < 2 ? (panBase - 63) / 63.0f : (panBase - 64) / 63.0f;
+    panBase *= m_PanRange;
+
+    float spanBase{0.0f};
+    spanBase += m_WaveSoundInfo.surroundPan;
+    spanBase += spanBase < 64 ? (spanBase / 63.0f) : ((spanBase + 1) / 64.0f);
+
+    float mainSendBase{m_WaveSoundInfo.mainSend / 127.0f - 1.0f};
+    float fxSendBase[3];
+    for (int i{0}; i < AuxBus_Count; ++i)
+        fxSendBase[i] = m_WaveSoundInfo.fxSend[i] / 127.0f;
+
+    OutputParam tvParam{GetTvParam()};
+    tvParam.pan += panBase;
+    tvParam.span += spanBase;
+
+    tvParam.send[0] += mainSendBase;
+    for (int i{0}; i < AuxBus_Count; ++i)
+        tvParam.send[i + 1] += fxSendBase[i];
+
+    m_pChannel->SetPanMode(GetPanMode());
+    m_pChannel->SetPanCurve(GetPanCurve());
+    m_pChannel->SetUserVolume(volume);
+    m_pChannel->SetUserPitchRatio(pitchRatio);
+    m_pChannel->SetLfoParam(m_LfoParam, 0);
+    m_pChannel->SetUserLpfFreq(lpfFreq);
+    m_pChannel->SetBiquadFilter(biquadType, biquadValue);
+    m_pChannel->SetOutputLine(GetOutputLine());
+    m_pChannel->SetTvParam(tvParam);
+
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+    if (GetTvAdditionalParamAddr() != nullptr)
+        m_pChannel->SetTvAdditionalParam(*GetTvAdditionalParamAddr());
+#endif
+}
+
+void WaveSoundPlayer::ChannelCallbackFunc([[maybe_unused]] Channel* dropChannel,
+                                          [[maybe_unused]] Channel::ChannelCallbackStatus status,
+                                          void* userData) {
+    WaveSoundPlayer* player{static_cast<WaveSoundPlayer*>(userData)};
+
+    player->m_pChannel = nullptr;
+}
+
 }  // namespace nn::atk::detail::driver

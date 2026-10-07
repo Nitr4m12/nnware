@@ -1053,7 +1053,6 @@ void StreamSoundPlayer::TrackData::Set(const StreamTrack* track) {
         span = (track->span + 1) / 64.0f;
 
     mainSend = track->mainSend / 127.0f - 1.0f;
-
     for (int i{0}; i < AuxBus_Count; ++i)
         fxSend[i] = track->fxSend[i] / 127.0f;
 }
