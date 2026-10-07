@@ -65,6 +65,19 @@ void WaveSoundPlayer::FinishPlayer() {
         SetStartedFlag(false);
 }
 
+void WaveSoundPlayer::CloseChannel() {
+    if (m_pChannel != nullptr) {
+        if (IsChannelActive()) {
+            UpdateChannel();
+            m_pChannel->Release();
+            if (m_pChannel == nullptr)
+                return;
+        }
+        m_pChannel->DetachChannel(m_pChannel);
+        m_pChannel = nullptr;
+    }
+}
+
 void WaveSoundPlayer::FreeLoader() {
     if (m_pLoader != nullptr) {
         m_pLoaderManager->Free(m_pLoader);

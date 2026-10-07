@@ -111,7 +111,7 @@ private:
 
     void Update();
 
-    bool IsChannelActive();
+    bool IsChannelActive() { return m_pChannel->IsActive(); }
 
     bool StartChannel();
     void CloseChannel();
@@ -165,5 +165,5 @@ static_assert(sizeof(WaveSoundPlayer) == 0x190);
 static_assert(sizeof(WaveSoundPlayer) == 0x1a0);
 #endif
 
-}  // namespace driver
-}  // namespace nn::atk::detail
+}  // namespace detail::driver
+}  // namespace nn::atk
