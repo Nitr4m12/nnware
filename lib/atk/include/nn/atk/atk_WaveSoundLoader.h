@@ -26,12 +26,15 @@ public:
     static_assert(sizeof(LoadInfo) == 0x20);
 
     struct Data {
-        const void* wsdFile;
-        const void* waveFile;
+        const void* wsdFile{};
+        const void* waveFile{};
 
         Data() = default;
 
-        void Initialize();
+        void Initialize() {
+            wsdFile = nullptr;
+            waveFile = nullptr;
+        }
     };
     static_assert(sizeof(Data) == 0x10);
 

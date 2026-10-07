@@ -1,5 +1,7 @@
 #include <nn/atk/atk_WaveSoundLoader.h>
-#include "nn/atk/atk_TaskManager.h"
+
+#include <nn/atk/atk_SoundPlayer.h>
+#include <nn/atk/atk_TaskManager.h>
 
 namespace nn::atk::detail::driver {
 
@@ -25,9 +27,8 @@ void WaveSoundLoader::Initialize(const Arg& arg) {
 
 void WaveSoundLoader::DataLoadTask::Initialize() {
     InitializeStatus();
+    m_Data.Initialize();
     m_IsLoadSuccess = false;
-    m_Data.wsdFile = nullptr;
-    m_Data.waveFile = nullptr;
 }
 
 void WaveSoundLoader::FreePlayerHeapTask::Initialize() {
@@ -37,6 +38,16 @@ void WaveSoundLoader::FreePlayerHeapTask::Initialize() {
 void WaveSoundLoader::Finalize() {
     m_FreePlayerHeapTask.m_pPlayerHeap = m_Task.m_pPlayerHeap;
     TaskManager::GetInstance().AppendTask(&m_FreePlayerHeapTask, TaskManager::TaskPriority_Middle);
+}
+
+bool WaveSoundLoader::DataLoadTask::TryAllocPlayerHeap() {
+    if (m_pPlayerHeap == nullptr) {
+        m_pPlayerHeap = m_Arg.soundPlayer->detail_AllocPlayerHeap();
+        if (m_pPlayerHeap == nullptr)
+            return false;
+    }
+
+    return true;
 }
 
 }  // namespace nn::atk::detail::driver
