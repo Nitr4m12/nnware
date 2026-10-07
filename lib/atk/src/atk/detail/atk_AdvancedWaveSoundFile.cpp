@@ -21,4 +21,11 @@ AdvancedWaveSoundFile::InfoBlockBody::GetWaveSoundTrack(int32_t index) const {
     return *pWaveSoundTrack;
 }
 
+const BinaryTypes::ReferenceTable&
+AdvancedWaveSoundFile::WaveSoundTrack::GetClipReferenceTable() const {
+    util::ConstBytePtr bytePtr{util::ConstBytePtr(this, offsetToClipTableReference)};
+
+    return *bytePtr.Get<BinaryTypes::ReferenceTable>();
+}
+
 }  // namespace nn::atk::detail
