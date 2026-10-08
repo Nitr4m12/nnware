@@ -1,4 +1,3 @@
-#include <algorithm>
 #include <nn/atk/atk_StreamSound.h>
 
 #include <nn/atk/atk_DriverCommand.h>
@@ -136,6 +135,20 @@ void StreamSound::SetTrackVolume(uint32_t trackBitFlag, float volume, int32_t fr
         if (bitFlag & 1)
             m_TrackVolume[trackNo].SetTarget(volume, frames);
     }
+}
+
+void StreamSound::SetTrackInitialVolume(uint32_t trackBitFlag, uint32_t volume) {
+    uint16_t bitFlag{static_cast<uint16_t>(trackBitFlag & m_AllocTrackFlag)};
+
+    DriverCommand& cmdmgr{DriverCommand::GetInstance()};
+
+    auto* command{cmdmgr.AllocCommand<DriverCommandStreamSoundTrackInitialVolume>()};
+    command->id = DriverCommandId_StrmTrackInitialVolume;
+    command->player = &m_PlayerInstance;
+    command->trackBitFlag = bitFlag;
+    command->value = volume;
+
+    cmdmgr.PushCommand(command);
 }
 
 }  // namespace nn::atk::detail
