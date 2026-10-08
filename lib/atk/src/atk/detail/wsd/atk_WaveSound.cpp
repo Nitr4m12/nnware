@@ -4,6 +4,8 @@
 
 #include <nn/atk/atk_DriverCommand.h>
 #include <nn/atk/atk_WaveFileReader.h>
+#include "nn/atk/atk_Config.h"
+#include "nn/atk/atk_SoundThread.h"
 
 namespace nn::atk::detail {
 
@@ -154,6 +156,14 @@ bool WaveSound::ReadWaveSoundDataInfo(WaveSoundDataInfo* info) const {
     info->compatibleLoopEnd = waveInfo.loopEndFrame;
     info->channelCount = std::min(waveInfo.channelCount, 2);
     return true;
+}
+
+position_t WaveSound::GetPlaySamplePosition(bool isOriginalSamplePosition) const {
+    if (!IsPlayerAvailable())
+        return 0;
+
+    driver::AtkStateAndParameterUpdateLock lock{};
+    return m_PlayerInstance.GetPlaySamplePosition(isOriginalSamplePosition);
 }
 
 }  // namespace nn::atk::detail
