@@ -131,4 +131,29 @@ bool WaveSound::IsAttachedTempSpecialHandle() {
 
 void WaveSound::DetachTempSpecialHandle() {}
 
+bool WaveSound::ReadWaveSoundDataInfo(WaveSoundDataInfo* info) const {
+    const void* waveFile{m_pWaveFile};
+    if (waveFile == nullptr && (!IsPlayerAvailable() || m_PlayerInstance.GetWaveFile() == nullptr))
+        return false;
+
+    if (m_WaveType != WaveType_Nwwav)
+        return false;
+
+    WaveFileReader reader{waveFile, m_WaveType};
+
+    WaveInfo waveInfo;
+    if (!reader.ReadWaveInfo(&waveInfo, nullptr))
+        return false;
+
+    info->loopFlag = waveInfo.loopFlag;
+    info->sampleRate = waveInfo.sampleRate;
+    info->loopStart = waveInfo.originalLoopStartFrame;
+    info->loopEnd =
+        waveInfo.loopEndFrame - waveInfo.loopStartFrame + waveInfo.originalLoopStartFrame;
+    info->compatibleLoopStart = waveInfo.loopStartFrame;
+    info->compatibleLoopEnd = waveInfo.loopEndFrame;
+    info->channelCount = std::min(waveInfo.channelCount, 2);
+    return true;
+}
+
 }  // namespace nn::atk::detail
