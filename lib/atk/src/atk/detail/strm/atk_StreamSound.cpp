@@ -315,4 +315,11 @@ int32_t StreamSound::GetTotalBufferBlockCount() const {
     return m_PlayerInstance.GetTotalBufferBlockCount();
 }
 
+bool StreamSound::IsPrepared() const {
+    if (!IsPlayerAvailable())
+        return false;
+
+    return m_PlayerInstance.IsPrepared();
+}
+
 }  // namespace nn::atk::detail

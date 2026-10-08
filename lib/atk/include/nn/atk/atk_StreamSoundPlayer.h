@@ -136,7 +136,13 @@ public:
     bool IsFinalizing() const { return m_IsFinalizing; }
     bool IsSuspendByLoadingDelay() const { return m_IsStoppedByLoadingDelay; }
     bool IsLoadingDelayState() const;
-    bool IsPrepared() const { return m_IsPrepared; }
+
+    bool IsPrepared() const {
+        if (m_IsPrepared)
+            return m_IsPrepared;
+
+        return m_IsPreparedPrefetch;
+    }
 
     void SetTrackVolume(uint32_t trackBitFlag, float volume);
     void SetTrackInitialVolume(uint32_t trackBitFlag, uint32_t volume);
