@@ -24,9 +24,12 @@ private:
 };
 static_assert(sizeof(RuntimeTypeInfo) == 0x8);
 
+// XXX: __attribute__((noinline)) is only there so that the symbol for GetRuntimeTypeInfoStatic
+// generates and allows GetRuntimeTypeInfo to match
 #define NN_ATK_RTTI_BASE(CLASS)                                                                    \
 public:                                                                                            \
-    static const nn::atk::detail::fnd::RuntimeTypeInfo* GetRuntimeTypeInfoStatic() {               \
+    __attribute__((noinline)) static const nn::atk::detail::fnd::RuntimeTypeInfo*                  \
+    GetRuntimeTypeInfoStatic() {                                                                   \
         static const nn::atk::detail::fnd::RuntimeTypeInfo s_TypeInfo{nullptr};                    \
         return &s_TypeInfo;                                                                        \
     }                                                                                              \

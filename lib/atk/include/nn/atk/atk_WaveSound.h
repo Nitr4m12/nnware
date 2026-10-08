@@ -12,6 +12,8 @@ class WaveSound;
 using WaveSoundInstanceManager = SoundInstanceManager<WaveSound>;
 
 class WaveSound : public BasicSound {
+    NN_ATK_RTTI_OVERRIDE(WaveSound, BasicSound)
+
 public:
     explicit WaveSound(WaveSoundInstanceManager& manager);
 
@@ -28,7 +30,15 @@ public:
 #endif
     void Finalize() override;
 
-    bool IsPrepared() const override;
+    bool IsPrepared() const override {
+        if (m_IsCalledPrepare)
+            return true;
+
+        if (!IsPlayerAvailable())
+            return false;
+
+        return m_PlayerInstance.IsPrepared();
+    }
 
     void InitializeChannelParam(int32_t priority, bool isReleasePriorityFix);
     void SetChannelPriority(int32_t priority);
@@ -39,11 +49,15 @@ public:
 
     uint32_t GetChannelCount() const { return m_ChannelCount; }
 
-    void SetLoaderManager(driver::WaveSoundLoaderManager& maanger);
+    void SetLoaderManager(driver::WaveSoundLoaderManager& manager) {
+        m_PlayerInstance.SetLoaderManager(&manager);
+    }
 
     DebugSoundType GetSoundType() { return DebugSoundType_Wavesound; }
 
-    os::Tick GetProcessTick(const SoundProfile& profile);
+    os::Tick GetProcessTick(const SoundProfile& profile) {
+        return m_PlayerInstance.GetProcessTick(profile);
+    }
 
     util::IntrusiveListNode m_PriorityLink;
 
@@ -51,8 +65,9 @@ private:
     bool IsAttachedTempSpecialHandle() override;
     void DetachTempSpecialHandle() override;
     void OnUpdatePlayerPriority() override;
-    void OnUpdateParam() override;
-    driver::BasicSoundPlayer* GetBasicSoundPlayerHandle() override;
+
+    void OnUpdateParam() override {}
+    driver::BasicSoundPlayer* GetBasicSoundPlayerHandle() override { return &m_PlayerInstance; }
 
     WaveSoundHandle* m_pTempSpecialHandle;
     WaveSoundInstanceManager& m_Manager;

@@ -4,8 +4,6 @@
 
 #include <nn/atk/atk_DriverCommand.h>
 #include <nn/atk/atk_WaveFileReader.h>
-#include "nn/atk/atk_Config.h"
-#include "nn/atk/atk_SoundThread.h"
 
 namespace nn::atk::detail {
 

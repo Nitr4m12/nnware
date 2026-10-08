@@ -73,7 +73,17 @@ public:
 #endif
     void Finalize() override;
 
-    bool IsPrepared() const;
+    bool IsPrepared() const {
+        switch (m_ResState) {
+        case ResState_Invalid:
+        case ResState_ReceiveLoadReq:
+        case ResState_AppendLoadTask:
+            return false;
+        case ResState_Assigned:
+        default:
+            return true;
+        }
+    }
 
     void SetLoaderManager(WaveSoundLoaderManager* manager) { m_pLoaderManager = manager; }
 
@@ -98,7 +108,9 @@ public:
     const void* GetWaveFile() const { return m_pWaveFile; }
     UpdateType GetUpdateType() const { return m_UpdateType; }
 
-    os::Tick GetProcessTick(const SoundProfile& profile);
+    os::Tick GetProcessTick(const SoundProfile& profile) {
+        return m_pChannel->GetProcessTick(profile);
+    }
 
     void DebugUpdate();
 

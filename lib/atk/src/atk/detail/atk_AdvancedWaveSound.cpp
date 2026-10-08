@@ -61,15 +61,4 @@ bool AdvancedWaveSound::IsAttachedTempSpecialHandle() {
 
 void AdvancedWaveSound::DetachTempSpecialHandle() {}
 
-bool AdvancedWaveSound::IsPrepared() const {
-    if (!IsPlayerAvailable())
-        return false;
-
-    return m_PlayerInstance.IsPrepared();
-}
-
-driver::BasicSoundPlayer* AdvancedWaveSound::GetBasicSoundPlayerHandle() {
-    return &m_PlayerInstance;
-}
-
 }  // namespace nn::atk::detail

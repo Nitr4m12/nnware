@@ -24,7 +24,12 @@ public:
 #endif
     void Finalize() override;
 
-    bool IsPrepared() const override;
+    bool IsPrepared() const override {
+        if (!IsPlayerAvailable())
+            return false;
+
+        return m_PlayerInstance.IsPrepared();
+    }
 
     void Prepare(const driver::AdvancedWaveSoundPlayer::PrepareParameter& parameter);
 
@@ -36,7 +41,7 @@ private:
 
     void OnUpdatePlayerPriority() override;
 
-    driver::BasicSoundPlayer* GetBasicSoundPlayerHandle() override;
+    driver::BasicSoundPlayer* GetBasicSoundPlayerHandle() override { return &m_PlayerInstance; }
 
 public:
     util::IntrusiveListNode m_PriorityLink;
