@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <nn/atk/atk_StreamSound.h>
 
 #include <nn/atk/atk_DriverCommand.h>
@@ -98,10 +99,9 @@ void StreamSound::UpdateMoveValue() {
     BasicSound::UpdateMoveValue();
 
     uint16_t bitFlag{m_AllocTrackFlag};
-    for (int trackNo{0}; trackNo < static_cast<int>(StreamTrackCount); ++trackNo) {
+    for (int trackNo{0}; trackNo < static_cast<int>(StreamTrackCount); ++trackNo, bitFlag >>= 1) {
         if (bitFlag & 1)
             m_TrackVolume[trackNo].Update();
-        bitFlag >>= 1;
     }
 }
 
@@ -110,7 +110,8 @@ void StreamSound::OnUpdateParam() {
         DriverCommand& cmdmgr{DriverCommand::GetInstance()};
 
         uint16_t bitFlag{m_AllocTrackFlag};
-        for (int trackNo{0}; trackNo < static_cast<int>(StreamTrackCount); ++trackNo) {
+        for (int trackNo{0}; trackNo < static_cast<int>(StreamTrackCount);
+             ++trackNo, bitFlag >>= 1) {
             if (bitFlag & 1) {
                 auto* command{cmdmgr.AllocCommand<DriverCommandStreamSoundTrackParam>()};
                 command->id = DriverCommandId_StrmTrackVolume;
@@ -120,8 +121,20 @@ void StreamSound::OnUpdateParam() {
 
                 cmdmgr.PushCommand(command);
             }
-            bitFlag >>= 1;
         }
+    }
+}
+
+void StreamSound::SetTrackVolume(uint32_t trackBitFlag, float volume, int32_t frames) {
+    if (trackBitFlag == 0)
+        return;
+
+    volume = volume < 0.0f ? 0.0f : volume;
+
+    uint16_t bitFlag{static_cast<uint16_t>(m_AllocTrackFlag & trackBitFlag)};
+    for (int trackNo{0}; trackNo < static_cast<int>(StreamTrackCount); ++trackNo, bitFlag >>= 1) {
+        if (bitFlag & 1)
+            m_TrackVolume[trackNo].SetTarget(volume, frames);
     }
 }
 
