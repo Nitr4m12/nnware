@@ -1,4 +1,5 @@
 #include <nn/atk/atk_StreamSound.h>
+#include "nn/atk/atk_DriverCommand.h"
 
 namespace nn::atk::detail {
 
@@ -38,6 +39,27 @@ void StreamSound::Finalize() {
         m_InitializeFlag = false;
         BasicSound::Finalize();
         m_Manager.Free(this);
+    }
+}
+
+void StreamSound::Setup(const driver::StreamSoundPlayer::SetupArg& arg) {
+    m_AllocTrackFlag = arg.allocTrackFlag;
+
+    {
+        DriverCommand& cmdmgr{DriverCommand::GetInstance()};
+
+        auto* command{cmdmgr.AllocCommand<DriverCommandStreamSoundSetup>()};
+        command->id = DriverCommandId_StrmSetup;
+        command->player = &m_PlayerInstance;
+        command->arg = arg;
+
+        cmdmgr.PushCommand(command);
+    }
+
+    for (uint32_t trackNo{0}; trackNo < StreamTrackCount; ++trackNo) {
+        const uint8_t trackChannelCount{arg.trackInfos.track[trackNo].channelCount};
+        for (uint8_t channelNo{0}; channelNo < trackChannelCount; ++channelNo)
+            m_AvailableTrackBitFlag[channelNo] += 1 << trackNo;
     }
 }
 
