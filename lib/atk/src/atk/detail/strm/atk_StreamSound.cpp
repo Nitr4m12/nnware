@@ -1,6 +1,7 @@
 #include <nn/atk/atk_StreamSound.h>
 
 #include <nn/atk/atk_DriverCommand.h>
+#include <nn/atk/atk_StreamSoundHandle.h>
 
 namespace nn::atk::detail {
 
@@ -257,6 +258,10 @@ void StreamSound::OnUpdatePlayerPriority() {
 
 bool StreamSound::IsAttachedTempSpecialHandle() {
     return m_pTempSpecialHandle != nullptr;
+}
+
+void StreamSound::DetachTempSpecialHandle() {
+    m_pTempSpecialHandle->DetachSound();
 }
 
 }  // namespace nn::atk::detail
