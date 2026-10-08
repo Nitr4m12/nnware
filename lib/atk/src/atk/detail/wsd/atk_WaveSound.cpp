@@ -125,4 +125,8 @@ void WaveSound::OnUpdatePlayerPriority() {
     m_Manager.UpdatePriority(this, priority);
 }
 
+bool WaveSound::IsAttachedTempSpecialHandle() {
+    return m_pTempSpecialHandle != nullptr;
+}
+
 }  // namespace nn::atk::detail
