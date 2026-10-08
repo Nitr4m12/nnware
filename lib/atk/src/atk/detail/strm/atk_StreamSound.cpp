@@ -163,4 +163,15 @@ void StreamSound::SetTrackOutputLine(uint32_t trackBitFlag, uint32_t lineFlag) {
     cmdmgr.PushCommand(command);
 }
 
+void StreamSound::ResetTrackOutputLine(uint32_t trackBitFlag) {
+    DriverCommand& cmdmgr{DriverCommand::GetInstance()};
+
+    auto* command{cmdmgr.AllocCommand<DriverCommandStreamSoundTrackParam>()};
+    command->id = DriverCommandId_StrmTrackOutputlineReset;
+    command->player = &m_PlayerInstance;
+    command->trackBitFlag = trackBitFlag;
+
+    cmdmgr.PushCommand(command);
+}
+
 }  // namespace nn::atk::detail
