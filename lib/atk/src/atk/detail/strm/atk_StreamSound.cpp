@@ -226,4 +226,16 @@ void StreamSound::SetTrackSurroundPan(uint32_t trackBitFlag, float span) {
     cmdmgr.PushCommand(command);
 }
 
+void StreamSound::SetTrackMainSend(uint32_t trackBitFlag, float send) {
+    DriverCommand& cmdmgr{DriverCommand::GetInstance()};
+
+    auto* command{cmdmgr.AllocCommand<DriverCommandStreamSoundTrackParam>()};
+    command->id = DriverCommandId_StrmTrackTvMainSend;
+    command->player = &m_PlayerInstance;
+    command->trackBitFlag = trackBitFlag;
+    command->value = send;
+
+    cmdmgr.PushCommand(command);
+}
+
 }  // namespace nn::atk::detail
