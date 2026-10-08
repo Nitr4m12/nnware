@@ -61,4 +61,11 @@ bool AdvancedWaveSound::IsAttachedTempSpecialHandle() {
 
 void AdvancedWaveSound::DetachTempSpecialHandle() {}
 
+bool AdvancedWaveSound::IsPrepared() const {
+    if (!IsPlayerAvailable())
+        return false;
+
+    return m_PlayerInstance.IsPrepared();
+}
+
 }  // namespace nn::atk::detail
