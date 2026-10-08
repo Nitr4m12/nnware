@@ -202,4 +202,16 @@ void StreamSound::SetTrackChannelMixParameter(uint32_t trackBitFlag, uint32_t sr
     cmdmgr.PushCommand(command);
 }
 
+void StreamSound::SetTrackPan(uint32_t trackBitFlag, float pan) {
+    DriverCommand& cmdmgr{DriverCommand::GetInstance()};
+
+    auto* command{cmdmgr.AllocCommand<DriverCommandStreamSoundTrackParam>()};
+    command->id = DriverCommandId_StrmTrackTvPan;
+    command->player = &m_PlayerInstance;
+    command->trackBitFlag = trackBitFlag;
+    command->value = pan;
+
+    cmdmgr.PushCommand(command);
+}
+
 }  // namespace nn::atk::detail
