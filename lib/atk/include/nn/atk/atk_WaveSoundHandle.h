@@ -3,13 +3,9 @@
 #include <nn/util/util_BitFlagSet.h>
 
 #include <nn/atk/atk_SoundHandle.h>
+#include <nn/atk/atk_WaveSound.h>
 
 namespace nn::atk {
-namespace detail {
-
-class WaveSound;
-
-}  // namespace detail
 
 class WaveSoundHandle {
 public:

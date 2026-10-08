@@ -18,7 +18,9 @@ public:
     void Stop(int fadeFrames) { m_pSound->Stop(fadeFrames); }
 
     void Pause(bool flag, int fadeFrames) { m_pSound->Pause(flag, fadeFrames); }
-    void Pause(bool flag, int fadeFrames, PauseMode pauseMode) { m_pSound->Pause(flag, fadeFrames, pauseMode); }
+    void Pause(bool flag, int fadeFrames, PauseMode pauseMode) {
+        m_pSound->Pause(flag, fadeFrames, pauseMode);
+    }
 
     bool IsPrepared() const { return m_pSound->IsPrepared(); }
     bool IsPause() const { return m_pSound->IsPause(); }
@@ -28,7 +30,11 @@ public:
     void FadeIn(int frames) { return m_pSound->FadeIn(frames); }
 
     void SetVolume(float volume, int frames) { m_pSound->SetVolume(volume, frames); }
-    void SetVolumeThroughMode(int bus, uint8_t modeBitFlag) { m_pSound->SetVolumeThroughMode(bus, modeBitFlag); }
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+    void SetVolumeThroughMode(int bus, uint8_t modeBitFlag) {
+        m_pSound->SetVolumeThroughMode(bus, modeBitFlag);
+    }
+#endif
     void SetPitch(float pitch) { m_pSound->SetPitch(pitch); }
     void SetLowPassFilterFrequency(float lpfFreq) { m_pSound->SetLpfFreq(lpfFreq); }
     void SetPlayerPriority(int priority) { m_pSound->SetPlayerPriority(priority); }

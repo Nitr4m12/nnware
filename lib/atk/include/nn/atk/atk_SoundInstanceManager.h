@@ -12,8 +12,9 @@ namespace nn::atk::detail {
 template <typename Sound>
 class SoundInstanceManager {
 public:
-    using PriorityList = util::IntrusiveList<
-        Sound, util::IntrusiveListMemberNodeTraits<Sound, &Sound::m_PriorityLink>>;
+    using PriorityList =
+        util::IntrusiveList<Sound,
+                            util::IntrusiveListMemberNodeTraits<Sound, &Sound::m_PriorityLink>>;
     using Iterator = typename PriorityList::iterator;
 
     SoundInstanceManager() = default;
@@ -41,9 +42,7 @@ public:
 
     // UNCHECKED
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
-    static size_t GetRequiredMemSize(int instanceCount) {
-        return GetObjectSize() * instanceCount;
-    }
+    static size_t GetRequiredMemSize(int instanceCount) { return GetObjectSize() * instanceCount; }
 #else
     static size_t GetRequiredMemSize(int instanceCount, const SoundInstanceConfig& config) {
         return GetObjectSize(config) * instanceCount;

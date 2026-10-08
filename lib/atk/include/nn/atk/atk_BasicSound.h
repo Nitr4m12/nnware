@@ -322,9 +322,7 @@ public:
 
     BasicSound();
 
-    virtual ~BasicSound() {
-        m_State = State_Destructed;
-    }
+    virtual ~BasicSound() { m_State = State_Destructed; }
 
     void Update();
     void StartPrepared();

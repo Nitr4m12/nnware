@@ -580,8 +580,7 @@ void SequenceSoundPlayer::SkipTick() {
 
         if (m_SkipTickCounter != 0) {
             --m_SkipTickCounter;
-        }
-        else {
+        } else {
             float tickPerMsec{CalcTickPerMsec()};
             float msecPerTick{1.0f / tickPerMsec};
 

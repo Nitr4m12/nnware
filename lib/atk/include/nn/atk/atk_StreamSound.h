@@ -97,7 +97,7 @@ protected:
     void DetachTempSpecialHandle() override;
 
     void UpdateMoveValue() override;
-    driver::BasicSoundPlayer* GetBasicSoundPlayerHandle() override;
+    driver::BasicSoundPlayer* GetBasicSoundPlayerHandle() override { return &m_PlayerInstance; }
 
     void OnUpdatePlayerPriority() override;
 
