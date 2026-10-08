@@ -33,4 +33,12 @@ bool StreamSound::Initialize(OutputReceiver* pOutputReceiver)
     return true;
 }
 
+void StreamSound::Finalize() {
+    if (m_InitializeFlag) {
+        m_InitializeFlag = false;
+        BasicSound::Finalize();
+        m_Manager.Free(this);
+    }
+}
+
 }  // namespace nn::atk::detail
