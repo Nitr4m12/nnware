@@ -301,4 +301,11 @@ float StreamSound::GetFilledBufferPercentage() const {
     return m_PlayerInstance.GetFilledBufferPercentage();
 }
 
+int32_t StreamSound::GetBufferBlockCount(WaveBuffer::Status status) const {
+    if (!IsPlayerAvailable())
+        return 0;
+
+    return m_PlayerInstance.GetBufferBlockCount(status);
+}
+
 }  // namespace nn::atk::detail
