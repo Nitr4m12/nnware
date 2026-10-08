@@ -28,4 +28,14 @@ bool WaveSound::Initialize(OutputReceiver* pOutputReceiver)
     return true;
 }
 
+void WaveSound::Finalize() {
+    if (m_InitializeFlag) {
+        m_InitializeFlag = false;
+        m_IsCalledPrepare = false;
+        m_ChannelCount = 0;
+        BasicSound::Finalize();
+        m_Manager.Free(this);
+    }
+}
+
 }  // namespace nn::atk::detail
