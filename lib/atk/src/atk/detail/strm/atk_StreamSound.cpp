@@ -322,4 +322,11 @@ bool StreamSound::IsPrepared() const {
     return m_PlayerInstance.IsPrepared();
 }
 
+bool StreamSound::IsSuspendByLoadingDelay() const {
+    if (!IsPlayerAvailable())
+        return false;
+
+    return m_PlayerInstance.IsSuspendByLoadingDelay();
+}
+
 }  // namespace nn::atk::detail

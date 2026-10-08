@@ -134,7 +134,7 @@ public:
     void Pause(bool flag) override;
 
     bool IsFinalizing() const { return m_IsFinalizing; }
-    bool IsSuspendByLoadingDelay() const { return m_IsStoppedByLoadingDelay; }
+    bool IsSuspendByLoadingDelay() const { return m_LoadWaitFlag; }
     bool IsLoadingDelayState() const;
 
     bool IsPrepared() const {
