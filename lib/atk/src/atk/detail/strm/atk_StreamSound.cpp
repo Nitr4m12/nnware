@@ -251,4 +251,8 @@ void StreamSound::SetTrackFxSend(uint32_t trackBitFlag, AuxBus bus, float send) 
     cmdmgr.PushCommand(command);
 }
 
+void StreamSound::OnUpdatePlayerPriority() {
+    m_Manager.UpdatePriority(this, CalcCurrentPlayerPriority());
+}
+
 }  // namespace nn::atk::detail
