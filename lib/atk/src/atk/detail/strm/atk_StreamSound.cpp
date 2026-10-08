@@ -308,4 +308,11 @@ int32_t StreamSound::GetBufferBlockCount(WaveBuffer::Status status) const {
     return m_PlayerInstance.GetBufferBlockCount(status);
 }
 
+int32_t StreamSound::GetTotalBufferBlockCount() const {
+    if (!IsPlayerAvailable())
+        return 0;
+
+    return m_PlayerInstance.GetTotalBufferBlockCount();
+}
+
 }  // namespace nn::atk::detail
