@@ -28,7 +28,7 @@ public:
 
     void Prepare(const driver::AdvancedWaveSoundPlayer::PrepareParameter& parameter);
 
-    DebugSoundType GetSoundType() const;
+    DebugSoundType GetSoundType() const { return DebugSoundType_Wavesound; }
 
 private:
     bool IsAttachedTempSpecialHandle() override;
