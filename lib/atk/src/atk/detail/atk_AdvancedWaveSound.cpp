@@ -27,4 +27,13 @@ bool AdvancedWaveSound::Initialize(OutputReceiver* pOutputReceiver)
     return true;
 }
 
+void AdvancedWaveSound::Finalize() {
+    if (m_IsInitialized) {
+        m_IsInitialized = false;
+        m_pTempSpecialHandle = nullptr;
+        BasicSound::Finalize();
+        m_InstanceManager.Free(this);
+    }
+}
+
 }  // namespace nn::atk::detail
