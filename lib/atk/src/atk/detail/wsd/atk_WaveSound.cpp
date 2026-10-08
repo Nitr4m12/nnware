@@ -120,4 +120,9 @@ void WaveSound::InitializeChannelParam(int32_t priority, bool isReleasePriorityF
     }
 }
 
+void WaveSound::OnUpdatePlayerPriority() {
+    int priority{CalcCurrentPlayerPriority()};
+    m_Manager.UpdatePriority(this, priority);
+}
+
 }  // namespace nn::atk::detail
