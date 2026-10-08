@@ -55,4 +55,8 @@ void AdvancedWaveSound::OnUpdatePlayerPriority() {
     m_InstanceManager.UpdatePriority(this, priority);
 }
 
+bool AdvancedWaveSound::IsAttachedTempSpecialHandle() {
+    return m_pTempSpecialHandle != nullptr;
+}
+
 }  // namespace nn::atk::detail
