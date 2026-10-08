@@ -287,4 +287,11 @@ int64_t StreamSound::GetPlayLoopCount() const {
     return m_PlayerInstance.GetPlayLoopCount();
 }
 
+position_t StreamSound::GetPlaySamplePosition(bool isOriginalSamplePosition) const {
+    if (!IsPlayerAvailable())
+        return 0;
+
+    return m_PlayerInstance.GetPlaySamplePosition(isOriginalSamplePosition);
+}
+
 }  // namespace nn::atk::detail
