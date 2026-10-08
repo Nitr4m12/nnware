@@ -59,4 +59,6 @@ bool AdvancedWaveSound::IsAttachedTempSpecialHandle() {
     return m_pTempSpecialHandle != nullptr;
 }
 
+void AdvancedWaveSound::DetachTempSpecialHandle() {}
+
 }  // namespace nn::atk::detail
