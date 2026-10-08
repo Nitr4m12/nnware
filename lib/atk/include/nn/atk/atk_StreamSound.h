@@ -64,7 +64,7 @@ public:
     bool ReadStreamSoundDataInfo(StreamSoundDataInfo* info) const;
 #endif
 
-    int32_t GetPlayLoopCount() const;
+    int64_t GetPlayLoopCount() const;
     position_t GetPlaySamplePosition(bool isOriginalSamplePosition) const;
 
     uint32_t GetAvailableTrackBitFlag(uint32_t index) { return m_AvailableTrackBitFlag[index]; }

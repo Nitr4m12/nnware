@@ -165,7 +165,13 @@ public:
     bool ReadStreamSoundDataInfo(StreamSoundDataInfo* info) const;
 #endif
 
-    int GetPlayLoopCount() const { return m_PlayingBlockLoopCounter; }
+    int GetPlayLoopCount() const {
+        if (!IsActive())
+            return -1;
+
+        return m_PlayingBlockLoopCounter;
+    }
+
     position_t GetPlaySamplePosition(bool isOriginalSamplePosition) const;
     float GetFilledBufferPercentage() const;
     int GetBufferBlockCount(WaveBuffer::Status status) const;

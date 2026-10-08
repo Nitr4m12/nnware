@@ -280,4 +280,11 @@ bool StreamSound::ReadStreamSoundDataInfo(StreamSoundDataInfo* info) const {
 }
 #endif
 
+int64_t StreamSound::GetPlayLoopCount() const {
+    if (!IsPlayerAvailable())
+        return 0;
+
+    return m_PlayerInstance.GetPlayLoopCount();
+}
+
 }  // namespace nn::atk::detail
