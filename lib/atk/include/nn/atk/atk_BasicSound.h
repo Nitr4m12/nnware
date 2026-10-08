@@ -321,7 +321,10 @@ public:
     };
 
     BasicSound();
-    virtual ~BasicSound();
+
+    virtual ~BasicSound() {
+        m_State = State_Destructed;
+    }
 
     void Update();
     void StartPrepared();
