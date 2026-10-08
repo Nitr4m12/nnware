@@ -47,6 +47,7 @@ void WaveSound::Prepare(const void* wsdFile, const void* waveFile,
                         const driver::WaveSoundPlayer::StartInfo& startInfo, int8_t waveType) {
     {
         DriverCommand& cmdmgr{DriverCommand::GetInstance()};
+
         auto* command{cmdmgr.AllocCommand<DriverCommandWaveSoundPrepare>()};
         command->id = DriverCommandId_WsdPrepare;
         command->player = &m_PlayerInstance;
@@ -75,6 +76,7 @@ void WaveSound::RegisterDataLoadTask(const driver::WaveSoundLoader::LoadInfo& lo
                                      const driver::WaveSoundPlayer::StartInfo& startInfo) {
     {
         DriverCommand& cmdmgr{DriverCommand::GetInstance()};
+
         auto* command{cmdmgr.AllocCommand<DriverCommandWaveSoundLoad>()};
         command->id = DriverCommandId_WsdLoad;
         command->player = &m_PlayerInstance;
@@ -93,10 +95,26 @@ void WaveSound::SetChannelPriority(int32_t priority) {
     uint8_t uint8_t_prio{static_cast<uint8_t>(priority)};
     {
         DriverCommand& cmdmgr{DriverCommand::GetInstance()};
+
         auto* command{cmdmgr.AllocCommand<DriverCommandWaveSoundChannelPrio>()};
         command->id = DriverCommandId_WsdChannelPrio;
         command->player = &m_PlayerInstance;
         command->priority = uint8_t_prio;
+
+        cmdmgr.PushCommand(command);
+    }
+}
+
+void WaveSound::InitializeChannelParam(int32_t priority, bool isReleasePriorityFix) {
+    uint8_t uint8_t_prio{static_cast<uint8_t>(priority)};
+    {
+        DriverCommand& cmdmgr{DriverCommand::GetInstance()};
+
+        auto* command{cmdmgr.AllocCommand<DriverCommandWaveSoundChannelParam>()};
+        command->id = DriverCommandId_WsdChannelParam;
+        command->player = &m_PlayerInstance;
+        command->priority = uint8_t_prio;
+        command->isReleasePriorityFix = isReleasePriorityFix;
 
         cmdmgr.PushCommand(command);
     }
