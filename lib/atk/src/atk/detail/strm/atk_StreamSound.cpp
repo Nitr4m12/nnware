@@ -174,4 +174,16 @@ void StreamSound::ResetTrackOutputLine(uint32_t trackBitFlag) {
     cmdmgr.PushCommand(command);
 }
 
+void StreamSound::SetTrackMainOutVolume(uint32_t trackBitFlag, float volume) {
+    DriverCommand& cmdmgr{DriverCommand::GetInstance()};
+
+    auto* command{cmdmgr.AllocCommand<DriverCommandStreamSoundTrackParam>()};
+    command->id = DriverCommandId_StrmTrackTvVolume;
+    command->player = &m_PlayerInstance;
+    command->trackBitFlag = trackBitFlag;
+    command->value = volume;
+
+    cmdmgr.PushCommand(command);
+}
+
 }  // namespace nn::atk::detail
