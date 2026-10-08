@@ -71,4 +71,22 @@ void WaveSound::Prepare(const void* wsdFile, const void* waveFile,
     m_ChannelCount = std::min(waveInfo.channelCount, 2);
 }
 
+void WaveSound::RegisterDataLoadTask(const driver::WaveSoundLoader::LoadInfo& loadInfo,
+                                     const driver::WaveSoundPlayer::StartInfo& startInfo) {
+    {
+        DriverCommand& cmdmgr{DriverCommand::GetInstance()};
+        auto* command{cmdmgr.AllocCommand<DriverCommandWaveSoundLoad>()};
+        command->id = DriverCommandId_WsdLoad;
+        command->player = &m_PlayerInstance;
+        command->startInfo = startInfo;
+        command->arg.soundDataManager = loadInfo.soundDataManager;
+        command->arg.soundArchive = loadInfo.soundArchive;
+        command->arg.soundPlayer = loadInfo.soundPlayer;
+        command->arg.loadInfoWsd = *loadInfo.loadInfoWsd;
+        command->arg.index = startInfo.index;
+
+        cmdmgr.PushCommand(command);
+    }
+}
+
 }  // namespace nn::atk::detail
