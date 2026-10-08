@@ -50,4 +50,9 @@ void AdvancedWaveSound::Prepare(
     }
 }
 
+void AdvancedWaveSound::OnUpdatePlayerPriority() {
+    int priority{CalcCurrentPlayerPriority()};
+    m_InstanceManager.UpdatePriority(this, priority);
+}
+
 }  // namespace nn::atk::detail

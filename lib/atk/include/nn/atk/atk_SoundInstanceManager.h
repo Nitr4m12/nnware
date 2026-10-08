@@ -4,16 +4,16 @@
 #include <nn/util/util_IntrusiveList.h>
 
 #include <nn/atk/atk_Global.h>
-#include <nn/atk/atk_OutputReceiver.h>
 #include <nn/atk/atk_OutputAdditionalParam.h>
+#include <nn/atk/atk_OutputReceiver.h>
 
 namespace nn::atk::detail {
 
 template <typename Sound>
 class SoundInstanceManager {
 public:
-    using PriorityList =
-        util::IntrusiveList<Sound, util::IntrusiveListMemberNodeTraits<Sound, &Sound::m_PriorityLink>>; // 35
+    using PriorityList = util::IntrusiveList<
+        Sound, util::IntrusiveListMemberNodeTraits<Sound, &Sound::m_PriorityLink>>;
     using Iterator = typename PriorityList::iterator;
 
     SoundInstanceManager() = default;
@@ -54,18 +54,22 @@ public:
             soundPtr += sizeof(Sound);
 
 #if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
-            const size_t AdditionalParamBufferSize{OutputAdditionalParam::GetRequiredMemSize(config)};
+            const size_t AdditionalParamBufferSize{
+                OutputAdditionalParam::GetRequiredMemSize(config),
+            };
 
             if (AdditionalParamBufferSize != 0) {
                 [[maybe_unused]] const size_t AdditionalParamSize{sizeof(OutputAdditionalParam)};
 
-                OutputAdditionalParam* pAdditionalParam{reinterpret_cast<OutputAdditionalParam*>(additionalParamPtr)};
+                OutputAdditionalParam* pAdditionalParam{
+                    reinterpret_cast<OutputAdditionalParam*>(additionalParamPtr),
+                };
                 new (pAdditionalParam) OutputAdditionalParam;
 
-                [[maybe_unused]]void* pAdditionalParamBuffer;
+                [[maybe_unused]] void* pAdditionalParamBuffer;
                 OutputAdditionalParam* pAdditionalParamForPlayer;
                 new (pAdditionalParamForPlayer) OutputAdditionalParam;
-                [[maybe_unused]]const void* pAdditionalParamBufferForPlayer;
+                [[maybe_unused]] const void* pAdditionalParamBufferForPlayer;
             }
 #endif
         }
@@ -104,7 +108,10 @@ public:
         m_FreeList.push_back(*sound);
     }
 
-    void UpdatePriority(Sound* sound, int priority);
+    void UpdatePriority(Sound* sound, int priority) {
+        RemovePriorityList(sound);
+        InsertPriorityList(sound, priority);
+    }
     void SortPriorityList();
 
     Sound* GetLowestPrioritySound();
@@ -115,7 +122,16 @@ public:
     const PriorityList& GetSoundList() const { return m_PriorityList; }
     PriorityList& GetFreeList() { return m_FreeList; }
 
-    void InsertPriorityList(Sound* sound, int priority);
+    void InsertPriorityList(Sound* sound, int priority) {
+        Iterator itr{m_PriorityList.begin()};
+        while (itr != m_PriorityList.end()) {
+            if (itr->CalcCurrentPlayerPriority() > priority)
+                break;
+            ++itr;
+        }
+
+        m_PriorityList.insert(itr, *sound);
+    }
 
     void RemovePriorityList(Sound* sound) {
         m_PriorityList.erase(m_PriorityList.iterator_to(*sound));
