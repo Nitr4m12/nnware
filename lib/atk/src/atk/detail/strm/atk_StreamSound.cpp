@@ -79,4 +79,19 @@ void StreamSound::Prepare(const driver::StreamSoundPlayer::PrepareBaseArg& arg) 
     }
 }
 
+void StreamSound::PreparePrefetch(const void* strmPrefetchFile,
+                                  const driver::StreamSoundPlayer::PrepareBaseArg& arg) {
+    {
+        DriverCommand& cmdmgr{DriverCommand::GetInstance()};
+
+        auto* command{cmdmgr.AllocCommand<DriverCommandStreamSoundPreparePrefetch>()};
+        command->id = DriverCommandId_StrmPreparePrefetch;
+        command->player = &m_PlayerInstance;
+        command->arg.strmPrefetchFile = strmPrefetchFile;
+        command->arg.baseArg = arg;
+
+        cmdmgr.PushCommand(command);
+    }
+}
+
 }  // namespace nn::atk::detail
