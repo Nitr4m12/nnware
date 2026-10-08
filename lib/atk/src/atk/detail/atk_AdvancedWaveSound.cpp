@@ -1,4 +1,5 @@
 #include <nn/atk/detail/atk_AdvancedWaveSound.h>
+#include "nn/atk/atk_DriverCommand.h"
 
 namespace nn::atk::detail {
 
@@ -33,6 +34,19 @@ void AdvancedWaveSound::Finalize() {
         m_pTempSpecialHandle = nullptr;
         BasicSound::Finalize();
         m_InstanceManager.Free(this);
+    }
+}
+
+void AdvancedWaveSound::Prepare(
+    const driver::AdvancedWaveSoundPlayer::PrepareParameter& parameter) {
+    {
+        DriverCommand& cmdmgr{DriverCommand::GetInstance()};
+        auto* command{cmdmgr.AllocCommand<DriverCommandAdvancedWaveSoundPrepare>()};
+        command->id = DriverCommandId_AwsdPrepare;
+        command->player = &m_PlayerInstance;
+        command->parameter = parameter;
+
+        cmdmgr.PushCommand(command);
     }
 }
 
