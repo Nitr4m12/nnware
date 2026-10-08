@@ -264,4 +264,20 @@ void StreamSound::DetachTempSpecialHandle() {
     m_pTempSpecialHandle->DetachSound();
 }
 
+#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
+bool StreamSound::ReadStreamDataInfo(StreamDataInfo* info) const {
+    if (!IsPlayerAvailable())
+        return false;
+
+    return m_PlayerInstance.ReadStreamDataInfo(info);
+}
+#else
+bool StreamSound::ReadStreamSoundDataInfo(StreamSoundDataInfo* info) const {
+    if (!IsPlayerAvailable())
+        return false;
+
+    return m_PlayerInstance.ReadStreamSoundDataInfo(info);
+}
+#endif
+
 }  // namespace nn::atk::detail
