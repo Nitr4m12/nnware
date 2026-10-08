@@ -294,4 +294,11 @@ position_t StreamSound::GetPlaySamplePosition(bool isOriginalSamplePosition) con
     return m_PlayerInstance.GetPlaySamplePosition(isOriginalSamplePosition);
 }
 
+float StreamSound::GetFilledBufferPercentage() const {
+    if (!IsPlayerAvailable())
+        return 0;
+
+    return m_PlayerInstance.GetFilledBufferPercentage();
+}
+
 }  // namespace nn::atk::detail
