@@ -110,7 +110,7 @@ private:
     uint16_t m_AllocTrackFlag;
     bool m_InitializeFlag{false};
     uint8_t m_Padding[1];
-    uint32_t m_AvailableTrackBitFlag[2];
+    uint32_t m_AvailableTrackBitFlag[WaveChannelMax];
     void* m_pCacheBuffer{};
     size_t m_CacheSize{0};
     driver::StreamSoundPlayer m_PlayerInstance;
