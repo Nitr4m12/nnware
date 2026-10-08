@@ -255,4 +255,8 @@ void StreamSound::OnUpdatePlayerPriority() {
     m_Manager.UpdatePriority(this, CalcCurrentPlayerPriority());
 }
 
+bool StreamSound::IsAttachedTempSpecialHandle() {
+    return m_pTempSpecialHandle != nullptr;
+}
+
 }  // namespace nn::atk::detail
