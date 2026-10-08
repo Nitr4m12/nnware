@@ -94,4 +94,15 @@ void StreamSound::PreparePrefetch(const void* strmPrefetchFile,
     }
 }
 
+void StreamSound::UpdateMoveValue() {
+    BasicSound::UpdateMoveValue();
+
+    uint16_t bitFlag{m_AllocTrackFlag};
+    for (int trackNo{0}; trackNo < static_cast<int>(StreamTrackCount); ++trackNo) {
+        if (bitFlag & 1)
+            m_TrackVolume[trackNo].Update();
+        bitFlag >>= 1;
+    }
+}
+
 }  // namespace nn::atk::detail
