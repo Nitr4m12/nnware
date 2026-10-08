@@ -105,4 +105,24 @@ void StreamSound::UpdateMoveValue() {
     }
 }
 
+void StreamSound::OnUpdateParam() {
+    {
+        DriverCommand& cmdmgr{DriverCommand::GetInstance()};
+
+        uint16_t bitFlag{m_AllocTrackFlag};
+        for (int trackNo{0}; trackNo < static_cast<int>(StreamTrackCount); ++trackNo) {
+            if (bitFlag & 1) {
+                auto* command{cmdmgr.AllocCommand<DriverCommandStreamSoundTrackParam>()};
+                command->id = DriverCommandId_StrmTrackVolume;
+                command->player = &m_PlayerInstance;
+                command->trackBitFlag = 1 << trackNo;
+                command->value = m_TrackVolume[trackNo].GetValue();
+
+                cmdmgr.PushCommand(command);
+            }
+            bitFlag >>= 1;
+        }
+    }
+}
+
 }  // namespace nn::atk::detail
