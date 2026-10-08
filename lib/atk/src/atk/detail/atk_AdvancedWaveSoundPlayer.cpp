@@ -134,6 +134,44 @@ void AdvancedWaveSoundPlayer::Update() {
         TearDownPlayer();
 }
 
+bool AdvancedWaveSoundPlayer::UpdateTracks() {
+    bool isAllTrackPlayed{true};
+
+    int trackCount{m_AdvancedWaveSoundTrackInfoSet.waveSoundTrackCount};
+    for (int trackIndex{0}; trackIndex < trackCount; ++trackIndex) {
+        AdvancedWaveSoundTrackInfo& trackInfo{
+            m_AdvancedWaveSoundTrackInfoSet.waveSoundTrackInfo[trackIndex],
+        };
+        TrackParam& trackParam{m_TrackParamSet.trackParam[trackIndex]};
+
+        bool isAllClipPlayed{true};
+        for (int clipIndex{0}; clipIndex < trackInfo.waveSoundClipCount; ++clipIndex) {
+            AdvancedWaveSoundClipInfo& waveSoundClipInfo{trackInfo.waveSoundClipInfo[clipIndex]};
+            ClipParam& clipParam{trackParam.clipParam[clipIndex]};
+
+            if (!clipParam.isPlayed) {
+                if (waveSoundClipInfo.duration * 1000 < m_CurrentTime)
+                    StartClip(&clipParam, &waveSoundClipInfo);
+
+                isAllClipPlayed = false;
+            }
+
+            if (clipParam.pChannel != nullptr) {
+                if (clipParam.pChannel->IsActive()) {
+                    UpdateClip(&clipParam, &waveSoundClipInfo);
+                    isAllClipPlayed = false;
+                }
+                clipParam.pChannel = nullptr;
+            }
+        }
+
+        isAllTrackPlayed &= isAllClipPlayed;
+    }
+
+    m_CurrentTime += SoundFrameIntervalMicroSeconds;
+    return isAllTrackPlayed;
+}
+
 void AdvancedWaveSoundPlayer::InitializeTrackParams() {
     m_TrackParamSet.isPlayed = false;
     int trackCount{m_AdvancedWaveSoundTrackInfoSet.waveSoundTrackCount};
@@ -152,6 +190,44 @@ void AdvancedWaveSoundPlayer::InitializeTrackParams() {
             clipParam.pChannel = nullptr;
         }
     }
+}
+
+// TODO: bool AdvancedWaveSoundPlayer::StartClip
+
+void AdvancedWaveSoundPlayer::UpdateClip(ClipParam* pClipParam,
+                                         AdvancedWaveSoundClipInfo* pWaveSoundClipInfo) {
+    Channel* pChannel{pClipParam->pChannel};
+    if (pChannel == nullptr)
+        return;
+
+    int remainingTimeMilliSeconds{
+        static_cast<int>(pChannel->GetLength() - (SoundFrameIntervalMicroSeconds / 1000))};
+    if (remainingTimeMilliSeconds < 1) {
+        StopClip(pClipParam);
+        return;
+    }
+
+    pChannel->SetLength(remainingTimeMilliSeconds);
+
+    float volume{1.0f};
+    volume *= GetVolume();
+    volume *= pWaveSoundClipInfo->volume / 255.0f;
+    pChannel->SetUserVolume(volume);
+
+    float pitchRatio{1.0f};
+    pitchRatio *= GetPitch();
+    pitchRatio *= pWaveSoundClipInfo->pitch;
+    pChannel->SetUserPitchRatio(pitchRatio);
+
+    float panBase{0.0f};
+    panBase = (pWaveSoundClipInfo->pan - 64) / 64.0f;
+
+    OutputParam tvParam{GetTvParam()};
+    tvParam.pan += panBase;
+    pChannel->SetTvParam(tvParam);
+
+    pChannel->SetPanMode(GetPanMode());
+    pChannel->SetPanCurve(GetPanCurve());
 }
 
 void AdvancedWaveSoundPlayer::ReleaseClip(ClipParam* pClipParam) {

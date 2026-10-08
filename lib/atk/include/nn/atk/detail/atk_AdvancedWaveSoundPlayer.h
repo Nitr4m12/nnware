@@ -81,8 +81,8 @@ private:
     bool UpdateTracks();
     void ReleaseTracks();
 
-    bool StartClip(ClipParam* pClipParam, SoundArchive::AdvancedWaveSoundInfo* pWaveSoundClipInfo);
-    bool UpdateClip(ClipParam* pClipParam, SoundArchive::AdvancedWaveSoundInfo* pWaveSoundClipInfo);
+    bool StartClip(ClipParam* pClipParam, AdvancedWaveSoundClipInfo* pWaveSoundClipInfo);
+    void UpdateClip(ClipParam* pClipParam, AdvancedWaveSoundClipInfo* pWaveSoundClipInfo);
     void ReleaseClip(ClipParam* pClipParam);
     void StopClip(ClipParam* pClipParam);
 
