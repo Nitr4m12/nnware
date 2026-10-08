@@ -7,4 +7,24 @@ AdvancedWaveSound::AdvancedWaveSound(AdvancedWaveSoundInstanceManager& manager)
 
 AdvancedWaveSound::~AdvancedWaveSound() = default;
 
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+bool AdvancedWaveSound::Initialize()
+#else
+bool AdvancedWaveSound::Initialize(OutputReceiver* pOutputReceiver)
+#endif
+{
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    bool result{BasicSound::Initialize()};
+#else
+    bool result{BasicSound::Initialize(pOutputReceiver)};
+#endif
+
+    if (!result)
+        return false;
+
+    m_pTempSpecialHandle = nullptr;
+    m_IsInitialized = true;
+    return true;
+}
+
 }  // namespace nn::atk::detail
