@@ -1,5 +1,10 @@
 #include <nn/atk/atk_WaveSound.h>
 
+#include <algorithm>
+
+#include <nn/atk/atk_DriverCommand.h>
+#include <nn/atk/atk_WaveFileReader.h>
+
 namespace nn::atk::detail {
 
 WaveSound::WaveSound(WaveSoundInstanceManager& manager) : m_Manager{manager} {}
@@ -36,6 +41,34 @@ void WaveSound::Finalize() {
         BasicSound::Finalize();
         m_Manager.Free(this);
     }
+}
+
+void WaveSound::Prepare(const void* wsdFile, const void* waveFile,
+                        const driver::WaveSoundPlayer::StartInfo& startInfo, int8_t waveType) {
+    {
+        DriverCommand& cmdmgr{DriverCommand::GetInstance()};
+        auto* command{cmdmgr.AllocCommand<DriverCommandWaveSoundPrepare>()};
+        command->id = DriverCommandId_WsdPrepare;
+        command->player = &m_PlayerInstance;
+        command->startInfo = startInfo;
+        command->arg.wsdFile = wsdFile;
+        command->arg.waveFile = waveFile;
+        command->arg.waveType = waveType;
+
+        cmdmgr.PushCommand(command);
+    }
+
+    m_WaveType = waveType;
+    m_pWaveFile = waveFile;
+    m_IsCalledPrepare = true;
+
+    WaveFileReader reader{waveFile, waveType};
+    WaveInfo waveInfo;
+
+    if (!reader.ReadWaveInfo(&waveInfo, nullptr))
+        return;
+
+    m_ChannelCount = std::min(waveInfo.channelCount, 2);
 }
 
 }  // namespace nn::atk::detail
