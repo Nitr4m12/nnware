@@ -166,8 +166,9 @@ bool AdvancedWaveSoundPlayer::UpdateTracks() {
                 if (clipParam.pChannel->IsActive()) {
                     UpdateClip(&clipParam, &waveSoundClipInfo);
                     isAllClipPlayed = false;
+                } else {
+                    clipParam.pChannel = nullptr;
                 }
-                // clipParam.pChannel = nullptr;
             }
         }
 
