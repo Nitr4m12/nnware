@@ -20,33 +20,53 @@ public:
     ~SoundInstanceManager() = default;
 
     // UNCHECKED
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    static size_t GetObjectSize() {
+        size_t result{sizeof(Sound)};
+        return result;
+    }
+#else
     static size_t GetObjectSize(const SoundInstanceConfig& config) {
         size_t result{sizeof(Sound)};
 
-#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
         const size_t AdditionalParamBufferSize{OutputAdditionalParam::GetRequiredMemSize(config)};
         if (AdditionalParamBufferSize != 0) {
             result = sizeof(Sound) + sizeof(OutputAdditionalParam) + 8;
             result *= AdditionalParamBufferSize * 2;
         }
-#endif
 
         return result;
     }
+#endif
 
     // UNCHECKED
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    static size_t GetRequiredMemSize(int instanceCount) {
+        return GetObjectSize() * instanceCount;
+    }
+#else
     static size_t GetRequiredMemSize(int instanceCount, const SoundInstanceConfig& config) {
         return GetObjectSize(config) * instanceCount;
     }
+#endif
 
     // TODO
-    int32_t Create(void* buffer, size_t size, const SoundInstanceConfig& config) {
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    int32_t Create(void* buffer, size_t size)
+#else
+    int32_t Create(void* buffer, size_t size, const SoundInstanceConfig& config)
+#endif
+    {
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+        const size_t TotalObjectSize{GetObjectSize()};
+#else
         const size_t TotalObjectSize{GetObjectSize(config)};
+#endif
         const int ObjectCount{size / TotalObjectSize};
 
         uint8_t* ptr{reinterpret_cast<uint8_t*>(buffer)};
         uint8_t* soundPtr{ptr};
-        uint8_t* additionalParamPtr{ptr};
+        [[maybe_unused]] uint8_t* additionalParamPtr{ptr};
 
         for (int i{0}; i < ObjectCount; ++i) {
             Sound* sound{reinterpret_cast<Sound*>(soundPtr)};
@@ -54,6 +74,7 @@ public:
             soundPtr += sizeof(Sound);
 
 #if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+            // TODO
             const size_t AdditionalParamBufferSize{
                 OutputAdditionalParam::GetRequiredMemSize(config),
             };
@@ -80,7 +101,11 @@ public:
     // UNCHECKED
     void Destroy() {
         char* ptr{reinterpret_cast<char*>(m_pBuffer)};
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+        const size_t TotalObjectSize{GetObjectSize()};
+#else
         const size_t TotalObjectSize{GetObjectSize(m_SoundInstanceConfig)};
+#endif
         const int objectCount{m_BufferSize / TotalObjectSize};
 
         if (m_FreeList.empty())
@@ -112,6 +137,7 @@ public:
         RemovePriorityList(sound);
         InsertPriorityList(sound, priority);
     }
+
     void SortPriorityList();
 
     Sound* GetLowestPrioritySound();

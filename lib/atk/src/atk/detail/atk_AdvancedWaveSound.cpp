@@ -68,4 +68,8 @@ bool AdvancedWaveSound::IsPrepared() const {
     return m_PlayerInstance.IsPrepared();
 }
 
+driver::BasicSoundPlayer* AdvancedWaveSound::GetBasicSoundPlayerHandle() {
+    return &m_PlayerInstance;
+}
+
 }  // namespace nn::atk::detail

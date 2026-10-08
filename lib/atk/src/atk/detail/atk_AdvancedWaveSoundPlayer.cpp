@@ -231,7 +231,11 @@ bool AdvancedWaveSoundPlayer::StartClip(ClipParam* pClipParam,
     startOffsetSamples +=
         (static_cast<position_t>(pWaveSoundClipInfo->startOffset) * waveInfo.sampleRate) / 1000;
 
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    pChannel->Start(waveInfo, pWaveSoundClipInfo->duration, startOffsetSamples);
+#else
     pChannel->Start(waveInfo, pWaveSoundClipInfo->duration, startOffsetSamples, false);
+#endif
     pClipParam->pChannel = pChannel;
     pClipParam->isPlayed = true;
 
