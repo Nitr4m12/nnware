@@ -1,5 +1,8 @@
 #include <nn/atk/detail/atk_AdvancedWaveSoundPlayer.h>
 
+#include <nn/atk/atk_WaveArchiveFileReader.h>
+#include <nn/atk/atk_WaveFileReader.h>
+
 namespace {
 
 const uint32_t SoundFrameIntervalMicroSeconds{5000};
@@ -150,22 +153,25 @@ bool AdvancedWaveSoundPlayer::UpdateTracks() {
             ClipParam& clipParam{trackParam.clipParam[clipIndex]};
 
             if (!clipParam.isPlayed) {
-                if (waveSoundClipInfo.duration * 1000 < m_CurrentTime)
+                if (waveSoundClipInfo.position * 1000 < m_CurrentTime)
                     StartClip(&clipParam, &waveSoundClipInfo);
 
                 isAllClipPlayed = false;
             }
+
+            if (!clipParam.isPlayed)
+                continue;
 
             if (clipParam.pChannel != nullptr) {
                 if (clipParam.pChannel->IsActive()) {
                     UpdateClip(&clipParam, &waveSoundClipInfo);
                     isAllClipPlayed = false;
                 }
-                clipParam.pChannel = nullptr;
+                // clipParam.pChannel = nullptr;
             }
         }
 
-        isAllTrackPlayed &= isAllClipPlayed;
+        isAllTrackPlayed = isAllTrackPlayed && isAllClipPlayed;
     }
 
     m_CurrentTime += SoundFrameIntervalMicroSeconds;
@@ -192,7 +198,44 @@ void AdvancedWaveSoundPlayer::InitializeTrackParams() {
     }
 }
 
-// TODO: bool AdvancedWaveSoundPlayer::StartClip
+bool AdvancedWaveSoundPlayer::StartClip(ClipParam* pClipParam,
+                                        AdvancedWaveSoundClipInfo* pWaveSoundClipInfo) {
+    const int priority{128};
+
+    WaveArchiveFileReader warcReader{m_pWarcFile, false};
+    const void* pWaveFile{warcReader.GetWaveFile(pWaveSoundClipInfo->waveIndex)};
+    if (pWaveFile == nullptr)
+        return false;
+
+    WaveInfo waveInfo;
+    {
+        WaveFileReader waveReader{pWaveFile, WaveType_Nwwav};
+        if (!waveReader.ReadWaveInfo(&waveInfo, nullptr))
+            return false;
+    }
+
+    Channel* pChannel{Channel::AllocChannel(waveInfo.channelCount > 2 ? 2 : waveInfo.channelCount,
+                                            priority, nullptr, this)};
+    if (pChannel == nullptr)
+        return false;
+
+    pChannel->SetUpdateType(m_UpdateType);
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    pChannel->SetSubMixIndex(m_SubMixIndex);
+#else
+    pChannel->SetOutputReceiver(GetOutputReceiver());
+#endif
+
+    uint32_t startOffsetSamples{0};
+    startOffsetSamples +=
+        (static_cast<position_t>(pWaveSoundClipInfo->startOffset) * waveInfo.sampleRate) / 1000;
+
+    pChannel->Start(waveInfo, pWaveSoundClipInfo->duration, startOffsetSamples, false);
+    pClipParam->pChannel = pChannel;
+    pClipParam->isPlayed = true;
+
+    return true;
+}
 
 void AdvancedWaveSoundPlayer::UpdateClip(ClipParam* pClipParam,
                                          AdvancedWaveSoundClipInfo* pWaveSoundClipInfo) {
@@ -202,7 +245,7 @@ void AdvancedWaveSoundPlayer::UpdateClip(ClipParam* pClipParam,
 
     int remainingTimeMilliSeconds{
         static_cast<int>(pChannel->GetLength() - (SoundFrameIntervalMicroSeconds / 1000))};
-    if (remainingTimeMilliSeconds < 1) {
+    if (remainingTimeMilliSeconds <= 0) {
         StopClip(pClipParam);
         return;
     }
