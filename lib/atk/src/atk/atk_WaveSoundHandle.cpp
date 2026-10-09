@@ -11,6 +11,11 @@ void WaveSoundHandle::detail_AttachSoundAsTempHandle(detail::WaveSound* sound) {
     m_pSound->m_pTempSpecialHandle = this;
 }
 
+void WaveSoundHandle::ForceStop() {
+    if (IsAttachedSound())
+        m_pSound->ForceStop();
+}
+
 void WaveSoundHandle::DetachSound() {
     if (!IsAttachedSound())
         return;
