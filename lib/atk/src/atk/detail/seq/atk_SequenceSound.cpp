@@ -25,4 +25,13 @@ bool SequenceSound::Initialize(OutputReceiver* pOutputReceiver)
     return true;
 }
 
+void SequenceSound::Finalize() {
+    if (m_InitializeFlag) {
+        m_InitializeFlag = false;
+        m_IsCalledPrepare = false;
+        BasicSound::Finalize();
+        m_Manager.Free(this);
+    }
+}
+
 }  // namespace nn::atk::detail
