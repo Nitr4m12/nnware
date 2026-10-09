@@ -254,4 +254,16 @@ void SequenceSound::SetTrackSurroundPan(uint32_t trackBitFlag, float surroundPan
     cmdmgr.PushCommand(command);
 }
 
+void SequenceSound::SetTrackMainSend(uint32_t trackBitFlag, float send) {
+    DriverCommand& cmdmgr{DriverCommand::GetInstance()};
+
+    auto* command{cmdmgr.AllocCommand<DriverCommandSequenceSoundTrackParam>()};
+    command->id = DriverCommandId_SeqTrackTvMainSend;
+    command->player = &m_PlayerInstance;
+    command->trackBitFlag = trackBitFlag;
+    command->value = send;
+
+    cmdmgr.PushCommand(command);
+}
+
 }  // namespace nn::atk::detail
