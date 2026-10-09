@@ -56,7 +56,15 @@ public:
 #endif
     void Finalize() override;
 
-    bool IsPrepared() const override;
+    bool IsPrepared() const override {
+        if (m_IsCalledPrepare)
+            return true;
+
+        if (!IsPlayerAvailable())
+            return false;
+
+        return m_PlayerInstance.IsPrepared();
+    }
 
     void SetTempoRatio(float tempoRatio);
     void SetChannelPriority(int32_t priority);
