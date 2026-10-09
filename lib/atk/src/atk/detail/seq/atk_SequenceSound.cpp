@@ -279,4 +279,16 @@ void SequenceSound::SetTrackFxSend(uint32_t trackBitFlag, AuxBus bus, float send
     cmdmgr.PushCommand(command);
 }
 
+void SequenceSound::SetTrackLpfFreq(uint32_t trackBitFlag, float lpfFreq) {
+    DriverCommand& cmdmgr{DriverCommand::GetInstance()};
+
+    auto* command{cmdmgr.AllocCommand<DriverCommandSequenceSoundTrackParam>()};
+    command->id = DriverCommandId_SeqTrackLpf;
+    command->player = &m_PlayerInstance;
+    command->trackBitFlag = trackBitFlag;
+    command->value = lpfFreq;
+
+    cmdmgr.PushCommand(command);
+}
+
 }  // namespace nn::atk::detail
