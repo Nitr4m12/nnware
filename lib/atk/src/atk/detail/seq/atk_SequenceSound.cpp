@@ -1,4 +1,6 @@
 #include <nn/atk/atk_SequenceSound.h>
+#include "nn/atk/atk_DriverCommand.h"
+#include "nn/atk/atk_SequenceSoundPlayer.h"
 
 namespace nn::atk::detail {
 
@@ -31,6 +33,32 @@ void SequenceSound::Finalize() {
         m_IsCalledPrepare = false;
         BasicSound::Finalize();
         m_Manager.Free(this);
+    }
+}
+
+void SequenceSound::Setup(driver::SequenceTrackAllocator* trackAllocator, uint32_t allocTracks,
+                          driver::NoteOnCallback* noteOnCallback, int32_t channelPriority,
+                          bool isReleasePriorityFix, SequenceUserProcCallback userproc,
+                          void* userprocArg) {
+    {
+        DriverCommand& cmdmgr{DriverCommand::GetInstance()};
+
+        auto* command{cmdmgr.AllocCommand<DriverCommandSequenceSoundSetup>()};
+        command->id = DriverCommandId_SeqSetup;
+        command->player = &m_PlayerInstance;
+
+        driver::SequenceSoundPlayer::SetupArg arg;
+        arg.trackAllocator = trackAllocator;
+        arg.allocTracks = allocTracks;
+        arg.callback = noteOnCallback;
+
+        command->arg = arg;
+        command->channelPriority = channelPriority;
+        command->isReleasePriorityFix = isReleasePriorityFix;
+        command->userproc = reinterpret_cast<uintptr_t>(userproc);
+        command->userprocArg = userprocArg;
+
+        cmdmgr.PushCommand(command);
     }
 }
 
