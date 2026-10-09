@@ -363,4 +363,13 @@ void SequenceSound::ResetTrackOutputLine(uint32_t trackBitFlag) {
     cmdmgr.PushCommand(command);
 }
 
+bool SequenceSound::ReadVariable(int32_t varNo, int16_t* var) const {
+    if (IsPlayerAvailable())
+        *var = m_PlayerInstance.GetLocalVariable(varNo);
+    else
+        *var = -1;
+
+    return true;
+}
+
 }  // namespace nn::atk::detail
