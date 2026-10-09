@@ -376,4 +376,18 @@ bool SequenceSound::ReadGlobalVariable(int32_t varNo, int16_t* var) {
     return true;
 }
 
+bool SequenceSound::ReadTrackVariable(int32_t trackNo, int32_t varNo, int16_t* var) const {
+    if (IsPlayerAvailable()) {
+        const driver::SequenceTrack* track{m_PlayerInstance.GetPlayerTrack(trackNo)};
+        if (track != nullptr)
+            *var = track->GetTrackVariable(varNo);
+        else
+            *var = -1;
+    } else {
+        *var = -1;
+    }
+
+    return true;
+}
+
 }  // namespace nn::atk::detail
