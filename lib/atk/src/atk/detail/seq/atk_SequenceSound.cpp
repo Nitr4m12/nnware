@@ -442,4 +442,25 @@ void SequenceSound::DetachTempSpecialHandle() {
     m_pTempSpecialHandle->DetachSound();
 }
 
+void SequenceSound::RegisterDataLoadTask(const driver::SequenceSoundLoader::LoadInfo& loadInfo,
+                                         const driver::SequenceSoundPlayer::StartInfo& startInfo) {
+    {
+        DriverCommand& cmdmgr{DriverCommand::GetInstance()};
+
+        auto* command{cmdmgr.AllocCommand<DriverCommandSequenceSoundLoad>()};
+        command->id = DriverCommandId_SeqLoad;
+        command->player = &m_PlayerInstance;
+        command->startInfo = startInfo;
+        command->arg.soundArchive = loadInfo.soundArchive;
+        command->arg.soundDataManager = loadInfo.soundDataManager;
+        command->arg.soundPlayer = loadInfo.soundPlayer;
+        command->arg.loadInfoSeq = *loadInfo.loadInfoSeq;
+
+        for (int i{0}; i < static_cast<int>(SeqBankMax); ++i)
+            command->arg.loadInfoBanks[i] = *loadInfo.loadInfoBanks[i];
+
+        cmdmgr.PushCommand(command);
+    }
+}
+
 }  // namespace nn::atk::detail
