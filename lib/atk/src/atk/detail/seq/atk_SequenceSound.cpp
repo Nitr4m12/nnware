@@ -214,4 +214,20 @@ void SequenceSound::SetTrackMainOutVolume(uint32_t trackBitFlag, float volume) {
     cmdmgr.PushCommand(command);
 }
 
+void SequenceSound::SetTrackChannelMixParameter(uint32_t trackBitFlag, uint32_t srcChNo,
+                                                const MixParameter& mixParam) {
+    DriverCommand& cmdmgr{DriverCommand::GetInstance()};
+
+    auto* command{cmdmgr.AllocCommand<DriverCommandSequenceSoundTrackMixParameter>()};
+    command->id = DriverCommandId_SeqTrackTvMixParameter;
+    command->player = &m_PlayerInstance;
+    command->trackBitFlag = trackBitFlag;
+    command->srcChNo = srcChNo;
+
+    for (int channel{0}; channel < ChannelIndex_Count; ++channel)
+        command->param.ch[channel] = mixParam.ch[channel];
+
+    cmdmgr.PushCommand(command);
+}
+
 }  // namespace nn::atk::detail
