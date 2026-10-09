@@ -2,6 +2,15 @@
 
 namespace nn::atk {
 
+void StreamSoundHandle::detail_AttachSoundAsTempHandle(detail::StreamSound* sound) {
+    m_pSound = sound;
+
+    if (m_pSound->IsAttachedTempSpecialHandle())
+        m_pSound->DetachTempSpecialHandle();
+
+    m_pSound->m_pTempSpecialHandle = this;
+}
+
 void StreamSoundHandle::DetachSound() {
     if (!IsAttachedSound())
         return;
