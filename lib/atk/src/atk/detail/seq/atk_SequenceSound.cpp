@@ -1,7 +1,6 @@
 #include <nn/atk/atk_SequenceSound.h>
 
 #include <nn/atk/atk_DriverCommand.h>
-#include "nn/atk/atk_Global.h"
 
 namespace nn::atk::detail {
 
@@ -369,6 +368,11 @@ bool SequenceSound::ReadVariable(int32_t varNo, int16_t* var) const {
     else
         *var = -1;
 
+    return true;
+}
+
+bool SequenceSound::ReadGlobalVariable(int32_t varNo, int16_t* var) {
+    *var = driver::SequenceSoundPlayer::GetGlobalVariable(varNo);
     return true;
 }
 
