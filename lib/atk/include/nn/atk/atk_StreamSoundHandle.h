@@ -1,7 +1,5 @@
 #pragma once
 
-#include <nn/util/util_BitFlagSet.h>
-
 #include <nn/atk/atk_SoundHandle.h>
 #include <nn/atk/atk_StreamSound.h>
 
@@ -333,7 +331,7 @@ public:
 private:
     NN_NO_COPY(StreamSoundHandle);
 
-    detail::StreamSound* m_pSound;
+    detail::StreamSound* m_pSound{};
 };
 
 }  // namespace nn::atk
