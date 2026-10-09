@@ -165,4 +165,17 @@ void SequenceSound::SetTrackMute(uint32_t trackBitFlag, bool muteFlag) {
     cmdmgr.PushCommand(command);
 }
 
+void SequenceSound::SetTrackSilence(uint32_t trackBitFlag, bool silenceFlag, int32_t fadeFrames) {
+    DriverCommand& cmdmgr{DriverCommand::GetInstance()};
+
+    auto* command{cmdmgr.AllocCommand<DriverCommandSequenceSoundTrackSilence>()};
+    command->id = DriverCommandId_SeqTrackSilence;
+    command->player = &m_PlayerInstance;
+    command->trackBitFlag = trackBitFlag;
+    command->silenceFlag = silenceFlag;
+    command->fadeFrames = fadeFrames;
+
+    cmdmgr.PushCommand(command);
+}
+
 }  // namespace nn::atk::detail
