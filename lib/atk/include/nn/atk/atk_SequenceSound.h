@@ -122,7 +122,7 @@ private:
     void DetachTempSpecialHandle() override;
     void OnUpdatePlayerPriority() override;
 
-    void OnUpdateParam() override;
+    void OnUpdateParam() override {}
     driver::BasicSoundPlayer* GetBasicSoundPlayerHandle() override { return &m_PlayerInstance; }
 
     void Skip(driver::SequenceSoundPlayer::StartOffsetType offsetType, int32_t offset);
