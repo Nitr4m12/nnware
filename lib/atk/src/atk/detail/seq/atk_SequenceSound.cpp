@@ -1,6 +1,6 @@
 #include <nn/atk/atk_SequenceSound.h>
-#include "nn/atk/atk_DriverCommand.h"
-#include "nn/atk/atk_SequenceSoundPlayer.h"
+
+#include <nn/atk/atk_DriverCommand.h>
 
 namespace nn::atk::detail {
 
@@ -57,6 +57,20 @@ void SequenceSound::Setup(driver::SequenceTrackAllocator* trackAllocator, uint32
         command->isReleasePriorityFix = isReleasePriorityFix;
         command->userproc = reinterpret_cast<uintptr_t>(userproc);
         command->userprocArg = userprocArg;
+
+        cmdmgr.PushCommand(command);
+    }
+}
+
+void SequenceSound::Skip(driver::SequenceSoundPlayer::StartOffsetType offsetType, int32_t offset) {
+    {
+        DriverCommand& cmdmgr{DriverCommand::GetInstance()};
+
+        auto* command{cmdmgr.AllocCommand<DriverCommandSequenceSoundSkip>()};
+        command->id = DriverCommandId_SeqSkip;
+        command->player = &m_PlayerInstance;
+        command->offsetType = offsetType;
+        command->offset = offset;
 
         cmdmgr.PushCommand(command);
     }
