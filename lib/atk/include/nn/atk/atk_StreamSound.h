@@ -67,7 +67,7 @@ public:
     int64_t GetPlayLoopCount() const;
     position_t GetPlaySamplePosition(bool isOriginalSamplePosition) const;
 
-    uint32_t GetAvailableTrackBitFlag(uint32_t index) { return m_AvailableTrackBitFlag[index]; }
+    uint32_t GetAvailableTrackBitFlag(uint32_t channel) { return m_AvailableTrackBitFlag[channel]; }
 
     float GetFilledBufferPercentage() const;
     int32_t GetBufferBlockCount(WaveBuffer::Status status) const;
@@ -109,6 +109,8 @@ protected:
     void OnUpdatePlayerPriority() override;
 
 private:
+    friend StreamSoundHandle;
+
     void OnUpdateParam() override;
 
     StreamSoundHandle* m_pTempSpecialHandle;

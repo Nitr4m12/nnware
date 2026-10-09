@@ -280,7 +280,7 @@ public:
 
     uint32_t GetId() const {
         if (!IsAttachedSound())
-            return 0;
+            return InvalidSoundId;
 
         return m_pSound->GetId();
     }

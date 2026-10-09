@@ -146,32 +146,27 @@ public:
     }
 
 #if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
-    // UNCHECKED
     void SetMixVolume(int subMixBus, const MixVolume& mixVolume) {
         if (IsAttachedSound())
             m_pSound->SetOutputBusMixVolume(OutputDevice_Main, 0, subMixBus,
                                             {mixVolume.channel, 6});
     }
 
-    // UNCHECKED
     void SetBusMixVolumeEnabled(int subMixBus, bool isEnabled) {
         if (IsAttachedSound())
             m_pSound->SetOutputBusMixVolumeEnabled(OutputDevice_Main, subMixBus, isEnabled);
     }
 
-    // UNCHECKED
     void SetBusMixVolume(int srcChNo, int subMixBus, const ChannelMixVolume& param) {
         if (IsAttachedSound())
             m_pSound->SetOutputBusMixVolume(OutputDevice_Main, srcChNo, subMixBus, param);
     }
 
-    // UNCHECKED
     void SetMixVolume(const MixVolume& mixVolume) {
         if (IsAttachedSound())
             m_pSound->SetOutputBusMixVolume(OutputDevice_Main, 0, 0, {mixVolume.channel, 6});
     }
 
-    // UNCHECKED
     void SetBusMixVolume(int subMixBus, const ChannelMixVolume& param) {
         if (IsAttachedSound())
             m_pSound->SetOutputBusMixVolume(OutputDevice_Main, 0, subMixBus, param);
