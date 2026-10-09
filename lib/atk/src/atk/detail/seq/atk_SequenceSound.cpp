@@ -1,6 +1,7 @@
 #include <nn/atk/atk_SequenceSound.h>
 
 #include <nn/atk/atk_DriverCommand.h>
+#include <nn/atk/atk_SequenceSoundHandle.h>
 
 namespace nn::atk::detail {
 
@@ -435,6 +436,10 @@ uint32_t SequenceSound::GetTick() const {
 
 bool SequenceSound::IsAttachedTempSpecialHandle() {
     return m_pTempSpecialHandle != nullptr;
+}
+
+void SequenceSound::DetachTempSpecialHandle() {
+    m_pTempSpecialHandle->DetachSound();
 }
 
 }  // namespace nn::atk::detail
