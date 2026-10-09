@@ -1,6 +1,7 @@
 #include <nn/atk/atk_SequenceSound.h>
 
 #include <nn/atk/atk_DriverCommand.h>
+#include "nn/atk/atk_Global.h"
 
 namespace nn::atk::detail {
 
@@ -84,6 +85,9 @@ void SequenceSound::Prepare(const Resource& res,
         arg.delayTime = startInfo.delayTime;
         arg.delayCount = startInfo.delayCount;
         arg.updateType = startInfo.updateType;
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+        arg.subMixIndex = startInfo.subMixIndex;
+#endif
 
         command->arg = arg;
 
@@ -135,6 +139,30 @@ void SequenceSound::SetChannelPriority(int32_t priority) {
 void SequenceSound::OnUpdatePlayerPriority() {
     int priority{CalcCurrentPlayerPriority()};
     m_Manager.UpdatePriority(this, priority);
+}
+
+void SequenceSound::SetTrackMute(uint32_t trackBitFlag, SequenceMute mute) {
+    DriverCommand& cmdmgr{DriverCommand::GetInstance()};
+
+    auto* command{cmdmgr.AllocCommand<DriverCommandSequenceSoundTrackMute>()};
+    command->id = DriverCommandId_SeqTrackMute;
+    command->player = &m_PlayerInstance;
+    command->trackBitFlag = trackBitFlag;
+    command->mute = mute;
+
+    cmdmgr.PushCommand(command);
+}
+
+void SequenceSound::SetTrackMute(uint32_t trackBitFlag, bool muteFlag) {
+    DriverCommand& cmdmgr{DriverCommand::GetInstance()};
+
+    auto* command{cmdmgr.AllocCommand<DriverCommandSequenceSoundTrackMute>()};
+    command->id = DriverCommandId_SeqTrackMute;
+    command->player = &m_PlayerInstance;
+    command->trackBitFlag = trackBitFlag;
+    command->mute = muteFlag ? SequenceMute_Stop : SequenceMute_Off;
+
+    cmdmgr.PushCommand(command);
 }
 
 }  // namespace nn::atk::detail
