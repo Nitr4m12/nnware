@@ -110,4 +110,15 @@ void SequenceSound::Skip(driver::SequenceSoundPlayer::StartOffsetType offsetType
     }
 }
 
+void SequenceSound::SetTempoRatio(float tempoRatio) {
+    DriverCommand& cmdmgr{DriverCommand::GetInstance()};
+
+    auto* command{cmdmgr.AllocCommand<DriverCommandSequenceSoundTempoRatio>()};
+    command->id = DriverCommandId_SeqTempoRatio;
+    command->player = &m_PlayerInstance;
+    command->tempoRatio = tempoRatio;
+
+    cmdmgr.PushCommand(command);
+}
+
 }  // namespace nn::atk::detail
