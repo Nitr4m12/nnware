@@ -190,4 +190,16 @@ void SequenceSound::SetTrackVolume(uint32_t trackBitFlag, float volume) {
     cmdmgr.PushCommand(command);
 }
 
+void SequenceSound::SetTrackPitch(uint32_t trackBitFlag, float pitch) {
+    DriverCommand& cmdmgr{DriverCommand::GetInstance()};
+
+    auto* command{cmdmgr.AllocCommand<DriverCommandSequenceSoundTrackParam>()};
+    command->id = DriverCommandId_SeqTrackPitch;
+    command->player = &m_PlayerInstance;
+    command->trackBitFlag = trackBitFlag;
+    command->value = pitch;
+
+    cmdmgr.PushCommand(command);
+}
+
 }  // namespace nn::atk::detail
