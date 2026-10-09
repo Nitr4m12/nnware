@@ -230,4 +230,16 @@ void SequenceSound::SetTrackChannelMixParameter(uint32_t trackBitFlag, uint32_t 
     cmdmgr.PushCommand(command);
 }
 
+void SequenceSound::SetTrackPan(uint32_t trackBitFlag, float pan) {
+    DriverCommand& cmdmgr{DriverCommand::GetInstance()};
+
+    auto* command{cmdmgr.AllocCommand<DriverCommandSequenceSoundTrackParam>()};
+    command->id = DriverCommandId_SeqTrackTvPan;
+    command->player = &m_PlayerInstance;
+    command->trackBitFlag = trackBitFlag;
+    command->value = pan;
+
+    cmdmgr.PushCommand(command);
+}
+
 }  // namespace nn::atk::detail
