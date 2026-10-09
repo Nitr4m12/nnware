@@ -402,4 +402,15 @@ void SequenceSound::WriteVariable(int32_t varNo, int16_t var) {
     cmdmgr.PushCommand(command);
 }
 
+void SequenceSound::WriteGlobalVariable(int32_t varNo, int16_t var) {
+    DriverCommand& cmdmgr{DriverCommand::GetInstance()};
+
+    auto* command{cmdmgr.AllocCommand<DriverCommandSequenceSoundSetVar>()};
+    command->id = DriverCommandId_SeqSetGvar;
+    command->varNo = varNo;
+    command->var = var;
+
+    cmdmgr.PushCommand(command);
+}
+
 }  // namespace nn::atk::detail
