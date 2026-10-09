@@ -328,4 +328,16 @@ void SequenceSound::SetTrackTranspose(uint32_t trackBitFlag, int8_t transpose) {
     cmdmgr.PushCommand(command);
 }
 
+void SequenceSound::SetTrackVelocityRange(uint32_t trackBitFlag, uint8_t velocityRange) {
+    DriverCommand& cmdmgr{DriverCommand::GetInstance()};
+
+    auto* command{cmdmgr.AllocCommand<DriverCommandSequenceSoundTrackVelocityRange>()};
+    command->id = DriverCommandId_SeqTrackVelocityRange;
+    command->player = &m_PlayerInstance;
+    command->trackBitFlag = trackBitFlag;
+    command->range = velocityRange;
+
+    cmdmgr.PushCommand(command);
+}
+
 }  // namespace nn::atk::detail
