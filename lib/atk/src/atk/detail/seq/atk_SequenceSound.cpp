@@ -316,4 +316,16 @@ void SequenceSound::SetTrackBankIndex(uint32_t trackBitFlag, int32_t bankIndex) 
     cmdmgr.PushCommand(command);
 }
 
+void SequenceSound::SetTrackTranspose(uint32_t trackBitFlag, int8_t transpose) {
+    DriverCommand& cmdmgr{DriverCommand::GetInstance()};
+
+    auto* command{cmdmgr.AllocCommand<DriverCommandSequenceSoundTrackTranspose>()};
+    command->id = DriverCommandId_SeqTrackTranspose;
+    command->player = &m_PlayerInstance;
+    command->trackBitFlag = trackBitFlag;
+    command->transpose = transpose;
+
+    cmdmgr.PushCommand(command);
+}
+
 }  // namespace nn::atk::detail
