@@ -291,4 +291,17 @@ void SequenceSound::SetTrackLpfFreq(uint32_t trackBitFlag, float lpfFreq) {
     cmdmgr.PushCommand(command);
 }
 
+void SequenceSound::SetTrackBiquadFilter(uint32_t trackBitFlag, int32_t type, float value) {
+    DriverCommand& cmdmgr{DriverCommand::GetInstance()};
+
+    auto* command{cmdmgr.AllocCommand<DriverCommandSequenceSoundTrackBiquad>()};
+    command->id = DriverCommandId_SeqTrackBiquad;
+    command->player = &m_PlayerInstance;
+    command->trackBitFlag = trackBitFlag;
+    command->type = type;
+    command->value = value;
+
+    cmdmgr.PushCommand(command);
+}
+
 }  // namespace nn::atk::detail
