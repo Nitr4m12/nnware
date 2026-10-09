@@ -118,6 +118,8 @@ public:
     util::IntrusiveListNode m_PriorityLink;
 
 private:
+    friend SequenceSoundHandle;
+
     bool IsAttachedTempSpecialHandle() override;
     void DetachTempSpecialHandle() override;
     void OnUpdatePlayerPriority() override;

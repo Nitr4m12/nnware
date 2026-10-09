@@ -22,7 +22,7 @@ public:
     using TrackBitFlagSet = util::BitFlagSet<16, void>;
 
     SequenceSoundHandle();
-    explicit SequenceSoundHandle(SoundHandle* pSoundHandle);
+    explicit SequenceSoundHandle(SoundHandle* handle);
 
     ~SequenceSoundHandle();
 
@@ -342,7 +342,7 @@ public:
         return m_pSound->GetProcessTick(profile);
     }
 
-    void detail_AttachSoundAsTempHandle(detail::SequenceSound* pSound);
+    void detail_AttachSoundAsTempHandle(detail::SequenceSound* sound);
 
     detail::SequenceSound* detail_GetAttachedSound() { return m_pSound; }
     const detail::SequenceSound* detail_GetAttachedSound() const { return m_pSound; }
