@@ -2,6 +2,15 @@
 
 namespace nn::atk {
 
+void WaveSoundHandle::detail_AttachSoundAsTempHandle(detail::WaveSound* sound) {
+    m_pSound = sound;
+
+    if (m_pSound->IsAttachedTempSpecialHandle())
+        m_pSound->DetachTempSpecialHandle();
+
+    m_pSound->m_pTempSpecialHandle = this;
+}
+
 void WaveSoundHandle::DetachSound() {
     if (!IsAttachedSound())
         return;
