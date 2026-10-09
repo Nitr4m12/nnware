@@ -2,14 +2,10 @@
 
 #include <nn/util/util_BitFlagSet.h>
 
+#include <nn/atk/atk_SequenceSound.h>
 #include <nn/atk/atk_SoundHandle.h>
 
 namespace nn::atk {
-namespace detail {
-
-class SequenceSound;
-
-}  // namespace detail
 
 class SequenceSoundHandle {
 public:
