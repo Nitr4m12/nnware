@@ -433,4 +433,8 @@ uint32_t SequenceSound::GetTick() const {
     return m_PlayerInstance.GetTickCounter();
 }
 
+bool SequenceSound::IsAttachedTempSpecialHandle() {
+    return m_pTempSpecialHandle != nullptr;
+}
+
 }  // namespace nn::atk::detail
