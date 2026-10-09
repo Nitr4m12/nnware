@@ -426,4 +426,11 @@ void SequenceSound::WriteTrackVariable(int32_t trackNo, int32_t varNo, int16_t v
     cmdmgr.PushCommand(command);
 }
 
+uint32_t SequenceSound::GetTick() const {
+    if (!IsPlayerAvailable())
+        return 0;
+
+    return m_PlayerInstance.GetTickCounter();
+}
+
 }  // namespace nn::atk::detail
