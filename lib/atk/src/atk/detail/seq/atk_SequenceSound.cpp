@@ -242,4 +242,16 @@ void SequenceSound::SetTrackPan(uint32_t trackBitFlag, float pan) {
     cmdmgr.PushCommand(command);
 }
 
+void SequenceSound::SetTrackSurroundPan(uint32_t trackBitFlag, float surroundPan) {
+    DriverCommand& cmdmgr{DriverCommand::GetInstance()};
+
+    auto* command{cmdmgr.AllocCommand<DriverCommandSequenceSoundTrackParam>()};
+    command->id = DriverCommandId_SeqTrackTvSpan;
+    command->player = &m_PlayerInstance;
+    command->trackBitFlag = trackBitFlag;
+    command->value = surroundPan;
+
+    cmdmgr.PushCommand(command);
+}
+
 }  // namespace nn::atk::detail
