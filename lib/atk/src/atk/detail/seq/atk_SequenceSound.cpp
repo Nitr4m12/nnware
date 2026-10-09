@@ -121,4 +121,15 @@ void SequenceSound::SetTempoRatio(float tempoRatio) {
     cmdmgr.PushCommand(command);
 }
 
+void SequenceSound::SetChannelPriority(int32_t priority) {
+    DriverCommand& cmdmgr{DriverCommand::GetInstance()};
+
+    auto* command{cmdmgr.AllocCommand<DriverCommandSequenceSoundChannelPrio>()};
+    command->id = DriverCommandId_SeqChannelPrio;
+    command->player = &m_PlayerInstance;
+    command->priority = static_cast<uint8_t>(priority);
+
+    cmdmgr.PushCommand(command);
+}
+
 }  // namespace nn::atk::detail
