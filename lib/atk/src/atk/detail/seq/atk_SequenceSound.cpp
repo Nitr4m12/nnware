@@ -132,4 +132,9 @@ void SequenceSound::SetChannelPriority(int32_t priority) {
     cmdmgr.PushCommand(command);
 }
 
+void SequenceSound::OnUpdatePlayerPriority() {
+    int priority{CalcCurrentPlayerPriority()};
+    m_Manager.UpdatePriority(this, priority);
+}
+
 }  // namespace nn::atk::detail
