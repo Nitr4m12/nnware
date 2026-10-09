@@ -272,13 +272,11 @@ public:
 
     bool CalculateSoundParamCalculationValues(SoundParamCalculationValues* pOutValue) const;
 
-    // UNCHECKED
     void SetChannelMixParameter(uint32_t srcChNo, const MixParameter& param) {
         if (IsAttachedSound())
             m_pSound->SetOutputChannelMixParameter(OutputDevice_Main, srcChNo, param);
     }
 
-    // UNCHECKED
     void SetChannelMixParameter(const MixParameter& param) {
         if (IsAttachedSound())
             m_pSound->SetOutputChannelMixParameter(OutputDevice_Main, 0, param);

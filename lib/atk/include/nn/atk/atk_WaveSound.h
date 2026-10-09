@@ -57,7 +57,7 @@ public:
             m_PlayerInstance.SetLoaderManager(&manager);
     }
 
-    DebugSoundType GetSoundType() { return DebugSoundType_Wavesound; }
+    DebugSoundType GetSoundType() const { return DebugSoundType_Wavesound; }
 
     os::Tick GetProcessTick(const SoundProfile& profile) {
         if (!IsPlayerAvailable())
@@ -69,6 +69,8 @@ public:
     util::IntrusiveListNode m_PriorityLink;
 
 private:
+    friend WaveSoundHandle;
+
     bool IsAttachedTempSpecialHandle() override;
     void DetachTempSpecialHandle() override;
     void OnUpdatePlayerPriority() override;
