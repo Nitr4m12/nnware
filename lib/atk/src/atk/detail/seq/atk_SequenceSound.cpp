@@ -62,6 +62,40 @@ void SequenceSound::Setup(driver::SequenceTrackAllocator* trackAllocator, uint32
     }
 }
 
+void SequenceSound::Prepare(const Resource& res,
+                            const driver::SequenceSoundPlayer::StartInfo& startInfo) {
+    {
+        DriverCommand& cmdmgr{DriverCommand::GetInstance()};
+
+        auto* command{cmdmgr.AllocCommand<DriverCommandSequenceSoundPrepare>()};
+        command->id = DriverCommandId_SeqPrepare;
+        command->player = &m_PlayerInstance;
+
+        driver::SequenceSoundPlayer::PrepareArg arg;
+        arg.seqFile = res.seq;
+
+        for (int i{0}; i < static_cast<int>(SeqBankMax); ++i) {
+            arg.bankFiles[i] = res.banks[i];
+            arg.warcFiles[i] = res.warcs[i];
+            arg.warcIsIndividuals[i] = res.warcIsIndividuals[i];
+        }
+
+        arg.seqOffset = startInfo.seqOffset;
+        arg.delayTime = startInfo.delayTime;
+        arg.delayCount = startInfo.delayCount;
+        arg.updateType = startInfo.updateType;
+
+        command->arg = arg;
+
+        cmdmgr.PushCommand(command);
+    }
+
+    if (startInfo.startOffset > 0)
+        Skip(startInfo.startOffsetType, startInfo.startOffset);
+
+    m_IsCalledPrepare = true;
+}
+
 void SequenceSound::Skip(driver::SequenceSoundPlayer::StartOffsetType offsetType, int32_t offset) {
     {
         DriverCommand& cmdmgr{DriverCommand::GetInstance()};
