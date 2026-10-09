@@ -266,4 +266,17 @@ void SequenceSound::SetTrackMainSend(uint32_t trackBitFlag, float send) {
     cmdmgr.PushCommand(command);
 }
 
+void SequenceSound::SetTrackFxSend(uint32_t trackBitFlag, AuxBus bus, float send) {
+    DriverCommand& cmdmgr{DriverCommand::GetInstance()};
+
+    auto* command{cmdmgr.AllocCommand<DriverCommandSequenceSoundTrackParam>()};
+    command->id = DriverCommandId_SeqTrackTvFxSend;
+    command->player = &m_PlayerInstance;
+    command->trackBitFlag = trackBitFlag;
+    command->value = send;
+    command->uint32Value = static_cast<uint32_t>(bus);
+
+    cmdmgr.PushCommand(command);
+}
+
 }  // namespace nn::atk::detail
