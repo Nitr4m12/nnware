@@ -352,4 +352,15 @@ void SequenceSound::SetTrackOutputLine(uint32_t trackBitFlag, uint32_t outputLin
     cmdmgr.PushCommand(command);
 }
 
+void SequenceSound::ResetTrackOutputLine(uint32_t trackBitFlag) {
+    DriverCommand& cmdmgr{DriverCommand::GetInstance()};
+
+    auto* command{cmdmgr.AllocCommand<DriverCommandSequenceSoundTrackOutputLine>()};
+    command->id = DriverCommandId_SeqTrackOutputlineReset;
+    command->player = &m_PlayerInstance;
+    command->trackBitFlag = trackBitFlag;
+
+    cmdmgr.PushCommand(command);
+}
+
 }  // namespace nn::atk::detail
