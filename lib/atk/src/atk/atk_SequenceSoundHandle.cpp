@@ -25,4 +25,15 @@ void SequenceSoundHandle::detail_AttachSoundAsTempHandle(detail::SequenceSound* 
     m_pSound->m_pTempSpecialHandle = this;
 }
 
+void SequenceSoundHandle::DetachSound() {
+    if (!IsAttachedSound())
+        return;
+
+    if (m_pSound->m_pTempSpecialHandle == this)
+        m_pSound->m_pTempSpecialHandle = nullptr;
+
+    if (m_pSound != nullptr)
+        m_pSound = nullptr;
+}
+
 }  // namespace nn::atk
