@@ -10,7 +10,7 @@ public:
     using TrackBitFlagSet = util::BitFlagSet<8, void>;
 
     WaveSoundHandle() = default;
-    explicit WaveSoundHandle(SoundHandle* pSoundHandle);
+    explicit WaveSoundHandle(SoundHandle* handle);
 
     ~WaveSoundHandle() = default;
 
@@ -225,7 +225,9 @@ public:
     void ForceStop();
 
 private:
-    detail::WaveSound* m_pSound;
+    NN_NO_COPY(WaveSoundHandle);
+
+    detail::WaveSound* m_pSound{};
 };
 
 }  // namespace nn::atk
