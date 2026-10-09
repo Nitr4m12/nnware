@@ -1,22 +1,23 @@
 #pragma once
 
+#include <type_traits>
+
 namespace nn::atk::detail::fnd {
 
 class RuntimeTypeInfo {
 public:
     explicit RuntimeTypeInfo(const RuntimeTypeInfo* parent) : m_ParentTypeInfo{parent} {}
 
-    // UNCHECKED
     bool IsDerivedFrom(const RuntimeTypeInfo* s_TypeInfo) const {
         const RuntimeTypeInfo* self{this};
 
-        if (self == s_TypeInfo)
-            return true;
-
-        if (m_ParentTypeInfo == nullptr)
+        if (s_TypeInfo == nullptr)
             return false;
 
-        return m_ParentTypeInfo->IsDerivedFrom(s_TypeInfo);
+        if (s_TypeInfo == self)
+            return true;
+
+        return IsDerivedFrom(s_TypeInfo->m_ParentTypeInfo);
     }
 
 private:
@@ -24,8 +25,8 @@ private:
 };
 static_assert(sizeof(RuntimeTypeInfo) == 0x8);
 
-// XXX: __attribute__((noinline)) is only there so that the symbol for GetRuntimeTypeInfoStatic
-// generates and allows GetRuntimeTypeInfo to match
+// XXX: currently, functions calling GetRuntimeTypeInfoStatic will only match when using
+// __attribute__((noinline))
 #define NN_ATK_RTTI_BASE(CLASS)                                                                    \
 public:                                                                                            \
     __attribute__((noinline)) static const nn::atk::detail::fnd::RuntimeTypeInfo*                  \
@@ -51,11 +52,11 @@ public:                                                                         
     }
 
 template <typename TToPtr, typename TFrom>
-inline TToPtr* DynamicCast(TFrom* obj) {
-    RuntimeTypeInfo* typeInfoU{TToPtr::GetRuntimeTypeInfoStatic()};
+inline TToPtr DynamicCast(TFrom* obj) {
+    const RuntimeTypeInfo* typeInfoU{std::remove_pointer_t<TToPtr>::GetRuntimeTypeInfoStatic()};
 
-    if (typeInfoU->IsDerivedFrom(obj->GetRuntimeTypeInfo()))
-        return static_cast<TToPtr*>(obj);
+    if (obj != nullptr && typeInfoU->IsDerivedFrom(obj->GetRuntimeTypeInfo()))
+        return static_cast<TToPtr>(obj);
 
     return nullptr;
 }

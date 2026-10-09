@@ -21,7 +21,7 @@ public:
 
     using TrackBitFlagSet = util::BitFlagSet<16, void>;
 
-    SequenceSoundHandle();
+    SequenceSoundHandle() = default;
     explicit SequenceSoundHandle(SoundHandle* handle);
 
     ~SequenceSoundHandle();
@@ -350,7 +350,7 @@ public:
 private:
     NN_NO_COPY(SequenceSoundHandle);
 
-    detail::SequenceSound* m_pSound;
+    detail::SequenceSound* m_pSound{};
 };
 
 }  // namespace nn::atk

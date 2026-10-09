@@ -2,6 +2,20 @@
 
 namespace nn::atk {
 
+SequenceSoundHandle::SequenceSoundHandle(SoundHandle* handle) {
+    if (handle == nullptr)
+        return;
+
+    if (handle->IsAttachedSound()) {
+        detail::SequenceSound* sound;
+        sound = detail::fnd::DynamicCast<detail::SequenceSound*>(handle->detail_GetAttachedSound());
+        if (sound != nullptr) {
+            m_pSound = sound;
+            detail_AttachSoundAsTempHandle(sound);
+        }
+    }
+}
+
 void SequenceSoundHandle::detail_AttachSoundAsTempHandle(detail::SequenceSound* sound) {
     m_pSound = sound;
 
