@@ -304,4 +304,16 @@ void SequenceSound::SetTrackBiquadFilter(uint32_t trackBitFlag, int32_t type, fl
     cmdmgr.PushCommand(command);
 }
 
+void SequenceSound::SetTrackBankIndex(uint32_t trackBitFlag, int32_t bankIndex) {
+    DriverCommand& cmdmgr{DriverCommand::GetInstance()};
+
+    auto* command{cmdmgr.AllocCommand<DriverCommandSequenceSoundTrackBankIndex>()};
+    command->id = DriverCommandId_SeqTrackBankIndex;
+    command->player = &m_PlayerInstance;
+    command->trackBitFlag = trackBitFlag;
+    command->bankIndex = bankIndex;
+
+    cmdmgr.PushCommand(command);
+}
+
 }  // namespace nn::atk::detail
