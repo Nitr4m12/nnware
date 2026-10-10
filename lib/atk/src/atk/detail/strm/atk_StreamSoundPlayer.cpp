@@ -369,7 +369,8 @@ bool StreamSoundPlayer::SetupPlayer() {
 
     const size_t strmBufferSize{
         m_pBufferPool->GetBlockSize() /
-        (m_StreamDataInfo.blockSize + StreamSoundLoader::DataBlockSizeMargin)};
+            (m_StreamDataInfo.blockSize + StreamSoundLoader::DataBlockSizeMargin),
+    };
 
     m_BufferBlockCount = strmBufferSize;
 
@@ -390,7 +391,8 @@ bool StreamSoundPlayer::AllocVoices() {
         StreamChannel& channel{m_Channels[channelIndex]};
 
         MultiVoice* voice{
-            MultiVoiceManager::GetInstance().AllocVoice(1, 0xff, VoiceCallbackFunc, &channel)};
+            MultiVoiceManager::GetInstance().AllocVoice(1, 0xff, VoiceCallbackFunc, &channel),
+        };
 
         if (voice == nullptr) {
             for (int i{0}; i < channelIndex; ++i) {

@@ -39,8 +39,12 @@ enum SoundInfoBitFlag {
     SoundInfoBitFlag_UserParam = 31,
 };
 
-const int UserParamIndex[4]{SoundInfoBitFlag_UserParam, SoundInfoBitFlag_UserParam1,
-                            SoundInfoBitFlag_UserParam2, SoundInfoBitFlag_UserParam3};
+const int UserParamIndex[4]{
+    SoundInfoBitFlag_UserParam,
+    SoundInfoBitFlag_UserParam1,
+    SoundInfoBitFlag_UserParam2,
+    SoundInfoBitFlag_UserParam3,
+};
 
 enum WaveSoundInfoBitFlag {
     WaveSoundInfoBitFlag_Priority = 0,

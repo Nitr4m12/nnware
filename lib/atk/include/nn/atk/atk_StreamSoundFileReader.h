@@ -14,7 +14,7 @@ public:
         uint8_t channelCount;
         uint8_t globalChannelIndex[WaveChannelMax];
 
-        TrackInfo() : volume(0), pan(0), channelCount(0), globalChannelIndex() {}
+        TrackInfo() : volume{0}, pan{0}, channelCount{0}, globalChannelIndex() {}
     };
 
     StreamSoundFileReader();

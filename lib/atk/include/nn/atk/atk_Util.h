@@ -237,7 +237,7 @@ public:
         WaveArchiveLoadStatus_NotYet,
         WaveArchiveLoadStatus_Ok,
         WaveArchiveLoadStatus_Noneed,
-        WaveArchiveLoadStatus_Partly
+        WaveArchiveLoadStatus_Partly,
     };
 
     static WaveArchiveLoadStatus GetWaveArchiveOfBank(LoadItemInfo& warcLoadInfo,
@@ -306,7 +306,7 @@ public:
             LogId_ChannelAllocationFailed,
             LogId_SoundthreadFailedWakeup,
             LogId_LogbufferFull,
-            LogId_Max
+            LogId_Max,
         };
 
     private:
