@@ -38,4 +38,8 @@ bool AdvancedWaveSoundRuntime::Initialize(int32_t soundCount, void** pOutAllocat
     return isSuccess;
 }
 
+void AdvancedWaveSoundRuntime::Finalize() {
+    m_InstanceManager.Destroy();
+}
+
 }  // namespace nn::atk::detail

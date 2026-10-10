@@ -111,27 +111,24 @@ public:
         return ObjectCount;
     }
 
-    // UNCHECKED
     void Destroy() {
-        char* ptr{reinterpret_cast<char*>(m_pBuffer)};
+        char* ptr{static_cast<char*>(m_pBuffer)};
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
         const size_t TotalObjectSize{GetObjectSize()};
 #else
         const size_t TotalObjectSize{GetObjectSize(m_SoundInstanceConfig)};
 #endif
-        const int objectCount{m_BufferSize / TotalObjectSize};
-
-        if (m_FreeList.empty())
-            return;
+        const int objectCount{static_cast<int>(m_BufferSize / TotalObjectSize)};
 
         for (int i{0}; i < objectCount; ++i) {
             Sound* sound{reinterpret_cast<Sound*>(ptr)};
-            m_FreeList.iterator_to(*sound)->Finalize();
+            sound->~Sound();
 
-            ptr += i * sizeof(sound);
+            ptr += sizeof(Sound);
         }
 
         m_FreeList.clear();
+        m_PriorityList.clear();
     }
 
     // TODO
