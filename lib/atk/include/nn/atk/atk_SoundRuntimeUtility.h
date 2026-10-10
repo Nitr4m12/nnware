@@ -8,15 +8,16 @@ namespace nn::atk::detail {
 
 class SoundRuntimeUtility {
 public:
-#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
-    Sound* AllocSound(SoundInstanceManager<Sound>* manager, SoundArchive::ItemId soundId,
-                      int playerPriority, int ambientPriority,
-                      BasicSound::AmbientInfo* ambientArgInfo)
-#else
     template <typename Sound>
-    Sound* AllocSound(SoundInstanceManager<Sound>* manager, SoundArchive::ItemId soundId,
-                      int playerPriority, int ambientPriority,
-                      BasicSound::AmbientInfo* ambientArgInfo, OutputReceiver* pOutputReceiver)
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    static Sound* AllocSound(SoundInstanceManager<Sound>* manager, SoundArchive::ItemId soundId,
+                             int playerPriority, int ambientPriority,
+                             BasicSound::AmbientInfo* ambientArgInfo)
+#else
+    static Sound* AllocSound(SoundInstanceManager<Sound>* manager, SoundArchive::ItemId soundId,
+                             int playerPriority, int ambientPriority,
+                             BasicSound::AmbientInfo* ambientArgInfo,
+                             OutputReceiver* pOutputReceiver)
 #endif
     {
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
