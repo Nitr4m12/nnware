@@ -89,4 +89,8 @@ void AdvancedWaveSoundRuntime::SetupUserParam(void** startAddr, size_t adjustSiz
 #endif
 }
 
+void AdvancedWaveSoundRuntime::Update() {
+    m_InstanceManager.SortPriorityList();
+}
+
 }  // namespace nn::atk::detail
