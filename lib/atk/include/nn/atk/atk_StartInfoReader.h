@@ -10,6 +10,8 @@ public:
 
     void Read(const SoundStartable::StartInfo* startInfo);
 
+    UpdateType GetUpdateType() const { return m_UpdateType; }
+
 private:
     SoundStartable::StartInfo::StartOffsetType m_StartOffsetType;
     int32_t m_StartOffset;

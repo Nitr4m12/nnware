@@ -2,7 +2,6 @@
 
 #include <nn/atk/atk_SoundRuntimeUtility.h>
 #include <nn/atk/atk_SoundSystem.h>
-#include <nn/util/util_BytePtr.h>
 
 namespace nn::atk::detail {
 
@@ -112,6 +111,33 @@ AdvancedWaveSound* AdvancedWaveSoundRuntime::AllocSound(SoundArchive::ItemId sou
     return SoundRuntimeUtility::AllocSound(&m_InstanceManager, soundId, priority, ambientPriority,
                                            ambientArgInfo, pOutputReceiver);
 #endif
+}
+
+SoundStartable::StartResult AdvancedWaveSoundRuntime::PrepareImpl(
+    const SoundArchive* pSoundArchive, const SoundDataManager* pSoundDataManager,
+    SoundArchive::ItemId soundId, AdvancedWaveSound* sound,
+    const SoundArchive::SoundInfo* commonInfo, const StartInfoReader& startInfoReader) {
+    SoundArchive::AdvancedWaveSoundInfo info;
+    if (!pSoundArchive->detail_ReadAdvancedWaveSoundInfo(soundId, &info))
+        return SoundStartable::StartResult::ResultCode_ErrorInvalidSoundId;
+
+    const void* pAwsdFile{pSoundDataManager->detail_GetFileAddress(commonInfo->fileId)};
+    if (pAwsdFile == nullptr)
+        return SoundStartable::StartResult::ResultCode_ErrorNotWsdLoaded;
+
+    const void* pWarcFile{pSoundDataManager->detail_GetFileAddressByItemId(info.waveArchiveId)};
+    if (pWarcFile == nullptr)
+        return SoundStartable::StartResult::ResultCode_ErrorNotWarcLoaded;
+
+    driver::AdvancedWaveSoundPlayer::PrepareParameter parameter;
+    parameter.advancedWaveSoundInfo.waveArchiveId = info.waveArchiveId;
+    parameter.updateType = startInfoReader.GetUpdateType();
+    parameter.pWarcFile = pWarcFile;
+    parameter.pAwsdFile = pAwsdFile;
+
+    sound->Prepare(parameter);
+
+    return SoundStartable::StartResult::ResultCode_Success;
 }
 
 }  // namespace nn::atk::detail

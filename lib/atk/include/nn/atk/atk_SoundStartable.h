@@ -43,7 +43,7 @@ public:
         };
 
         StartResult() = default;
-        explicit StartResult(ResultCode code) : m_Code{code} {}
+        StartResult(ResultCode code) : m_Code{code} {}
 
         bool IsSuccess() const { return m_Code == ResultCode_Success; }
 
