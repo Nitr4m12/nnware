@@ -140,4 +140,7 @@ SoundStartable::StartResult AdvancedWaveSoundRuntime::PrepareImpl(
     return SoundStartable::StartResult::ResultCode_Success;
 }
 
+void AdvancedWaveSoundRuntime::DumpMemory(
+    [[maybe_unused]] const SoundArchive* pSoundArchive) const {}
+
 }  // namespace nn::atk::detail

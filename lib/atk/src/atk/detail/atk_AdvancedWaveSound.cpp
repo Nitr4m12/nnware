@@ -1,5 +1,6 @@
 #include <nn/atk/detail/atk_AdvancedWaveSound.h>
-#include "nn/atk/atk_DriverCommand.h"
+
+#include <nn/atk/atk_DriverCommand.h>
 
 namespace nn::atk::detail {
 

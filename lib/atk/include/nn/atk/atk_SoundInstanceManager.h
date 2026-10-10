@@ -130,7 +130,7 @@ public:
         m_PriorityList.clear();
     }
 
-    // TODO
+    // NON_MATCHING
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
     Sound* Alloc(int32_t priority, int32_t ambientPriority)
 #else
@@ -141,33 +141,39 @@ public:
         allocPriority = fnd::Clamp(allocPriority, PlayerPriorityMin, PlayerPriorityMax);
 
         Sound* sound;
-        sound = &m_FreeList.front();
-        m_FreeList.pop_front();
 
-        while (m_FreeList.empty()) {
+        while (!m_FreeList.empty()) {
+            sound = &m_FreeList.front();
+            m_FreeList.pop_front();
+
+            if (!m_FreeList.empty())
+                continue;
+
             Sound* lowPrioSound{GetLowestPrioritySound()};
             if (lowPrioSound == nullptr)
                 return nullptr;
 
-            if (lowPrioSound->CalcCurrentPlayerPriority() > allocPriority)
+            if (allocPriority < lowPrioSound->CalcCurrentPlayerPriority())
                 return nullptr;
 
-            Debug_GetWarningFlag(Debug_GetDebugWarningFlagFromSoundType(sound->GetSoundType()));
-            sound->Stop(0);
+            Debug_GetWarningFlag(
+                Debug_GetDebugWarningFlagFromSoundType(lowPrioSound->GetSoundType()));
+            lowPrioSound->Stop(0);
         }
-#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
-        if (sound->Initialize())
-#else
 
-        if (sound->Initialize(pOutputReceiver))
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+        bool result{sound->Initialize()};
+#else
+        bool result{sound->Initialize(pOutputReceiver)};
 #endif
-        {
-            sound->SetPriority(priority, ambientPriority);
-            InsertPriorityList(sound, allocPriority);
-        } else {
+
+        if (!result) {
             m_FreeList.push_back(*sound);
-            sound = nullptr;
+            return nullptr;
         }
+
+        sound->SetPriority(priority, ambientPriority);
+        InsertPriorityList(sound, allocPriority);
 
         return sound;
     }

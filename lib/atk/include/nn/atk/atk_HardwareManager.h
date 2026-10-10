@@ -281,7 +281,11 @@ private:
                                                       1];  // SMO: 0x1e8 = 488, BTD5: 0x108 = 264
     uint8_t m_OutputDeviceFlag[OutputLineIndex_Max];
     LowLevelVoiceAllocator m_LowLevelVoiceAllocator;  // SMO: 0x608 = 1544, BTD5: 0x528 = 1320
-#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    audio::FinalMixType m_FinalMix;
+    audio::SubMixType m_SubMix[SubMixCountMax];
+    audio::SubMixType m_AdditionalSubMix;
+#else
     FinalMix m_FinalMix;
     SubMix m_SubMix[SubMixCountMax];
     SubMix m_AdditionalSubMix;
@@ -293,7 +297,7 @@ private:
     MoveValue<float, int32_t> m_AuxUserVolume[MixerCount];
     MoveValue<float, int32_t> m_AuxUserVolumeForAdditionalEffect[AuxBusCountForAdditionalEffect];
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
-    uint8_t _0[298];
+    uint8_t _0[280];
 #endif
     bool m_IsInitializedEffect;  // SMO: 0x7f0 = 2040, BTD5: 0x948 = 2376
     bool m_IsPresetSubMixEnabled;
