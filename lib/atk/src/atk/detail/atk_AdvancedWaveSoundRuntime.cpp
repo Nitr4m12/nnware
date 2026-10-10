@@ -75,4 +75,18 @@ int32_t AdvancedWaveSoundRuntime::GetFreeAdvancedWaveSoundCount() const {
     return m_InstanceManager.GetFreeCount();
 }
 
+void AdvancedWaveSoundRuntime::SetupUserParam(void** startAddr, size_t adjustSize) {
+    void* curAddr{*startAddr};
+
+    auto& list{m_InstanceManager.GetFreeList()};
+    for (auto itr(list.begin()); itr != list.end(); ++itr) {
+        itr->SetUserParamBuffer(curAddr, adjustSize);
+        curAddr = util::BytePtr(curAddr, adjustSize).Get();
+    }
+
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+    *startAddr = curAddr;
+#endif
+}
+
 }  // namespace nn::atk::detail
