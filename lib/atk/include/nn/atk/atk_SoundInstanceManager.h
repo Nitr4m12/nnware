@@ -6,6 +6,7 @@
 #include <nn/atk/atk_Global.h>
 #include <nn/atk/atk_OutputAdditionalParam.h>
 #include <nn/atk/atk_OutputReceiver.h>
+#include <nn/atk/fnd/basis/atkfnd_Inlines.h>
 
 namespace nn::atk::detail {
 
@@ -133,11 +134,42 @@ public:
         m_FreeList.clear();
     }
 
+    // TODO
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
-    Sound* Alloc(int32_t priority, int32_t ambientPriority);
+    Sound* Alloc(int32_t priority, int32_t ambientPriority)
 #else
-    Sound* Alloc(int32_t priority, int32_t ambientPriority, OutputReceiver* pOutputReceiver);
+    Sound* Alloc(int32_t priority, int32_t ambientPriority, OutputReceiver* pOutputReceiver)
 #endif
+    {
+        int allocPriority{priority + ambientPriority};
+        allocPriority = fnd::Clamp(allocPriority, PlayerPriorityMin, PlayerPriorityMax);
+
+        Sound* sound;
+        sound = &m_FreeList.front();
+        m_FreeList.pop_front();
+
+        while (m_FreeList.empty()) {
+            Sound* lowPrioSound{GetLowestPrioritySound()};
+            if (lowPrioSound == nullptr)
+                return nullptr;
+
+            if (lowPrioSound->CalcCurrentPlayerPriority() > allocPriority)
+                return nullptr;
+
+            Debug_GetWarningFlag(Debug_GetDebugWarningFlagFromSoundType(sound->GetSoundType()));
+            sound->Stop(0);
+        }
+
+        if (sound->Initialize(pOutputReceiver)) {
+            sound->SetPriority(priority, ambientPriority);
+            InsertPriorityList(sound, allocPriority);
+        } else {
+            m_FreeList.push_back(*sound);
+            sound = nullptr;
+        }
+
+        return sound;
+    }
 
     void Free(Sound* sound) {
         RemovePriorityList(sound);
@@ -152,7 +184,12 @@ public:
 
     void SortPriorityList();
 
-    Sound* GetLowestPrioritySound();
+    Sound* GetLowestPrioritySound() {
+        if (m_PriorityList.empty())
+            return nullptr;
+
+        return &m_PriorityList.front();
+    }
 
     int GetActiveCount() const { m_PriorityList.size(); }
     int GetFreeCount() const { m_FreeList.size(); }
@@ -176,8 +213,8 @@ public:
     }
 
 private:
-    void* m_pBuffer;
-    size_t m_BufferSize;
+    void* m_pBuffer{};
+    size_t m_BufferSize{0};
 #if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
     SoundInstanceConfig m_SoundInstanceConfig;
 #endif

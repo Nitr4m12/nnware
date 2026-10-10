@@ -23,11 +23,9 @@ public:
     GetRequiredMemorySize(const SoundArchive::SoundArchivePlayerInfo& soundArchivePlayerInfo,
                           size_t alignmentSize);
 
-    int32_t GetActiveCount() const;
     int32_t GetFreeAdvancedWaveSoundCount() const;
 
     void SetupUserParam(void** startAddr, size_t adjustSize);
-
     void Update();
 
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
@@ -45,7 +43,7 @@ public:
                                             const SoundArchive::SoundInfo* commonInfo,
                                             const StartInfoReader& startInfoReader);
 
-    void DumpMemory(const SoundArchive*) const;
+    void DumpMemory(const SoundArchive* pSoundArchive) const;
 
 private:
     AdvancedWaveSoundInstanceManager m_InstanceManager;
