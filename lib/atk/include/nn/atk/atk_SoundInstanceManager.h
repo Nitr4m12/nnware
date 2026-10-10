@@ -183,7 +183,27 @@ public:
         InsertPriorityList(sound, priority);
     }
 
-    void SortPriorityList();
+    void SortPriorityList() {
+        if (m_PriorityList.size() <= 1)
+            return;
+
+        const int TmpCount{PlayerPriorityMax + 1};
+        PriorityList tmplist[TmpCount];
+
+        while (!m_PriorityList.empty()) {
+            Sound& front{m_PriorityList.front()};
+            m_PriorityList.pop_front();
+            tmplist[front.CalcCurrentPlayerPriority()].push_back(front);
+        }
+
+        for (int i{0}; i < TmpCount; ++i) {
+            while (!tmplist[i].empty()) {
+                Sound& front{tmplist[i].front()};
+                tmplist[i].pop_front();
+                m_PriorityList.push_back(front);
+            }
+        }
+    }
 
     Sound* GetLowestPrioritySound() {
         if (m_PriorityList.empty())
