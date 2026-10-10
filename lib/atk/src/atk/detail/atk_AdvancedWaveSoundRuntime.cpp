@@ -42,4 +42,15 @@ void AdvancedWaveSoundRuntime::Finalize() {
     m_InstanceManager.Destroy();
 }
 
+size_t AdvancedWaveSoundRuntime::GetRequiredMemorySize(
+    const SoundArchive::SoundArchivePlayerInfo& soundArchivePlayerInfo, size_t alignmentSize) {
+    size_t size{0};
+    size = soundArchivePlayerInfo.waveSoundCount;
+    size = AdvancedWaveSoundInstanceManager::GetRequiredMemSize(
+        size, SoundSystem::GetSoundInstanceConfig());
+    size = util::align_up(size, alignmentSize);
+
+    return size;
+}
+
 }  // namespace nn::atk::detail
