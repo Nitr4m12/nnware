@@ -40,7 +40,6 @@ public:
     }
 #endif
 
-    // UNCHECKED
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
     static size_t GetRequiredMemSize(int instanceCount) { return GetObjectSize() * instanceCount; }
 #else
@@ -156,8 +155,13 @@ public:
             Debug_GetWarningFlag(Debug_GetDebugWarningFlagFromSoundType(sound->GetSoundType()));
             sound->Stop(0);
         }
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+        if (sound->Initialize())
+#else
 
-        if (sound->Initialize(pOutputReceiver)) {
+        if (sound->Initialize(pOutputReceiver))
+#endif
+        {
             sound->SetPriority(priority, ambientPriority);
             InsertPriorityList(sound, allocPriority);
         } else {
@@ -188,8 +192,8 @@ public:
         return &m_PriorityList.front();
     }
 
-    int GetActiveCount() const { m_PriorityList.size(); }
-    int GetFreeCount() const { m_FreeList.size(); }
+    int GetActiveCount() const { return m_PriorityList.size(); }
+    int GetFreeCount() const { return m_FreeList.size(); }
 
     const PriorityList& GetSoundList() const { return m_PriorityList; }
     PriorityList& GetFreeList() { return m_FreeList; }
