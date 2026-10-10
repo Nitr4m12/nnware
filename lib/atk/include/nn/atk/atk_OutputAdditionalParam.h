@@ -13,6 +13,8 @@ using SendArray = ValueArray<float>;
 
 class OutputAdditionalParam {
 public:
+    OutputAdditionalParam() = default;
+
     static size_t GetRequiredMemSize(const SoundInstanceConfig& config);
 
     void Initialize(void* buffer, size_t bufferSize, const SoundInstanceConfig& config);
@@ -64,9 +66,9 @@ public:
     OutputAdditionalParam& operator=(const OutputAdditionalParam& rhs);
 
 private:
-    SendArray* m_pAdditionalSend;
-    BusMixVolumePacket* m_pBusMixVolumePacket;
-    VolumeThroughModePacket* VolumeThroughModePacket;
+    SendArray* m_pAdditionalSend{};
+    BusMixVolumePacket* m_pBusMixVolumePacket{};
+    VolumeThroughModePacket* VolumeThroughModePacket{};
 };
 static_assert(sizeof(OutputAdditionalParam) == 0x18);
 

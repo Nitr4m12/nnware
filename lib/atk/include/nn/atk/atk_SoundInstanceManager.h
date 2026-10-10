@@ -20,7 +20,6 @@ public:
     SoundInstanceManager() = default;
     ~SoundInstanceManager() = default;
 
-    // UNCHECKED
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
     static size_t GetObjectSize() {
         size_t result{sizeof(Sound)};
@@ -32,8 +31,8 @@ public:
 
         const size_t AdditionalParamBufferSize{OutputAdditionalParam::GetRequiredMemSize(config)};
         if (AdditionalParamBufferSize != 0) {
-            result = sizeof(Sound) + sizeof(OutputAdditionalParam) + 8;
-            result *= AdditionalParamBufferSize * 2;
+            result += sizeof(OutputAdditionalParam) * 2;
+            result += AdditionalParamBufferSize * 2;
         }
 
         return result;
@@ -49,7 +48,6 @@ public:
     }
 #endif
 
-    // TODO
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
     int32_t Create(void* buffer, size_t size)
 #else
@@ -61,38 +59,53 @@ public:
 #else
         const size_t TotalObjectSize{GetObjectSize(config)};
 #endif
-        const int ObjectCount{size / TotalObjectSize};
+        const int ObjectCount{static_cast<int>(size / TotalObjectSize)};
 
         uint8_t* ptr{reinterpret_cast<uint8_t*>(buffer)};
         uint8_t* soundPtr{ptr};
-        [[maybe_unused]] uint8_t* additionalParamPtr{ptr};
+        [[maybe_unused]] uint8_t* additionalParamPtr{ptr + ObjectCount * sizeof(Sound)};
 
         for (int i{0}; i < ObjectCount; ++i) {
-            Sound* sound{reinterpret_cast<Sound*>(soundPtr)};
-            m_PriorityList.push_back(*sound);
-            soundPtr += sizeof(Sound);
+            Sound* sound{new (soundPtr) Sound(*this)};
+            m_FreeList.push_back(*sound);
 
 #if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
-            // TODO
             const size_t AdditionalParamBufferSize{
                 OutputAdditionalParam::GetRequiredMemSize(config),
             };
 
             if (AdditionalParamBufferSize != 0) {
-                [[maybe_unused]] const size_t AdditionalParamSize{sizeof(OutputAdditionalParam)};
+                const size_t AdditionalParamSize{sizeof(OutputAdditionalParam)};
 
-                OutputAdditionalParam* pAdditionalParam{
-                    reinterpret_cast<OutputAdditionalParam*>(additionalParamPtr),
-                };
-                new (pAdditionalParam) OutputAdditionalParam;
+                OutputAdditionalParam* pAdditionalParam;
+                pAdditionalParam = new (additionalParamPtr) OutputAdditionalParam;
+                additionalParamPtr += AdditionalParamSize;
+                void* pAdditionalParamBuffer{additionalParamPtr};
+                pAdditionalParam->Initialize(pAdditionalParamBuffer, AdditionalParamBufferSize,
+                                             config);
+                additionalParamPtr += AdditionalParamBufferSize;
 
-                [[maybe_unused]] void* pAdditionalParamBuffer;
                 OutputAdditionalParam* pAdditionalParamForPlayer;
-                new (pAdditionalParamForPlayer) OutputAdditionalParam;
-                [[maybe_unused]] const void* pAdditionalParamBufferForPlayer;
+                pAdditionalParamForPlayer = new (additionalParamPtr) OutputAdditionalParam;
+                additionalParamPtr += AdditionalParamSize;
+                void* pAdditionalParamBufferForPlayer{additionalParamPtr};
+                pAdditionalParamForPlayer->Initialize(pAdditionalParamBufferForPlayer,
+                                                      AdditionalParamBufferSize, config);
+                additionalParamPtr += AdditionalParamBufferSize;
+
+                sound->SetOutputAdditionalParamAddr(OutputDevice_Main, pAdditionalParam,
+                                                    pAdditionalParamForPlayer);
             }
 #endif
+
+            soundPtr += sizeof(Sound);
         }
+
+        m_pBuffer = buffer;
+        m_BufferSize = size;
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+        m_SoundInstanceConfig = config;
+#endif
 
         return ObjectCount;
     }
