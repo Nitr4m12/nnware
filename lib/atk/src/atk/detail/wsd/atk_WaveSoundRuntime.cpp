@@ -104,4 +104,8 @@ int32_t WaveSoundRuntime::GetActiveCount() const {
     return m_WaveSoundInstanceManager.GetActiveCount();
 }
 
+int32_t WaveSoundRuntime::GetFreeWaveSoundCount() const {
+    return m_WaveSoundInstanceManager.GetFreeCount();
+}
+
 }  // namespace nn::atk::detail
