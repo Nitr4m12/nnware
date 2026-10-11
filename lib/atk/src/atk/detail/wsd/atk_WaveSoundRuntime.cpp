@@ -81,4 +81,23 @@ void WaveSoundRuntime::Finalize() {
     driver::SoundThread::GetInstance().UnregisterSoundFrameCallback(&m_WaveSoundLoaderManager);
 }
 
+size_t WaveSoundRuntime::GetRequiredMemorySize(
+    const SoundArchive::SoundArchivePlayerInfo& soundArchivePlayerInfo, int32_t alignment) {
+    size_t size{0};
+    size = soundArchivePlayerInfo.waveSoundCount;
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    size = WaveSoundInstanceManager::GetRequiredMemSize(size);
+#else
+    size =
+        WaveSoundInstanceManager::GetRequiredMemSize(size, SoundSystem::GetSoundInstanceConfig());
+#endif
+    size = util::align_up(size, alignment);
+
+    size += util::align_up(
+        driver::WaveSoundLoaderManager::GetRequiredMemSize(soundArchivePlayerInfo.waveSoundCount),
+        alignment);
+
+    return size;
+}
+
 }  // namespace nn::atk::detail

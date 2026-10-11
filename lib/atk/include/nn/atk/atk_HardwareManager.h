@@ -297,9 +297,9 @@ private:
     MoveValue<float, int32_t> m_AuxUserVolume[MixerCount];
     MoveValue<float, int32_t> m_AuxUserVolumeForAdditionalEffect[AuxBusCountForAdditionalEffect];
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
-    uint8_t _0[280];
+    uint8_t _0[272];
 #endif
-    bool m_IsInitializedEffect;  // SMO: 0x7f0 = 2040, BTD5: 0x948 = 2376
+    bool m_IsInitializedEffect;  // SMO: 0x7f0 = 2032, BTD5: 0x948 = 2376
     bool m_IsPresetSubMixEnabled;
     bool m_IsAdditionalEffectEnabled;
     bool m_IsAdditionalSubMixEnabled;
@@ -307,7 +307,7 @@ private:
     bool m_IsInitializedSoundThread;
     bool m_IsPreviousSdkVersionLowPassFilterCompatible;
     bool m_IsMemoryPoolAttachCheckEnabled;
-    fnd::CriticalSection m_UpdateAudioRendererLock;  // SMO: 0x7f8 = 2048, BTD5: 0x950 = 2384
+    fnd::CriticalSection m_UpdateAudioRendererLock;  // SMO: 0x7f8 = 2040, BTD5: 0x950 = 2384
     fnd::CriticalSection m_UpdateHardwareManagerLock;
     fnd::CriticalSection m_EffectAuxListLock;
     fnd::CriticalSection m_EffectAuxListForFinalMixLock;
