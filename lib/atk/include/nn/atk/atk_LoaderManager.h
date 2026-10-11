@@ -12,7 +12,7 @@ public:
     using Iterator = typename List::iterator;
 
     LoaderManager() = default;
-    ~LoaderManager() override;
+    ~LoaderManager() override = default;
 
     // UNCHECKED
     size_t GetRequiredMemSize(int count) { return sizeof(Instance) * count; }

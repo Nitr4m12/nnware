@@ -8,4 +8,6 @@ namespace nn::atk::detail {
 
 WaveSoundRuntime::WaveSoundRuntime() = default;
 
+WaveSoundRuntime::~WaveSoundRuntime() = default;
+
 }  // namespace nn::atk::detail
