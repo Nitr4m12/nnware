@@ -1,5 +1,7 @@
 #pragma once
 
+#include <nn/nn_TimeSpan.h>
+
 #include <nn/atk/atk_SoundThread.h>
 
 namespace nn::atk::detail {
@@ -33,19 +35,18 @@ public:
         return objectCount;
     }
 
-    // UNCHECKED
     void Destroy() {
-        char* ptr{reinterpret_cast<char*>(m_pBuffer)};
-        const int objectCount{m_BufferSize / sizeof(Instance)};
+        while (!m_FreeReqList.empty())
+            os::SleepThread(TimeSpanType{5000000});
 
-        if (m_FreeList.empty())
-            return;
+        char* ptr{static_cast<char*>(m_pBuffer)};
+        const int objectCount{static_cast<int>(m_BufferSize / sizeof(Instance))};
 
         for (int i{0}; i < objectCount; ++i) {
             Instance* instance{reinterpret_cast<Instance*>(ptr)};
-            m_FreeList.iterator_to(*instance)->Finalize();
+            instance->~Instance();
 
-            ptr += i * sizeof(Instance);
+            ptr += sizeof(Instance);
         }
 
         m_FreeList.clear();

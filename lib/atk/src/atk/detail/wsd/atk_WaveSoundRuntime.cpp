@@ -74,4 +74,11 @@ bool WaveSoundRuntime::Initialize(int32_t soundCount, void** pOutAllocatedAddr,
     return true;
 }
 
+void WaveSoundRuntime::Finalize() {
+    m_WaveSoundInstanceManager.Destroy();
+    m_WaveSoundLoaderManager.Destroy();
+
+    driver::SoundThread::GetInstance().UnregisterSoundFrameCallback(&m_WaveSoundLoaderManager);
+}
+
 }  // namespace nn::atk::detail
