@@ -1,5 +1,6 @@
 #include <nn/atk/atk_WaveSoundRuntime.h>
 
+#include <nn/atk/atk_SoundRuntimeUtility.h>
 #include <nn/atk/atk_SoundSystem.h>
 
 namespace {
@@ -125,5 +126,21 @@ void WaveSoundRuntime::SetupUserParam(void** startAddr, size_t adjustSize) {
 void WaveSoundRuntime::Update() {
     m_WaveSoundInstanceManager.SortPriorityList();
 }
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+WaveSound* WaveSoundRuntime::AllocSound(SoundArchive::ItemId soundId, int32_t priority,
+                                        int32_t ambientPriority,
+                                        BasicSound::AmbientInfo* ambientArgInfo) {
+    return SoundRuntimeUtility::AllocSound(&m_WaveSoundInstanceManager, soundId, priority,
+                                           ambientPriority, ambientArgInfo);
+}
+#else
+WaveSound* WaveSoundRuntime::AllocSound(SoundArchive::ItemId soundId, int32_t priority,
+                                        int32_t ambientPriority,
+                                        BasicSound::AmbientInfo* ambientArgInfo,
+                                        OutputReceiver* pOutputReceiver) {
+    return SoundRuntimeUtility::AllocSound(&m_WaveSoundInstanceManager, soundId, priority,
+                                           ambientPriority, ambientArgInfo, pOutputReceiver);
+}
+#endif
 
 }  // namespace nn::atk::detail

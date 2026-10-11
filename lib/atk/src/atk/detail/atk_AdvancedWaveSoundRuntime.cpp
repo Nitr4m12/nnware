@@ -96,22 +96,19 @@ void AdvancedWaveSoundRuntime::Update() {
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
 AdvancedWaveSound* AdvancedWaveSoundRuntime::AllocSound(SoundArchive::ItemId soundId,
                                                         int32_t priority, int32_t ambientPriority,
-                                                        BasicSound::AmbientInfo* ambientArgInfo)
+                                                        BasicSound::AmbientInfo* ambientArgInfo) {
+    return SoundRuntimeUtility::AllocSound(&m_InstanceManager, soundId, priority, ambientPriority,
+                                           ambientArgInfo);
+}
 #else
 AdvancedWaveSound* AdvancedWaveSoundRuntime::AllocSound(SoundArchive::ItemId soundId,
                                                         int32_t priority, int32_t ambientPriority,
                                                         BasicSound::AmbientInfo* ambientArgInfo,
-                                                        OutputReceiver* pOutputReceiver)
-#endif
-{
-#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
-    return SoundRuntimeUtility::AllocSound(&m_InstanceManager, soundId, priority, ambientPriority,
-                                           ambientArgInfo);
-#else
+                                                        OutputReceiver* pOutputReceiver) {
     return SoundRuntimeUtility::AllocSound(&m_InstanceManager, soundId, priority, ambientPriority,
                                            ambientArgInfo, pOutputReceiver);
-#endif
 }
+#endif
 
 SoundStartable::StartResult AdvancedWaveSoundRuntime::PrepareImpl(
     const SoundArchive* pSoundArchive, const SoundDataManager* pSoundDataManager,
