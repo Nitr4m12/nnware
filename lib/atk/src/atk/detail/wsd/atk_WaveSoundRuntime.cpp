@@ -122,4 +122,8 @@ void WaveSoundRuntime::SetupUserParam(void** startAddr, size_t adjustSize) {
 #endif
 }
 
+void WaveSoundRuntime::Update() {
+    m_WaveSoundInstanceManager.SortPriorityList();
+}
+
 }  // namespace nn::atk::detail
