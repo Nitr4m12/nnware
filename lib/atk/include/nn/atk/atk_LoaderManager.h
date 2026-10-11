@@ -14,23 +14,23 @@ public:
     LoaderManager() = default;
     ~LoaderManager() override = default;
 
-    // UNCHECKED
-    size_t GetRequiredMemSize(int count) { return sizeof(Instance) * count; }
+    static size_t GetRequiredMemSize(int count) { return sizeof(Instance) * count; }
 
-    // UNCHECKED
     int Create(void* buffer, size_t size) {
         char* ptr{reinterpret_cast<char*>(buffer)};
-        const int objectCount{size / sizeof(Instance)};
+        const int objectCount{static_cast<int>(size / sizeof(Instance))};
 
         for (int i{0}; i < objectCount; ++i) {
             Instance* instance{new (ptr) Instance};
             m_FreeList.push_back(*instance);
 
-            ptr += i * sizeof(Instance);
+            ptr += sizeof(Instance);
         }
 
         m_pBuffer = buffer;
         m_BufferSize = size;
+
+        return objectCount;
     }
 
     // UNCHECKED

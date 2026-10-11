@@ -53,8 +53,7 @@ public:
     uint32_t GetChannelCount() const { return m_ChannelCount; }
 
     void SetLoaderManager(driver::WaveSoundLoaderManager& manager) {
-        if (IsPlayerAvailable())
-            m_PlayerInstance.SetLoaderManager(&manager);
+        m_PlayerInstance.SetLoaderManager(&manager);
     }
 
     DebugSoundType GetSoundType() const { return DebugSoundType_Wavesound; }
