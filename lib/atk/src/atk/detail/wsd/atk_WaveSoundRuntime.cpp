@@ -100,4 +100,8 @@ size_t WaveSoundRuntime::GetRequiredMemorySize(
     return size;
 }
 
+int32_t WaveSoundRuntime::GetActiveCount() const {
+    return m_WaveSoundInstanceManager.GetActiveCount();
+}
+
 }  // namespace nn::atk::detail
