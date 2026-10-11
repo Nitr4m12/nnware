@@ -11,7 +11,7 @@ public:
         Instance, util::IntrusiveListMemberNodeTraits<Instance, &Instance::m_LinkForLoaderManager>>;
     using Iterator = typename List::iterator;
 
-    LoaderManager();
+    LoaderManager() = default;
     ~LoaderManager() override;
 
     // UNCHECKED
@@ -81,8 +81,8 @@ public:
     }
 
 private:
-    void* m_pBuffer;
-    size_t m_BufferSize;
+    void* m_pBuffer{};
+    size_t m_BufferSize{0};
     List m_FreeList;
     List m_FreeReqList;
 };

@@ -17,6 +17,10 @@ public:
     GetRequiredMemorySize(const SoundArchive::SoundArchivePlayerInfo& soundArchivePlayerInfo,
                           int32_t alignment);
 
+    void SetSoundArchiveFilesHook(SoundArchiveFilesHook* pSoundArchiveFilesHook) {
+        m_pSoundArchiveFilesHook = pSoundArchiveFilesHook;
+    }
+
     int32_t GetActiveCount() const;
     int32_t GetFreeWaveSoundCount() const;
 
@@ -38,12 +42,12 @@ public:
                                             const SoundArchive::SoundInfo* commonInfo,
                                             const StartInfoReader& startInfoReader);
 
-    void DumpMemory(const SoundArchive*) const;
+    void DumpMemory(const SoundArchive* pSoundArchive) const;
 
 private:
     WaveSoundInstanceManager m_WaveSoundInstanceManager;
     driver::WaveSoundLoaderManager m_WaveSoundLoaderManager;
-    SoundArchiveFilesHook* m_pSoundArchiveFilesHook;
+    SoundArchiveFilesHook* m_pSoundArchiveFilesHook{};
 };
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
 static_assert(sizeof(WaveSoundRuntime) == 0x80);
