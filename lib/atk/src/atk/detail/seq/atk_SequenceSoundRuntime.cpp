@@ -78,4 +78,14 @@ bool SequenceSoundRuntime::Initialize(int32_t soundCount, void** pOutAllocatedAd
     return true;
 }
 
+void SequenceSoundRuntime::Finalize() {
+    m_pSequenceTrackAllocator = nullptr;
+
+    m_SequenceSoundInstanceManager.Destroy();
+    m_SequenceSoundLoaderManager.Destroy();
+
+    driver::SoundThread::GetInstance().UnregisterSoundFrameCallback(&m_SequenceSoundLoaderManager);
+    m_MmlSequenceTrackAllocator.Destroy();
+}
+
 }  // namespace nn::atk::detail
