@@ -47,7 +47,7 @@ public:
         const void* warcFiles[SeqBankMax];
         bool warcIsIndividuals[SeqBankMax];
 
-        Data() = default;
+        Data() { Initialize(); }
 
         void Initialize() {
             seqFile = {};

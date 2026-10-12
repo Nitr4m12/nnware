@@ -102,8 +102,7 @@ public:
     void WriteTrackVariable(int32_t trackNo, int32_t varNo, int16_t var);
 
     void SetLoaderManager(driver::SequenceSoundLoaderManager& manager) {
-        if (IsPlayerAvailable())
-            m_PlayerInstance.SetLoaderManager(&manager);
+        m_PlayerInstance.SetLoaderManager(&manager);
     }
 
     DebugSoundType GetSoundType() const { return DebugSoundType_Seqsound; }
