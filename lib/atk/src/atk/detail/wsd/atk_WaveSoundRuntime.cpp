@@ -1,7 +1,10 @@
 #include <nn/atk/atk_WaveSoundRuntime.h>
 
+#include <nn/atk/atk_SoundArchiveFilesHook.h>
+#include <nn/atk/atk_SoundPlayer.h>
 #include <nn/atk/atk_SoundRuntimeUtility.h>
 #include <nn/atk/atk_SoundSystem.h>
+#include <nn/atk/atk_WaveArchiveFileReader.h>
 
 namespace {
 
@@ -17,7 +20,7 @@ WaveSoundRuntime::~WaveSoundRuntime() = default;
 
 bool WaveSoundRuntime::Initialize(int32_t soundCount, void** pOutAllocatedAddr,
                                   const void* endAddr) {
-    if (reinterpret_cast<uintptr_t>(*pOutAllocatedAddr) % 64 != 0)
+    if (reinterpret_cast<uintptr_t>(*pOutAllocatedAddr) % MemAlignSize != 0)
         return false;
 
     {
@@ -142,5 +145,137 @@ WaveSound* WaveSoundRuntime::AllocSound(SoundArchive::ItemId soundId, int32_t pr
                                            ambientPriority, ambientArgInfo, pOutputReceiver);
 }
 #endif
+
+// NON_MATCHING
+SoundStartable::StartResult WaveSoundRuntime::PrepareImpl(const SoundArchive* pSoundArchive,
+                                                          const SoundDataManager* pSoundDataManager,
+                                                          SoundArchive::ItemId soundId,
+                                                          WaveSound* sound,
+                                                          const SoundArchive::SoundInfo* commonInfo,
+                                                          const StartInfoReader& startInfoReader) {
+    SoundArchive::WaveSoundInfo info;
+    if (!pSoundArchive->detail_ReadWaveSoundInfo(soundId, &info))
+        return SoundStartable::StartResult::ResultCode_ErrorInvalidSoundId;
+
+    const SoundStartable::StartInfo::WaveSoundInfo* externalWsdInfo{startInfoReader.GetWsdInfo()};
+
+    bool canUsePlayerHeap{sound->GetSoundPlayer()->detail_CanUsePlayerHeap()};
+    bool isRegisterDataLoadTask{false};
+    LoadItemInfo loadWsd{};
+
+    const void* wsdFile{};
+    const void* waveFile{};
+
+    if (m_pSoundArchiveFilesHook != nullptr) {
+        const char* soundLabel{pSoundArchive->GetItemLabel(sound->GetId())};
+        if (soundLabel != nullptr) {
+            wsdFile = m_pSoundArchiveFilesHook->GetFileAddress(
+                soundLabel, SoundArchiveFilesHook::ItemTypeWaveSound,
+                SoundArchiveFilesHook::FileTypeWaveSoundBinary, 0);
+
+            const void* warcFile{m_pSoundArchiveFilesHook->GetFileAddress(
+                soundLabel, SoundArchiveFilesHook::ItemTypeWaveSound,
+                SoundArchiveFilesHook::FileTypeWaveArchiveBinary, 0),
+            };
+
+            if (wsdFile != nullptr && warcFile != nullptr) {
+                WaveArchiveFileReader warcReader{warcFile, false};
+                waveFile = warcReader.GetWaveFile(info.index);
+                if (waveFile != nullptr) {
+                    loadWsd.address = wsdFile;
+                }
+            }
+        }
+    }
+
+    int release{127};
+    bool isContextCalculationSkipMode{false};
+    int waveSoundParameterFlag{0};
+
+    loadWsd.itemId = sound->GetId();
+    if (wsdFile == nullptr || waveFile == nullptr) {
+        loadWsd.address = pSoundDataManager->detail_GetFileAddress(commonInfo->fileId);
+        if (loadWsd.address != nullptr) {
+            wsdFile = loadWsd.address;
+
+            if (externalWsdInfo != nullptr) {
+                waveFile = externalWsdInfo->waveAddress;
+                waveSoundParameterFlag = externalWsdInfo->enableParameterFlag;
+                isContextCalculationSkipMode = externalWsdInfo->isContextCalculationSkipMode;
+                release = fnd::Clamp(externalWsdInfo->release, 0, 127);
+            }
+
+            if (externalWsdInfo == nullptr || waveFile == nullptr) {
+                waveFile = Util::GetWaveFileOfWaveSound(wsdFile, info.index, *pSoundArchive,
+                                                        *pSoundDataManager);
+
+                isContextCalculationSkipMode = isContextCalculationSkipMode != false;
+
+                if (waveFile == nullptr) {
+                    if (!canUsePlayerHeap)
+                        return SoundStartable::StartResult::ResultCode_ErrorNotWarcLoaded;
+
+                    isRegisterDataLoadTask = true;
+                }
+            }
+        } else {
+            if (!canUsePlayerHeap)
+                return SoundStartable::StartResult::ResultCode_ErrorNotWsdLoaded;
+
+            isRegisterDataLoadTask = true;
+
+            wsdFile = nullptr;
+            waveFile = nullptr;
+        }
+    }
+
+
+    driver::WaveSoundPlayer::StartOffsetType wsdStartOffsetType{
+        driver::WaveSoundPlayer::StartOffsetType_Sample,
+    };
+    int startOffset{0};
+
+    switch (startInfoReader.GetStartOffsetType()) {
+    case SoundStartable::StartInfo::StartOffsetType_MilliSeconds:
+        wsdStartOffsetType = driver::WaveSoundPlayer::StartOffsetType_Millisec;
+        startOffset = startInfoReader.GetStartOffset();
+        break;
+    case SoundStartable::StartInfo::StartOffsetType_Sample:
+        wsdStartOffsetType = driver::WaveSoundPlayer::StartOffsetType_Sample;
+        startOffset = startInfoReader.GetStartOffset();
+        break;
+    case SoundStartable::StartInfo::StartOffsetType_Tick:
+        break;
+    }
+
+    driver::WaveSoundPlayer::StartInfo startInfo;
+    startInfo.startOffsetType = wsdStartOffsetType;
+    startInfo.startOffset = startOffset;
+    startInfo.delayTime = startInfoReader.GetDelayTime();
+    startInfo.delayCount = startInfoReader.GetDelayCount();
+    startInfo.waveSoundParameterFlag = waveSoundParameterFlag;
+    startInfo.release = release;
+    startInfo.isContextCalculationSkipMode = isContextCalculationSkipMode;
+    startInfo.updateType = startInfoReader.GetUpdateType();
+
+    if (isRegisterDataLoadTask) {
+        driver::WaveSoundLoader::LoadInfo loadInfo{pSoundArchive, pSoundDataManager, &loadWsd,
+                                                   sound->GetSoundPlayer()};
+        sound->RegisterDataLoadTask(loadInfo, startInfo);
+    } else {
+        int8_t waveType{WaveType_Nwwav};
+        if (externalWsdInfo != nullptr && externalWsdInfo->waveAddress != nullptr)
+            waveType = externalWsdInfo->waveType;
+
+        sound->Prepare(wsdFile, waveFile, startInfo, waveType);
+    }
+
+    SoundStartable::StartResult startResult{SoundStartable::StartResult::ResultCode_Success};
+    sound->InitializeChannelParam(info.channelPriority, info.isReleasePriorityFix);
+
+    return startResult;
+}
+
+void WaveSoundRuntime::DumpMemory([[maybe_unused]] const SoundArchive* pSoundArchive) const {}
 
 }  // namespace nn::atk::detail

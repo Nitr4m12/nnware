@@ -72,14 +72,19 @@ public:
     }
 
     void UpdateFreeReqList() {
-        // TODO
+        for (auto itr{m_FreeReqList.begin()}; itr != m_FreeReqList.end();) {
+            auto curItr{itr++};
+            if (!curItr->IsInUse()) {
+                curItr->Finalize();
+                m_FreeReqList.erase(curItr);
+                m_FreeList.push_back(*curItr);
+            }
+        }
     }
 
     int GetFreeCount() const { return m_FreeList.size(); }
 
-    void OnBeginSoundFrame() override {
-        // TODO
-    }
+    void OnBeginSoundFrame() override { UpdateFreeReqList(); }
 
 private:
     void* m_pBuffer{};

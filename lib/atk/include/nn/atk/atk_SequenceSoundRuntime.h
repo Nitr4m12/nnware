@@ -10,38 +10,13 @@ namespace nn::atk::detail {
 
 class SequenceSoundRuntime {
 public:
-    class SequenceNoteOnCallback : driver::NoteOnCallback {
-    public:
-        ~SequenceNoteOnCallback() override;
-
-        driver::Channel* NoteOn(driver::SequenceSoundPlayer* seqPlayer, uint8_t bankIndex,
-                                const driver::NoteOnInfo& noteOnInfo) override;
-
-    private:
-        SequenceSoundRuntime* m_pSequenceSoundRuntime;
-    };
-    static_assert(sizeof(SequenceNoteOnCallback) == 0x10);
-
-    struct PrepareContext {
-        SequenceSoundFile* pSequenceSoundFile;
-        uint32_t sequenceOffset;
-        uint32_t allocateTrackFlags;
-        LoadItemInfo loadTargetSequenceInfo;
-        LoadItemInfo loadTargetBankInfos[4];
-        LoadItemInfo loadTargetWaveArchiveInfos[4];
-        bool isLoadIndividuals[4];
-        bool canUsePlayerHeap;
-        bool isRegisterDataLoadTaskNeeded;
-    };
-    static_assert(sizeof(PrepareContext) == 0xa8);
-
     SequenceSoundRuntime();
     ~SequenceSoundRuntime();
 
     bool Initialize(int32_t soundCount, void** pOutAllocatedAddr, const void* endAddr);
     void Finalize();
 
-    void SetupSequenceTrack(int32_t trackCount, void** pOutAllocatedAddr, const void* endAddr);
+    bool SetupSequenceTrack(int32_t trackCount, void** pOutAllocatedAddr, const void* endAddr);
     void SetupUserParam(void** pOutAllocatedAddr, size_t adjustSize);
 
     static size_t
@@ -50,12 +25,27 @@ public:
     static size_t GetRequiredSequenceTrackMemorySize(
         const SoundArchive::SoundArchivePlayerInfo& soundArchivePlayerInfo, int32_t alignment);
 
+    void SetSoundArchiveManager(const SoundArchiveManager* manager) {
+        m_pSoundArchiveManager = manager;
+    }
+
+    void SetSoundArchiveFilesHook(SoundArchiveFilesHook* soundArchiveFilesHook) {
+        m_pSoundArchiveFilesHook = soundArchiveFilesHook;
+    }
+
+    void SetMmlParser(driver::MmlParser* parser) { m_MmlParser = *parser; }
+
+    void SetSequenceUserProcCallback(SequenceUserProcCallback callback, void* arg) {
+        m_SequenceUserProcCallback = callback;
+        m_pSequenceUserProcCallbackArg = arg;
+    }
+
     bool IsSoundArchiveAvailable() const;
 
     int32_t GetActiveCount() const;
     int32_t GetFreeCount() const;
 
-    static void SetSequenceSkipIntervalTick(int32_t tick);
+    static void SetSequenceSkipIntervalTick(int32_t intervalTick);
     static int32_t GetSequenceSkipIntervalTick();
 
     void Update();
@@ -74,9 +64,45 @@ public:
                                             const SoundArchive::SoundInfo* commonInfo,
                                             const StartInfoReader& startInfoReader);
 
-    SoundStartable::StartResult SetupSequenceSoundInfo(
-        SoundStartable::StartInfo::SequenceSoundInfo* sequenceSoundInfo,
-        SoundArchive::ItemId soundId, const SoundArchive& soundArchive,
+    void DumpMemory(const SoundArchive* pSoundArchive) const;
+
+private:
+    class SequenceNoteOnCallback : public driver::NoteOnCallback {
+        NN_NO_COPY(SequenceNoteOnCallback);
+
+    public:
+        SequenceNoteOnCallback() = default;
+
+        void Initialize(const SequenceSoundRuntime& runtime);
+
+        driver::Channel* NoteOn(driver::SequenceSoundPlayer* seqPlayer, uint8_t bankIndex,
+                                const driver::NoteOnInfo& noteOnInfo) override;
+
+    private:
+        friend SequenceSoundRuntime;
+
+        const SequenceSoundRuntime* m_pSequenceSoundRuntime;
+    };
+    static_assert(sizeof(SequenceNoteOnCallback) == 0x10);
+
+    struct PrepareContext {
+        const SequenceSoundFile* pSequenceSoundFile;
+        uint32_t sequenceOffset;
+        uint32_t allocateTrackFlags;
+        LoadItemInfo loadTargetSequenceInfo;
+        LoadItemInfo loadTargetBankInfos[SeqBankMax];
+        LoadItemInfo loadTargetWaveArchiveInfos[SeqBankMax];
+        bool isLoadIndividuals[SeqBankMax];
+        bool canUsePlayerHeap;
+        bool isRegisterDataLoadTaskNeeded;
+
+        void Initialize();
+    };
+    static_assert(sizeof(PrepareContext) == 0xa8);
+
+    bool SetupSequenceSoundInfo(
+        SoundStartable::StartInfo::SequenceSoundInfo* pOutInfo, SoundArchive::ItemId soundId,
+        const SoundArchive& soundArchive,
         const SoundStartable::StartInfo::SequenceSoundInfo* pExternalSequenceSoundInfo);
 
     SoundStartable::StartResult SetupSequenceSoundFile(
@@ -90,26 +116,24 @@ public:
         const SoundArchiveManager::SnapShot& snapShot,
         const SoundStartable::StartInfo::SequenceSoundInfo* pExternalSequenceSoundInfo);
 
-    void SetupSequenceSoundPlayerStartInfo(SoundStartable::StartInfo* startInfo,
-                                           SoundArchive::ItemId soundId,
-                                           const StartInfoReader& startInfoReader);
-
-    void DumpMemory(const SoundArchive*) const;
-
-    void SetupBankFileAndWaveArchiveFileFromHook(PrepareContext* pOutContext, SequenceSound* sound,
+    void SetupBankFileAndWaveArchiveFileFromHook(PrepareContext* pOutContext,
+                                                 const SequenceSound& sound,
                                                  SoundArchive* soundArchive);
 
-private:
+    void SetupSequenceSoundPlayerStartInfo(SoundStartable::StartInfo* pOutStartInfo,
+                                           uint32_t sequenceOffset,
+                                           const StartInfoReader& startInfoReader);
+
     SequenceSoundInstanceManager m_SequenceSoundInstanceManager;
     driver::SequenceSoundLoaderManager m_SequenceSoundLoaderManager;
-    driver::SequenceTrackAllocator* m_pSequenceTrackAllocator;
-    driver::MmlSequenceTrackAllocator m_MmlSequenceTrackAllocator;
+    driver::SequenceTrackAllocator* m_pSequenceTrackAllocator{};
+    driver::MmlSequenceTrackAllocator m_MmlSequenceTrackAllocator{&m_MmlParser};
     driver::MmlParser m_MmlParser;
     SequenceNoteOnCallback m_SequenceCallback;
-    SequenceUserProcCallback m_SequenceUserProcCallback;
-    void* m_pSequenceUserProcCallbackArg;
-    SoundArchiveManager* m_pSoundArchiveManager;
-    SoundArchiveFilesHook* m_pSoundArchiveFilesHook;
+    SequenceUserProcCallback m_SequenceUserProcCallback{};
+    void* m_pSequenceUserProcCallbackArg{};
+    const SoundArchiveManager* m_pSoundArchiveManager{};
+    SoundArchiveFilesHook* m_pSoundArchiveFilesHook{};
 };
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
 static_assert(sizeof(SequenceSoundRuntime) == 0xe0);

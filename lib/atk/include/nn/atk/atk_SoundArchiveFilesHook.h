@@ -38,7 +38,12 @@ public:
     }
 
     const void* GetFileAddress(const char* itemLabel, const char* itemType, const char* fileType,
-                               uint32_t fileIndex);
+                               uint32_t fileIndex) {
+        if (!m_IsEnable)
+            return nullptr;
+
+        return GetFileAddressImpl(itemLabel, itemType, fileType, fileIndex);
+    }
 
 protected:
     // XXX: these are not part of debug symbols, but are here
@@ -53,6 +58,8 @@ protected:
     virtual fnd::FileStream* OpenFileImpl(void* buffer, size_t bufferLength, void* cacheBuffer,
                                           size_t cacheBufferLength, const char* itemLabel,
                                           const char* fileType);
+    virtual const void* GetFileAddressImpl(const char* itemLabel, const char* itemType,
+                                           const char* fileType, uint32_t fileIndex);
 
 private:
     bool m_IsEnable;
