@@ -171,4 +171,8 @@ int32_t SequenceSoundRuntime::GetSequenceSkipIntervalTick() {
     return driver::SequenceSoundPlayer::GetSkipIntervalTick();
 }
 
+void SequenceSoundRuntime::Update() {
+    m_SequenceSoundInstanceManager.SortPriorityList();
+}
+
 }  // namespace nn::atk::detail
