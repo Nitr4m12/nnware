@@ -158,4 +158,8 @@ int32_t SequenceSoundRuntime::GetActiveCount() const {
     return m_SequenceSoundInstanceManager.GetActiveCount();
 }
 
+int32_t SequenceSoundRuntime::GetFreeCount() const {
+    return m_SequenceSoundInstanceManager.GetFreeCount();
+}
+
 }  // namespace nn::atk::detail
