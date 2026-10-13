@@ -62,15 +62,14 @@ public:
     virtual void OnChangeOutputMode();
     virtual void SetEffectBuffer(void* effectBuffer, size_t effectBufferSize);
 
+    util::IntrusiveListNode m_Link;
+
 protected:
     static int ConvertChannelModeToInt(ChannelMode channelMode);
 
 private:
     NN_NO_COPY(EffectBase);
 
-    friend OutputMixer;
-
-    util::IntrusiveListNode m_Link;
     bool m_IsActive;
     SampleRate m_SampleRate;
     void* m_EffectBuffer;

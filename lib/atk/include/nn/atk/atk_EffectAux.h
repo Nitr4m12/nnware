@@ -89,10 +89,9 @@ public:
 
     void Update();
 
-private:
-    friend OutputMixer;
-
     util::IntrusiveListNode m_AuxLinkNode;
+
+private:
     audio::AuxType m_AuxType;
     std::atomic_uint64_t m_AudioRendererUpdateCountWhenAddedAux;
     int32_t m_AudioFrameCount;

@@ -193,6 +193,23 @@ SequenceSound* SequenceSoundRuntime::AllocSound(SoundArchive::ItemId soundId, in
 }
 #endif
 
+bool SequenceSoundRuntime::SetupSequenceSoundInfo(
+    SoundArchive::SequenceSoundInfo* pOutInfo, SoundArchive::ItemId soundId,
+    const SoundArchive& soundArchive,
+    const SoundStartable::StartInfo::SequenceSoundInfo* pExternalSequenceSoundInfo) {
+    if (!soundArchive.ReadSequenceSoundInfo(pOutInfo, soundId))
+        return false;
+
+    if (pExternalSequenceSoundInfo != nullptr) {
+        for (int i{0}; i < static_cast<int>(SeqBankMax); ++i) {
+            if (pExternalSequenceSoundInfo->bankIds[i] != InvalidSoundId)
+                pOutInfo->bankIds[i] = pExternalSequenceSoundInfo->bankIds[i];
+        }
+    }
+
+    return true;
+}
+
 void SequenceSoundRuntime::DumpMemory([[maybe_unused]] const SoundArchive* pSoundArchive) const {}
 
 }  // namespace nn::atk::detail

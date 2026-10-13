@@ -101,7 +101,7 @@ private:
     static_assert(sizeof(PrepareContext) == 0xa8);
 
     bool SetupSequenceSoundInfo(
-        SoundStartable::StartInfo::SequenceSoundInfo* pOutInfo, SoundArchive::ItemId soundId,
+        SoundArchive::SequenceSoundInfo* pOutInfo, SoundArchive::ItemId soundId,
         const SoundArchive& soundArchive,
         const SoundStartable::StartInfo::SequenceSoundInfo* pExternalSequenceSoundInfo);
 

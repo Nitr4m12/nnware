@@ -18,9 +18,13 @@ namespace nn::atk::detail::driver {
 
 class HardwareManager : public Util::Singleton<HardwareManager> {
 public:
+    using EffectList =
+        util::IntrusiveList<EffectBase,
+                            util::IntrusiveListMemberNodeTraits<EffectBase, &EffectBase::m_Link>>;
+    using EffectAuxList = util::IntrusiveList<
+        EffectAux, util::IntrusiveListMemberNodeTraits<EffectAux, &EffectAux::m_AuxLinkNode>>;
     using SubMixList =
         util::IntrusiveList<SubMix, util::IntrusiveListMemberNodeTraits<SubMix, &SubMix::m_Link>>;
-
     constexpr static uint32_t SoundFrameIntervalMsec = 5;
     constexpr static uint32_t SoundFrameIntervalUsec = 5000;
 
@@ -274,11 +278,12 @@ private:
     MoveValue<float, int32_t> m_MasterVolume;
     MoveValue<float, int32_t> m_VolumeForReset;
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
-    SubMixList _1[14];  // There's some kind of intrusive list array here, but it's not SubMix
-                        // (because SubMix does not exist on versions prior to 4.0.0)
+    EffectList m_EffectList[OutputDevice_Count][AuxBus_Count][WaveChannelMax];
+    EffectAuxList m_EffectAuxList[OutputDevice_Count][AuxBus_Count][WaveChannelMax];
+    EffectAuxList m_EffectAuxListForFinalMix;
+    EffectAuxList m_EffectAuxListForAdditionalSubMix;
 #endif
-    BiquadFilterCallback* m_BiquadFilterCallbackTable[BiquadFilterType_Max +
-                                                      1];  // SMO: 0x1e8 = 488, BTD5: 0x108 = 264
+    BiquadFilterCallback* m_BiquadFilterCallbackTable[BiquadFilterType_Max + 1];
     uint8_t m_OutputDeviceFlag[OutputLineIndex_Max];
     LowLevelVoiceAllocator m_LowLevelVoiceAllocator;  // SMO: 0x608 = 1544, BTD5: 0x528 = 1320
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
