@@ -28,7 +28,6 @@ public:
     OutputReceiver* GetOutputReceiver() const { return m_pOutputReceiver; }
 #endif
 
-
 private:
     SoundStartable::StartInfo::StartOffsetType m_StartOffsetType;
     int32_t m_StartOffset;

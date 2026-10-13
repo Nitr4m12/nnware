@@ -107,7 +107,7 @@ private:
 
     SoundStartable::StartResult SetupSequenceSoundFile(
         PrepareContext* pOutContext, const SequenceSound& sound, const SoundArchive& soundArchive,
-        const SoundDataManager& soundDataManager, const SoundArchive::SoundInfo& commonInfo,
+        const SoundDataManager& soundDataManager, const SoundArchive::SoundInfo& soundInfo,
         const SoundStartable::StartInfo::SequenceSoundInfo* pExternalSequenceSoundInfo);
 
     SoundStartable::StartResult SetupBankFileAndWaveArchiveFile(
@@ -120,7 +120,7 @@ private:
                                                  const SequenceSound& sound,
                                                  SoundArchive* soundArchive);
 
-    void SetupSequenceSoundPlayerStartInfo(SoundStartable::StartInfo* pOutStartInfo,
+    void SetupSequenceSoundPlayerStartInfo(driver::SequenceSoundPlayer::StartInfo* pOutStartInfo,
                                            uint32_t sequenceOffset,
                                            const StartInfoReader& startInfoReader);
 

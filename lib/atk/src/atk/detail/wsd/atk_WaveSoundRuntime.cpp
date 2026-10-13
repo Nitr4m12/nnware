@@ -173,9 +173,10 @@ SoundStartable::StartResult WaveSoundRuntime::PrepareImpl(const SoundArchive* pS
                 soundLabel, SoundArchiveFilesHook::ItemTypeWaveSound,
                 SoundArchiveFilesHook::FileTypeWaveSoundBinary, 0);
 
-            const void* warcFile{m_pSoundArchiveFilesHook->GetFileAddress(
-                soundLabel, SoundArchiveFilesHook::ItemTypeWaveSound,
-                SoundArchiveFilesHook::FileTypeWaveArchiveBinary, 0),
+            const void* warcFile{
+                m_pSoundArchiveFilesHook->GetFileAddress(
+                    soundLabel, SoundArchiveFilesHook::ItemTypeWaveSound,
+                    SoundArchiveFilesHook::FileTypeWaveArchiveBinary, 0),
             };
 
             if (wsdFile != nullptr && warcFile != nullptr) {
@@ -228,7 +229,6 @@ SoundStartable::StartResult WaveSoundRuntime::PrepareImpl(const SoundArchive* pS
             waveFile = nullptr;
         }
     }
-
 
     driver::WaveSoundPlayer::StartOffsetType wsdStartOffsetType{
         driver::WaveSoundPlayer::StartOffsetType_Sample,

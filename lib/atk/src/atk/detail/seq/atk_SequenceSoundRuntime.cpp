@@ -1,5 +1,7 @@
 #include <nn/atk/atk_SequenceSoundRuntime.h>
 
+#include <nn/atk/atk_SequenceSoundFileReader.h>
+#include <nn/atk/atk_SoundArchiveFilesHook.h>
 #include <nn/atk/atk_SoundRuntimeUtility.h>
 #include <nn/atk/atk_SoundSystem.h>
 
@@ -208,6 +210,94 @@ bool SequenceSoundRuntime::SetupSequenceSoundInfo(
     }
 
     return true;
+}
+
+SoundStartable::StartResult SequenceSoundRuntime::SetupSequenceSoundFile(
+    PrepareContext* pOutContext, const SequenceSound& sound, const SoundArchive& soundArchive,
+    const SoundDataManager& soundDataManager, const SoundArchive::SoundInfo& soundInfo,
+    const SoundStartable::StartInfo::SequenceSoundInfo* pExternalSequenceSoundInfo) {
+    if (m_pSoundArchiveFilesHook != nullptr) {
+        const char* soundLabel{soundArchive.GetItemLabel(sound.GetId())};
+        if (soundLabel != nullptr) {
+            pOutContext->pSequenceSoundFile =
+                static_cast<const SequenceSoundFile*>(m_pSoundArchiveFilesHook->GetFileAddress(
+                    soundLabel, SoundArchiveFilesHook::ItemTypeSequenceSound,
+                    SoundArchiveFilesHook::FileTypeSequenceBinary, 0));
+        } else {
+            pOutContext->pSequenceSoundFile = nullptr;
+        }
+    }
+
+    if (pOutContext->pSequenceSoundFile == nullptr) {
+        pOutContext->pSequenceSoundFile = static_cast<const SequenceSoundFile*>(
+            soundDataManager.detail_GetFileAddress(soundInfo.fileId));
+        if (pExternalSequenceSoundInfo != nullptr) {
+            const void* pExternalSequenceSoundFile{pExternalSequenceSoundInfo->sequenceDataAddress};
+            if (pExternalSequenceSoundFile != nullptr) {
+                pOutContext->pSequenceSoundFile =
+                    static_cast<const SequenceSoundFile*>(pExternalSequenceSoundFile);
+            }
+
+            SequenceSoundFileReader fileReader{pOutContext->pSequenceSoundFile};
+            const char* startLabel{pExternalSequenceSoundInfo->startLocationLabel};
+            if (startLabel != nullptr) {
+                if (!fileReader.GetOffsetByLabel(startLabel, &pOutContext->sequenceOffset))
+                    return SoundStartable::StartResult::
+                        ResultCode_ErrorInvalidSequenceStartLocationLabel;
+
+                pOutContext->sequenceOffset = driver::MmlParser::ParseAllocTrack(
+                    fileReader.GetSequenceData(), pOutContext->sequenceOffset,
+                    &pOutContext->allocateTrackFlags);
+            }
+        }
+    }
+
+    pOutContext->loadTargetSequenceInfo.itemId = sound.GetId();
+    pOutContext->loadTargetSequenceInfo.address = pOutContext->pSequenceSoundFile;
+
+    if (pOutContext->pSequenceSoundFile == nullptr) {
+        if (!pOutContext->canUsePlayerHeap)
+            return SoundStartable::StartResult::ResultCode_ErrorNotSequenceLoaded;
+
+        pOutContext->isRegisterDataLoadTaskNeeded = true;
+    }
+
+    return SoundStartable::StartResult::ResultCode_Success;
+}
+
+// NON_MATCHING: missing cmp branch
+void SequenceSoundRuntime::SetupSequenceSoundPlayerStartInfo(
+    driver::SequenceSoundPlayer::StartInfo* pOutStartInfo, uint32_t sequenceOffset,
+    const StartInfoReader& startInfoReader) {
+    int startOffset;
+    driver::SequenceSoundPlayer::StartOffsetType startOffsetType;
+
+    switch (startInfoReader.GetStartOffsetType()) {
+    case SoundStartable::StartInfo::StartOffsetType_Sample:
+        startOffsetType = driver::SequenceSoundPlayer::StartOffsetType_Tick;
+        startOffset = 0;
+        break;
+
+    case SoundStartable::StartInfo::StartOffsetType_Tick:
+        startOffsetType = driver::SequenceSoundPlayer::StartOffsetType_Tick;
+        startOffset = startInfoReader.GetStartOffset();
+        break;
+
+    case SoundStartable::StartInfo::StartOffsetType_MilliSeconds:
+        startOffsetType = driver::SequenceSoundPlayer::StartOffsetType_Millisec;
+        startOffset = startInfoReader.GetStartOffset();
+        break;
+    }
+
+    pOutStartInfo->seqOffset = sequenceOffset;
+    pOutStartInfo->startOffsetType = startOffsetType;
+    pOutStartInfo->startOffset = startOffset;
+    pOutStartInfo->delayTime = startInfoReader.GetDelayTime();
+    pOutStartInfo->delayCount = startInfoReader.GetDelayCount();
+    pOutStartInfo->updateType = startInfoReader.GetUpdateType();
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    pOutStartInfo->subMixIndex = startInfoReader.GetSubMixIndex();
+#endif
 }
 
 void SequenceSoundRuntime::DumpMemory([[maybe_unused]] const SoundArchive* pSoundArchive) const {}
