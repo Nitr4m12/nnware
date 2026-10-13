@@ -100,7 +100,8 @@ bool SequenceSoundRuntime::SetupSequenceTrack(int32_t trackCount, void** pOutAll
         return false;
 
     [[maybe_unused]] int32_t createdTrackCount{
-        m_MmlSequenceTrackAllocator.Create(*pOutAllocatedAddr, requireSize)};
+        m_MmlSequenceTrackAllocator.Create(*pOutAllocatedAddr, requireSize),
+    };
     *pOutAllocatedAddr = estimateEndAddr;
     return true;
 }
@@ -164,6 +165,10 @@ int32_t SequenceSoundRuntime::GetFreeCount() const {
 
 void SequenceSoundRuntime::SetSequenceSkipIntervalTick(int32_t intervalTick) {
     driver::SequenceSoundPlayer::SetSkipIntervalTick(intervalTick);
+}
+
+int32_t SequenceSoundRuntime::GetSequenceSkipIntervalTick() {
+    return driver::SequenceSoundPlayer::GetSkipIntervalTick();
 }
 
 }  // namespace nn::atk::detail
