@@ -189,7 +189,7 @@ SoundStartable::StartResult WaveSoundRuntime::PrepareImpl(const SoundArchive* pS
     }
 
     int release{127};
-    bool isContextCalculationSkipMode{false};
+    [[maybe_unused]] bool isContextCalculationSkipMode{false};
     int waveSoundParameterFlag{0};
 
     loadWsd.itemId = sound->GetId();
@@ -255,7 +255,9 @@ SoundStartable::StartResult WaveSoundRuntime::PrepareImpl(const SoundArchive* pS
     startInfo.delayCount = startInfoReader.GetDelayCount();
     startInfo.waveSoundParameterFlag = waveSoundParameterFlag;
     startInfo.release = release;
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
     startInfo.isContextCalculationSkipMode = isContextCalculationSkipMode;
+#endif
     startInfo.updateType = startInfoReader.GetUpdateType();
 
     if (isRegisterDataLoadTask) {

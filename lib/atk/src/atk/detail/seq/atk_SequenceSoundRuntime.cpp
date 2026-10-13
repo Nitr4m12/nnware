@@ -147,4 +147,11 @@ size_t SequenceSoundRuntime::GetRequiredSequenceTrackMemorySize(
     return size;
 }
 
+bool SequenceSoundRuntime::IsSoundArchiveAvailable() const {
+    if (m_pSoundArchiveManager == nullptr)
+        return false;
+
+    return m_pSoundArchiveManager->IsAvailable();
+}
+
 }  // namespace nn::atk::detail
