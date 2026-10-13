@@ -1,5 +1,6 @@
 #include <nn/atk/atk_SequenceSoundRuntime.h>
 
+#include <nn/atk/atk_SoundRuntimeUtility.h>
 #include <nn/atk/atk_SoundSystem.h>
 
 namespace nn::atk::detail {
@@ -174,5 +175,22 @@ int32_t SequenceSoundRuntime::GetSequenceSkipIntervalTick() {
 void SequenceSoundRuntime::Update() {
     m_SequenceSoundInstanceManager.SortPriorityList();
 }
+
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+SequenceSound* SequenceSoundRuntime::AllocSound(SoundArchive::ItemId soundId, int32_t priority,
+                                                int32_t ambientPriority,
+                                                BasicSound::AmbientInfo* ambientArgInfo) {
+    return SoundRuntimeUtility::AllocSound(&m_SequenceSoundInstanceManager, soundId, priority,
+                                           ambientPriority, ambientArgInfo);
+}
+#else
+SequenceSound* SequenceSoundRuntime::AllocSound(SoundArchive::ItemId soundId, int32_t priority,
+                                                int32_t ambientPriority,
+                                                BasicSound::AmbientInfo* ambientArgInfo,
+                                                OutputReceiver* pOutputReceiver) {
+    return SoundRuntimeUtility::AllocSound(&m_SequenceSoundInstanceManager, soundId, priority,
+                                           ambientPriority, ambientArgInfo, pOutputReceiver);
+}
+#endif
 
 }  // namespace nn::atk::detail
