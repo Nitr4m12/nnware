@@ -119,4 +119,23 @@ void SequenceSoundRuntime::SetupUserParam(void** pOutAllocatedAddr, size_t adjus
 #endif
 }
 
+size_t SequenceSoundRuntime::GetRequiredMemorySize(
+    const SoundArchive::SoundArchivePlayerInfo& soundArchivePlayerInfo, int32_t alignment) {
+    size_t size{0};
+    size = soundArchivePlayerInfo.sequenceSoundCount;
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    size = SequenceSoundInstanceManager::GetRequiredMemSize(size);
+#else
+    size = SequenceSoundInstanceManager::GetRequiredMemSize(size,
+                                                            SoundSystem::GetSoundInstanceConfig());
+#endif
+    size = util::align_up(size, alignment);
+
+    size += util::align_up(driver::SequenceSoundLoaderManager::GetRequiredMemSize(
+                               soundArchivePlayerInfo.sequenceSoundCount),
+                           alignment);
+
+    return size;
+}
+
 }  // namespace nn::atk::detail
