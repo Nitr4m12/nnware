@@ -162,4 +162,8 @@ int32_t SequenceSoundRuntime::GetFreeCount() const {
     return m_SequenceSoundInstanceManager.GetFreeCount();
 }
 
+void SequenceSoundRuntime::SetSequenceSkipIntervalTick(int32_t intervalTick) {
+    driver::SequenceSoundPlayer::SetSkipIntervalTick(intervalTick);
+}
+
 }  // namespace nn::atk::detail
