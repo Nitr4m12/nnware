@@ -88,4 +88,21 @@ void SequenceSoundRuntime::Finalize() {
     m_MmlSequenceTrackAllocator.Destroy();
 }
 
+bool SequenceSoundRuntime::SetupSequenceTrack(int32_t trackCount, void** pOutAllocatedAddr,
+                                              const void* endAddr) {
+    if (reinterpret_cast<uintptr_t>(*pOutAllocatedAddr) % 64 != 0)
+        return false;
+
+    size_t requireSize{util::align_up(trackCount * (sizeof(driver::SequenceTrack) + 0x8), 64)};
+
+    void* estimateEndAddr{util::BytePtr(*pOutAllocatedAddr, requireSize).Get()};
+    if (util::ConstBytePtr(endAddr).Distance(estimateEndAddr) > 0)
+        return false;
+
+    [[maybe_unused]] int32_t createdTrackCount{
+        m_MmlSequenceTrackAllocator.Create(*pOutAllocatedAddr, requireSize)};
+    *pOutAllocatedAddr = estimateEndAddr;
+    return true;
+}
+
 }  // namespace nn::atk::detail
