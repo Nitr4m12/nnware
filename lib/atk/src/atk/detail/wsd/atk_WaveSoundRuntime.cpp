@@ -116,7 +116,7 @@ void WaveSoundRuntime::SetupUserParam(void** startAddr, size_t adjustSize) {
     void* curAddr{*startAddr};
 
     auto& list{m_WaveSoundInstanceManager.GetFreeList()};
-    for (auto itr(list.begin()); itr != list.end(); ++itr) {
+    for (auto itr{list.begin()}; itr != list.end(); ++itr) {
         itr->SetUserParamBuffer(curAddr, adjustSize);
         curAddr = util::BytePtr(curAddr, adjustSize).Get();
     }
