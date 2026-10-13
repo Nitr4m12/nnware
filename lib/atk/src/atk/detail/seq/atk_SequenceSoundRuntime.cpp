@@ -138,4 +138,13 @@ size_t SequenceSoundRuntime::GetRequiredMemorySize(
     return size;
 }
 
+size_t SequenceSoundRuntime::GetRequiredSequenceTrackMemorySize(
+    const SoundArchive::SoundArchivePlayerInfo& soundArchivePlayerInfo, int32_t alignment) {
+    size_t size{0};
+    size = soundArchivePlayerInfo.sequenceTrackCount * (sizeof(driver::SequenceTrack) + 8);
+    size = util::align_up(size, alignment);
+
+    return size;
+}
+
 }  // namespace nn::atk::detail
