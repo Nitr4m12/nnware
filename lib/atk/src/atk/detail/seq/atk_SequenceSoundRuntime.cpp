@@ -193,4 +193,6 @@ SequenceSound* SequenceSoundRuntime::AllocSound(SoundArchive::ItemId soundId, in
 }
 #endif
 
+void SequenceSoundRuntime::DumpMemory([[maybe_unused]] const SoundArchive* pSoundArchive) const {}
+
 }  // namespace nn::atk::detail
