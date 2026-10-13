@@ -154,4 +154,8 @@ bool SequenceSoundRuntime::IsSoundArchiveAvailable() const {
     return m_pSoundArchiveManager->IsAvailable();
 }
 
+int32_t SequenceSoundRuntime::GetActiveCount() const {
+    return m_SequenceSoundInstanceManager.GetActiveCount();
+}
+
 }  // namespace nn::atk::detail
