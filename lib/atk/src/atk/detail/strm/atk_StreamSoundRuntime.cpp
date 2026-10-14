@@ -224,4 +224,8 @@ void StreamSoundRuntime::SetupUserParam(void** pOutAllocatedAddr, size_t adjustS
 #endif
 }
 
+void StreamSoundRuntime::Update() {
+    m_StreamSoundInstanceManager.SortPriorityList();
+}
+
 }  // namespace nn::atk::detail
