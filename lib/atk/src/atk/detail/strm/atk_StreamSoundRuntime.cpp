@@ -161,13 +161,24 @@ size_t StreamSoundRuntime::GetRequiredMemorySize(
     };
 #endif
 
-    size = util::align_up(size, 4096);
+    size = util::align_up(size, fnd::Thread::StackAlignment);
 
     size += util::align_up(driver::StreamSoundLoaderManager::GetRequiredMemSize(
                                soundArchivePlayerInfo.streamSoundCount),
                            alignment);
 
     return size;
+}
+
+size_t StreamSoundRuntime::GetRequiredStreamCacheSize(const SoundArchive *soundArchive, size_t cacheSizePerSound) {
+    int strmSoundCount{0};
+
+    SoundArchive::SoundArchivePlayerInfo soundArchivePlayerInfo;
+    if (soundArchive->ReadSoundArchivePlayerInfo(&soundArchivePlayerInfo))
+        strmSoundCount = soundArchivePlayerInfo.streamSoundCount;
+
+    size_t memSize{strmSoundCount * cacheSizePerSound};
+    return memSize;
 }
 
 }  // namespace nn::atk::detail
