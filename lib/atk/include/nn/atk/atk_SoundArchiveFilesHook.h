@@ -19,8 +19,8 @@ public:
     constexpr static const char FileTypeWaveArchiveBinary[] = "bxwar";
     constexpr static const char FileTypeStreamPrefetchBinary[] = "bxstp";
 
-    bool GetIsEnable() const;
-    void SetIsEnable(bool value);
+    bool GetIsEnable() const { return m_IsEnable; }
+    void SetIsEnable(bool value) { m_IsEnable = value; }
 
     bool IsTargetItem(const char* itemLabel);
 

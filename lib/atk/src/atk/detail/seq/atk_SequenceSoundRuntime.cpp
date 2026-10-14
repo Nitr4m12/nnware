@@ -3,6 +3,7 @@
 #include <nn/atk/atk_Bank.h>
 #include <nn/atk/atk_SequenceSoundFileReader.h>
 #include <nn/atk/atk_SoundArchiveFilesHook.h>
+#include <nn/atk/atk_SoundArchiveParametersHook.h>
 #include <nn/atk/atk_SoundRuntimeUtility.h>
 #include <nn/atk/atk_SoundSystem.h>
 
@@ -407,5 +408,45 @@ SequenceSoundRuntime::SequenceNoteOnCallback::NoteOn(driver::SequenceSoundPlayer
 }
 
 void SequenceSoundRuntime::DumpMemory([[maybe_unused]] const SoundArchive* pSoundArchive) const {}
+
+void SequenceSoundRuntime::SetupBankFileAndWaveArchiveFileFromHook(
+    PrepareContext* pOutContext, const SequenceSound& sound, const SoundArchive& soundArchive) {
+    const char* soundLabel{soundArchive.GetItemLabel(sound.GetId())};
+    if (soundLabel == nullptr)
+        return;
+
+    for (int i{0}; i < SeqBankMax; ++i) {
+        bool isSeqHookDisabled{!m_pSoundArchiveFilesHook->GetIsEnable()};
+        if (isSeqHookDisabled) {
+            soundArchive.detail_GetParametersHook()->SetIsEnable(true);
+            m_pSoundArchiveFilesHook->SetIsEnable(true);
+        }
+
+        const void* bankFile{
+            m_pSoundArchiveFilesHook->GetFileAddress(soundLabel,
+                                                     SoundArchiveFilesHook::ItemTypeSequenceSound,
+                                                     SoundArchiveFilesHook::FileTypeBankBinary, i),
+        };
+        const void* warcFile{
+            m_pSoundArchiveFilesHook->GetFileAddress(
+                soundLabel, SoundArchiveFilesHook::ItemTypeSequenceSound,
+                SoundArchiveFilesHook::FileTypeWaveArchiveBinary, i),
+        };
+
+        if (isSeqHookDisabled) {
+            soundArchive.detail_GetParametersHook()->SetIsEnable(false);
+            m_pSoundArchiveFilesHook->SetIsEnable(false);
+        }
+
+        if (bankFile != nullptr && warcFile != nullptr) {
+            pOutContext->loadTargetBankInfos[i].address = bankFile;
+            pOutContext->loadTargetWaveArchiveInfos[i].address = warcFile;
+            pOutContext->isLoadIndividuals[i] = false;
+        } else {
+            pOutContext->loadTargetBankInfos[i].address = nullptr;
+            pOutContext->loadTargetWaveArchiveInfos[i].address = nullptr;
+        }
+    }
+}
 
 }  // namespace nn::atk::detail
