@@ -206,4 +206,8 @@ int32_t StreamSoundRuntime::GetActiveTrackCount() const {
     return count;
 }
 
+int32_t StreamSoundRuntime::GetFreeCount() const {
+    return m_StreamSoundInstanceManager.GetFreeCount();
+}
+
 }  // namespace nn::atk::detail
