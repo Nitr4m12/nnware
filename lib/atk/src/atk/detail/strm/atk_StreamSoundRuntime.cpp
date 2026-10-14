@@ -140,4 +140,12 @@ bool StreamSoundRuntime::SetupStreamCacheBuffer(const SoundArchive* pSoundArchiv
     return true;
 }
 
+void StreamSoundRuntime::Finalize() {
+    m_StreamBufferPool.Finalize();
+    m_StreamSoundInstanceManager.Destroy();
+    m_StreamSoundLoaderManager.Destroy();
+
+    driver::SoundThread::GetInstance().UnregisterSoundFrameCallback(&m_StreamSoundLoaderManager);
+}
+
 }  // namespace nn::atk::detail
