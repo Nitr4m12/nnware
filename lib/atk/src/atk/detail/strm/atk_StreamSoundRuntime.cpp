@@ -1,5 +1,6 @@
 #include <nn/atk/atk_StreamSoundRuntime.h>
 
+#include <nn/atk/atk_SoundRuntimeUtility.h>
 #include <nn/atk/atk_SoundSystem.h>
 
 namespace {
@@ -227,5 +228,22 @@ void StreamSoundRuntime::SetupUserParam(void** pOutAllocatedAddr, size_t adjustS
 void StreamSoundRuntime::Update() {
     m_StreamSoundInstanceManager.SortPriorityList();
 }
+
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+StreamSound* StreamSoundRuntime::AllocSound(SoundArchive::ItemId soundId, int32_t priority,
+                                            int32_t ambientPriority,
+                                            BasicSound::AmbientInfo* ambientArgInfo) {
+    return SoundRuntimeUtility::AllocSound(&m_StreamSoundInstanceManager, soundId, priority,
+                                           ambientPriority, ambientArgInfo);
+}
+#else
+StreamSound* StreamSoundRuntime::AllocSound(SoundArchive::ItemId soundId, int32_t priority,
+                                            int32_t ambientPriority,
+                                            BasicSound::AmbientInfo* ambientArgInfo,
+                                            OutputReceiver* pOutputReceiver) {
+    return SoundRuntimeUtility::AllocSound(&m_StreamSoundInstanceManager, soundId, priority,
+                                           ambientPriority, ambientArgInfo, pOutputReceiver);
+}
+#endif
 
 }  // namespace nn::atk::detail
