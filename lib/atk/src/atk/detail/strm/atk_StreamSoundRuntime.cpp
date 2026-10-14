@@ -210,4 +210,18 @@ int32_t StreamSoundRuntime::GetFreeCount() const {
     return m_StreamSoundInstanceManager.GetFreeCount();
 }
 
+void StreamSoundRuntime::SetupUserParam(void** pOutAllocatedAddr, size_t adjustSize) {
+    void* curAddr{*pOutAllocatedAddr};
+
+    auto& list{m_StreamSoundInstanceManager.GetFreeList()};
+    for (auto itr{list.begin()}; itr != list.end(); ++itr) {
+        itr->SetUserParamBuffer(curAddr, adjustSize);
+        curAddr = util::BytePtr(curAddr, adjustSize).Get();
+    }
+
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+    *pOutAllocatedAddr = curAddr;
+#endif
+}
+
 }  // namespace nn::atk::detail
