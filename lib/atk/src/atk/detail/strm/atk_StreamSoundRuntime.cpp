@@ -148,4 +148,26 @@ void StreamSoundRuntime::Finalize() {
     driver::SoundThread::GetInstance().UnregisterSoundFrameCallback(&m_StreamSoundLoaderManager);
 }
 
+size_t StreamSoundRuntime::GetRequiredMemorySize(
+    const SoundArchive::SoundArchivePlayerInfo& soundArchivePlayerInfo, int32_t alignment) {
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    size_t size{
+        StreamSoundInstanceManager::GetRequiredMemSize(soundArchivePlayerInfo.streamSoundCount),
+    };
+#else
+    size_t size{
+        StreamSoundInstanceManager::GetRequiredMemSize(soundArchivePlayerInfo.streamSoundCount,
+                                                       SoundSystem::GetSoundInstanceConfig()),
+    };
+#endif
+
+    size = util::align_up(size, 4096);
+
+    size += util::align_up(driver::StreamSoundLoaderManager::GetRequiredMemSize(
+                               soundArchivePlayerInfo.streamSoundCount),
+                           alignment);
+
+    return size;
+}
+
 }  // namespace nn::atk::detail
