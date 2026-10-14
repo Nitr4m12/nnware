@@ -246,4 +246,6 @@ StreamSound* StreamSoundRuntime::AllocSound(SoundArchive::ItemId soundId, int32_
 }
 #endif
 
+void StreamSoundRuntime::DumpMemory([[maybe_unused]] const SoundArchive* pSoundArchive) const {}
+
 }  // namespace nn::atk::detail
