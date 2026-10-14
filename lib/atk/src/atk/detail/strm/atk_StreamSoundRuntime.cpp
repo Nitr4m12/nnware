@@ -170,7 +170,8 @@ size_t StreamSoundRuntime::GetRequiredMemorySize(
     return size;
 }
 
-size_t StreamSoundRuntime::GetRequiredStreamCacheSize(const SoundArchive *soundArchive, size_t cacheSizePerSound) {
+size_t StreamSoundRuntime::GetRequiredStreamCacheSize(const SoundArchive* soundArchive,
+                                                      size_t cacheSizePerSound) {
     int strmSoundCount{0};
 
     SoundArchive::SoundArchivePlayerInfo soundArchivePlayerInfo;
@@ -179,6 +180,10 @@ size_t StreamSoundRuntime::GetRequiredStreamCacheSize(const SoundArchive *soundA
 
     size_t memSize{strmSoundCount * cacheSizePerSound};
     return memSize;
+}
+
+int32_t StreamSoundRuntime::GetActiveCount() const {
+    return m_StreamSoundInstanceManager.GetActiveCount();
 }
 
 }  // namespace nn::atk::detail
