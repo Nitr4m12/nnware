@@ -73,7 +73,9 @@ private:
     public:
         SequenceNoteOnCallback() = default;
 
-        void Initialize(const SequenceSoundRuntime& runtime);
+        void Initialize(const SequenceSoundRuntime& sequenceSoundRuntime) {
+            m_pSequenceSoundRuntime = &sequenceSoundRuntime;
+        }
 
         driver::Channel* NoteOn(driver::SequenceSoundPlayer* seqPlayer, uint8_t bankIndex,
                                 const driver::NoteOnInfo& noteOnInfo) override;

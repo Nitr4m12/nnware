@@ -1,5 +1,6 @@
 #include <nn/atk/atk_SequenceSoundRuntime.h>
 
+#include <nn/atk/atk_Bank.h>
 #include <nn/atk/atk_SequenceSoundFileReader.h>
 #include <nn/atk/atk_SoundArchiveFilesHook.h>
 #include <nn/atk/atk_SoundRuntimeUtility.h>
@@ -8,7 +9,7 @@
 namespace nn::atk::detail {
 
 SequenceSoundRuntime::SequenceSoundRuntime() {
-    m_SequenceCallback.m_pSequenceSoundRuntime = this;
+    m_SequenceCallback.Initialize(*this);
 }
 
 SequenceSoundRuntime::~SequenceSoundRuntime() {
@@ -294,7 +295,8 @@ SoundStartable::StartResult SequenceSoundRuntime::SetupBankFileAndWaveArchiveFil
             if (pSoundArchive->IsAddon()) {
                 const char* bankName{pSoundArchive->GetItemLabel(bankId)};
                 SoundArchive::ItemId mainArchiveBankId{
-                    snapShot.GetMainSoundArchive().GetItemId(bankName)};
+                    snapShot.GetMainSoundArchive().GetItemId(bankName),
+                };
 
                 if (mainArchiveBankId != SoundArchive::InvalidId) {
                     pSoundArchive = &snapShot.GetMainSoundArchive();
@@ -313,9 +315,11 @@ SoundStartable::StartResult SequenceSoundRuntime::SetupBankFileAndWaveArchiveFil
             pOutContext->loadTargetBankInfos[i].address = bankFile;
 
             if (bankFile != nullptr) {
-                Util::WaveArchiveLoadStatus status{Util::GetWaveArchiveOfBank(
-                    pOutContext->loadTargetWaveArchiveInfos[i], pOutContext->isLoadIndividuals[i],
-                    bankFile, *pSoundArchive, *pSoundDataManager)};
+                Util::WaveArchiveLoadStatus status{
+                    Util::GetWaveArchiveOfBank(pOutContext->loadTargetWaveArchiveInfos[i],
+                                               pOutContext->isLoadIndividuals[i], bankFile,
+                                               *pSoundArchive, *pSoundDataManager),
+                };
                 switch (status) {
                 case Util::WaveArchiveLoadStatus_Ok:
                 case Util::WaveArchiveLoadStatus_Noneed:
@@ -382,6 +386,24 @@ void SequenceSoundRuntime::SetupSequenceSoundPlayerStartInfo(
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
     pOutStartInfo->subMixIndex = startInfoReader.GetSubMixIndex();
 #endif
+}
+
+driver::Channel*
+SequenceSoundRuntime::SequenceNoteOnCallback::NoteOn(driver::SequenceSoundPlayer* seqPlayer,
+                                                     uint8_t bankIndex,
+                                                     const driver::NoteOnInfo& noteOnInfo) {
+    if (m_pSequenceSoundRuntime->m_pSoundArchiveManager == nullptr ||
+        !m_pSequenceSoundRuntime->m_pSoundArchiveManager->IsAvailable())
+        return nullptr;
+
+    detail::BankFileReader& bankReader{seqPlayer->GetBankFileReader(bankIndex)};
+
+    detail::driver::Bank bank;
+    driver::Channel* channel{
+        bank.NoteOn(bankReader, seqPlayer->GetWaveArchiveFileReader(bankIndex), noteOnInfo),
+    };
+
+    return channel;
 }
 
 void SequenceSoundRuntime::DumpMemory([[maybe_unused]] const SoundArchive* pSoundArchive) const {}
