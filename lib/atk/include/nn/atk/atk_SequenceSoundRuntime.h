@@ -98,7 +98,15 @@ private:
         bool canUsePlayerHeap;
         bool isRegisterDataLoadTaskNeeded;
 
-        void Initialize();
+        void Initialize() {
+            pSequenceSoundFile = nullptr;
+            sequenceOffset = 0;
+            allocateTrackFlags = 0;
+            for (int i{0}; i < SeqBankMax; ++i)
+                isLoadIndividuals[i] = false;
+            canUsePlayerHeap = false;
+            isRegisterDataLoadTaskNeeded = false;
+        }
     };
     static_assert(sizeof(PrepareContext) == 0xa8);
 

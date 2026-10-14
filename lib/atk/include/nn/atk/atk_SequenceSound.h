@@ -36,9 +36,9 @@ public:
 
     struct Resource {
         const void* seq;
-        const void* banks[4];
-        const void* warcs[4];
-        bool warcIsIndividuals[4];
+        const void* banks[SeqBankMax];
+        const void* warcs[SeqBankMax];
+        bool warcIsIndividuals[SeqBankMax];
 
         Resource() = default;
     };
