@@ -27,7 +27,7 @@ public:
                           int32_t alignment);
 
     size_t GetRequiredStreamBufferSize(const SoundArchive* soundArchive) const;
-    static uint32_t GetRequiredStreamBufferTimes(const SoundArchive* soundArchive);
+    static int32_t GetRequiredStreamBufferTimes(const SoundArchive* soundArchive);
     static size_t GetRequiredStreamCacheSize(const SoundArchive* soundArchive,
                                              size_t cacheSizePerSound);
     static size_t GetRequiredStreamInstanceSize(int32_t soundCount);

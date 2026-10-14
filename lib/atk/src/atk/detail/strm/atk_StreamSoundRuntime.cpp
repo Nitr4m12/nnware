@@ -80,9 +80,20 @@ size_t StreamSoundRuntime::GetRequiredStreamBufferSize(const SoundArchive* sound
     if (soundArchive->ReadSoundArchivePlayerInfo(&soundArchivePlayerInfo))
         strmChannelCount = soundArchivePlayerInfo.streamChannelCount;
 
-    size_t memSize{static_cast<size_t>(m_StreamBlockCount) * strmChannelCount};
-    memSize *= driver::StreamSoundLoader::DataBlockSizeMax;
+    size_t memSize{driver::StreamSoundLoader::DataBlockSizeMax};
+    memSize *= m_StreamBlockCount;
+    memSize *= strmChannelCount;
     return memSize;
+}
+
+int32_t StreamSoundRuntime::GetRequiredStreamBufferTimes(const SoundArchive* soundArchive) {
+    int strmBufferTimes{1};
+
+    SoundArchive::SoundArchivePlayerInfo soundArchivePlayerInfo;
+    if (soundArchive->ReadSoundArchivePlayerInfo(&soundArchivePlayerInfo))
+        strmBufferTimes = soundArchivePlayerInfo.streamBufferTimes;
+
+    return strmBufferTimes;
 }
 
 }  // namespace nn::atk::detail
