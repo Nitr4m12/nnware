@@ -73,6 +73,29 @@ size_t StreamSoundRuntime::GetRequiredStreamInstanceSize(int32_t soundCount) {
 #endif
 }
 
+bool StreamSoundRuntime::SetupStreamBuffer(const SoundArchive* pSoundArchive, void* strmBuffer,
+                                           size_t strmBufferSize) {
+    return SetupStreamBuffer(pSoundArchive, strmBuffer, strmBufferSize, &m_StreamBufferPool);
+}
+
+bool StreamSoundRuntime::SetupStreamBuffer(const SoundArchive* pSoundArchive, void* strmBuffer,
+                                           size_t strmBufferSize,
+                                           driver::StreamBufferPool* pStreamBufferPool) {
+    GetRequiredStreamBufferSize(pSoundArchive);
+    GetRequiredStreamBufferTimes(pSoundArchive);
+    if (GetRequiredStreamBufferSize(pSoundArchive) > strmBufferSize)
+        return false;
+
+    int strmChannelCount{0};
+    SoundArchive::SoundArchivePlayerInfo soundArchivePlayerInfo;
+
+    if (pSoundArchive->ReadSoundArchivePlayerInfo(&soundArchivePlayerInfo))
+        strmChannelCount = soundArchivePlayerInfo.streamChannelCount;
+
+    pStreamBufferPool->Initialize(strmBuffer, strmBufferSize, strmChannelCount);
+    return true;
+}
+
 size_t StreamSoundRuntime::GetRequiredStreamBufferSize(const SoundArchive* soundArchive) const {
     int32_t strmChannelCount{0};
 
@@ -88,8 +111,8 @@ size_t StreamSoundRuntime::GetRequiredStreamBufferSize(const SoundArchive* sound
 
 int32_t StreamSoundRuntime::GetRequiredStreamBufferTimes(const SoundArchive* soundArchive) {
     int strmBufferTimes{1};
-
     SoundArchive::SoundArchivePlayerInfo soundArchivePlayerInfo;
+
     if (soundArchive->ReadSoundArchivePlayerInfo(&soundArchivePlayerInfo))
         strmBufferTimes = soundArchivePlayerInfo.streamBufferTimes;
 
