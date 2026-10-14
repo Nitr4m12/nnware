@@ -196,4 +196,14 @@ int32_t StreamSoundRuntime::GetActiveChannelCount() const {
     return count;
 }
 
+int32_t StreamSoundRuntime::GetActiveTrackCount() const {
+    int count{0};
+
+    auto& activeList{m_StreamSoundInstanceManager.GetSoundList()};
+    for (auto iterator{activeList.begin()}; iterator != activeList.end(); ++iterator)
+        count += iterator->GetActiveTrackCount();
+
+    return count;
+}
+
 }  // namespace nn::atk::detail
