@@ -8,4 +8,6 @@ namespace nn::atk::detail {
 
 StreamSoundRuntime::StreamSoundRuntime() = default;
 
-}
+StreamSoundRuntime::~StreamSoundRuntime() = default;
+
+}  // namespace nn::atk::detail
