@@ -73,4 +73,16 @@ size_t StreamSoundRuntime::GetRequiredStreamInstanceSize(int32_t soundCount) {
 #endif
 }
 
+size_t StreamSoundRuntime::GetRequiredStreamBufferSize(const SoundArchive* soundArchive) const {
+    int32_t strmChannelCount{0};
+
+    SoundArchive::SoundArchivePlayerInfo soundArchivePlayerInfo;
+    if (soundArchive->ReadSoundArchivePlayerInfo(&soundArchivePlayerInfo))
+        strmChannelCount = soundArchivePlayerInfo.streamChannelCount;
+
+    size_t memSize{static_cast<size_t>(m_StreamBlockCount) * strmChannelCount};
+    memSize *= driver::StreamSoundLoader::DataBlockSizeMax;
+    return memSize;
+}
+
 }  // namespace nn::atk::detail
