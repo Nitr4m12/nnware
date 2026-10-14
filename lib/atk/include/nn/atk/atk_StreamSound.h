@@ -79,8 +79,7 @@ public:
     DebugSoundType GetSoundType() const { return DebugSoundType_Strmsound; }
 
     void SetLoaderManager(driver::StreamSoundLoaderManager& manager) {
-        if (IsPlayerAvailable())
-            m_PlayerInstance.SetLoaderManager(&manager);
+        m_PlayerInstance.SetLoaderManager(&manager);
     }
 
     os::Tick GetProcessTick(const SoundProfile& profile) {
