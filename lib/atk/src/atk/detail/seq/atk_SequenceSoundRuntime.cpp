@@ -265,6 +265,90 @@ SoundStartable::StartResult SequenceSoundRuntime::SetupSequenceSoundFile(
     return SoundStartable::StartResult::ResultCode_Success;
 }
 
+SoundStartable::StartResult SequenceSoundRuntime::SetupBankFileAndWaveArchiveFile(
+    PrepareContext* pOutContext, const SequenceSound& sound,
+    const SoundArchive::SequenceSoundInfo& sequenceSoundInfo,
+    const SoundArchiveManager::SnapShot& snapShot,
+    const SoundStartable::StartInfo::SequenceSoundInfo* pExternalSequenceSoundInfo) {
+    if (m_pSoundArchiveFilesHook != nullptr) {
+        SetupBankFileAndWaveArchiveFileFromHook(pOutContext, sound,
+                                                snapShot.GetCurrentSoundArchive());
+    }
+
+    for (int i{0}; static_cast<uint32_t>(i) < SeqBankMax; ++i) {
+        if (m_pSoundArchiveFilesHook != nullptr &&
+            pOutContext->loadTargetBankInfos[i].address != nullptr &&
+            pOutContext->loadTargetWaveArchiveInfos[i].address != nullptr)
+            continue;
+
+        SoundArchive::ItemId bankId;
+        if (pExternalSequenceSoundInfo != nullptr)
+            bankId = pExternalSequenceSoundInfo->bankIds[i];
+        else
+            bankId = sequenceSoundInfo.bankIds[i];
+
+        const SoundArchive* pSoundArchive{&snapShot.GetCurrentSoundArchive()};
+        const SoundDataManager* pSoundDataManager{&snapShot.GetCurrentSoundDataManager()};
+
+        if (bankId != SoundArchive::InvalidId) {
+            if (pSoundArchive->IsAddon()) {
+                const char* bankName{pSoundArchive->GetItemLabel(bankId)};
+                SoundArchive::ItemId mainArchiveBankId{
+                    snapShot.GetMainSoundArchive().GetItemId(bankName)};
+
+                if (mainArchiveBankId != SoundArchive::InvalidId) {
+                    pSoundArchive = &snapShot.GetMainSoundArchive();
+                    pSoundDataManager = &snapShot.GetMainSoundDataManager();
+                    bankId = mainArchiveBankId;
+                }
+            }
+        }
+
+        SoundArchive::BankInfo bankInfo;
+        if (!pSoundArchive->ReadBankInfo(&bankInfo, bankId))
+            continue;
+
+        {
+            const void* bankFile{pSoundDataManager->detail_GetFileAddress(bankInfo.fileId)};
+            pOutContext->loadTargetBankInfos[i].address = bankFile;
+
+            if (bankFile != nullptr) {
+                Util::WaveArchiveLoadStatus status{Util::GetWaveArchiveOfBank(
+                    pOutContext->loadTargetWaveArchiveInfos[i], pOutContext->isLoadIndividuals[i],
+                    bankFile, *pSoundArchive, *pSoundDataManager)};
+                switch (status) {
+                case Util::WaveArchiveLoadStatus_Ok:
+                case Util::WaveArchiveLoadStatus_Noneed:
+                    break;
+
+                case Util::WaveArchiveLoadStatus_Partly:
+                    if (pOutContext->canUsePlayerHeap)
+                        pOutContext->isRegisterDataLoadTaskNeeded = true;
+                    break;
+
+                case Util::WaveArchiveLoadStatus_Error:
+                    return SoundStartable::StartResult::ResultCode_ErrorNotBankLoaded;
+
+                case Util::WaveArchiveLoadStatus_NotYet:
+                    if (!pOutContext->canUsePlayerHeap)
+                        return SoundStartable::StartResult::ResultCode_ErrorNotWarcLoaded;
+                    pOutContext->isRegisterDataLoadTaskNeeded = true;
+                    break;
+
+                default:
+                    return SoundStartable::StartResult::ResultCode_ErrorUnknown;
+                }
+            } else if (pOutContext->canUsePlayerHeap) {
+                pOutContext->loadTargetBankInfos[i].itemId = bankId;
+                pOutContext->isRegisterDataLoadTaskNeeded = true;
+                return SoundStartable::StartResult::ResultCode_Success;
+            }
+        }
+    }
+
+    return SoundStartable::StartResult::ResultCode_Success;
+}
+
 // NON_MATCHING: missing cmp branch
 void SequenceSoundRuntime::SetupSequenceSoundPlayerStartInfo(
     driver::SequenceSoundPlayer::StartInfo* pOutStartInfo, uint32_t sequenceOffset,

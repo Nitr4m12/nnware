@@ -112,13 +112,13 @@ private:
 
     SoundStartable::StartResult SetupBankFileAndWaveArchiveFile(
         PrepareContext* pOutContext, const SequenceSound& sound,
-        const SoundStartable::StartInfo::SequenceSoundInfo& sequenceSoundInfo,
+        const SoundArchive::SequenceSoundInfo& sequenceSoundInfo,
         const SoundArchiveManager::SnapShot& snapShot,
         const SoundStartable::StartInfo::SequenceSoundInfo* pExternalSequenceSoundInfo);
 
     void SetupBankFileAndWaveArchiveFileFromHook(PrepareContext* pOutContext,
                                                  const SequenceSound& sound,
-                                                 SoundArchive* soundArchive);
+                                                 const SoundArchive& soundArchive);
 
     void SetupSequenceSoundPlayerStartInfo(driver::SequenceSoundPlayer::StartInfo* pOutStartInfo,
                                            uint32_t sequenceOffset,
