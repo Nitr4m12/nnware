@@ -119,4 +119,25 @@ int32_t StreamSoundRuntime::GetRequiredStreamBufferTimes(const SoundArchive* sou
     return strmBufferTimes;
 }
 
+bool StreamSoundRuntime::SetupStreamCacheBuffer(const SoundArchive* pSoundArchive,
+                                                void* streamCacheBuffer, size_t streamCacheSize) {
+    int strmSoundCount{0};
+    SoundArchive::SoundArchivePlayerInfo soundArchivePlayerInfo;
+    if (!pSoundArchive->ReadSoundArchivePlayerInfo(&soundArchivePlayerInfo))
+        return false;
+
+    strmSoundCount = soundArchivePlayerInfo.streamSoundCount;
+    size_t cacheSize{streamCacheSize / strmSoundCount};
+
+    void* cache{streamCacheBuffer};
+
+    auto& list{m_StreamSoundInstanceManager.GetFreeList()};
+    for (auto itr{list.begin()}; itr != list.end(); ++itr) {
+        itr->SetCacheBuffer(cache, cacheSize);
+        cache = util::BytePtr(cache, cacheSize).Get();
+    }
+
+    return true;
+}
+
 }  // namespace nn::atk::detail
