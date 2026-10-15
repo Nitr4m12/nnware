@@ -199,6 +199,73 @@ SequenceSound* SequenceSoundRuntime::AllocSound(SoundArchive::ItemId soundId, in
 }
 #endif
 
+SoundStartable::StartResult
+SequenceSoundRuntime::PrepareImpl(const SoundArchiveManager::SnapShot& snapShot,
+                                  SoundArchive::ItemId soundId, SequenceSound* sound,
+                                  const SoundArchive::SoundInfo* commonInfo,
+                                  const StartInfoReader& startInfoReader) {
+    SoundArchive::SequenceSoundInfo info;
+    if (!SetupSequenceSoundInfo(&info, soundId, snapShot.GetCurrentSoundArchive(),
+                                startInfoReader.GetSeqInfo()))
+        return SoundStartable::StartResult::ResultCode_ErrorInvalidSoundId;
+
+    PrepareContext prepareContext;
+    prepareContext.Initialize();
+    prepareContext.canUsePlayerHeap = sound->GetSoundPlayer()->detail_CanUsePlayerHeap();
+    prepareContext.sequenceOffset = info.startOffset;
+    prepareContext.allocateTrackFlags = info.allocateTrackFlags;
+
+    {
+        SoundStartable::StartResult result{
+            SetupSequenceSoundFile(&prepareContext, *sound, snapShot.GetCurrentSoundArchive(),
+                                   snapShot.GetCurrentSoundDataManager(), *commonInfo,
+                                   startInfoReader.GetSeqInfo()),
+        };
+        if (!result.IsSuccess())
+            return result;
+    }
+
+    {
+        SoundStartable::StartResult result{
+            SetupBankFileAndWaveArchiveFile(&prepareContext, *sound, info, snapShot,
+                                            startInfoReader.GetSeqInfo()),
+        };
+        if (!result.IsSuccess())
+            return result;
+    }
+
+    sound->Setup(m_pSequenceTrackAllocator, prepareContext.allocateTrackFlags, &m_SequenceCallback,
+                 info.channelPriority, info.isReleasePriorityFix, m_SequenceUserProcCallback,
+                 m_pSequenceUserProcCallbackArg);
+
+    driver::SequenceSoundPlayer::StartInfo startInfo;
+    SetupSequenceSoundPlayerStartInfo(&startInfo, prepareContext.sequenceOffset, startInfoReader);
+
+    if (prepareContext.isRegisterDataLoadTaskNeeded) {
+        driver::SequenceSoundLoader::LoadInfo loadInfo{
+            &snapShot.GetCurrentSoundArchive(),
+            &snapShot.GetCurrentSoundDataManager(),
+            &prepareContext.loadTargetSequenceInfo,
+            prepareContext.loadTargetBankInfos,
+            sound->GetSoundPlayer(),
+        };
+        sound->RegisterDataLoadTask(loadInfo, startInfo);
+    } else {
+        SequenceSound::Resource res;
+        res.seq = prepareContext.pSequenceSoundFile;
+
+        for (int i{0}; i < SeqBankMax; ++i) {
+            res.banks[i] = prepareContext.loadTargetBankInfos[i].address;
+            res.warcs[i] = prepareContext.loadTargetWaveArchiveInfos[i].address;
+            res.warcIsIndividuals[i] = prepareContext.isLoadIndividuals[i];
+        }
+
+        sound->Prepare(res, startInfo);
+    }
+
+    return SoundStartable::StartResult::ResultCode_Success;
+}
+
 bool SequenceSoundRuntime::SetupSequenceSoundInfo(
     SoundArchive::SequenceSoundInfo* pOutInfo, SoundArchive::ItemId soundId,
     const SoundArchive& soundArchive,
