@@ -4,7 +4,9 @@
 #include <nn/atk/atk_SequenceSoundFileReader.h>
 #include <nn/atk/atk_SoundArchiveFilesHook.h>
 #include <nn/atk/atk_SoundArchiveParametersHook.h>
+#include <nn/atk/atk_SoundPlayer.h>
 #include <nn/atk/atk_SoundRuntimeUtility.h>
+#include <nn/atk/atk_SoundStartable.h>
 #include <nn/atk/atk_SoundSystem.h>
 
 namespace nn::atk::detail {
@@ -354,27 +356,26 @@ SoundStartable::StartResult SequenceSoundRuntime::SetupBankFileAndWaveArchiveFil
     return SoundStartable::StartResult::ResultCode_Success;
 }
 
-// NON_MATCHING: missing cmp branch
 void SequenceSoundRuntime::SetupSequenceSoundPlayerStartInfo(
     driver::SequenceSoundPlayer::StartInfo* pOutStartInfo, uint32_t sequenceOffset,
     const StartInfoReader& startInfoReader) {
-    int startOffset;
+    int startOffset{startInfoReader.GetStartOffset()};
     driver::SequenceSoundPlayer::StartOffsetType startOffsetType;
 
     switch (startInfoReader.GetStartOffsetType()) {
+    case SoundStartable::StartInfo::StartOffsetType_MilliSeconds:
+        startOffsetType = driver::SequenceSoundPlayer::StartOffsetType_Millisec;
+        break;
+    case SoundStartable::StartInfo::StartOffsetType_Tick:
+        startOffsetType = driver::SequenceSoundPlayer::StartOffsetType_Tick;
+        break;
     case SoundStartable::StartInfo::StartOffsetType_Sample:
         startOffsetType = driver::SequenceSoundPlayer::StartOffsetType_Tick;
         startOffset = 0;
         break;
-
-    case SoundStartable::StartInfo::StartOffsetType_Tick:
+    default:
         startOffsetType = driver::SequenceSoundPlayer::StartOffsetType_Tick;
-        startOffset = startInfoReader.GetStartOffset();
-        break;
-
-    case SoundStartable::StartInfo::StartOffsetType_MilliSeconds:
-        startOffsetType = driver::SequenceSoundPlayer::StartOffsetType_Millisec;
-        startOffset = startInfoReader.GetStartOffset();
+        startOffset = 0;
         break;
     }
 
