@@ -62,6 +62,7 @@ public:
 
     void DumpMemory(const SoundArchive* pSoundArchive) const;
 
+    // UNCHECKED
     bool SetStreamBlockCount(int32_t count) {
         m_StreamBlockCount = count;
         return true;

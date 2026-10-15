@@ -13,10 +13,11 @@ const uint32_t CurrentFileVersionWar{0x10000};
 bool IsValidFileHeaderWar(const void* waveArchiveData) {
     const BinaryFileHeader& header{*util::ConstBytePtr(waveArchiveData).Get<BinaryFileHeader>()};
 
-    bool isSupportedVersion{header.signature == WaveArchiveFileReader::SignatureFile &&
-                            header.byteOrder == BinaryFileHeader::ValidByteOrderMark &&
-                            header.version >= SupportedFileVersionWar &&
-                            header.version <= CurrentFileVersionWar};
+    bool isSupportedVersion{
+        header.signature == WaveArchiveFileReader::SignatureFile &&
+            header.byteOrder == BinaryFileHeader::ValidByteOrderMark &&
+            header.version >= SupportedFileVersionWar && header.version <= CurrentFileVersionWar,
+    };
 
     return isSupportedVersion;
 }
@@ -122,7 +123,8 @@ bool WaveArchiveFileReader::HasIndividualLoadTable() const {
         return false;
 
     const uint32_t* signature{
-        util::ConstBytePtr(m_pHeader, m_pHeader->GetFileBlockOffset()).Get<uint32_t>()};
+        util::ConstBytePtr(m_pHeader, m_pHeader->GetFileBlockOffset()).Get<uint32_t>(),
+    };
 
     return *signature == SignatureWarcTable;
 }

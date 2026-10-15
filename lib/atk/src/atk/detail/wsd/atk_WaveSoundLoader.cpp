@@ -93,8 +93,10 @@ void WaveSoundLoader::DataLoadTask::Execute([[maybe_unused]] TaskProfileLogger& 
         }
     }
 
-    const void* waveFile{Util::GetWaveFileOfWaveSound(
-        m_Arg.loadInfoWsd.address, m_Arg.index, *m_Arg.soundArchive, *m_Arg.soundDataManager)};
+    const void* waveFile{
+        Util::GetWaveFileOfWaveSound(m_Arg.loadInfoWsd.address, m_Arg.index, *m_Arg.soundArchive,
+                                     *m_Arg.soundDataManager),
+    };
 
     if (waveFile == nullptr) {
         if (!m_pPlayerHeapDataManager->detail_LoadWaveArchiveByWaveSoundFile(

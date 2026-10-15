@@ -12,7 +12,8 @@ const int16_t CurveAdshr::DecibelSquareTable[CurveAdshr::DecibelSquareTableSize]
     -119, -116, -114, -111, -109, -106, -103, -101, -99,  -96,  -94,  -91,  -89,  -87,  -85,  -82,
     -80,  -78,  -76,  -74,  -72,  -70,  -68,  -66,  -64,  -62,  -60,  -58,  -56,  -54,  -52,  -50,
     -49,  -47,  -45,  -43,  -42,  -40,  -38,  -36,  -35,  -33,  -31,  -30,  -28,  -27,  -25,  -23,
-    -22,  -20,  -19,  -17,  -16,  -14,  -13,  -11,  -10,  -8,   -7,   -6,   -4,   -3,   -1,   0};
+    -22,  -20,  -19,  -17,  -16,  -14,  -13,  -11,  -10,  -8,   -7,   -6,   -4,   -3,   -1,   0,
+};
 
 CurveAdshr::CurveAdshr() {
     Initialize(VolumeInit);
@@ -90,9 +91,6 @@ float CurveAdshr::GetValue() const {
 }
 
 void CurveAdshr::SetAttack(int attack) {
-    // Table to optimize calculations
-    // More info here:
-    // https://github.com/stupidestmodder/TuneBloom/blob/master/TuneBloom/src/snd-ply/CurveAdshr.cpp#L127
     static const float attackTable[DecibelSquareTableSize] = {
         0.99921750, 0.99843258, 0.99764520, 0.99685530, 0.99606287, 0.99526790, 0.99447040,
         0.99367040, 0.99286770, 0.99206250, 0.99125460, 0.99044410, 0.98963088, 0.98881510,
@@ -112,7 +110,8 @@ void CurveAdshr::SetAttack(int attack) {
         0.89860800, 0.89740658, 0.89619880, 0.89498440, 0.89005989, 0.88246220, 0.87592470,
         0.86918610, 0.86364060, 0.85357880, 0.84301889, 0.82861350, 0.81490988, 0.80021720,
         0.77806628, 0.75547498, 0.72421250, 0.68282390, 0.63291690, 0.55921350, 0.45514110,
-        0.32987699, 0.00000000};
+        0.32987699, 0.00000000,
+    };
 
     m_Attack = attackTable[attack];
 }

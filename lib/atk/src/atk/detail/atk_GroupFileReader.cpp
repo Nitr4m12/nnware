@@ -14,10 +14,12 @@ const uint32_t CurrentFileVersionGroup{0x10000};
 bool IsValidFileHeaderGroup(const void* groupFile) {
     const BinaryFileHeader* header{util::ConstBytePtr(groupFile).Get<BinaryFileHeader>()};
 
-    bool isSupportedVersion{header->signature == GroupFileReader::SignatureFile &&
-                            header->byteOrder == BinaryFileHeader::ValidByteOrderMark &&
-                            header->version >= SupportedFileVersionGroup &&
-                            header->version <= CurrentFileVersionGroup};
+    bool isSupportedVersion{
+        header->signature == GroupFileReader::SignatureFile &&
+            header->byteOrder == BinaryFileHeader::ValidByteOrderMark &&
+            header->version >= SupportedFileVersionGroup &&
+            header->version <= CurrentFileVersionGroup,
+    };
 
     return isSupportedVersion;
 }

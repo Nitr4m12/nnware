@@ -47,9 +47,11 @@ bool SoundDataManager::CreateTables(void** pOutBuffer, const SoundArchive* pArch
     fileTableSize *= sizeof(FileAddress);
     fileTableSize += 4;
 
-    void* ep{util::BytePtr(*pOutBuffer, static_cast<ptrdiff_t>(fileTableSize))
-                 .AlignUp(BufferAlignSize)
-                 .Get()};
+    void* ep{
+        util::BytePtr(*pOutBuffer, static_cast<ptrdiff_t>(fileTableSize))
+            .AlignUp(BufferAlignSize)
+            .Get(),
+    };
     if (util::BytePtr(endAddress).Distance(ep) > 0)
         return false;
 

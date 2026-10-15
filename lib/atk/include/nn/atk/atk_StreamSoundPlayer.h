@@ -95,7 +95,7 @@ public:
         int delayCount{0};
         UpdateType updateType{UpdateType_AudioFrame};
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
-        uint32_t subMixIndex;
+        uint32_t subMixIndex{0};
 #endif
         StreamRegionCallback regionCallback{};
         void* regionCallbackArg{};
@@ -269,7 +269,7 @@ private:
 
         bool IsLastBlock(uint32_t blockIndex, uint32_t blockOffsetFromLoopEnd) {
             return (lastBlockIndex == 0 || blockIndex == lastBlockIndex) ||
-                   ((IsOverLastBlock(blockIndex)) && blockOffsetFromLoopEnd == 0);
+                   (IsOverLastBlock(blockIndex) && blockOffsetFromLoopEnd == 0);
         }
     };
     static_assert(sizeof(PrefetchIndexInfo) == 0x18);

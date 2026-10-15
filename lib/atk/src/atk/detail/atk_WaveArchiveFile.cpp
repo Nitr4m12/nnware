@@ -4,11 +4,11 @@
 
 namespace nn::atk::detail {
 
-const WaveArchiveFile::InfoBlock* WaveArchiveFile::FileHeader::GetInfoBlock() const {  // 28
+const WaveArchiveFile::InfoBlock* WaveArchiveFile::FileHeader::GetInfoBlock() const {
     return util::ConstBytePtr(this, GetInfoBlockOffset()).Get<InfoBlock>();
 }
 
-const WaveArchiveFile::FileBlock* WaveArchiveFile::FileHeader::GetFileBlock() const {  // 34
+const WaveArchiveFile::FileBlock* WaveArchiveFile::FileHeader::GetFileBlock() const {
     return util::ConstBytePtr(this, GetFileBlockOffset()).Get<FileBlock>();
 }
 

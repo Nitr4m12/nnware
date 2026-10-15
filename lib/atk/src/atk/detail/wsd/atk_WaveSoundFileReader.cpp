@@ -13,10 +13,11 @@ const uint32_t FilterSupportedVersionWsd{0x10100};
 bool IsValidFileHeaderWsd(const void* waveSoundFile) {
     const BinaryFileHeader& header{*util::ConstBytePtr(waveSoundFile).Get<BinaryFileHeader>()};
 
-    bool isSupportedVersion{header.signature == WaveSoundFileReader::SignatureFile &&
-                            header.byteOrder == BinaryFileHeader::ValidByteOrderMark &&
-                            header.version >= SupportedFileVersionWsd &&
-                            header.version <= CurrentFileVersionWsd};
+    bool isSupportedVersion{
+        header.signature == WaveSoundFileReader::SignatureFile &&
+            header.byteOrder == BinaryFileHeader::ValidByteOrderMark &&
+            header.version >= SupportedFileVersionWsd && header.version <= CurrentFileVersionWsd,
+    };
 
     return isSupportedVersion;
 }
@@ -52,7 +53,8 @@ uint32_t WaveSoundFileReader::GetTrackInfoCount(uint32_t index) const {
 
 bool WaveSoundFileReader::ReadWaveSoundInfo(WaveSoundInfo* dst, uint32_t index) const {
     const WaveSoundFile::WaveSoundInfo& src{
-        m_pInfoBlockBody->GetWaveSoundData(index).GetWaveSoundInfo()};
+        m_pInfoBlockBody->GetWaveSoundData(index).GetWaveSoundInfo(),
+    };
 
     dst->pitch = src.GetPitch();
     dst->pan = src.GetPan();
@@ -76,7 +78,8 @@ bool WaveSoundFileReader::ReadWaveSoundInfo(WaveSoundInfo* dst, uint32_t index) 
 bool WaveSoundFileReader::ReadNoteInfo(WaveSoundNoteInfo* dst, uint32_t index,
                                        uint32_t noteIndex) const {
     const WaveSoundFile::NoteInfo& src{
-        m_pInfoBlockBody->GetWaveSoundData(index).GetNoteInfo(noteIndex)};
+        m_pInfoBlockBody->GetWaveSoundData(index).GetNoteInfo(noteIndex),
+    };
 
     const Util::WaveId* pWaveId{m_pInfoBlockBody->GetWaveIdTable().GetWaveId(src.waveIdTableIndex)};
     if (pWaveId == nullptr)

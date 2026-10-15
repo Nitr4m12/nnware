@@ -15,10 +15,11 @@ namespace {
 bool IsValidFileHeaderWav(const void* waveFile) {
     const BinaryFileHeader& header{*util::ConstBytePtr(waveFile).Get<BinaryFileHeader>()};
 
-    bool isSupportedVersion{header.signature == WaveFileReader::SignatureFile &&
-                            header.byteOrder == BinaryFileHeader::ValidByteOrderMark &&
-                            header.version >= SupportedFileVersionWav &&
-                            header.version <= CurrentFileVersionWav};
+    bool isSupportedVersion{
+        header.signature == WaveFileReader::SignatureFile &&
+            header.byteOrder == BinaryFileHeader::ValidByteOrderMark &&
+            header.version >= SupportedFileVersionWav && header.version <= CurrentFileVersionWav,
+    };
 
     return isSupportedVersion;
 }
@@ -101,7 +102,8 @@ bool WaveFileReader::ReadWaveInfo(WaveInfo* info, const void* waveDataOffsetOrig
                 channelParam.dataAddress = GetWaveDataAddress(&channelInfo, waveDataOffsetOrigin);
 
                 const WaveFile::ChannelInfo& lastChannelInfo{
-                    m_pInfoBlockBody->GetChannelInfo(channelCount - 1)};
+                    m_pInfoBlockBody->GetChannelInfo(channelCount - 1),
+                };
                 channelParam.dataSize = m_pHeader->GetDataBlock()->header.size -
                                         sizeof(BinaryBlockHeader) -
                                         lastChannelInfo.referToSamples.offset;

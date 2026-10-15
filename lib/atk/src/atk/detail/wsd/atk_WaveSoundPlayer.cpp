@@ -297,8 +297,10 @@ bool WaveSoundPlayer::StartChannel() {
     if (static_cast<uint32_t>(startOffsetSamples) > waveInfo.loopEndFrame)
         return false;
 
-    Channel* channel{Channel::AllocChannel(waveInfo.channelCount <= 2 ? waveInfo.channelCount : 2,
-                                           priority, ChannelCallbackFunc, this)};
+    Channel* channel{
+        Channel::AllocChannel(waveInfo.channelCount <= 2 ? waveInfo.channelCount : 2, priority,
+                              ChannelCallbackFunc, this),
+    };
     if (channel == nullptr)
         return false;
 

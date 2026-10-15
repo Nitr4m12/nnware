@@ -93,43 +93,53 @@ public:
 
     static const uint32_t StreamTrackCount{8};
     struct StreamTrackInfo {
-        uint8_t volume;
-        uint8_t pan;
-        uint8_t surroundPan;
+        uint8_t volume{0};
+        uint8_t pan{0};
+        uint8_t surroundPan{0};
         uint8_t flags;
-        uint8_t mainSend;
-        uint8_t fxSend[3];
-        uint8_t lowPassFilterFrequency;
-        uint8_t biquadType;
-        uint8_t biquadValue;
-        uint8_t channelCount;
-        int8_t globalChannelIndex[2];
+        uint8_t mainSend{127};
+        uint8_t fxSend[AuxBus_Count];
+        uint8_t lowPassFilterFrequency{64};
+        uint8_t biquadType{BiquadFilterType_None};
+        uint8_t biquadValue{0};
+        uint8_t channelCount{0};
+        int8_t globalChannelIndex[WaveChannelMax];
 
-        StreamTrackInfo() = default;
+        StreamTrackInfo() {
+            for (int i{0}; i < WaveChannelMax; ++i)
+                globalChannelIndex[i] = -1;
+
+            for (int i{0}; i < AuxBus_Count; ++i)
+                fxSend[i] = 0;
+        }
     };
     static_assert(sizeof(StreamTrackInfo) == 0xe);
 
     struct StreamSoundInfo {
-        uint16_t allocateTrackFlags;
-        uint16_t allocateChannelCount;
-        float pitch;
-        uint8_t mainSend;
-        uint8_t fxSend[3];
+        uint16_t allocateTrackFlags{0};
+        uint16_t allocateChannelCount{0};
+        float pitch{1.0f};
+        uint8_t mainSend{127};
+        uint8_t fxSend[AuxBus_Count];
         StreamTrackInfo trackInfo[StreamTrackCount];
-        StreamFileType streamFileType;
-        DecodeMode decodeMode;
-        FileId prefetchFileId;
-        void* streamBufferPool;
+        StreamFileType streamFileType{StreamFileType_Invalid};
+        DecodeMode decodeMode{DecodeMode_Default};
+        FileId prefetchFileId{InvalidId};
+        void* streamBufferPool{};
 
-        StreamSoundInfo() = default;
+        StreamSoundInfo() {
+            for (int i{0}; i < AuxBus_Count; ++i)
+                fxSend[i] = 0;
+        };
+
         void Setup();
     };
     static_assert(sizeof(StreamSoundInfo) == 0x90);
 
     struct StreamSoundInfo2 {
-        bool isLoop;
-        uint32_t loopStartFrame;
-        uint32_t loopEndFrame;
+        bool isLoop{false};
+        uint32_t loopStartFrame{0};
+        uint32_t loopEndFrame{0};
 
         StreamSoundInfo2() = default;
     };

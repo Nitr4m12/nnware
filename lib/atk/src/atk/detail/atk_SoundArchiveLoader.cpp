@@ -207,11 +207,13 @@ bool SoundArchiveLoader::LoadWaveSound(SoundArchive::ItemId soundId,
                 return false;
 
         } else {
-            SoundArchive::ItemId itemId{waveSoundSetId != SoundArchive::InvalidId ? waveSoundSetId :
-                                                                                    soundId};
+            SoundArchive::ItemId itemId{
+                waveSoundSetId != SoundArchive::InvalidId ? waveSoundSetId : soundId,
+            };
 
             const Util::Table<uint32_t>* pWarcIdTable{
-                m_pSoundArchive->detail_GetWaveArchiveIdTable(itemId)};
+                m_pSoundArchive->detail_GetWaveArchiveIdTable(itemId),
+            };
 
             for (uint32_t i{0}; i < pWarcIdTable->count; ++i) {
                 if (!LoadWaveArchive(pWarcIdTable->item[i], pAllocator, loadFlag, loadBlockSize))
@@ -263,7 +265,8 @@ bool SoundArchiveLoader::LoadBank(SoundArchive::ItemId bankId, SoundMemoryAlloca
 
         } else {
             const Util::Table<uint32_t>* pWarcIdTable{
-                m_pSoundArchive->detail_GetWaveArchiveIdTable(bankId)};
+                m_pSoundArchive->detail_GetWaveArchiveIdTable(bankId),
+            };
 
             for (uint32_t i{0}; i < pWarcIdTable->count; ++i) {
                 if (!LoadWaveArchive(pWarcIdTable->item[i], pAllocator, loadFlag, loadBlockSize))
@@ -292,7 +295,8 @@ bool SoundArchiveLoader::LoadWaveArchive(SoundArchive::ItemId warcId,
 bool SoundArchiveLoader::LoadGroup(SoundArchive::ItemId groupId, SoundMemoryAllocatable* pAllocator,
                                    size_t loadBlockSize) {
     const void* pGroupFile{
-        LoadImpl(m_pSoundArchive->GetItemFileId(groupId), pAllocator, loadBlockSize, true)};
+        LoadImpl(m_pSoundArchive->GetItemFileId(groupId), pAllocator, loadBlockSize, true),
+    };
     if (pGroupFile == nullptr)
         return false;
 
@@ -412,7 +416,8 @@ bool SoundArchiveLoader::LoadIndividualWave(SoundArchive::ItemId warcId, uint32_
     const size_t WaveFileSize{reader.GetWaveFileSize(waveIndex)};
     const size_t RequiredSize{
         util::align_up(WaveFileSize + sizeof(IndividualWaveInfo) + WaveBufferAlignSize,
-                       fnd::Thread::StackAlignment)};
+                       fnd::Thread::StackAlignment),
+    };
 
     void* buffer{pAllocator->Allocate(RequiredSize)};
     if (buffer == nullptr)
@@ -427,9 +432,11 @@ bool SoundArchiveLoader::LoadIndividualWave(SoundArchive::ItemId warcId, uint32_
     {
         void* loadingAddress{pAlignedBuffer + sizeof(IndividualWaveInfo)};
 
-        size_t readSize{ReadFile(fileId, loadingAddress, WaveFileSize,
-                                 static_cast<int>(reader.GetWaveFileOffsetFromFileHead(waveIndex)),
-                                 loadBlockSize)};
+        size_t readSize{
+            ReadFile(fileId, loadingAddress, WaveFileSize,
+                     static_cast<int>(reader.GetWaveFileOffsetFromFileHead(waveIndex)),
+                     loadBlockSize),
+        };
 
         if (readSize != WaveFileSize)
             return false;
@@ -466,13 +473,15 @@ const void* SoundArchiveLoader::LoadWaveArchiveTable(SoundArchive::ItemId warcId
     {
         char pBuffer[sizeof(WaveArchiveFile::FileHeader)];
         size_t readSize{
-            ReadFile(fileId, pBuffer, sizeof(WaveArchiveFile::FileHeader), 0, loadBlockSize)};
+            ReadFile(fileId, pBuffer, sizeof(WaveArchiveFile::FileHeader), 0, loadBlockSize),
+        };
 
         if (readSize != sizeof(WaveArchiveFile::FileHeader))
             return nullptr;
 
         const WaveArchiveFile::FileHeader* pHeader{
-            reinterpret_cast<const WaveArchiveFile::FileHeader*>(pBuffer)};
+            reinterpret_cast<const WaveArchiveFile::FileHeader*>(pBuffer),
+        };
 
         fileBlockOffset = pHeader->GetFileBlockOffset();
         position_t infoBlockOffset{pHeader->GetInfoBlockOffset()};
@@ -708,10 +717,12 @@ void SoundArchiveLoader::SetWaveArchiveTableInEmbeddedGroupImpl(
         return;
 
     uint32_t fileBlockOffset{
-        static_cast<const WaveArchiveFile::FileHeader*>(warcFile)->GetFileBlockOffset()};
+        static_cast<const WaveArchiveFile::FileHeader*>(warcFile)->GetFileBlockOffset(),
+    };
 
     const uint32_t RequiredTableSize{
-        static_cast<uint32_t>(fileBlockOffset + info.waveCount * sizeof(uint32_t) + sizeof(int))};
+        static_cast<uint32_t>(fileBlockOffset + info.waveCount * sizeof(uint32_t) + sizeof(int)),
+    };
 
     void* buffer{pAllocator->Allocate(RequiredTableSize)};
     if (buffer == nullptr)

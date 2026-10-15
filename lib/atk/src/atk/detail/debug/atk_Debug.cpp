@@ -12,7 +12,7 @@ const uint32_t NotEnoughSeqTrack{0b01000};
 const uint32_t NotEnoughStrmChannel{0b10000};
 const uint32_t NotEnoughInstance{0b11111};
 
-uint32_t gWarningFlag = NotEnoughInstance;
+uint32_t gWarningFlag{NotEnoughInstance};
 
 uint32_t GetWarningBitFlag(DebugWarningFlag warning) {
     uint32_t bitFlag{0};

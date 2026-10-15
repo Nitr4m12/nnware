@@ -22,7 +22,6 @@ uint8_t GetNwInterpolationTypeFromHardwareManager() {
         break;
 
     case SampleRateConverterType_4Tap:
-        // result = 0;
         break;
     }
 
@@ -42,8 +41,10 @@ Channel* Channel::AllocChannel(int voiceChannelCount, int priority, ChannelCallb
 
     channel->m_AllocFlag = 1;
 
-    MultiVoice* voice{MultiVoiceManager::GetInstance().AllocVoice(voiceChannelCount, priority,
-                                                                  VoiceCallbackFunc, channel)};
+    MultiVoice* voice{
+        MultiVoiceManager::GetInstance().AllocVoice(voiceChannelCount, priority, VoiceCallbackFunc,
+                                                    channel),
+    };
 
     if (voice == nullptr) {
         FreeChannel(channel);
@@ -207,8 +208,9 @@ position_t Channel::GetCurrentPlayingSample(bool isOriginalSamplePosition) const
     position_t playSamplePosition{m_pVoice->GetCurrentPlayingSample()};
 
     if (isOriginalSamplePosition && m_LoopFlag) {
-        position_t loopEnd{m_WaveBuffer[0][0].sampleLength +
-                           (-m_LoopStartFrame + m_OriginalLoopStartFrame)};
+        position_t loopEnd{
+            m_WaveBuffer[0][0].sampleLength + (-m_LoopStartFrame + m_OriginalLoopStartFrame),
+        };
         position_t originalLoopEnd{m_OriginalLoopStartFrame + playSamplePosition - loopEnd};
 
         if (playSamplePosition > loopEnd)
@@ -236,7 +238,8 @@ void Channel::Disposer::InvalidateData(const void* start, const void* end) {
                 util::ConstBytePtr(waveBuffer.bufferAddress,
                                    Util::GetByteBySample(waveBuffer.sampleLength,
                                                          m_pChannel->m_pVoice->GetFormat()))
-                    .Get()};
+                    .Get(),
+            };
 
             if (start <= bufferEnd && end >= waveBuffer.bufferAddress) {
                 disposeFlag = true;

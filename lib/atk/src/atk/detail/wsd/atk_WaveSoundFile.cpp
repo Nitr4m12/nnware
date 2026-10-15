@@ -129,8 +129,9 @@ void WaveSoundFile::WaveSoundInfo::GetSendValue(uint8_t* mainSend, uint8_t* fxSe
         const SendValueWsd& sendValue = *util::ConstBytePtr(this, value).Get<SendValueWsd>();
 
         *mainSend = sendValue.mainSend;
-        int countSize{sendValue.fxSend.count > AuxBus_Count ? AuxBus_Count :
-                                                              sendValue.fxSend.count};
+        int countSize{
+            sendValue.fxSend.count > AuxBus_Count ? AuxBus_Count : sendValue.fxSend.count,
+        };
 
         for (int i{0}; i < countSize; ++i)
             fxSend[i] = sendValue.fxSend.item[i];
@@ -250,8 +251,9 @@ void WaveSoundFile::NoteInfo::GetSendValue(uint8_t* mainSend, uint8_t** fxSend,
         const SendValueWsd& sendValue = *util::ConstBytePtr(this, value).Get<SendValueWsd>();
 
         *mainSend = sendValue.mainSend;
-        int countSize{sendValue.fxSend.count > AuxBus_Count ? AuxBus_Count :
-                                                              sendValue.fxSend.count};
+        int countSize{
+            sendValue.fxSend.count > AuxBus_Count ? AuxBus_Count : sendValue.fxSend.count,
+        };
 
         for (int i{0}; i < countSize; ++i)
             fxSend[i][0] = sendValue.fxSend.item[i];

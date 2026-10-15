@@ -230,21 +230,23 @@ SoundStartable::StartResult WaveSoundRuntime::PrepareImpl(const SoundArchive* pS
         }
     }
 
-    driver::WaveSoundPlayer::StartOffsetType wsdStartOffsetType{
-        driver::WaveSoundPlayer::StartOffsetType_Sample,
-    };
-    int startOffset{0};
+    int startOffset{startInfoReader.GetStartOffset()};
+    driver::WaveSoundPlayer::StartOffsetType wsdStartOffsetType;
 
     switch (startInfoReader.GetStartOffsetType()) {
     case SoundStartable::StartInfo::StartOffsetType_MilliSeconds:
         wsdStartOffsetType = driver::WaveSoundPlayer::StartOffsetType_Millisec;
-        startOffset = startInfoReader.GetStartOffset();
+        break;
+    case SoundStartable::StartInfo::StartOffsetType_Tick:
+        wsdStartOffsetType = driver::WaveSoundPlayer::StartOffsetType_Sample;
+        startOffset = 0;
         break;
     case SoundStartable::StartInfo::StartOffsetType_Sample:
         wsdStartOffsetType = driver::WaveSoundPlayer::StartOffsetType_Sample;
-        startOffset = startInfoReader.GetStartOffset();
         break;
-    case SoundStartable::StartInfo::StartOffsetType_Tick:
+    default:
+        wsdStartOffsetType = driver::WaveSoundPlayer::StartOffsetType_Sample;
+        startOffset = 0;
         break;
     }
 

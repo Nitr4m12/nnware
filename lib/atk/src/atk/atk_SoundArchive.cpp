@@ -320,8 +320,7 @@ void SoundArchive::FileAccessBegin() const {}
 
 void SoundArchive::FileAccessEnd() const {}
 
-// NON_MATCHING: still unsure on fnd::strncat's implementation,
-// or the whole function really. Leaving as TODO
+// NON_MATCHING: requires detail::fnd::strncat
 const char* SoundArchive::detail_GetExternalFileFullPath(const char* externalFilePath,
                                                          char* pathBuffer, size_t bufSize) const {
     if (*externalFilePath != '/') {

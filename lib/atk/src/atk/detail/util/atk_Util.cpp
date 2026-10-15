@@ -375,7 +375,8 @@ const float Pan2RatioTableSinCos[PanTableMax + 1]{
     0.134580709f, 0.128498111f, 0.122410675f, 0.116318631f, 0.110222207f, 0.104121634f,
     0.098017140f, 0.091908956f, 0.085797312f, 0.079682438f, 0.073564564f, 0.067443920f,
     0.061320736f, 0.055195244f, 0.049067674f, 0.042938257f, 0.036807223f, 0.030674803f,
-    0.024541229f, 0.018406730f, 0.012271538f, 0.006135885f, 0.000000000f};
+    0.024541229f, 0.018406730f, 0.012271538f, 0.006135885f, 0.000000000f,
+};
 
 const float Pan2RatioTableSinCosSurround[PanTableMax + 1]{
     0.800000000f, 0.799274270f, 0.798548500f, 0.797822830f, 0.797097090f, 0.796371340f,
@@ -517,8 +518,11 @@ const float Pan2RatioTableLinearSurround[PanTableMax + 1]{
 
 const float* PanTableTable[3]{Pan2RatioTableSqrt, Pan2RatioTableSinCos, Pan2RatioTableLinear};
 
-const float* PanTableTableForSurround[3]{Pan2RatioTableSqrtSurround, Pan2RatioTableSinCosSurround,
-                                         Pan2RatioTableLinearSurround};
+const float* PanTableTableForSurround[3]{
+    Pan2RatioTableSqrtSurround,
+    Pan2RatioTableSinCosSurround,
+    Pan2RatioTableLinearSurround,
+};
 
 }  // anonymous namespace
 
@@ -831,7 +835,8 @@ Util::WaveArchiveLoadStatus Util::GetWaveArchiveOfBank(LoadItemInfo& warcLoadInf
 
     SoundArchive::WaveArchiveInfo warcInfo;
     [[maybe_unused]] bool isReadWarcInfo{
-        arc.ReadWaveArchiveInfo(pWaveId->waveArchiveId, &warcInfo)};
+        arc.ReadWaveArchiveInfo(pWaveId->waveArchiveId, &warcInfo),
+    };
 
     warcLoadInfo.itemId = pWaveId->waveArchiveId;
     warcLoadInfo.address = waveArchiveFile;
@@ -855,8 +860,6 @@ const void* Util::GetWaveFileOfWaveSound(const void* wsdFile, uint32_t index,
     WaveSoundNoteInfo noteInfo{};
 
     [[maybe_unused]] bool isReadNoteInfo{reader.ReadNoteInfo(&noteInfo, index, 0)};
-    // if (!isReadNoteInfo)
-    //     return nullptr;
 
     const void* waveArchiveFile{mgr.detail_GetFileAddressByItemId(noteInfo.waveArchiveId)};
     if (waveArchiveFile == nullptr)
@@ -864,9 +867,8 @@ const void* Util::GetWaveFileOfWaveSound(const void* wsdFile, uint32_t index,
 
     SoundArchive::WaveArchiveInfo warcInfo;
     [[maybe_unused]] bool isReadWarcInfo{
-        arc.ReadWaveArchiveInfo(noteInfo.waveArchiveId, &warcInfo)};
-    // if (!isReadWarcInfo)
-    //     return nullptr;
+        arc.ReadWaveArchiveInfo(noteInfo.waveArchiveId, &warcInfo),
+    };
 
     WaveArchiveFileReader warcReader{waveArchiveFile, warcInfo.isLoadIndividual};
     const void* waveFile{warcReader.GetWaveFile(noteInfo.waveIndex)};

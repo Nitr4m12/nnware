@@ -53,8 +53,9 @@ void* FrameHeap::Alloc(size_t size, DisposeCallback callback, void* callbackArg,
 
     void* buffer{util::BytePtr(mem, blockSize).Get()};
 
-    Block* block{new (mem)
-                     Block(buffer, size, callback, callbackArg, heapCallback, heapCallbackArg)};
+    Block* block{
+        new (mem) Block(buffer, size, callback, callbackArg, heapCallback, heapCallbackArg),
+    };
     m_SectionList.back().AppendBlock(block);
 
     return buffer;
