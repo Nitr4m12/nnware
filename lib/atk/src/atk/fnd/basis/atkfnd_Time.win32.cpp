@@ -22,6 +22,18 @@ int64_t TicksToNanoSeconds(int64_t ticks) {
     return timeSpan.GetNanoSeconds();
 }
 
+int64_t TicksToMicroSeconds(int64_t ticks) {
+    nn::os::Tick tick{ticks};
+    nn::TimeSpan timeSpan{tick.ToTimeSpan()};
+    return timeSpan.GetMicroSeconds();
+}
+
+int64_t TicksToMilliSeconds(int64_t ticks) {
+    nn::os::Tick tick{ticks};
+    nn::TimeSpan timeSpan{tick.ToTimeSpan()};
+    return timeSpan.GetMilliSeconds();
+}
+
 }  // anonymous namespace
 
 namespace nn::atk::detail::fnd {
@@ -44,6 +56,10 @@ TimeSpan TimeSpan::FromMilliSeconds(int64_t value) {
 
 int64_t TimeSpan::ToNanoSeconds() const {
     return TicksToNanoSeconds(m_TickSpan);
+}
+
+int64_t TimeSpan::ToMicroSeconds() const {
+    return TicksToMicroSeconds(m_TickSpan);
 }
 
 }  // namespace nn::atk::detail::fnd
