@@ -29,4 +29,17 @@ void* FrameHeapImpl::Destroy() {
     return this;
 }
 
+void* FrameHeapImpl::AllocFromHead(size_t size, int alignment) {
+    void* newBlock{RoundUp(m_pHeadAllocator, alignment)};
+    void* endAddress{AddOffsetToPtr(newBlock, size)};
+
+    if (endAddress > m_pTailAllocator)
+        return nullptr;
+
+    FillAllocMemory(m_pHeadAllocator,
+                    static_cast<uint32_t>(GetOffsetFromPtr(m_pHeadAllocator, endAddress)));
+    m_pHeadAllocator = endAddress;
+    return newBlock;
+}
+
 }  // namespace nn::atk::detail::fnd
