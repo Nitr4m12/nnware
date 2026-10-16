@@ -6,9 +6,9 @@ namespace nn::atk::detail::fnd {
 
 class FrameHeapImpl : public HeapBase {
 public:
-    static const int FreeHeadMode = 1;
-    static const int FreeTailMode = 2;
-    static const int FreeAllMode = 3;
+    static const int FreeHeadMode{1};
+    static const int FreeTailMode{2};
+    static const int FreeAllMode{3};
 
     struct HeapState {
         uint32_t tagName;
@@ -23,8 +23,8 @@ public:
     FrameHeapImpl();
 
     static FrameHeapImpl* Create(void* startAddress, size_t size, uint16_t optFlag);
-
     void* Destroy();
+
     void* Alloc(size_t size, int alignment);
     size_t ResizeForMBlock(void* memBlock, size_t newSize);
     size_t GetAllocatableSize(int alignment);
