@@ -20,7 +20,7 @@ public:
     };
     static_assert(sizeof(HeapState) == 0x20);
 
-    FrameHeapImpl();
+    FrameHeapImpl() = default;
 
     static FrameHeapImpl* Create(void* startAddress, size_t size, uint16_t optFlag);
     void* Destroy();

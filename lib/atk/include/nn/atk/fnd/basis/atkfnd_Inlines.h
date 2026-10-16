@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <cstdint>
 
 namespace nn::atk::detail::fnd {
 
@@ -23,18 +24,27 @@ inline float FloatClamp(float value, float min, float max) {
 }
 
 template <typename ValueT>
-inline ValueT RoundUp(ValueT x, int base);
+inline ValueT RoundUp(ValueT x, int base) {
+    int mask{base - 1};
+    return (x + mask) & ~mask;
+}
 
-// TODO: figure out if this is correct for
-// void* RoundUp<void>(void* x, int base)
 template <typename ValueT = void>
-inline ValueT* RoundUp(ValueT* x, int base);
+inline ValueT* RoundUp(ValueT* x, int base) {
+    uintptr_t value{RoundUp<uintptr_t>(reinterpret_cast<uintptr_t>(x), base)};
+    return reinterpret_cast<ValueT*>(value);
+}
 
 template <typename ValueT>
-inline ValueT RoundDown(ValueT x, int base);
+inline ValueT RoundDown(ValueT x, int base) {
+    return x & ~(base - 1);
+}
 
 template <typename ValueT = void>
-inline ValueT* RoundDown(ValueT* x, int base);
+inline ValueT* RoundDown(ValueT* x, int base) {
+    uintptr_t value{RoundDown<uintptr_t>(reinterpret_cast<uintptr_t>(x), base)};
+    return reinterpret_cast<ValueT*>(value);
+}
 
 template <typename TDiff>
 inline TDiff GetOffsetFromPtr(const void* start, const void* end) {
@@ -46,6 +56,8 @@ inline ptrdiff_t GetOffsetFromPtr(const void* start, const void* end) {
 }
 
 template <typename TOffset>
-inline void* AddOffsetToPtr(void* ptr, TOffset offset);
+inline void* AddOffsetToPtr(void* ptr, TOffset offset) {
+    return reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(ptr) + offset);
+}
 
 }  // namespace nn::atk::detail::fnd
