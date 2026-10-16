@@ -62,4 +62,8 @@ int64_t TimeSpan::ToMicroSeconds() const {
     return TicksToMicroSeconds(m_TickSpan);
 }
 
+int64_t TimeSpan::ToMilliSeconds() const {
+    return TicksToMilliSeconds(m_TickSpan);
+}
+
 }  // namespace nn::atk::detail::fnd
