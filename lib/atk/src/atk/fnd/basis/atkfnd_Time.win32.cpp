@@ -16,6 +16,12 @@ int64_t MilliSecondsToTicks(int64_t value) {
     return MicroSecondsToTicks(value * 1000);
 }
 
+int64_t TicksToNanoSeconds(int64_t ticks) {
+    nn::os::Tick tick{ticks};
+    nn::TimeSpan timeSpan{tick.ToTimeSpan()};
+    return timeSpan.GetNanoSeconds();
+}
+
 }  // anonymous namespace
 
 namespace nn::atk::detail::fnd {
@@ -34,6 +40,10 @@ TimeSpan TimeSpan::FromMicroSeconds(int64_t value) {
 
 TimeSpan TimeSpan::FromMilliSeconds(int64_t value) {
     return MilliSecondsToTicks(value);
+}
+
+int64_t TimeSpan::ToNanoSeconds() const {
+    return TicksToNanoSeconds(m_TickSpan);
 }
 
 }  // namespace nn::atk::detail::fnd
