@@ -102,14 +102,14 @@ public:
 
 private:
     audio::AuxType m_AuxType;
-    std::atomic_uint64_t m_AudioRendererUpdateCountWhenAddedAux;
-    int32_t m_AudioFrameCount;
-    int32_t m_ChannelCount;
-    bool m_IsActive;
-    bool m_IsEnabled;
-    void* m_EffectBuffer;
-    size_t m_EffectBufferSize;
-    int32_t* m_AuxReadBuffer;
+    std::atomic_uint64_t m_AudioRendererUpdateCountWhenAddedAux{0};
+    int32_t m_AudioFrameCount{4};
+    int32_t m_ChannelCount{4};
+    bool m_IsActive{false};
+    bool m_IsEnabled{false};
+    void* m_EffectBuffer{};
+    size_t m_EffectBufferSize{0};
+    int32_t* m_AuxReadBuffer{};
     ChannelIndex m_ChannelSetting[ChannelCountMax];
 };
 static_assert(sizeof(EffectAux) == 0x68);
