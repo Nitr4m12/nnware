@@ -116,4 +116,17 @@ Channel* ChannelManager::Alloc() {
     return channel;
 }
 
+void ChannelManager::UpdateAllChannel() {
+    for (auto itr{m_ChannelList.begin()}; itr != m_ChannelList.end();) {
+        Channel* channel{&*itr};
+        ++itr;
+
+        channel->Update(true);
+        if (!channel->IsActive()) {
+            channel->CallChannelCallback(Channel::ChannelCallbackStatus_Stopped);
+            Free(channel);
+        }
+    }
+}
+
 }  // namespace nn::atk::detail::driver
