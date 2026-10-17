@@ -129,4 +129,22 @@ void ChannelManager::UpdateAllChannel() {
     }
 }
 
+void ChannelManager::UpdateAudioFrameChannel() {
+    for (auto itr{m_ChannelList.begin()}; itr != m_ChannelList.end();) {
+        Channel* channel{&*itr};
+        ++itr;
+
+        if (!channel->IsActive()) {
+            channel->CallChannelCallback(Channel::ChannelCallbackStatus_Stopped);
+            Free(channel);
+        } else if (channel->GetUpdateType() == UpdateType_AudioFrame) {
+            channel->Update(true);
+            if (!channel->IsActive()) {
+                channel->CallChannelCallback(Channel::ChannelCallbackStatus_Stopped);
+                Free(channel);
+            }
+        }
+    }
+}
+
 }  // namespace nn::atk::detail::driver
