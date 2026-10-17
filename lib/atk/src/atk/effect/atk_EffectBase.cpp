@@ -70,4 +70,12 @@ EffectBase::SampleRate EffectBase::GetSampleRate() const {
     return m_SampleRate;
 }
 
+bool EffectBase::SetSampleRate(SampleRate sampleRate) {
+    if (m_IsActive)
+        return false;
+
+    m_SampleRate = sampleRate;
+    return true;
+}
+
 }  // namespace nn::atk
