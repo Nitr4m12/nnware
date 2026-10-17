@@ -6,6 +6,10 @@ namespace nn::atk::detail {
 
 TaskThread::TaskThread() = default;
 
+TaskThread::~TaskThread() {
+    Destroy();
+}
+
 void TaskThread::Destroy() {
     if (!m_IsCreated)
         return;
