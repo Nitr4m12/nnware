@@ -74,4 +74,10 @@ FndResult StreamCache::SyncStreamCurrentPosition(position_t position) {
     return m_Stream->Seek(position, Stream::SeekOrigin_Begin);
 }
 
+void StreamCache::ClearCache() {
+    FlushWriteCache();
+    m_CachePosition = InvalidPosition;
+    m_CachedLength = 0;
+}
+
 }  // namespace nn::atk::detail::fnd
