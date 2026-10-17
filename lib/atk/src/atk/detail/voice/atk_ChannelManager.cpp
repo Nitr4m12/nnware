@@ -13,6 +13,13 @@ ChannelManager::ChannelManager() = default;
 size_t ChannelManager::GetRequiredMemSize(int32_t channelCount) {
     return (static_cast<size_t>(channelCount * 2) / 2) * (sizeof(Channel) * 2) + 0x40;
 }
+
+void ChannelManager::Initialize(void* mem, size_t memSize) {
+    if (!m_IsInitialized) {
+        m_ChannelCount = m_Pool.Create(mem, memSize, 64);
+        m_IsInitialized = true;
+    }
+}
 #else
 size_t ChannelManager::GetObjectSize(const SoundInstanceConfig& config) {
     size_t result{sizeof(Channel)};
@@ -31,6 +38,10 @@ size_t ChannelManager::GetObjectSize(const SoundInstanceConfig& config) {
 size_t ChannelManager::GetRequiredMemSize(int32_t channelCount, const SoundInstanceConfig& config) {
     return GetObjectSize(config) * channelCount + 0x70;
 }
+
+// TODO: void ChannelManager::Initialize;
 #endif
+
+
 
 }  // namespace nn::atk::detail::driver
