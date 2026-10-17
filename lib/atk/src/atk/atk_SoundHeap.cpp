@@ -4,4 +4,8 @@ namespace nn::atk {
 
 SoundHeap::SoundHeap() = default;
 
+SoundHeap::~SoundHeap() {
+    Destroy();
+}
+
 }  // namespace nn::atk
