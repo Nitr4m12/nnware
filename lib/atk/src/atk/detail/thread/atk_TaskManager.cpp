@@ -29,7 +29,7 @@ void TaskManager::AppendTask(Task* task, TaskPriority priority) {
         m_TaskList[priority].push_back(*task);
     }
 
-    m_BlockingQueue.TrySend(0);
+    m_BlockingQueue.TrySend(Message_Append);
 }
 
 Task* TaskManager::GetNextTask(TaskPriority priority, bool doRemove) {
@@ -80,6 +80,25 @@ void TaskManager::ExecuteTask() {
         task->m_Status = Task::Status_Done;
         task->m_Event.Signal();
     }
+}
+
+bool TaskManager::TryRemoveTask(Task* task) {
+    fnd::ScopedLock<fnd::CriticalSection> scopeLock{m_CriticalSection};
+
+    for (int i{0}; i < PriorityCount; ++i) {
+        TaskPriority priority{static_cast<TaskPriority>(i)};
+        for (auto itr{m_TaskList[priority].begin()}; itr != m_TaskList[priority].end();) {
+            auto curItr{itr++};
+            if (task == &*curItr) {
+                m_TaskList[priority].erase(curItr);
+                curItr->m_Status = Task::Status_Cancel;
+                curItr->m_Event.Signal();
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 
 }  // namespace nn::atk::detail
