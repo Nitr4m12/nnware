@@ -11,8 +11,13 @@ public:
     TaskThread();
     ~TaskThread() override;
 
+#if NN_WARE_VER < NN_MAKE_VER(5, 0, 0)
+    bool Create(int32_t priority, void* stackBase, size_t stackSize, int32_t idealCoreNumber,
+                uint32_t affinityMask);
+#else
     bool Create(int32_t priority, void* stackBase, size_t stackSize, int32_t idealCoreNumber,
                 uint32_t affinityMask, FsPriority fsPriority);
+#endif
 
     void Destroy();
 
