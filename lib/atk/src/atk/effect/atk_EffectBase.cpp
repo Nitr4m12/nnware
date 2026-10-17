@@ -28,4 +28,15 @@ void EffectBase::SetEffectInputOutput([[maybe_unused]] const int8_t* input,
                                       [[maybe_unused]] int inputCount,
                                       [[maybe_unused]] int outputCount) {}
 
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+void EffectBase::RemoveEffect([[maybe_unused]] audio::AudioRendererConfig* pConfig,
+                              [[maybe_unused]] audio::FinalMixType* pFinalMix) {}
+
+void EffectBase::RemoveEffect([[maybe_unused]] audio::AudioRendererConfig* pConfig,
+                              [[maybe_unused]] audio::SubMixType* pSubMix) {}
+#else
+void EffectBase::RemoveEffect([[maybe_unused]] audio::AudioRendererConfig* pConfig,
+                              [[maybe_unused]] OutputMixer* pOutputMixer) {}
+#endif
+
 }  // namespace nn::atk
