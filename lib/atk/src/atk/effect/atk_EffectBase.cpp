@@ -81,4 +81,8 @@ bool EffectBase::SetSampleRate(SampleRate sampleRate) {
 void EffectBase::GetChannelIndex([[maybe_unused]] ChannelIndex* pChannel,
                                  [[maybe_unused]] int channelCount) const {}
 
+int32_t EffectBase::GetChannelSettingCountMax() const {
+    return 0;
+}
+
 }  // namespace nn::atk
