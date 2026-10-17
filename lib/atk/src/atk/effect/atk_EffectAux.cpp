@@ -11,4 +11,6 @@ void EffectAux::ResetChannelIndex() {
         m_ChannelSetting[i] = static_cast<ChannelIndex>(i);
 }
 
+EffectAux::~EffectAux() = default;
+
 }  // namespace nn::atk
