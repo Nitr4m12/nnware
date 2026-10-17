@@ -31,7 +31,7 @@ private:
     fnd::CriticalSection m_CriticalSection;
     volatile bool m_IsFinished{false};
     bool m_IsCreated{false};
-#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER >= NN_MAKE_VER(5, 0, 0)
     FsPriority m_FsPriority{FsPriority_Normal};
 #endif
 };
