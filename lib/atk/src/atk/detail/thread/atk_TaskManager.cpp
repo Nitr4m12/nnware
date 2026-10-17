@@ -76,9 +76,15 @@ Task* TaskManager::PeekTask() {
 
 void TaskManager::ExecuteTask() {
     for (Task* task{PopTask()}; task != nullptr; task = PopTask()) {
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+        m_ActiveTask = &*task;
+#endif
         task->Execute(m_TaskProfileLogger);
         task->m_Status = Task::Status_Done;
         task->m_Event.Signal();
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+        m_ActiveTask = nullptr;
+#endif
     }
 }
 
@@ -137,6 +143,11 @@ void TaskManager::WaitTask() {
         if (msg == Message_Append)
             return;
     }
+}
+
+void TaskManager::CancelWaitTask() {
+    m_IsWaitTaskCancel = true;
+    m_BlockingQueue.Send(Message_Append);
 }
 
 }  // namespace nn::atk::detail
