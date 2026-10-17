@@ -9,35 +9,44 @@
 
 namespace nn::atk {
 
-class SoundHeap : SoundMemoryAllocatable {
+class SoundHeap : public SoundMemoryAllocatable {
 public:
     SoundHeap();
     ~SoundHeap() override;
 
+    bool Create(void* startAddress, size_t size);
+    bool Create(void* startAddress, size_t size, bool enableAutoMemoryPoolManagement);
+
     void Destroy();
 
-    bool Create(void* startAddress, size_t size);
-    bool Create(void* startAddress, size_t size, bool);
-
-    void Clear();
-
     void* Allocate(size_t size) override;
-
-    static void DisposeCallbackFunc(void* mem, size_t size, void* arg);
-
     void* Allocate(size_t size, SoundMemoryAllocatable::DisposeCallback heapCallback,
                    void* heapCallbackArg) override;
 
     size_t GetAllocateSize(size_t size, bool needMemoryPool) override;
 
+    void Clear();
+
+    bool IsValid() const { return m_FrameHeap.IsValid(); }
+
     int32_t SaveState();
-    void LoadState(int32_t state);
+    void LoadState(int32_t level);
+
+    int32_t GetCurrentLevel() const { return m_FrameHeap.GetCurrentLevel(); }
+
+    size_t GetSize() const { return m_FrameHeap.GetSize(); }
+
+    size_t GetFreeSize() const { return m_FrameHeap.GetFreeSize(); }
+
+    void Dump(const SoundDataManager&, const SoundArchive&) const;
 
 private:
+    static void DisposeCallbackFunc(void* mem, size_t size, void* arg);
+
     detail::fnd::CriticalSection m_CriticalSection;
     detail::FrameHeap m_FrameHeap;
     audio::MemoryPoolType m_MemoryPool;
-    bool m_IsAutoMemoryPoolManagementEnabled;
+    bool m_IsAutoMemoryPoolManagementEnabled{false};
 };
 static_assert(sizeof(SoundHeap) == 0x50);
 
