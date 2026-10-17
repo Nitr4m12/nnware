@@ -7,20 +7,26 @@ namespace nn::atk::detail::fnd {
 struct FsAccessLog;
 
 class StreamCache {
+    NN_NO_COPY(StreamCache);
+
 public:
-    static const position_t InvalidPosition = -1;
+    static const position_t InvalidPosition{-1};
 
     StreamCache();
     StreamCache(Stream* sourceStream, void* buffer, size_t length);
+
+    virtual ~StreamCache() = default;
+
+    void Initialize(Stream* sourceStream, void* buffer, size_t length);
+    void Finalize();
 
     bool IsInitialized() const {
         return m_Stream != nullptr && m_CacheBuffer != nullptr && m_CacheBufferLength != 0;
     }
 
-    void Initialize(Stream* sourceStream, void* buffer, size_t length);
-    void Finalize();
-
     size_t Read(void* buf, size_t length, FndResult* result, FsAccessLog* log, void* pFileStream);
+
+    size_t GetCurrentPosition() const { return m_CurrentPosition; }
 
     void FlushWriteCache();
 
@@ -35,8 +41,6 @@ public:
     size_t GetWritableCacheLength(size_t) const;
 
     FndResult Seek(position_t offset, Stream::SeekOrigin origin);
-
-    virtual ~StreamCache() = default;
 
 private:
     Stream* m_Stream{};

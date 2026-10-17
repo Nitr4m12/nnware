@@ -14,7 +14,9 @@ public:
     public:
         DirectStream() = default;
 
-        void Initialize(FileStreamImpl& fileStream);
+        void Initialize(FileStreamImpl& fileStream) {
+            m_Owner = &fileStream;
+        }
 
         void Close() override {}
 
@@ -45,8 +47,6 @@ public:
         ~DirectStream() override = default;
 
     private:
-        friend FileStreamImpl;
-
         FileStreamImpl* m_Owner;
     };
     static_assert(sizeof(DirectStream) == 0x10);
@@ -71,7 +71,12 @@ public:
     size_t Write(const void* buf, size_t length, FndResult* result) override;
     FndResult Seek(position_t offset, SeekOrigin origin) override;
 
-    position_t GetCurrentPosition() const override { return m_CurrentPosition; }
+    position_t GetCurrentPosition() const override {
+        if (IsCacheEnabled())
+            return m_StreamCache.GetCurrentPosition();
+
+        return m_CurrentPosition;
+    }
 
     void EnableCache(void* buffer, size_t length) override;
     void DisableCache() override;
@@ -90,7 +95,7 @@ private:
     size_t WriteDirect(const void* buf, size_t length, FndResult* result);
     FndResult SeekDirect(position_t offset, SeekOrigin origin);
 
-    void ValidateAlignment([[maybe_unused]] const void* buf) const;
+    void ValidateAlignment(const void* buf) const;
 
     fs::FileHandle m_FileHandle{0};
     bool m_IsOpened{false};

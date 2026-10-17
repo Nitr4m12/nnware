@@ -3,6 +3,7 @@
 #include <algorithm>
 
 #include <nn/fs/fs_Files.h>
+#include <nn/nn_Result.h>
 
 #include <nn/atk/fnd/basis/atkfnd_Inlines.h>
 
@@ -10,7 +11,21 @@ namespace nn::atk::detail::fnd {
 
 namespace {
 
-fs::OpenMode ConvertAccessMode(FileStream::AccessMode accessMode) {}
+fs::OpenMode ConvertAccessMode(FileStream::AccessMode accessMode) {
+    switch (accessMode) {
+    case FileStream::AccessMode_None:
+    case FileStream::AccessMode_Read:
+        return fs::OpenMode_Read;
+    case FileStream::AccessMode_Write:
+        return fs::OpenMode_Write;
+    case FileStream::AccessMode_ReadAndWrite:
+        return fs::OpenMode_ReadWrite;
+    case FileStream::AccessMode_AllowAppend:
+        return fs::OpenMode_Append;
+    case FileStream::AccessMode_AllowAppendAndWrite:
+        return fs::OpenMode_AppendWrite;
+    }
+}
 
 position_t GetSeekPosition(FileStreamImpl& target, position_t offset, Stream::SeekOrigin origin) {
     position_t targetSizeEnd = target.GetSize();
@@ -45,8 +60,24 @@ position_t GetSeekPosition(FileStreamImpl& target, position_t offset, Stream::Se
 }  // anonymous namespace
 
 FileStreamImpl::FileStreamImpl() {
-    m_DirectStream.m_Owner = this;
+    m_DirectStream.Initialize(*this);
 };
+
+// NON_MATCHING: requires ConvertAccessMode and more work on nn::Result
+FndResult FileStreamImpl::Open(const char* filePath, AccessMode accessMode) {
+    fs::OpenMode openMode{ConvertAccessMode(accessMode)};
+    nn::Result result{fs::OpenFile(&m_FileHandle, filePath, openMode)};
+    if (result.IsSuccess())
+        return FndResult{FndResultType_True};
+
+    if (result::detail::ErrorRange<0, 1, 2>().Includes(result))
+        return FndResult{FndResultType_IoFileNotFound};
+
+    if (result::detail::ErrorRange<2, 4000, 5000>().Includes(result))
+        return FndResult{FndResultType_IoInvalidAccess};
+
+    return FndResult{FndResultType_IoTargetLocked};
+}
 
 void FileStreamImpl::Close() {
     if (IsOpened()) {
@@ -74,6 +105,7 @@ size_t FileStreamImpl::GetSize() const {
         return fileSize & 0xffffffff;
 
     // diag::detail::AbortImpl("", "", "", 0);
+    return 0;
 }
 
 int FileStreamImpl::GetIoBufferAlignment() const {
