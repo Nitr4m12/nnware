@@ -27,6 +27,22 @@ void StreamCache::Finalize() {
     m_CacheState = CacheState_None;
 }
 
+FndResult StreamCache::FlushWriteCache() {
+    if (m_CachedLength == 0 || m_CacheState != CacheState_ForWrite)
+        return FndResult{FndResultType_False};
+
+    FndResult result{SyncStreamCurrentPosition(m_CachePosition)};
+    if (result.IsFailed())
+        return result;
+
+    result = FndResult{FndResultType_True};
+    m_Stream->Write(m_CacheBuffer, m_CachedLength, &result);
+    m_CacheState = CacheState_None;
+    m_CachePosition = InvalidPosition;
+    m_CachedLength = 0;
+    return result;
+}
+
 FndResult StreamCache::SyncStreamCurrentPosition(position_t position) {
     if (m_Stream->GetCurrentPosition() == position)
         return FndResult{FndResultType_False};

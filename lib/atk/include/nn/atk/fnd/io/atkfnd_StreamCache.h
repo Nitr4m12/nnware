@@ -51,7 +51,7 @@ private:
 
     FndResult SyncStreamCurrentPosition(position_t position);
 
-    void FlushWriteCache();
+    FndResult FlushWriteCache();
 
     Stream* m_Stream{};
     position_t m_CurrentPosition{0};
