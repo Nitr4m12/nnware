@@ -1,8 +1,7 @@
 #include <nn/atk/atk_WaveSoundPlayer.h>
 
 #include <nn/atk/atk_DisposeCallbackManager.h>
-#include "nn/atk/atk_Global.h"
-#include "nn/atk/atk_WaveFileReader.h"
+#include <nn/atk/atk_WaveFileReader.h>
 
 namespace nn::atk::detail::driver {
 

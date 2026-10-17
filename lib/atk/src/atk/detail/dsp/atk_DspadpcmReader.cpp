@@ -34,7 +34,8 @@ DspadpcmReader::DspadpcmReader() = default;
 
 bool DspadpcmReader::ReadWaveInfo(WaveInfo* info) const {
     const InternalDSPADPCMInfo& data{
-        *util::ConstBytePtr(m_pDspadpcmData).Get<InternalDSPADPCMInfo>()};
+        *util::ConstBytePtr(m_pDspadpcmData).Get<InternalDSPADPCMInfo>(),
+    };
 
     info->sampleFormat = SampleFormat_DspAdpcm;
     info->loopFlag = false;

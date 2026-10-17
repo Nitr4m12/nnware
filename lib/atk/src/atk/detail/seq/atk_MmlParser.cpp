@@ -1,7 +1,6 @@
 #include <nn/atk/atk_MmlParser.h>
 
 #include <nn/atk/atk_SequenceSoundPlayer.h>
-#include "nn/util/util_BytePtr.h"
 
 namespace nn::atk::detail::driver {
 
