@@ -78,4 +78,7 @@ bool EffectBase::SetSampleRate(SampleRate sampleRate) {
     return true;
 }
 
+void EffectBase::GetChannelIndex([[maybe_unused]] ChannelIndex* pChannel,
+                                 [[maybe_unused]] int channelCount) const {}
+
 }  // namespace nn::atk
