@@ -61,4 +61,17 @@ Task* TaskManager::PopTask() {
     return task;
 }
 
+Task* TaskManager::PeekTask() {
+    Task* task{GetNextTask(TaskPriority_High, false)};
+    if (task != nullptr)
+        return task;
+
+    task = GetNextTask(TaskPriority_Middle, false);
+    if (task != nullptr)
+        return task;
+
+    task = GetNextTask(TaskPriority_Low, false);
+    return task;
+}
+
 }  // namespace nn::atk::detail
