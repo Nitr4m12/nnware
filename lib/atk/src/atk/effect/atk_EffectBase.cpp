@@ -46,4 +46,19 @@ void EffectBase::SetEffectBuffer(void* effectBuffer, size_t effectBufferSize) {
     m_EffectBufferSize = effectBufferSize;
 }
 
+int32_t EffectBase::ConvertChannelModeToInt(ChannelMode channelMode) {
+    switch (channelMode) {
+    case ChannelMode_1Ch:
+        return 1;
+    case ChannelMode_2Ch:
+        return 2;
+    case ChannelMode_4Ch:
+        return 4;
+    case ChannelMode_6Ch:
+        return 6;
+    default:
+        NN_UNEXPECTED_DEFAULT;
+    }
+}
+
 }  // namespace nn::atk
