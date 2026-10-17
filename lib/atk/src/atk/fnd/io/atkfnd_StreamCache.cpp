@@ -27,4 +27,14 @@ void StreamCache::Finalize() {
     m_CacheState = CacheState_None;
 }
 
+FndResult StreamCache::SyncStreamCurrentPosition(position_t position) {
+    if (m_Stream->GetCurrentPosition() == position)
+        return FndResult{FndResultType_False};
+
+    if (!m_Stream->CanSeek())
+        return FndResult{FndResultType_Failed};
+
+    return m_Stream->Seek(position, Stream::SeekOrigin_Begin);
+}
+
 }  // namespace nn::atk::detail::fnd
