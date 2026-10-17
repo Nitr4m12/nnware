@@ -21,12 +21,14 @@ StreamSoundPrefetchFileReader::~StreamSoundPrefetchFileReader() {
 
 bool StreamSoundPrefetchFileReader::IsValidFileHeader(const void* streamSoundPrefetchFile) const {
     const BinaryFileHeader& header{
-        *util::ConstBytePtr(streamSoundPrefetchFile).Get<BinaryFileHeader>()};
+        *util::ConstBytePtr(streamSoundPrefetchFile).Get<BinaryFileHeader>(),
+    };
 
-    bool isSupportedVersion{header.signature == SignatureFileStp &&
-                            header.byteOrder == BinaryFileHeader::ValidByteOrderMark &&
-                            header.version >= SupportedFileVersionStp &&
-                            header.version <= CurrentFileVersionStp};
+    bool isSupportedVersion{
+        header.signature == SignatureFileStp &&
+            header.byteOrder == BinaryFileHeader::ValidByteOrderMark &&
+            header.version >= SupportedFileVersionStp && header.version <= CurrentFileVersionStp,
+    };
 
     return isSupportedVersion;
 }
@@ -70,9 +72,11 @@ bool StreamSoundPrefetchFileReader::ReadStreamSoundInfo(
 bool StreamSoundPrefetchFileReader::ReadDspAdpcmChannelInfo(DspAdpcmParam* pParam,
                                                             DspAdpcmLoopParam* pLoopParam,
                                                             int channelIndex) const {
-    auto* src{m_pInfoBlockBody->GetChannelInfoTable()
-                  ->GetChannelInfo(channelIndex)
-                  ->GetDspAdpcmChannelInfo()};
+    auto* src{
+        m_pInfoBlockBody->GetChannelInfoTable()
+            ->GetChannelInfo(channelIndex)
+            ->GetDspAdpcmChannelInfo(),
+    };
     if (src != nullptr) {
         *pParam = src->param;
         *pLoopParam = src->loopParam;

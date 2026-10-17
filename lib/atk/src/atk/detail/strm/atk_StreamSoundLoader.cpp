@@ -213,7 +213,8 @@ void StreamSoundLoader::Update() {
 void StreamSoundLoader::ForceFinish() {
     DriverCommand& cmdmgr{DriverCommand::GetInstanceForTaskThread()};
     DriverCommandStreamSoundForceFinish* command{
-        cmdmgr.AllocCommand<DriverCommandStreamSoundForceFinish>(false)};
+        cmdmgr.AllocCommand<DriverCommandStreamSoundForceFinish>(false),
+    };
     command->id = DriverCommandId_StrmForceFinish;
     command->player = m_PlayerHandle;
     cmdmgr.PushCommand(command);
@@ -479,8 +480,10 @@ void StreamSoundLoader::UpdateLoadingDataBlockIndex() {
     m_LoadingDataBlockIndex =
         m_RegionManager.GetCurrentRegion().current / m_DataInfo->blockSampleCount;
 
-    position_t startFilePos{static_cast<position_t>(
-        m_DataStartFilePos + m_DataInfo->blockSize * m_ChannelCount * m_LoadingDataBlockIndex)};
+    position_t startFilePos{
+        static_cast<position_t>(m_DataStartFilePos +
+                                m_DataInfo->blockSize * m_ChannelCount * m_LoadingDataBlockIndex),
+    };
     m_pFileStream->Seek(startFilePos, fnd::FileStream::SeekOrigin_Begin);
 }
 

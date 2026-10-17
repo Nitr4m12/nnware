@@ -12,10 +12,12 @@ const uint32_t CurrentFileVersionBank{0x10000};
 bool IsValidFileHeaderBank(const void* bankFile) {
     const BinaryFileHeader* header{util::ConstBytePtr(bankFile).Get<BinaryFileHeader>()};
 
-    bool isSupportedVersion{header->signature == BankFileReader::SignatureFile &&
-                            header->byteOrder == BinaryFileHeader::ValidByteOrderMark &&
-                            header->version >= SupportedFileVersionBank &&
-                            header->version <= CurrentFileVersionBank};
+    bool isSupportedVersion{
+        header->signature == BankFileReader::SignatureFile &&
+            header->byteOrder == BinaryFileHeader::ValidByteOrderMark &&
+            header->version >= SupportedFileVersionBank &&
+            header->version <= CurrentFileVersionBank,
+    };
 
     return isSupportedVersion;
 }

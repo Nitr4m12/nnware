@@ -8,59 +8,65 @@ namespace nn::atk::detail {
 
 class TaskManager {
 public:
-    using TaskList =
-        util::IntrusiveList<Task, util::IntrusiveListMemberNodeTraits<Task, &Task::m_TaskLink>>;
-
-    enum Message {
-        Message_Append,
-    };
-
     enum TaskPriority {
         TaskPriority_Low,
         TaskPriority_Middle,
         TaskPriority_High,
     };
 
-    constexpr static uint32_t PriorityCount = 3;
-    constexpr static uint32_t ThreadMessageBufferSize = 32;
-
     static TaskManager& GetInstance();
-
-    TaskManager();
-    ~TaskManager();
 
     void Initialize(bool isEnableProfiling);
     void Finalize();
 
+    void ExecuteTask();
     void AppendTask(Task* task, TaskPriority priority);
 
-    Task* GetNextTask(TaskPriority priority, bool);
-
-    Task* PopTask();
-    Task* PeekTask();
-
-    void ExecuteTask();
     void CancelTask(Task* task);
-
-    bool TryRemoveTask(Task* task);
-
     void CancelTaskById(uint32_t id);
-    void RemoveTaskById(uint32_t id);
-
     void CancelAllTask();
 
     void WaitTask();
     void CancelWaitTask();
 
+    bool TryRemoveTask(Task* task);
+
+    void RegisterTaskProfileReader(TaskProfileReader& profileReader) {
+        m_TaskProfileLogger.RegisterReader(profileReader);
+    }
+
+    void UnregisterTaskProfileReader(const TaskProfileReader& profileReader) {
+        m_TaskProfileLogger.UnregisterReader(profileReader);
+    }
+
 private:
+    static const int32_t PriorityCount{3};
+    static const int32_t ThreadMessageBufferSize{32};
+
+    enum Message {
+        Message_Append,
+    };
+
+    TaskManager();
+
+    Task* PopTask();
+    Task* PeekTask();
+
+    void RemoveTaskById(uint32_t id);
+
+    Task* GetNextTask(TaskPriority priority, bool doRemove);
+
+    using TaskList =
+        util::IntrusiveList<Task, util::IntrusiveListMemberNodeTraits<Task, &Task::m_TaskLink>>;
+
     TaskList m_TaskList[PriorityCount];
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
-    Task* m_ActiveTask;
+    Task* m_ActiveTask{};
 #endif
-    bool m_IsWaitTaskCancel;
+    volatile bool m_IsWaitTaskCancel{false};
     fnd::CriticalSection m_CriticalSection;
-    os::MessageQueue m_BlockingQueue;
-    std::uintptr_t m_MsgBuffer[ThreadMessageBufferSize];
+    os::MessageQueue m_BlockingQueue{m_MsgBuffer, ThreadMessageBufferSize};
+    uintptr_t m_MsgBuffer[ThreadMessageBufferSize];
     TaskProfileLogger m_TaskProfileLogger;
 };
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)

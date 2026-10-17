@@ -13,10 +13,11 @@ const uint32_t CurrentFileVersionSeq{0x20000};
 bool IsValidFileHeaderSeq(const void* sequenceFile) {
     const BinaryFileHeader* header{util::ConstBytePtr(sequenceFile).Get<BinaryFileHeader>()};
 
-    bool isSupportedVersion{header->signature == SequenceSoundFileReader::SignatureFile &&
-                            header->byteOrder == BinaryFileHeader::ValidByteOrderMark &&
-                            header->version >= SupportedFileVersionSeq &&
-                            header->version <= CurrentFileVersionSeq};
+    bool isSupportedVersion{
+        header->signature == SequenceSoundFileReader::SignatureFile &&
+            header->byteOrder == BinaryFileHeader::ValidByteOrderMark &&
+            header->version >= SupportedFileVersionSeq && header->version <= CurrentFileVersionSeq,
+    };
 
     return isSupportedVersion;
 }

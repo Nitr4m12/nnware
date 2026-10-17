@@ -42,7 +42,8 @@ void* StreamBufferPool::Alloc() {
                 if ((byte & mask) == 0) {
                     const int totalIndex{bitIndex};
                     void* buffer{
-                        util::BytePtr(m_Buffer).Advance(m_BlockSize * (totalIndex | byte)).Get()};
+                        util::BytePtr(m_Buffer).Advance(m_BlockSize * (totalIndex | byte)).Get(),
+                    };
                     return buffer;
                 }
             }

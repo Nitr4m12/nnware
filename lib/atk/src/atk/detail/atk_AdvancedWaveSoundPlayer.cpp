@@ -215,8 +215,10 @@ bool AdvancedWaveSoundPlayer::StartClip(ClipParam* pClipParam,
             return false;
     }
 
-    Channel* pChannel{Channel::AllocChannel(waveInfo.channelCount > 2 ? 2 : waveInfo.channelCount,
-                                            priority, nullptr, this)};
+    Channel* pChannel{
+        Channel::AllocChannel(waveInfo.channelCount > 2 ? 2 : waveInfo.channelCount, priority,
+                              nullptr, this),
+    };
     if (pChannel == nullptr)
         return false;
 
@@ -249,7 +251,8 @@ void AdvancedWaveSoundPlayer::UpdateClip(ClipParam* pClipParam,
         return;
 
     int remainingTimeMilliSeconds{
-        static_cast<int>(pChannel->GetLength() - (SoundFrameIntervalMicroSeconds / 1000))};
+        static_cast<int>(pChannel->GetLength() - (SoundFrameIntervalMicroSeconds / 1000)),
+    };
     if (remainingTimeMilliSeconds <= 0) {
         StopClip(pClipParam);
         return;

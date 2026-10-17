@@ -61,7 +61,8 @@ size_t WavOutFileStream::WriteDirect(const void* buf, size_t length, fnd::FndRes
     if (pResult->IsFailed()) {
         char bufferForAlignment[2];
         [[maybe_unused]] char* alignedBufferForAlignment{
-            util::BytePtr(bufferForAlignment).AlignUp(FileIoBufferAlignment).Get<char>()};
+            util::BytePtr(bufferForAlignment).AlignUp(FileIoBufferAlignment).Get<char>(),
+        };
 
         return 0;
     }

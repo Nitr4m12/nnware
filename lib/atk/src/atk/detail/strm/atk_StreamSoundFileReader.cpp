@@ -18,10 +18,11 @@ StreamSoundFileReader::StreamSoundFileReader() = default;
 bool StreamSoundFileReader::IsValidFileHeader(const void* streamSoundFile) {
     const BinaryFileHeader& header{*util::ConstBytePtr(streamSoundFile).Get<BinaryFileHeader>()};
 
-    bool isSupportedVersion{header.signature == SignatureFileStm &&
-                            header.byteOrder == BinaryFileHeader::ValidByteOrderMark &&
-                            header.version >= SupportedFileVersionStm &&
-                            header.version <= CurrentFileVersionStm};
+    bool isSupportedVersion{
+        header.signature == SignatureFileStm &&
+            header.byteOrder == BinaryFileHeader::ValidByteOrderMark &&
+            header.version >= SupportedFileVersionStm && header.version <= CurrentFileVersionStm,
+    };
 
     return isSupportedVersion;
 }
@@ -131,9 +132,11 @@ bool StreamSoundFileReader::ReadStreamTrackInfo(TrackInfo* pTrackInfo, int track
 bool StreamSoundFileReader::ReadDspAdpcmChannelInfo(DspAdpcmParam* pParam,
                                                     DspAdpcmLoopParam* pLoopParam,
                                                     int channelIndex) const {
-    auto* src{m_pInfoBlockBody->GetChannelInfoTable()
-                  ->GetChannelInfo(channelIndex)
-                  ->GetDspAdpcmChannelInfo()};
+    auto* src{
+        m_pInfoBlockBody->GetChannelInfoTable()
+            ->GetChannelInfo(channelIndex)
+            ->GetDspAdpcmChannelInfo(),
+    };
     if (src != nullptr) {
         *pParam = src->param;
         *pLoopParam = src->loopParam;

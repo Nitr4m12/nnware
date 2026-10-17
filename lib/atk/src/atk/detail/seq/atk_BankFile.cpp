@@ -24,7 +24,7 @@ enum VelocityRegionBitFlag {
     VelocityRegionBitFlag_Envelope = 9,
     VelocityRegionBitFlag_Randomizer = 10,
     VelocityRegionBitFlag_Lfo = 11,
-    VelocityRegionBitFlag_BasicParamFlag = 0b01000011111
+    VelocityRegionBitFlag_BasicParamFlag = 0b01000011111,
 };
 
 struct DirectChunk {

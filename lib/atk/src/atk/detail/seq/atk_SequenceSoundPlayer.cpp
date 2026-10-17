@@ -607,7 +607,8 @@ void SequenceSoundPlayer::UpdateTick() {
 
     uint64_t restMsec{IntervalMsecNumerator};
     uint64_t nextMsec{
-        static_cast<uint64_t>((m_TickFraction * IntervalMsecDenominator) / tickPerMsec)};
+        static_cast<uint64_t>((m_TickFraction * IntervalMsecDenominator) / tickPerMsec),
+    };
 
     while (nextMsec < restMsec) {
         restMsec -= nextMsec;

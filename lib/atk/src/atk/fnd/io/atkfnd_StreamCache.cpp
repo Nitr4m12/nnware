@@ -1,5 +1,9 @@
 #include <nn/atk/fnd/io/atkfnd_StreamCache.h>
 
+#include <cstring>
+
+#include <nn/util/util_BytePtr.h>
+
 namespace nn::atk::detail::fnd {
 
 StreamCache::StreamCache() = default;
@@ -25,6 +29,76 @@ void StreamCache::Finalize() {
     m_CachePosition = InvalidPosition;
     m_CachedLength = 0;
     m_CacheState = CacheState_None;
+}
+
+// NON_MATCHING
+size_t StreamCache::Read(void* buf, size_t length, FndResult* result, FsAccessLog* log,
+                         void* pFileStream) {
+    if (!IsInitialized()) {
+        if (log != nullptr)
+            log->Impl0(pFileStream);
+
+        size_t readSize{m_Stream->Read(buf, length, result)};
+        if (log != nullptr)
+            log->Impl1(pFileStream);
+
+        return readSize;
+    }
+
+    FndResult flushResult{FlushWriteCache()};
+    if (flushResult.IsFailed()) {
+        if (result != nullptr)
+            *result = flushResult;
+
+        return 0;
+    }
+
+    size_t cacheHitLength{GetReadCacheHitLength(length)};
+    if (cacheHitLength == 0 || length == 0)
+        return 0;
+
+    memcpy(buf, util::BytePtr(m_CacheBuffer, m_CurrentPosition - m_CachePosition).Get(),
+           cacheHitLength);
+
+    if (length <= cacheHitLength)
+        return length;
+
+    size_t restLength{length - cacheHitLength};
+
+    FndResult syncResult{SyncStreamCurrentPosition(m_CurrentPosition)};
+    if (syncResult.IsFailed()) {
+        if (result != nullptr)
+            *result = syncResult;
+
+        return 0;
+    }
+
+    if (m_CacheBufferLength < restLength) {
+        if (log != nullptr)
+            log->Impl0(pFileStream);
+
+        FndResult readResult;
+        restLength = m_Stream->Read(buf, restLength, &readResult);
+
+        if (log != nullptr)
+            log->Impl1(pFileStream);
+
+        if (result != nullptr)
+            *result = readResult;
+
+        if (readResult.IsFailed()) {
+            ClearCache();
+            m_CachePosition = m_CurrentPosition - m_CacheBufferLength;
+            memcpy(m_CacheBuffer, util::BytePtr(buf, -m_CacheBufferLength).Get(),
+                   m_CacheBufferLength);
+            if (result != nullptr)
+                *result = FndResult{FndResultType_True};
+
+            return length;
+        }
+    }
+
+    return cacheHitLength;
 }
 
 FndResult StreamCache::FlushWriteCache() {
@@ -79,5 +153,9 @@ void StreamCache::ClearCache() {
     m_CachePosition = InvalidPosition;
     m_CachedLength = 0;
 }
+
+// TODO: size_t StreamCache::Write
+// TODO: size_t StreamCache::GetWritableCacheLength
+// TODO: FndResult StreamCache::Seek
 
 }  // namespace nn::atk::detail::fnd

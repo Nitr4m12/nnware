@@ -10,7 +10,8 @@ bool StreamSoundFileLoader::LoadFileHeader(StreamSoundFileReader* reader, void* 
 
     m_pStream->Seek(0, fnd::FileStream::SeekOrigin_Begin);
     size_t readSize{
-        m_pStream->Read(util::BytePtr(buffer2).AlignUp(AlignSize).Get(), HeaderSize, nullptr)};
+        m_pStream->Read(util::BytePtr(buffer2).AlignUp(AlignSize).Get(), HeaderSize, nullptr),
+    };
     auto* header{util::BytePtr(buffer2).AlignUp(AlignSize).Get<StreamSoundFile::FileHeader>()};
 
     if (readSize == HeaderSize && reader->IsValidFileHeader(header)) {
@@ -59,8 +60,9 @@ bool StreamSoundFileLoader::ReadSeekBlockData(uint16_t* yn1, uint16_t* yn2, int 
 bool StreamSoundFileLoader::ReadRegionInfo(StreamSoundFile::RegionInfo* pInfo,
                                            uint32_t regionIndex) const {
     if (m_RegionDataOffset != 0 && m_RegionInfoBytes != 0) {
-        position_t offset{m_RegionDataOffset +
-                          static_cast<position_t>(m_RegionInfoBytes) * regionIndex};
+        position_t offset{
+            m_RegionDataOffset + static_cast<position_t>(m_RegionInfoBytes) * regionIndex,
+        };
         m_pStream->Seek(offset, fnd::FileStream::SeekOrigin_Begin);
 
         const int Align{64};

@@ -37,9 +37,10 @@ Channel* Bank::NoteOn(const BankFileReader& bankReader, const WaveArchiveFileRea
             return nullptr;
     }
 
-    Channel* pChannel{Channel::AllocChannel(std::min(waveInfo.channelCount, 2), noteOnInfo.priority,
-                                            noteOnInfo.channelCallback,
-                                            noteOnInfo.channelCallbackData)};
+    Channel* pChannel{
+        Channel::AllocChannel(std::min(waveInfo.channelCount, 2), noteOnInfo.priority,
+                              noteOnInfo.channelCallback, noteOnInfo.channelCallbackData),
+    };
 
     if (pChannel == nullptr)
         return nullptr;

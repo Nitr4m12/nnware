@@ -4,7 +4,11 @@
 
 namespace nn::atk::detail::fnd {
 
-struct FsAccessLog;
+class FsAccessLog {
+public:
+    virtual void Impl0(void* pStream);
+    virtual void Impl1(void* pStream);
+};
 
 class StreamCache {
     NN_NO_COPY(StreamCache);
