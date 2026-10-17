@@ -59,7 +59,7 @@ private:
     size_t m_CacheBufferLength{0};
     position_t m_CachePosition{InvalidPosition};
     size_t m_CachedLength{0};
-    uint8_t m_CacheState{0};
+    uint8_t m_CacheState{CacheState_None};
     uint8_t m_Padding[3];
 };
 static_assert(sizeof(StreamCache) == 0x40);

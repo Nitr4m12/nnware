@@ -19,11 +19,11 @@ fs::OpenMode ConvertAccessMode(FileStream::AccessMode accessMode) {
     case FileStream::AccessMode_Write:
         return fs::OpenMode_Write;
     case FileStream::AccessMode_ReadAndWrite:
-        return fs::OpenMode_ReadWrite;
+        return static_cast<fs::OpenMode>(fs::OpenMode_Read | fs::OpenMode_Write);
     case FileStream::AccessMode_AllowAppend:
         return fs::OpenMode_Append;
     case FileStream::AccessMode_AllowAppendAndWrite:
-        return fs::OpenMode_AppendWrite;
+        return static_cast<fs::OpenMode>(fs::OpenMode_Append | fs::OpenMode_Write);
     }
 }
 
