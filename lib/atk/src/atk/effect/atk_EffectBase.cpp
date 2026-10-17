@@ -66,4 +66,8 @@ void EffectBase::UpdateBuffer([[maybe_unused]] int numChannels, [[maybe_unused]]
                               [[maybe_unused]] SampleFormat format, [[maybe_unused]] int sampleRate,
                               [[maybe_unused]] OutputMode mode) {}
 
+EffectBase::SampleRate EffectBase::GetSampleRate() const {
+    return m_SampleRate;
+}
+
 }  // namespace nn::atk
