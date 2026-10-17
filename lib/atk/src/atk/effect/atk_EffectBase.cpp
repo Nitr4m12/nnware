@@ -39,4 +39,6 @@ void EffectBase::RemoveEffect([[maybe_unused]] audio::AudioRendererConfig* pConf
                               [[maybe_unused]] OutputMixer* pOutputMixer) {}
 #endif
 
+void EffectBase::OnChangeOutputMode() {}
+
 }  // namespace nn::atk
