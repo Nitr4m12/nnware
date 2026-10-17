@@ -106,4 +106,8 @@ bool TaskManager::TryRemoveTask(Task* task) {
     return false;
 }
 
+void TaskManager::CancelTaskById(uint32_t id) {
+    RemoveTaskById(id);
+}
+
 }  // namespace nn::atk::detail
