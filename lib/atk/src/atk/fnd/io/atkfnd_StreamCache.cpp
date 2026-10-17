@@ -43,6 +43,27 @@ FndResult StreamCache::FlushWriteCache() {
     return result;
 }
 
+size_t StreamCache::GetReadCacheHitLength(size_t length) const {
+    if (!IsInitialized())
+        return 0;
+
+    if (m_CacheState != CacheState_ForRead)
+        return 0;
+
+    if (m_CachePosition == InvalidPosition)
+        return 0;
+
+    if (m_CachePosition > m_CurrentPosition)
+        return 0;
+
+    size_t offset{static_cast<size_t>(m_CurrentPosition - m_CachePosition)};
+    if (m_CachedLength >= offset + length)
+        return length;
+
+    length = m_CachedLength - offset;
+    return m_CachedLength > offset ? length : 0;
+}
+
 FndResult StreamCache::SyncStreamCurrentPosition(position_t position) {
     if (m_Stream->GetCurrentPosition() == position)
         return FndResult{FndResultType_False};
