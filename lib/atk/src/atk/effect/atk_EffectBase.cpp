@@ -41,4 +41,9 @@ void EffectBase::RemoveEffect([[maybe_unused]] audio::AudioRendererConfig* pConf
 
 void EffectBase::OnChangeOutputMode() {}
 
+void EffectBase::SetEffectBuffer(void* effectBuffer, size_t effectBufferSize) {
+    m_EffectBuffer = effectBuffer;
+    m_EffectBufferSize = effectBufferSize;
+}
+
 }  // namespace nn::atk
