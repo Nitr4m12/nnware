@@ -23,4 +23,9 @@ bool EffectBase::AddEffect([[maybe_unused]] audio::AudioRendererConfig* pConfig,
 }
 #endif
 
+void EffectBase::SetEffectInputOutput([[maybe_unused]] const int8_t* input,
+                                      [[maybe_unused]] const int8_t* output,
+                                      [[maybe_unused]] int inputCount,
+                                      [[maybe_unused]] int outputCount) {}
+
 }  // namespace nn::atk
