@@ -42,4 +42,17 @@ void* FrameHeapImpl::AllocFromHead(size_t size, int alignment) {
     return newBlock;
 }
 
+void* FrameHeapImpl::AllocFromTail(size_t size, int alignment) {
+    void* newBlock{
+        RoundDown(AddOffsetToPtr(m_pTailAllocator, static_cast<int32_t>(-size)), alignment),
+    };
+    if (newBlock < m_pHeadAllocator)
+        return nullptr;
+
+    size = static_cast<uint32_t>(GetOffsetFromPtr(newBlock, m_pTailAllocator));
+    FillAllocMemory(newBlock, size);
+    m_pTailAllocator = newBlock;
+    return newBlock;
+}
+
 }  // namespace nn::atk::detail::fnd
