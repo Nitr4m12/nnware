@@ -85,12 +85,25 @@ void* SoundHeap::Allocate(size_t size) {
     return buffer;
 }
 
+void SoundHeap::DisposeCallbackFunc(void* mem, size_t size, [[maybe_unused]] void* arg) {
+    detail::DriverCommand& cmdmgr{detail::DriverCommand::GetInstance()};
+    if (cmdmgr.IsAvailable()) {
+        auto* command{cmdmgr.AllocCommand<detail::DriverCommandInvalidateData>()};
+        command->id = detail::DriverCommandId_InvalidateData;
+        command->mem = mem;
+        command->size = size;
+
+        cmdmgr.PushCommand(command);
+    }
+}
+
 void* SoundHeap::Allocate(size_t size, SoundMemoryAllocatable::DisposeCallback heapCallback,
                           void* heapCallbackArg) {
     detail::fnd::ScopedLock<detail::fnd::CriticalSection> lock{m_CriticalSection};
 
     void* buffer{
-        m_FrameHeap.Alloc(size, DisposeCallbackFunc, nullptr, heapCallback, heapCallbackArg)};
+        m_FrameHeap.Alloc(size, DisposeCallbackFunc, nullptr, heapCallback, heapCallbackArg),
+    };
     return buffer;
 }
 
