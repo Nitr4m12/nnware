@@ -42,7 +42,10 @@ public:
 
     int Count() const { return CountImpl(); }
 
-    void* Alloc() { return AllocImpl(); }
+    void* Alloc() {
+        void* ptr{AllocImpl()};
+        return ptr;
+    }
 
     void Free(void* ptr) {
         if (ptr != nullptr)

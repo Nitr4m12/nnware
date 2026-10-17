@@ -84,4 +84,36 @@ void ChannelManager::Free(Channel* channel) {
     m_Pool.Free(channel);
 }
 
+Channel* ChannelManager::Alloc() {
+    Channel* channel{m_Pool.Alloc()};
+    if (channel == nullptr)
+        return nullptr;
+
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+    OutputAdditionalParam* pAdditionalParam;
+    if (m_pAdditionalParamPool != nullptr) {
+        pAdditionalParam = m_pAdditionalParamPool->Alloc();
+        if (pAdditionalParam == nullptr) {
+            m_Pool.Free(channel);
+            return nullptr;
+        }
+
+        void* additionalParamBuffer{m_pAdditionalParamBufferPool->Alloc()};
+        if (additionalParamBuffer != nullptr) {
+            pAdditionalParam->Initialize(additionalParamBuffer,
+                                         m_AdditionalParamBufferSizePerChannel,
+                                         m_SoundInstanceConfig);
+            channel->SetTvAdditionalParamAddr(pAdditionalParam);
+        } else {
+            m_Pool.Free(channel);
+            m_pAdditionalParamPool->Free(pAdditionalParam);
+            return nullptr;
+        }
+    }
+#endif
+
+    m_ChannelList.push_back(*channel);
+    return channel;
+}
+
 }  // namespace nn::atk::detail::driver
