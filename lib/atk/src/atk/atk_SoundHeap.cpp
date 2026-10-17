@@ -107,4 +107,8 @@ void* SoundHeap::Allocate(size_t size, SoundMemoryAllocatable::DisposeCallback h
     return buffer;
 }
 
+size_t SoundHeap::GetAllocateSize(size_t size, [[maybe_unused]] bool needMemoryPool) {
+    return size;
+}
+
 }  // namespace nn::atk
