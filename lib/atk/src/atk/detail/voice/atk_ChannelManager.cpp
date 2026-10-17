@@ -42,6 +42,33 @@ size_t ChannelManager::GetRequiredMemSize(int32_t channelCount, const SoundInsta
 // TODO: void ChannelManager::Initialize;
 #endif
 
+void ChannelManager::Finalize() {
+    if (!m_IsInitialized)
+        return;
 
+    for (auto itr{m_ChannelList.begin()}; itr != m_ChannelList.end();) {
+        Channel* channel{&*itr};
+        ++itr;
+
+        channel->Stop();
+        channel->CallChannelCallback(Channel::ChannelCallbackStatus_Cancel);
+        Free(channel);
+    }
+
+#if NN_WARE_VER > NN_MAKE_VER(4, 0, 0)
+    if (m_pAdditionalParamPool != nullptr) {
+        m_pAdditionalParamPool->Destroy();
+        m_pAdditionalParamPool = nullptr;
+    }
+
+    if (m_pAdditionalParamBufferPool != nullptr) {
+        m_pAdditionalParamBufferPool->Destroy();
+        m_pAdditionalParamBufferPool = nullptr;
+    }
+#endif
+
+    m_Pool.Destroy();
+    m_IsInitialized = false;
+}
 
 }  // namespace nn::atk::detail::driver
