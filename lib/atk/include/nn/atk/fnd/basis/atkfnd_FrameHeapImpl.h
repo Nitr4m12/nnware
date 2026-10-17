@@ -11,12 +11,12 @@ public:
     static const int FreeAllMode{3};
 
     struct HeapState {
-        uint32_t tagName;
-        void* headAllocator;
-        void* tailAllocator;
-        HeapState* pPrevState;
+        uint32_t tagName{0};
+        void* headAllocator{};
+        void* tailAllocator{};
+        HeapState* pPrevState{};
 
-        HeapState();
+        HeapState() = default;
     };
     static_assert(sizeof(HeapState) == 0x20);
 

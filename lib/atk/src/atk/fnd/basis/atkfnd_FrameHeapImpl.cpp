@@ -144,4 +144,29 @@ void FrameHeapImpl::FreeTail() {
     m_pTailAllocator = GetHeapEnd();
 }
 
+bool FrameHeapImpl::RecordState(uint32_t tagName) {
+    bool retVal{false};
+
+    {
+        LockHeap();
+
+        void* oldHeadAllocator{m_pHeadAllocator};
+        void* stateHeap{AllocFromHead(sizeof(HeapState), HeapBase::DefaultAlignment)};
+
+        if (stateHeap != nullptr) {
+            HeapState* pState{new (stateHeap) HeapState};
+            pState->tagName = tagName;
+            pState->headAllocator = oldHeadAllocator;
+            pState->tailAllocator = m_pTailAllocator;
+            pState->pPrevState = m_pState;
+            m_pState = pState;
+            retVal = true;
+        }
+
+        UnlockHeap();
+    }
+
+    return retVal;
+}
+
 }  // namespace nn::atk::detail::fnd
