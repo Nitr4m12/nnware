@@ -110,4 +110,20 @@ void TaskManager::CancelTaskById(uint32_t id) {
     RemoveTaskById(id);
 }
 
+void TaskManager::RemoveTaskById(uint32_t id) {
+    fnd::ScopedLock<fnd::CriticalSection> scopeLock{m_CriticalSection};
+
+    for (int i{0}; i < PriorityCount; ++i) {
+        TaskPriority priority{static_cast<TaskPriority>(i)};
+        for (auto itr{m_TaskList[priority].begin()}; itr != m_TaskList[priority].end();) {
+            auto curItr{itr++};
+            if (curItr->m_Id == id) {
+                m_TaskList[priority].erase(curItr);
+                curItr->m_Status = Task::Status_Cancel;
+                curItr->m_Event.Signal();
+            }
+        }
+    }
+}
+
 }  // namespace nn::atk::detail
