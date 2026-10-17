@@ -36,7 +36,6 @@ public:
 
     static const int ErrorPrint = 1;
 
-    static const int MIN_ALIGNMENT = DefaultAlignment;
 
     static HeapBase* FindContainHeap(const void* memBlock);
     static HeapBase* FindParentHeap(const HeapBase* pChild);
@@ -53,13 +52,14 @@ public:
     HeapType GetHeapType();
 
 protected:
+    static const int MIN_ALIGNMENT = DefaultAlignment;
+
     void Initialize(uint32_t signature, void* heapStart, void* heapEnd, uint16_t optFlag);
     void Finalize();
 
     uint32_t GetSignature() const { return m_Signature; }
 
     void* GetHeapStart() const { return mHeapStart; }
-
     void* GetHeapEnd() const { return mHeapEnd; }
 
     void LockHeap();
@@ -69,6 +69,9 @@ protected:
     void FillNoUseMemory(void* address, size_t size);
     void FillAllocMemory(void* address, size_t size);
 
+    void* mHeapStart;
+    void* mHeapEnd;
+
 private:
     static HeapBase* FindContainHeap(HeapList* pList, const void* memBlock);
     static HeapList* FindListContainHeap(HeapBase* pHeapBase);
@@ -76,8 +79,6 @@ private:
     uint16_t GetOptionFlag();
     void SetOptionFlag(uint16_t optFlag);
 
-    void* mHeapStart;
-    void* mHeapEnd;
     uint32_t m_Signature;
     HeapList m_ChildList;
     uint32_t m_Attribute;

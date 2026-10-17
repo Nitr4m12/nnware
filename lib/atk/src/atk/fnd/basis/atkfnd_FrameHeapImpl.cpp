@@ -29,7 +29,7 @@ void* FrameHeapImpl::Destroy() {
     return this;
 }
 
-// NON_MATCHING: inlining of AllocFromHead and AllocFromTail
+// NON_MATCHING: AllocFromHead and AllocFromTail don't inline properly
 void* FrameHeapImpl::Alloc(size_t size, int alignment) {
     void* memory{};
 
@@ -65,6 +65,7 @@ void* FrameHeapImpl::AllocFromTail(size_t size, int alignment) {
     void* newBlock{
         RoundDown(AddOffsetToPtr(m_pTailAllocator, -static_cast<int32_t>(size)), alignment),
     };
+
     if (newBlock < m_pHeadAllocator)
         return nullptr;
 
@@ -199,6 +200,24 @@ bool FrameHeapImpl::FreeByState(uint32_t tagName) {
                                                  oldTailAllocator, m_pTailAllocator)));
 
             retVal = true;
+        }
+
+        UnlockHeap();
+    }
+
+    return retVal;
+}
+
+uint32_t FrameHeapImpl::Adjust() {
+    uint32_t retVal{0};
+
+    {
+        LockHeap();
+
+        if (GetOffsetFromPtr(m_pTailAllocator, mHeapEnd) <= 0) {
+            m_pTailAllocator = m_pHeadAllocator;
+            mHeapEnd = m_pTailAllocator;
+            retVal = static_cast<uint32_t>(GetOffsetFromPtr(this, m_pTailAllocator));
         }
 
         UnlockHeap();
