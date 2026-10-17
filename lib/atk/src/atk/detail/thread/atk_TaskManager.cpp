@@ -9,4 +9,8 @@ TaskManager& TaskManager::GetInstance() {
 
 TaskManager::TaskManager() = default;
 
+void TaskManager::Initialize(bool isEnableProfiling) {
+    m_TaskProfileLogger.SetProfilingEnabled(isEnableProfiling);
+}
+
 }  // namespace nn::atk::detail
