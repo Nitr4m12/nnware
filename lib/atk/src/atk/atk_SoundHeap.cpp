@@ -111,4 +111,10 @@ size_t SoundHeap::GetAllocateSize(size_t size, [[maybe_unused]] bool needMemoryP
     return size;
 }
 
+int32_t SoundHeap::SaveState() {
+    detail::fnd::ScopedLock<detail::fnd::CriticalSection> lock{m_CriticalSection};
+
+    return m_FrameHeap.SaveState();
+}
+
 }  // namespace nn::atk
