@@ -122,4 +122,13 @@ void FrameHeapImpl::FreeHead() {
     m_pState = nullptr;
 }
 
+void FrameHeapImpl::FreeTail() {
+    FillFreeMemory(m_pTailAllocator,
+                   static_cast<uint32_t>(GetOffsetFromPtr(m_pTailAllocator, GetHeapEnd())));
+    for (FrameHeapImpl::HeapState* pState{m_pState}; pState != nullptr; pState = pState->pPrevState)
+        pState->tailAllocator = GetHeapEnd();
+
+    m_pTailAllocator = GetHeapEnd();
+}
+
 }  // namespace nn::atk::detail::fnd
