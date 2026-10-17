@@ -82,6 +82,11 @@ void TaskManager::ExecuteTask() {
     }
 }
 
+void TaskManager::CancelTask(Task* task) {
+    if (!TryRemoveTask(task))
+        task->m_Event.Wait();
+}
+
 bool TaskManager::TryRemoveTask(Task* task) {
     fnd::ScopedLock<fnd::CriticalSection> scopeLock{m_CriticalSection};
 
