@@ -46,4 +46,19 @@ Task* TaskManager::GetNextTask(TaskPriority priority, bool doRemove) {
     }
 }
 
+Task* TaskManager::PopTask() {
+    fnd::ScopedLock<fnd::CriticalSection> scopeLock{m_CriticalSection};
+
+    Task* task{GetNextTask(TaskPriority_High, true)};
+    if (task != nullptr)
+        return task;
+
+    task = GetNextTask(TaskPriority_Middle, true);
+    if (task != nullptr)
+        return task;
+
+    task = GetNextTask(TaskPriority_Low, true);
+    return task;
+}
+
 }  // namespace nn::atk::detail
