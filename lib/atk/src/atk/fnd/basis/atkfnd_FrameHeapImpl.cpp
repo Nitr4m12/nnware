@@ -169,4 +169,42 @@ bool FrameHeapImpl::RecordState(uint32_t tagName) {
     return retVal;
 }
 
+bool FrameHeapImpl::FreeByState(uint32_t tagName) {
+    bool retVal{false};
+
+    {
+        LockHeap();
+
+        HeapState* pState{m_pState};
+
+        if (tagName != 0) {
+            while (pState != nullptr) {
+                if (pState->tagName == tagName)
+                    break;
+                pState = pState->pPrevState;
+            }
+        }
+
+        if (pState != nullptr) {
+            void* oldHeadAllocator{m_pHeadAllocator};
+            void* oldTailAllocator{m_pTailAllocator};
+
+            m_pHeadAllocator = pState->headAllocator;
+            m_pTailAllocator = pState->tailAllocator;
+            m_pState = pState->pPrevState;
+
+            FillFreeMemory(m_pHeadAllocator, static_cast<uint32_t>(GetOffsetFromPtr(
+                                                 m_pHeadAllocator, oldHeadAllocator)));
+            FillFreeMemory(oldTailAllocator, static_cast<uint32_t>(GetOffsetFromPtr(
+                                                 oldTailAllocator, m_pTailAllocator)));
+
+            retVal = true;
+        }
+
+        UnlockHeap();
+    }
+
+    return retVal;
+}
+
 }  // namespace nn::atk::detail::fnd
