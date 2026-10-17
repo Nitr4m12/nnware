@@ -1,5 +1,6 @@
 #include <nn/atk/atk_TaskManager.h>
-#include "nn/atk/fnd/os/atkfnd_ScopedLock.h"
+
+#include <nn/atk/fnd/os/atkfnd_ScopedLock.h>
 
 namespace nn::atk::detail {
 
@@ -29,6 +30,20 @@ void TaskManager::AppendTask(Task* task, TaskPriority priority) {
     }
 
     m_BlockingQueue.TrySend(0);
+}
+
+Task* TaskManager::GetNextTask(TaskPriority priority, bool doRemove) {
+    {
+        fnd::ScopedLock<fnd::CriticalSection> scopeLock{m_CriticalSection};
+        if (m_TaskList[priority].empty())
+            return nullptr;
+
+        Task* task{&m_TaskList[priority].front()};
+        if (doRemove)
+            m_TaskList[priority].pop_front();
+
+        return task;
+    }
 }
 
 }  // namespace nn::atk::detail
