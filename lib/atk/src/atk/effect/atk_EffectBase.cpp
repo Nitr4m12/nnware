@@ -61,4 +61,9 @@ int32_t EffectBase::ConvertChannelModeToInt(ChannelMode channelMode) {
     }
 }
 
+void EffectBase::UpdateBuffer([[maybe_unused]] int numChannels, [[maybe_unused]] void** buffer,
+                              [[maybe_unused]] size_t bufferSize,
+                              [[maybe_unused]] SampleFormat format, [[maybe_unused]] int sampleRate,
+                              [[maybe_unused]] OutputMode mode) {}
+
 }  // namespace nn::atk
