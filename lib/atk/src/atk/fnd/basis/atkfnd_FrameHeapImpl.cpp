@@ -63,7 +63,8 @@ void* FrameHeapImpl::AllocFromHead(size_t size, int alignment) {
 
 void* FrameHeapImpl::AllocFromTail(size_t size, int alignment) {
     void* newBlock{
-        RoundDown(AddOffsetToPtr(m_pTailAllocator, -static_cast<int32_t>(size)), alignment)};
+        RoundDown(AddOffsetToPtr(m_pTailAllocator, -static_cast<int32_t>(size)), alignment),
+    };
     if (newBlock < m_pHeadAllocator)
         return nullptr;
 
@@ -113,6 +114,18 @@ size_t FrameHeapImpl::GetAllocatableSize(int alignment) {
 
         return retVal;
     }
+}
+
+void FrameHeapImpl::Free(int mode) {
+    LockHeap();
+
+    if (mode & FreeHeadMode)
+        FreeHead();
+
+    if (mode & FreeTailMode)
+        FreeTail();
+
+    UnlockHeap();
 }
 
 void FrameHeapImpl::FreeHead() {
