@@ -9,7 +9,11 @@ ChannelManager& ChannelManager::GetInstance() {
 
 ChannelManager::ChannelManager() = default;
 
-#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+size_t ChannelManager::GetRequiredMemSize(int32_t channelCount) {
+    return (static_cast<size_t>(channelCount * 2) / 2) * (sizeof(Channel) * 2) + 0x40;
+}
+#else
 size_t ChannelManager::GetObjectSize(const SoundInstanceConfig& config) {
     size_t result{sizeof(Channel)};
 
@@ -22,6 +26,10 @@ size_t ChannelManager::GetObjectSize(const SoundInstanceConfig& config) {
     }
 
     return result;
+}
+
+size_t ChannelManager::GetRequiredMemSize(int32_t channelCount, const SoundInstanceConfig& config) {
+    return GetObjectSize(config) * channelCount + 0x70;
 }
 #endif
 
