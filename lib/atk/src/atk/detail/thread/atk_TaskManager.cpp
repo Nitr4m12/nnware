@@ -13,4 +13,9 @@ void TaskManager::Initialize(bool isEnableProfiling) {
     m_TaskProfileLogger.SetProfilingEnabled(isEnableProfiling);
 }
 
+void TaskManager::Finalize() {
+    m_TaskProfileLogger.SetProfilingEnabled(false);
+    m_TaskProfileLogger.Finalize();
+}
+
 }  // namespace nn::atk::detail
