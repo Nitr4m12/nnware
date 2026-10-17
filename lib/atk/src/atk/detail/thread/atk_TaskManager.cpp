@@ -74,4 +74,12 @@ Task* TaskManager::PeekTask() {
     return task;
 }
 
+void TaskManager::ExecuteTask() {
+    for (Task* task{PopTask()}; task != nullptr; task = PopTask()) {
+        task->Execute(m_TaskProfileLogger);
+        task->m_Status = Task::Status_Done;
+        task->m_Event.Signal();
+    }
+}
+
 }  // namespace nn::atk::detail
