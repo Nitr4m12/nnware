@@ -2,6 +2,7 @@
 
 #include <nn/atk/atk_DriverCommand.h>
 #include <nn/atk/fnd/os/atkfnd_ScopedLock.h>
+#include "nn/atk/atk_SoundSystem.h"
 
 namespace nn::atk {
 
@@ -9,6 +10,21 @@ SoundHeap::SoundHeap() = default;
 
 SoundHeap::~SoundHeap() {
     Destroy();
+}
+
+void SoundHeap::Destroy() {
+    detail::fnd::ScopedLock<detail::fnd::CriticalSection> lock{m_CriticalSection};
+    if (!m_FrameHeap.IsValid())
+        return;
+
+    Clear();
+
+    if (m_IsAutoMemoryPoolManagementEnabled) {
+        SoundSystem::DetachMemoryPool(&m_MemoryPool);
+        m_IsAutoMemoryPoolManagementEnabled = false;
+    }
+
+    m_FrameHeap.Destroy();
 }
 
 void SoundHeap::Clear() {
