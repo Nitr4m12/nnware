@@ -4,4 +4,6 @@ namespace nn::atk {
 
 EffectBase::EffectBase() = default;
 
+EffectBase::~EffectBase() = default;
+
 }  // namespace nn::atk
