@@ -117,4 +117,17 @@ int32_t SoundHeap::SaveState() {
     return m_FrameHeap.SaveState();
 }
 
+void SoundHeap::LoadState(int32_t level) {
+    {
+        detail::fnd::ScopedLock<detail::fnd::CriticalSection> lock{m_CriticalSection};
+        m_FrameHeap.LoadState(level);
+
+        detail::DriverCommand& cmdmgr{detail::DriverCommand::GetInstance()};
+        if (cmdmgr.IsAvailable()) {
+            uint32_t tag{cmdmgr.FlushCommand(true)};
+            cmdmgr.WaitCommandReply(tag);
+        }
+    }
+}
+
 }  // namespace nn::atk
