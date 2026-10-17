@@ -78,4 +78,20 @@ void SoundHeap::Clear() {
     }
 }
 
+void* SoundHeap::Allocate(size_t size) {
+    detail::fnd::ScopedLock<detail::fnd::CriticalSection> lock{m_CriticalSection};
+
+    void* buffer{m_FrameHeap.Alloc(size, DisposeCallbackFunc, nullptr, nullptr, nullptr)};
+    return buffer;
+}
+
+void* SoundHeap::Allocate(size_t size, SoundMemoryAllocatable::DisposeCallback heapCallback,
+                          void* heapCallbackArg) {
+    detail::fnd::ScopedLock<detail::fnd::CriticalSection> lock{m_CriticalSection};
+
+    void* buffer{
+        m_FrameHeap.Alloc(size, DisposeCallbackFunc, nullptr, heapCallback, heapCallbackArg)};
+    return buffer;
+}
+
 }  // namespace nn::atk
