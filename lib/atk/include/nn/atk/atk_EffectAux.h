@@ -18,14 +18,8 @@ class OutputMixer;
 
 class EffectAux {
 public:
-    constexpr static int32_t ChannelCountMax = 6;
-
-    struct BufferSet {
-        void* sendBuffer;
-        void* returnBuffer;
-        void* readBuffer;
-    };
-    static_assert(sizeof(BufferSet) == 0x18);
+    static const int32_t ChannelCountMax{6};
+    static const int32_t EffectAuxAlignment{8};
 
     struct UpdateSamplesArg {
         int32_t sampleCountPerAudioFrame;
@@ -37,44 +31,25 @@ public:
     };
     static_assert(sizeof(UpdateSamplesArg) == 0x18);
 
+    struct BufferSet {
+        void* sendBuffer;
+        void* returnBuffer;
+        void* readBuffer;
+    };
+    static_assert(sizeof(BufferSet) == 0x18);
+
     EffectAux();
     virtual ~EffectAux();
-    virtual void Initialize();
+
+    virtual bool Initialize();
     virtual void Finalize();
+
     virtual void OnChangeOutputMode();
-    virtual void UpdateSamples(int32_t, const UpdateSamplesArg&);
-
-    void ResetChannelIndex();
-
-    size_t GetRequiredMemSize(const audio::AudioRendererParameter& parameter) const;
-
-#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
-    bool AddEffect(audio::AudioRendererConfig* pConfig,
-                   const audio::AudioRendererParameter& parameter,
-                   audio::FinalMixType* pFinalMixType);
-    bool AddEffect(audio::AudioRendererConfig* pConfig,
-                   const audio::AudioRendererParameter& parameter, audio::SubMixType* pSubMixType);
-#else
-    bool AddEffect(audio::AudioRendererConfig* pConfig,
-                   const audio::AudioRendererParameter& parameter, OutputMixer* pOutputMixer);
-#endif
-
-    void SplitEffectBuffer(BufferSet* pBufferSet, void* effectBuffer, size_t effectBufferSize);
-
-    void SetEffectInputOutput(const int8_t* input, const int8_t* output, int32_t inputCount,
-                              int32_t outputCount);
-
-#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
-    void RemoveEffect(audio::AudioRendererConfig* pConfig, audio::FinalMixType* pFinalMixType);
-    void RemoveEffect(audio::AudioRendererConfig* pConfig, audio::SubMixType* pSubMixType);
-#else
-    void RemoveEffect(audio::AudioRendererConfig* pConfig, OutputMixer* pOutputMixer);
-#endif
 
     bool SetChannelCount(int32_t channelCount);
-    bool SetChannelIndex(const ChannelIndex* pChannel, int32_t channelCount);
-
     int32_t GetChannelCount() const;
+
+    bool SetChannelIndex(const ChannelIndex* pChannel, int32_t channelCount);
     void GetChannelIndex(ChannelIndex* pChannel, int32_t channelCount) const;
 
     bool SetAudioFrameCount(int32_t audioFrameCount);
@@ -82,13 +57,47 @@ public:
 
     bool IsRemovable() const;
     bool IsClearable();
-    bool IsEnabled() const;
 
+    bool IsEnabled() const;
     void SetEnabled(bool isEnabled);
+
+    int32_t GetChannelSettingCountMax() const;
+
+    size_t GetRequiredMemSize(const audio::AudioRendererParameter& parameter) const;
+
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    bool AddEffect(audio::AudioRendererConfig* pConfig,
+                   const audio::AudioRendererParameter& parameter, audio::FinalMixType* pFinalMix);
+    bool AddEffect(audio::AudioRendererConfig* pConfig,
+                   const audio::AudioRendererParameter& parameter, audio::SubMixType* pSubMix);
+#else
+    bool AddEffect(audio::AudioRendererConfig* pConfig,
+                   const audio::AudioRendererParameter& parameter, OutputMixer* pOutputMixer);
+#endif
+
+    void SetEffectInputOutput(const int8_t* input, const int8_t* output, int32_t inputCount,
+                              int32_t outputCount);
+
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    void RemoveEffect(audio::AudioRendererConfig* pConfig, audio::FinalMixType* pFinalMix);
+    void RemoveEffect(audio::AudioRendererConfig* pConfig, audio::SubMixType* pSubMix);
+#else
+    void RemoveEffect(audio::AudioRendererConfig* pConfig, OutputMixer* pOutputMixer);
+#endif
+
     void SetEffectBuffer(void* effectBuffer, size_t effectBufferSize);
 
     void Update();
 
+protected:
+    virtual void UpdateSamples(int32_t*, const UpdateSamplesArg&) = 0;
+
+private:
+    void SplitEffectBuffer(BufferSet* pOutBufferSet, void* effectBuffer,
+                           size_t sendReturnBufferSize);
+    void ResetChannelIndex();
+
+public:
     util::IntrusiveListNode m_AuxLinkNode;
 
 private:
@@ -103,6 +112,6 @@ private:
     int32_t* m_AuxReadBuffer;
     ChannelIndex m_ChannelSetting[ChannelCountMax];
 };
-static_assert(sizeof(EffectAux) == 0x50 + sizeof(ChannelIndex) * EffectAux::ChannelCountMax);
+static_assert(sizeof(EffectAux) == 0x68);
 
 }  // namespace nn::atk
