@@ -52,7 +52,7 @@ inline TDiff GetOffsetFromPtr(const void* start, const void* end) {
 }
 
 inline ptrdiff_t GetOffsetFromPtr(const void* start, const void* end) {
-    return reinterpret_cast<ptrdiff_t>(end) - reinterpret_cast<ptrdiff_t>(start);
+    return GetOffsetFromPtr<ptrdiff_t>(start, end);
 }
 
 template <typename TOffset>

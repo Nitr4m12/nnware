@@ -115,4 +115,11 @@ size_t FrameHeapImpl::GetAllocatableSize(int alignment) {
     }
 }
 
+void FrameHeapImpl::FreeHead() {
+    FillFreeMemory(GetHeapStart(),
+                   static_cast<uint32_t>(GetOffsetFromPtr(GetHeapStart(), m_pHeadAllocator)));
+    m_pHeadAllocator = GetHeapStart();
+    m_pState = nullptr;
+}
+
 }  // namespace nn::atk::detail::fnd
