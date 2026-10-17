@@ -1,6 +1,8 @@
 #include <nn/atk/atk_TaskThread.h>
 
+#include <nn/atk/atk_DriverCommand.h>
 #include <nn/atk/atk_TaskManager.h>
+#include <nn/atk/fnd/os/atkfnd_ScopedLock.h>
 
 namespace nn::atk::detail {
 
@@ -54,6 +56,23 @@ bool TaskThread::Create(int32_t priority, void* stackBase, size_t stackSize,
     m_IsCreated = true;
 
     return true;
+}
+
+uint32_t TaskThread::Run([[maybe_unused]] void* param) {
+    while (!m_IsFinished) {
+        TaskManager::GetInstance().WaitTask();
+        if (m_IsFinished)
+            return 0;
+
+        {
+            fnd::ScopedLock<fnd::CriticalSection> scopeLock{m_CriticalSection};
+            TaskManager::GetInstance().ExecuteTask();
+        }
+
+        DriverCommand::GetInstanceForTaskThread().RecvCommandReply();
+    }
+
+    return 0;
 }
 
 TaskThread& TaskThread::GetInstance() {
