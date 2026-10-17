@@ -126,4 +126,6 @@ void TaskManager::RemoveTaskById(uint32_t id) {
     }
 }
 
+void TaskManager::CancelAllTask() {}
+
 }  // namespace nn::atk::detail
