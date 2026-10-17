@@ -62,7 +62,8 @@ void* FrameHeapImpl::AllocFromHead(size_t size, int alignment) {
 }
 
 void* FrameHeapImpl::AllocFromTail(size_t size, int alignment) {
-    void* newBlock{RoundDown(AddOffsetToPtr(m_pTailAllocator, -static_cast<int32_t>(size)), alignment)};
+    void* newBlock{
+        RoundDown(AddOffsetToPtr(m_pTailAllocator, -static_cast<int32_t>(size)), alignment)};
     if (newBlock < m_pHeadAllocator)
         return nullptr;
 
@@ -72,7 +73,7 @@ void* FrameHeapImpl::AllocFromTail(size_t size, int alignment) {
     return newBlock;
 }
 
-size_t FrameHeapImpl::ResizeForMBlock(void *memBlock, size_t newSize) {
+size_t FrameHeapImpl::ResizeForMBlock(void* memBlock, size_t newSize) {
     if (newSize == 0)
         newSize = HeapBase::DefaultAlignment;
     else
@@ -81,7 +82,7 @@ size_t FrameHeapImpl::ResizeForMBlock(void *memBlock, size_t newSize) {
     {
         HeapBase::LockHeap();
 
-        const ptrdiff_t oldSize {GetOffsetFromPtr(memBlock, m_pHeadAllocator)};
+        const ptrdiff_t oldSize{GetOffsetFromPtr(memBlock, m_pHeadAllocator)};
         void* endAddress{AddOffsetToPtr(memBlock, newSize)};
         if (static_cast<int32_t>(newSize) != oldSize) {
             if (newSize > static_cast<uint32_t>(oldSize)) {
@@ -98,6 +99,20 @@ size_t FrameHeapImpl::ResizeForMBlock(void *memBlock, size_t newSize) {
     }
 
     return newSize;
+}
+
+size_t FrameHeapImpl::GetAllocatableSize(int alignment) {
+    if (alignment < 0)
+        alignment = -alignment;
+
+    {
+        size_t retVal{0};
+        const void* block{RoundUp(m_pHeadAllocator, alignment)};
+        if (m_pTailAllocator >= block)
+            retVal = GetOffsetFromPtr(block, m_pTailAllocator);
+
+        return retVal;
+    }
 }
 
 }  // namespace nn::atk::detail::fnd
