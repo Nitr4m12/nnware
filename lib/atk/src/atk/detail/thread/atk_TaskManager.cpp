@@ -128,4 +128,15 @@ void TaskManager::RemoveTaskById(uint32_t id) {
 
 void TaskManager::CancelAllTask() {}
 
+void TaskManager::WaitTask() {
+    m_IsWaitTaskCancel = false;
+
+    while (PeekTask() == nullptr && !m_IsWaitTaskCancel) {
+        uintptr_t msg;
+        m_BlockingQueue.Receive(&msg);
+        if (msg == Message_Append)
+            return;
+    }
+}
+
 }  // namespace nn::atk::detail
