@@ -44,7 +44,10 @@ public:
 
     void* Alloc() { return AllocImpl(); }
 
-    void Free(void* ptr) { FreeImpl(ptr); }
+    void Free(void* ptr) {
+        if (ptr != nullptr)
+            FreeImpl(ptr);
+    }
 };
 
 template <typename T>

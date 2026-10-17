@@ -71,4 +71,17 @@ void ChannelManager::Finalize() {
     m_IsInitialized = false;
 }
 
+void ChannelManager::Free(Channel* channel) {
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+    if (m_pAdditionalParamBufferPool != nullptr && m_pAdditionalParamPool != nullptr) {
+        OutputAdditionalParam* pAdditionalParam{channel->GetTvAdditionalParamAddr()};
+        m_pAdditionalParamBufferPool->Free(pAdditionalParam->GetBufferAddr());
+        m_pAdditionalParamPool->Free(pAdditionalParam);
+    }
+#endif
+
+    m_ChannelList.erase(m_ChannelList.iterator_to(*channel));
+    m_Pool.Free(channel);
+}
+
 }  // namespace nn::atk::detail::driver
