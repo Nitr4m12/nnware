@@ -4,6 +4,7 @@
 #include <nn/util.h>
 
 #include <nn/atk/atk_HardwareManager.h>
+#include "nn/atk/atk_FinalMix.h"
 
 namespace nn::atk {
 
@@ -176,5 +177,45 @@ void EffectAux::SetEffectInputOutput(const int8_t* input, [[maybe_unused]] const
 
     audio::SetAuxInputOutput(&m_AuxType, channelBus, channelBus, m_ChannelCount);
 }
+
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+void EffectAux::RemoveEffect(audio::AudioRendererConfig* pConfig, audio::FinalMixType* pFinalMix) {
+    if (!m_IsActive)
+        return;
+
+    audio::RemoveAux(pConfig, &m_AuxType, pFinalMix);
+
+    m_IsActive = false;
+}
+
+void EffectAux::RemoveEffect(audio::AudioRendererConfig* pConfig, audio::SubMixType* pSubMix) {
+    if (!m_IsActive)
+        return;
+
+    audio::RemoveAux(pConfig, &m_AuxType, pSubMix);
+
+    m_IsActive = false;
+}
+#else
+void EffectAux::RemoveEffect(audio::AudioRendererConfig* pConfig, OutputMixer* pOutputMixer) {
+    if (!m_IsActive)
+        return;
+
+    switch (pOutputMixer->GetReceiverType()) {
+    case OutputReceiver::ReceiverType::ReceiverType_SubMix:
+        audio::RemoveAux(pConfig, &m_AuxType,
+                         static_cast<SubMix*>(pOutputMixer)->GetAudioSubMixInstance());
+        break;
+    case OutputReceiver::ReceiverType::ReceiverType_FinalMix:
+        audio::RemoveAux(pConfig, &m_AuxType,
+                         static_cast<FinalMix*>(pOutputMixer)->GetAudioFinalMixInstance());
+        break;
+    default:
+        NN_UNEXPECTED_DEFAULT;
+    }
+
+    m_IsActive = false;
+}
+#endif
 
 }  // namespace nn::atk
