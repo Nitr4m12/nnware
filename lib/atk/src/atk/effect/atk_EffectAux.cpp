@@ -167,4 +167,14 @@ void EffectAux::SplitEffectBuffer(BufferSet* pOutBufferSet, void* effectBuffer,
 }
 #endif
 
+void EffectAux::SetEffectInputOutput(const int8_t* input, [[maybe_unused]] const int8_t* output,
+                                     [[maybe_unused]] int32_t inputCount,
+                                     [[maybe_unused]] int32_t outputCount) {
+    int8_t channelBus[ChannelCountMax];
+    for (int i{0}; i < m_ChannelCount; ++i)
+        channelBus[i] = input[m_ChannelSetting[i]];
+
+    audio::SetAuxInputOutput(&m_AuxType, channelBus, channelBus, m_ChannelCount);
+}
+
 }  // namespace nn::atk

@@ -18,7 +18,7 @@ class OutputMixer;
 
 class EffectAux {
 public:
-    static const int32_t ChannelCountMax{6};
+    static const int32_t ChannelCountMax{ChannelIndex_Count};
     static const int32_t EffectAuxAlignment{8};
 
     struct UpdateSamplesArg {
