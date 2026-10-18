@@ -227,6 +227,10 @@ bool EffectAux::SetChannelIndex(const ChannelIndex* pChannel, int32_t channelCou
     if (m_IsActive)
         return false;
 
+    /// XXX: There's some sort of loop here according to DWARF
+    // for (int i {0};;)
+    // for (int j{0};;)
+
     m_ChannelCount = channelCount;
     for (int i{0}; i < channelCount; ++i)
         m_ChannelSetting[i] = pChannel[i];
@@ -238,9 +242,18 @@ int32_t EffectAux::GetChannelCount() const {
     return m_ChannelCount;
 }
 
-void EffectAux::GetChannelIndex(ChannelIndex* pChannel, [[maybe_unused]] int32_t channelCount) const {
+void EffectAux::GetChannelIndex(ChannelIndex* pChannel,
+                                [[maybe_unused]] int32_t channelCount) const {
     for (int i{0}; i < m_ChannelCount; ++i)
         pChannel[i] = m_ChannelSetting[i];
+}
+
+bool EffectAux::SetAudioFrameCount(int32_t audioFrameCount) {
+    if (m_IsActive)
+        return false;
+
+    m_AudioFrameCount = audioFrameCount;
+    return true;
 }
 
 }  // namespace nn::atk
