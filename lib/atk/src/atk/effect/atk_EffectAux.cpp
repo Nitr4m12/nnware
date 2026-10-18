@@ -284,4 +284,8 @@ bool EffectAux::IsClearable() {
     return IsRemovable();
 }
 
+bool EffectAux::IsEnabled() const {
+    return m_IsEnabled;
+}
+
 }  // namespace nn::atk
