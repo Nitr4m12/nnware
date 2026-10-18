@@ -259,4 +259,25 @@ int32_t EffectAux::GetAudioFrameCount() const {
     return m_AudioFrameCount;
 }
 
+bool EffectAux::IsRemovable() const {
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+    if (!m_IsActive)
+        return false;
+#endif
+
+    if (m_AudioRendererUpdateCountWhenAddedAux >=
+        detail::driver::HardwareManager::GetInstance().GetAudioRendererUpdateCount())
+        return false;
+
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+    detail::driver::HardwareManager::UpdateAudioRendererScopedLock lock;
+#endif
+
+    if (!audio::IsAuxRemovable(&m_AuxType))
+        return false;
+
+    return m_AudioRendererUpdateCountWhenAddedAux <
+           detail::driver::HardwareManager::GetInstance().GetAudioRendererUpdateCount();
+}
+
 }  // namespace nn::atk
