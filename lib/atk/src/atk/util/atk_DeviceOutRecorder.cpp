@@ -13,4 +13,10 @@ void DeviceOutRecorder::RecorderBuffer::UpdateMaxSamples() {
         m_MaxSamples = m_MaxBufferSamples;
 }
 
+void DeviceOutRecorder::RecorderBuffer::Clear() {
+    m_ValidSamples = 0;
+    m_ReadPosition = 0;
+    m_WritePosition = 0;
+}
+
 }  // namespace nn::atk
