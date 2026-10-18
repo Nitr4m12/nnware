@@ -235,4 +235,8 @@ bool EffectAux::SetChannelIndex(const ChannelIndex* pChannel, int32_t channelCou
     return true;
 }
 
+int32_t EffectAux::GetChannelCount() const {
+    return m_ChannelCount;
+}
+
 }  // namespace nn::atk
