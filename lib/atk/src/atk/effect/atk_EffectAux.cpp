@@ -1,5 +1,6 @@
 #include <nn/atk/atk_EffectAux.h>
 #include "nn/audio.h"
+#include "nn/util/util_BytePtr.h"
 
 namespace nn::atk {
 
@@ -28,6 +29,20 @@ size_t EffectAux::GetRequiredMemSize(const audio::AudioRendererParameter& parame
                                                            m_ChannelCount),
     };
     return bufferSize * 3;
+}
+
+void EffectAux::SplitEffectBuffer(BufferSet* pOutBufferSet, void* effectBuffer,
+                                  size_t sendReturnBufferSize) {
+    util::BytePtr bytePtr{effectBuffer};
+    bytePtr.AlignUp(64);
+
+    pOutBufferSet->sendBuffer = bytePtr.Get();
+    bytePtr.Advance(sendReturnBufferSize).AlignUp(64);
+
+    pOutBufferSet->returnBuffer = bytePtr.Get();
+    bytePtr.Advance(sendReturnBufferSize).AlignUp(64);
+
+    pOutBufferSet->readBuffer = bytePtr.Get();
 }
 
 }  // namespace nn::atk
