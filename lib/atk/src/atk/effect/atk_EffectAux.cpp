@@ -4,7 +4,6 @@
 #include <nn/util.h>
 
 #include <nn/atk/atk_HardwareManager.h>
-#include "nn/atk/atk_FinalMix.h"
 
 namespace nn::atk {
 
@@ -254,6 +253,10 @@ bool EffectAux::SetAudioFrameCount(int32_t audioFrameCount) {
 
     m_AudioFrameCount = audioFrameCount;
     return true;
+}
+
+int32_t EffectAux::GetAudioFrameCount() const {
+    return m_AudioFrameCount;
 }
 
 }  // namespace nn::atk
