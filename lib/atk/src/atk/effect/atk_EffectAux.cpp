@@ -1,4 +1,5 @@
 #include <nn/atk/atk_EffectAux.h>
+#include "nn/audio.h"
 
 namespace nn::atk {
 
@@ -20,5 +21,13 @@ bool EffectAux::Initialize() {
 void EffectAux::Finalize() {}
 
 void EffectAux::OnChangeOutputMode() {}
+
+size_t EffectAux::GetRequiredMemSize(const audio::AudioRendererParameter& parameter) const {
+    size_t bufferSize{
+        audio::GetRequiredBufferSizeForAuxSendReturnBuffer(&parameter, m_AudioFrameCount,
+                                                           m_ChannelCount),
+    };
+    return bufferSize * 3;
+}
 
 }  // namespace nn::atk
