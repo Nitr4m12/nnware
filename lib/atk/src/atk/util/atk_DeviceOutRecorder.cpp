@@ -28,4 +28,10 @@ void DeviceOutRecorder::RecorderBuffer::Clear() {
     m_WritePosition = 0;
 }
 
+void DeviceOutRecorder::RecorderBuffer::Finalize() {
+    m_SampleBuffer = nullptr;
+    m_MaxSamples = 0;
+    m_ReadBlockSamples = 1;
+}
+
 }  // namespace nn::atk
