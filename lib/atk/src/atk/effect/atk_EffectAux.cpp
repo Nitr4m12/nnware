@@ -17,4 +17,6 @@ bool EffectAux::Initialize() {
     return true;
 }
 
+void EffectAux::Finalize() {}
+
 }  // namespace nn::atk
