@@ -19,4 +19,6 @@ bool EffectAux::Initialize() {
 
 void EffectAux::Finalize() {}
 
+void EffectAux::OnChangeOutputMode() {}
+
 }  // namespace nn::atk
