@@ -300,4 +300,9 @@ void EffectAux::SetEnabled(bool isEnabled) {
     }
 }
 
+void EffectAux::SetEffectBuffer(void* effectBuffer, size_t effectBufferSize) {
+    m_EffectBuffer = effectBuffer;
+    m_EffectBufferSize = effectBufferSize;
+}
+
 }  // namespace nn::atk
