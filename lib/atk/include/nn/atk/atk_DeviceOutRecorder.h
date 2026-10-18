@@ -16,9 +16,9 @@ class DeviceOutRecorder : public detail::fnd::Thread::Handler {
     NN_NO_COPY(DeviceOutRecorder);
 
 public:
-    static const uint32_t RecordingBufferSize = 0x5a000;
-    static const uint32_t DefaultWriteBlockPerSamples = 0x10000;
-    static const uint32_t RequiredThreadStackSize = 0x10000;
+    static const uint32_t RecordingBufferSize{368640};
+    static const uint32_t DefaultWriteBlockPerSamples{65536};
+    static const uint32_t RequiredThreadStackSize{65536};
 
     enum State {
         State_NotInitialized,
@@ -75,12 +75,6 @@ public:
     static_assert(sizeof(RecordingOptions) == 0x10);
 
     class RecorderBuffer {
-        struct WriteState {
-            uint32_t channelIndex;
-            uint32_t writtenSampleCount;
-        };
-        static_assert(sizeof(WriteState) == 0x8);
-
         explicit RecorderBuffer(const char* deviceName);
 
         void Initialize(int16_t* sampleBuffer, uint32_t maxSamples);
@@ -98,9 +92,15 @@ public:
         uint32_t GetContiguousReadableCount() const;
         const char* GetDeviceName() const;
 
+    private:
+        struct WriteState {
+            uint32_t channelIndex;
+            uint32_t writtenSampleCount;
+        };
+        static_assert(sizeof(WriteState) == 0x8);
+
         void UpdateMaxSamples();
 
-    private:
         void Skip(uint32_t samples);
         void Write(const int16_t* sampleBuffer, uint32_t samples);
         uint32_t IncrementPosition(uint32_t position, uint32_t length) const;
@@ -108,7 +108,7 @@ public:
         int16_t* m_SampleBuffer{nullptr};
         uint32_t m_MaxBufferSamples{0};
         uint32_t m_MaxSamples{0};
-        std::atomic_uint m_ValidSamples{0};
+        std::atomic_uint32_t m_ValidSamples{0};
         uint32_t m_ReadPosition{0};
         uint32_t m_WritePosition{0};
         uint32_t m_ReadBlockSamples{1};
@@ -117,12 +117,12 @@ public:
     };
     static_assert(sizeof(RecorderBuffer) == 0x30);
 
+    ~DeviceOutRecorder() override;
+
 protected:
     explicit DeviceOutRecorder(const char* deviceName);
 
 public:
-    ~DeviceOutRecorder() override;
-
     bool Initialize(void* recordingBuffer, size_t recordingBufferSize, void* pThreadStack,
                     size_t threadStackSize);
     bool Initialize(void* recordingBuffer, size_t recordingBufferSize, void* pThreadStack,
@@ -152,7 +152,7 @@ protected:
 
     virtual uint32_t GetMaxFrameLength() const = 0;
     virtual uint32_t GetSamplesPerSec() const = 0;
-    virtual uint32_t GetValidChannels() const = 0;
+    virtual uint32_t GetValidChannels(uint32_t) const = 0;
 
     virtual void OnStart();
     virtual void OnStop();
@@ -169,7 +169,7 @@ private:
     uint32_t GetWritableSamples(uint32_t samples) const;
     bool IsNoMoreSamples() const;
 
-    bool StartThread(uint32_t, int32_t);
+    bool StartThread(uint32_t priority, int32_t idealCoreNumber);
     void StopThread();
 
     int32_t Prepare();
