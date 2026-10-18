@@ -209,6 +209,8 @@ public:
 
     bool TimedWaitAudioRendererEvent(TimeSpan timeout);
 
+    uint64_t GetAudioRendererUpdateCount() const { return m_AudioRendererUpdateCount; }
+
     void SetAudioRendererRenderingTimeLimit(int32_t timeLimit);
     int32_t GetAudioRendererRenderingTimeLimit();
 

@@ -13,7 +13,7 @@ class HardwareManager;
 
 };
 
-class SubMix : OutputMixer {
+class SubMix : public OutputMixer {
 public:
     class SubMixParam {
     public:

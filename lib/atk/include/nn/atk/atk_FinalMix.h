@@ -8,7 +8,7 @@
 
 namespace nn::atk {
 
-class FinalMix : OutputMixer {
+class FinalMix : public OutputMixer {
 public:
     static size_t GetRequiredMemorySize(bool isEffectEnabled);
 
@@ -34,6 +34,8 @@ public:
     void AddReferenceCount(int32_t value) override;
 
     bool IsSoundSendClampEnabled(int32_t bus) const override;
+
+    audio::FinalMixType* GetAudioFinalMixInstance() { return &m_FinalMix; }
 
 private:
     audio::FinalMixType m_FinalMix;

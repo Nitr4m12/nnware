@@ -9,7 +9,7 @@
 
 namespace nn::atk {
 
-class OutputMixer : protected OutputReceiver {
+class OutputMixer : public OutputReceiver {
 public:
     using EffectList =
         util::IntrusiveList<EffectBase,
