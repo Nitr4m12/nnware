@@ -4,6 +4,7 @@
 #include <nn/util.h>
 
 #include <nn/atk/atk_HardwareManager.h>
+#include <nn/atk/atk_SoundSystem.h>
 
 namespace nn::atk {
 
@@ -291,10 +292,7 @@ bool EffectAux::IsEnabled() const {
 void EffectAux::SetEnabled(bool isEnabled) {
     m_IsEnabled = isEnabled;
 
-    if (!m_IsActive)
-        return;
-
-    {
+    if (m_IsActive) {
         detail::driver::HardwareManager::UpdateAudioRendererScopedLock lock;
         audio::SetAuxEnabled(&m_AuxType, isEnabled);
     }
@@ -303,6 +301,26 @@ void EffectAux::SetEnabled(bool isEnabled) {
 void EffectAux::SetEffectBuffer(void* effectBuffer, size_t effectBufferSize) {
     m_EffectBuffer = effectBuffer;
     m_EffectBufferSize = effectBufferSize;
+}
+
+void EffectAux::Update() {
+    if (m_IsActive) {
+        int32_t sampleCount{audio::GetAuxSampleCount(&m_AuxType)};
+
+        UpdateSamplesArg arg;
+        arg.sampleCountPerAudioFrame = sampleCount / (m_AudioFrameCount * m_ChannelCount);
+        arg.sampleRate = audio::GetAuxSampleRate(&m_AuxType);
+        arg.audioFrameCount = m_AudioFrameCount;
+        arg.channelCount = m_ChannelCount;
+        arg.outputMode = SoundSystem::GetOutputMode(OutputDevice_Main);
+
+        int readSampleCount{audio::ReadAuxSendBuffer(&m_AuxType, m_AuxReadBuffer, sampleCount)};
+        arg.readSampleCount = readSampleCount;
+
+        UpdateSamples(m_AuxReadBuffer, arg);
+
+        audio::WriteAuxReturnBuffer(&m_AuxType, m_AuxReadBuffer, readSampleCount);
+    }
 }
 
 }  // namespace nn::atk

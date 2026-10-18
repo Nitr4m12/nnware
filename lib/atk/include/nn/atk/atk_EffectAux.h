@@ -61,7 +61,7 @@ public:
     bool IsEnabled() const;
     void SetEnabled(bool isEnabled);
 
-    int32_t GetChannelSettingCountMax() const;
+    int32_t GetChannelSettingCountMax() const { return ChannelCountMax; }
 
     size_t GetRequiredMemSize(const audio::AudioRendererParameter& parameter) const;
 
@@ -90,11 +90,12 @@ public:
     void Update();
 
 protected:
-    virtual void UpdateSamples(int32_t*, const UpdateSamplesArg&) = 0;
+    virtual void UpdateSamples(int32_t* readBuffer, const UpdateSamplesArg& arg) = 0;
 
 private:
     void SplitEffectBuffer(BufferSet* pOutBufferSet, void* effectBuffer,
                            size_t sendReturnBufferSize);
+
     void ResetChannelIndex();
 
 public:

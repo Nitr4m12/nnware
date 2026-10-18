@@ -312,6 +312,10 @@ struct SoundSystem {
     static CircularBufferSinkState GetCircularBufferSinkState();
     static detail::SoundInstanceConfig GetSoundInstanceConfig();
 
+    static OutputMode GetOutputMode(OutputDevice device) {
+        return detail::driver::HardwareManager::GetInstance().GetOutputMode(device);
+    }
+
     static bool detail_IsStreamOpenFailureHaltEnabled() {
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
         return true;
