@@ -220,7 +220,6 @@ void EffectAux::RemoveEffect(audio::AudioRendererConfig* pConfig, OutputMixer* p
 
 bool EffectAux::SetChannelCount(int32_t channelCount) {
     ResetChannelIndex();
-
     return SetChannelIndex(m_ChannelSetting, channelCount);
 }
 
@@ -237,6 +236,11 @@ bool EffectAux::SetChannelIndex(const ChannelIndex* pChannel, int32_t channelCou
 
 int32_t EffectAux::GetChannelCount() const {
     return m_ChannelCount;
+}
+
+void EffectAux::GetChannelIndex(ChannelIndex* pChannel, [[maybe_unused]] int32_t channelCount) const {
+    for (int i{0}; i < m_ChannelCount; ++i)
+        pChannel[i] = m_ChannelSetting[i];
 }
 
 }  // namespace nn::atk
