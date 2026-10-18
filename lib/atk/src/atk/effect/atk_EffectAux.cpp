@@ -288,4 +288,16 @@ bool EffectAux::IsEnabled() const {
     return m_IsEnabled;
 }
 
+void EffectAux::SetEnabled(bool isEnabled) {
+    m_IsEnabled = isEnabled;
+
+    if (!m_IsActive)
+        return;
+
+    {
+        detail::driver::HardwareManager::UpdateAudioRendererScopedLock lock;
+        audio::SetAuxEnabled(&m_AuxType, isEnabled);
+    }
+}
+
 }  // namespace nn::atk
