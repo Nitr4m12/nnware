@@ -280,4 +280,8 @@ bool EffectAux::IsRemovable() const {
            detail::driver::HardwareManager::GetInstance().GetAudioRendererUpdateCount();
 }
 
+bool EffectAux::IsClearable() {
+    return IsRemovable();
+}
+
 }  // namespace nn::atk
