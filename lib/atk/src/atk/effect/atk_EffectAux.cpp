@@ -13,4 +13,8 @@ void EffectAux::ResetChannelIndex() {
 
 EffectAux::~EffectAux() = default;
 
+bool EffectAux::Initialize() {
+    return true;
+}
+
 }  // namespace nn::atk
