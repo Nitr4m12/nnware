@@ -165,4 +165,6 @@ inline uint32_t DeviceOutRecorder::RecorderBuffer::IncrementPosition(uint32_t po
     return result;
 }
 
+DeviceOutRecorder::DeviceOutRecorder(const char* deviceName) : m_RecordingBuffer{deviceName} {}
+
 }  // namespace nn::atk

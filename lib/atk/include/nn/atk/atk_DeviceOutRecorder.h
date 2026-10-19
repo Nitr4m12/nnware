@@ -75,6 +75,7 @@ public:
     static_assert(sizeof(RecordingOptions) == 0x10);
 
     class RecorderBuffer {
+    public:
         explicit RecorderBuffer(const char* deviceName);
 
         void Initialize(int16_t* sampleBuffer, uint32_t maxSamples);
@@ -193,15 +194,15 @@ private:
     uint32_t m_WrittenSamples{0};
     detail::fnd::Thread m_Thread;
     void* m_ThreadStack;
-    os::MessageQueue m_MessageQueue;
-    std::uintptr_t m_Message;
-    int32_t m_MessageResult;
-    os::Event m_MessageDoneEvent;
+    os::MessageQueue m_MessageQueue{&m_Message, 1};
+    uintptr_t m_Message;
+    int32_t m_MessageResult{0};
+    os::Event m_MessageDoneEvent{os::EventClearMode_ManualClear};
     detail::fnd::FileStream* m_Stream;
     detail::WavOutFileStream m_WavOutStream;
     RecorderBuffer m_RecordingBuffer;
-    util::BytePtr m_WorkBuffer;
-    uint32_t m_WriteBlockPerSamples;
+    util::BytePtr m_WorkBuffer{nullptr};
+    uint32_t m_WriteBlockPerSamples{DefaultWriteBlockPerSamples};
 };
 static_assert(sizeof(DeviceOutRecorder) == 0x310);
 
