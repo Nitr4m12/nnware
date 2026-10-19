@@ -87,7 +87,11 @@ public:
         void SetReadBlockSamples(uint32_t value);
         void Clear();
 
-        uint32_t GetReadableCount() const;
+        uint32_t GetReadableCount() const {
+            return (static_cast<uint32_t>(m_ValidSamples) / m_ReadBlockSamples) *
+                   m_ReadBlockSamples;
+        }
+
         uint32_t GetWritableCount() const;
         uint32_t GetContiguousReadableCount() const;
         const char* GetDeviceName() const;
