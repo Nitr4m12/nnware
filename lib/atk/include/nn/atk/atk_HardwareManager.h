@@ -261,6 +261,8 @@ public:
 
     LowLevelVoiceAllocator& GetLowLevelVoiceAllocator() { return m_LowLevelVoiceAllocator; }
 
+    int32_t GetRendererSampleCount() { return m_AudioRendererParameter.sampleCount; }
+
 private:
     bool m_IsInitialized;
 #if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)

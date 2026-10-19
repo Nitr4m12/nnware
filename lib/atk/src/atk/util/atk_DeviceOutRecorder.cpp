@@ -1,5 +1,7 @@
 #include <nn/atk/atk_DeviceOutRecorder.h>
 
+#include <nn/atk/atk_HardwareManager.h>
+
 namespace nn::atk {
 
 DeviceOutRecorder::RecorderBuffer::RecorderBuffer(const char* deviceName) {
@@ -32,6 +34,81 @@ void DeviceOutRecorder::RecorderBuffer::Finalize() {
     m_SampleBuffer = nullptr;
     m_MaxSamples = 0;
     m_ReadBlockSamples = 1;
+}
+
+uint32_t DeviceOutRecorder::RecorderBuffer::Push(const int16_t* sampleBuffer, uint32_t samples) {
+    if (samples == 0)
+        return 0;
+
+    uint32_t copyCount{GetWritableCount()};
+    if (samples <= copyCount)
+        copyCount = samples;
+
+    if (copyCount == 0)
+        return 0;
+
+    Write(sampleBuffer, copyCount);
+    return copyCount;
+}
+
+inline void DeviceOutRecorder::RecorderBuffer::Write(const int16_t* sampleBuffer,
+                                                     uint32_t samples) {
+    uint32_t channels{
+        static_cast<uint32_t>(detail::driver::HardwareManager::GetInstance().GetChannelCountMax()),
+    };
+    uint32_t sampleCountPerChannel{
+        static_cast<uint32_t>(
+            detail::driver::HardwareManager::GetInstance().GetRendererSampleCount()),
+    };
+
+    for (uint32_t i{0}; i < samples; ++i) {
+        uint32_t writeTo{
+            IncrementPosition(m_WritePosition + m_WriteState.channelIndex +
+                                  m_WriteState.writtenSampleCount * channels,
+                              m_MaxSamples),
+        };
+        m_SampleBuffer[writeTo] = sampleBuffer[i];
+        m_WriteState.writtenSampleCount += 1;
+
+        if (m_WriteState.writtenSampleCount >= sampleCountPerChannel) {
+            m_WriteState.channelIndex += 1;
+            m_WriteState.writtenSampleCount = 0;
+            if (m_WriteState.channelIndex >= channels) {
+                m_WriteState.channelIndex = 0;
+                uint32_t readSamples{m_WritePosition + sampleCountPerChannel * channels};
+                m_WritePosition = IncrementPosition(readSamples, m_MaxSamples);
+                m_ValidSamples += sampleCountPerChannel * channels;
+            }
+        }
+    }
+}
+
+inline uint32_t DeviceOutRecorder::RecorderBuffer::GetWritableCount() const {
+    uint32_t channels{
+        static_cast<uint32_t>(detail::driver::HardwareManager::GetInstance().GetChannelCountMax()),
+    };
+    uint32_t sampleCountPerChannel{
+        static_cast<uint32_t>(
+            detail::driver::HardwareManager::GetInstance().GetRendererSampleCount()),
+    };
+    uint32_t unWritableSampleCount{
+        static_cast<uint32_t>(m_ValidSamples) + sampleCountPerChannel * channels,
+    };
+
+    if (m_MaxSamples < unWritableSampleCount)
+        return 0;
+
+    return m_MaxSamples - unWritableSampleCount;
+}
+
+inline uint32_t DeviceOutRecorder::RecorderBuffer::IncrementPosition(uint32_t position,
+                                                                     uint32_t length) const {
+    uint32_t result = position;
+
+    if (length <= position)
+        result = position - length;
+
+    return result;
 }
 
 }  // namespace nn::atk
