@@ -51,6 +51,33 @@ uint32_t DeviceOutRecorder::RecorderBuffer::Push(const int16_t* sampleBuffer, ui
     return copyCount;
 }
 
+uint32_t DeviceOutRecorder::RecorderBuffer::Pop(uint32_t samples) {
+    if (samples == 0)
+        return 0;
+
+    uint32_t skipCount{GetContiguousReadableCount()};
+    if (skipCount >= samples)
+        skipCount = samples;
+
+    Skip(skipCount);
+    if (skipCount == samples)
+        return samples;
+
+    samples -= skipCount;
+
+    uint32_t restCount{GetContiguousReadableCount()};
+    if (restCount >= samples)
+        restCount = samples;
+
+    Skip(restCount);
+    return restCount + skipCount;
+}
+
+inline void DeviceOutRecorder::RecorderBuffer::Skip(uint32_t samples) {
+    m_ReadPosition = IncrementPosition(m_ReadPosition + samples, m_MaxSamples);
+    m_ValidSamples -= samples;
+}
+
 inline void DeviceOutRecorder::RecorderBuffer::Write(const int16_t* sampleBuffer,
                                                      uint32_t samples) {
     uint32_t channels{
@@ -81,6 +108,21 @@ inline void DeviceOutRecorder::RecorderBuffer::Write(const int16_t* sampleBuffer
             }
         }
     }
+}
+
+inline uint32_t DeviceOutRecorder::RecorderBuffer::GetContiguousReadableCount() const {
+    volatile uint32_t validSamples{m_ValidSamples};
+    uint32_t samples;
+
+    if (m_ReadPosition > m_WritePosition)
+        samples = m_MaxSamples - m_ReadPosition;
+    else
+        samples = validSamples;
+
+    if (m_ReadBlockSamples != 0)
+        samples = (samples / m_ReadBlockSamples) * m_ReadBlockSamples;
+
+    return samples;
 }
 
 inline uint32_t DeviceOutRecorder::RecorderBuffer::GetWritableCount() const {
