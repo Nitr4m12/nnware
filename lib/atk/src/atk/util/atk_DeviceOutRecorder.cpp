@@ -171,6 +171,24 @@ DeviceOutRecorder::~DeviceOutRecorder() {
     Finalize();
 }
 
+void DeviceOutRecorder::Finalize() {
+    if (!IsInitialized())
+        return;
+
+    detail::driver::HardwareManager::GetInstance().UnregisterRecorder(this);
+
+    if (m_State == State_Recording || m_State == State_Recorded)
+        Stop(true);
+
+    StopThread();
+
+    m_WorkBuffer.Reset(nullptr);
+    m_RecordingBuffer.Clear();
+    m_RecordingBuffer.Finalize();
+    m_State = State_NotInitialized;
+    m_ThreadStack = nullptr;
+}
+
 void DeviceOutRecorder::Stop(bool isBlocking) {
     if (!IsInitialized())
         return;
