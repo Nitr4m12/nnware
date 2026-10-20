@@ -15,25 +15,10 @@ namespace nn::atk {
 class DeviceOutRecorder : public detail::fnd::Thread::Handler {
     NN_NO_COPY(DeviceOutRecorder);
 
-public:
     static const uint32_t RecordingBufferSize{368640};
     static const uint32_t DefaultWriteBlockPerSamples{65536};
-    static const uint32_t RequiredThreadStackSize{65536};
 
-    enum State {
-        State_NotInitialized,
-        State_Initialized,
-        State_Recording,
-        State_Recorded,
-    };
-
-    enum Message {
-        Message_Prepare,
-        Message_WriteSamples,
-        Message_RequestStop,
-        Message_Exit,
-    };
-
+public:
     class InitializationOptions {
     public:
         InitializationOptions() = default;
@@ -73,6 +58,20 @@ public:
         uint32_t m_WriteBlockPerSamples;
     };
     static_assert(sizeof(RecordingOptions) == 0x10);
+
+    enum State {
+        State_NotInitialized,
+        State_Initialized,
+        State_Recording,
+        State_Recorded,
+    };
+
+    enum Message {
+        Message_Prepare,
+        Message_WriteSamples,
+        Message_RequestStop,
+        Message_Exit,
+    };
 
     class RecorderBuffer {
     public:
@@ -128,6 +127,8 @@ protected:
     explicit DeviceOutRecorder(const char* deviceName);
 
 public:
+    static const uint32_t RequiredThreadStackSize{65536};
+
     bool Initialize(void* recordingBuffer, size_t recordingBufferSize, void* pThreadStack,
                     size_t threadStackSize);
     bool Initialize(void* recordingBuffer, size_t recordingBufferSize, void* pThreadStack,

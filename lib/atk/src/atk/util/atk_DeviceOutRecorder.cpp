@@ -237,6 +237,10 @@ bool DeviceOutRecorder::StartThread(uint32_t priority, int32_t idealCoreNumber) 
     return m_Thread.Run(args);
 }
 
+size_t DeviceOutRecorder::GetRequiredMemorySizeForRecording() {
+    return RecordingBufferSize;
+}
+
 void DeviceOutRecorder::Stop(bool isBlocking) {
     if (!IsInitialized())
         return;
