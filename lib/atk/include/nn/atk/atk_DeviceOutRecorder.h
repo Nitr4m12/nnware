@@ -142,7 +142,7 @@ public:
 
     void Stop(bool isBlocking);
 
-    bool IsInitialized() const;
+    bool IsInitialized() const { return m_State != State_NotInitialized; }
 
     State GetState() const;
 

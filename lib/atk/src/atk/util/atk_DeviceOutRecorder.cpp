@@ -171,4 +171,12 @@ DeviceOutRecorder::~DeviceOutRecorder() {
     Finalize();
 }
 
+bool DeviceOutRecorder::SendMessage(Message message) {
+    if (!IsInitialized())
+        return false;
+
+    m_MessageQueue.Send(message);
+    return true;
+}
+
 }  // namespace nn::atk
