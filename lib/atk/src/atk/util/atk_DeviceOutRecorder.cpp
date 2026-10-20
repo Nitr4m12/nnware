@@ -345,7 +345,40 @@ bool DeviceOutRecorder::PostMessage(Message message) {
     return m_MessageQueue.TrySend(message);
 }
 
-// TODO: DeviceOutRecorder::Run
+uint32_t DeviceOutRecorder::Run([[maybe_unused]] void* param) {
+    bool shouldExit{false};
+
+    while (!shouldExit) {
+        uintptr_t msgBuf;
+        m_MessageQueue.Receive(&msgBuf);
+
+        switch (msgBuf) {
+        case Message_Prepare:
+            m_MessageResult = OnPrepare();
+            if (m_MessageResult == 0)
+                m_State = State_Recording;
+            m_MessageDoneEvent.Signal();
+            break;
+        case Message_WriteSamples:
+            if (OnWriteSamples(false) == 0)
+                m_State = State_Recorded;
+            break;
+        case Message_RequestStop:
+            OnWriteSamples(true);
+            OnRequestStop();
+            m_State = State_Initialized;
+            m_MessageDoneEvent.Signal();
+            break;
+        case Message_Exit:
+            shouldExit = true;
+            break;
+        default:
+            break;
+        }
+    }
+
+    return 0;
+}
 
 int32_t DeviceOutRecorder::OnPrepare() {
     if (m_Stream == nullptr)
