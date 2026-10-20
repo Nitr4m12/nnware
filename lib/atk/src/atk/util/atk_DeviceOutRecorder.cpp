@@ -482,4 +482,6 @@ bool DeviceOutRecorder::IsNoMoreSamples() const {
     return m_MaxSamples <= m_WrittenSamples;
 }
 
+void DeviceOutRecorder::OnStart() {}
+
 }  // namespace nn::atk
