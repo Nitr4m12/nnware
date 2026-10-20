@@ -484,4 +484,6 @@ bool DeviceOutRecorder::IsNoMoreSamples() const {
 
 void DeviceOutRecorder::OnStart() {}
 
+void DeviceOutRecorder::OnStop() {}
+
 }  // namespace nn::atk
