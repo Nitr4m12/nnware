@@ -278,8 +278,36 @@ void DeviceOutRecorder::StopThread() {
     m_Thread.Release();
 }
 
+bool DeviceOutRecorder::Start(detail::fnd::FileStream& fileStream,
+                              const RecordingOptions& options) {
+    if (!IsInitialized())
+        return false;
+
+    if (m_State == State_Recording)
+        return true;
+
+    m_OutputMode = SoundSystem::GetOutputMode(OutputDevice_Main);
+    m_Channels = GetValidChannels(options.GetChannels());
+    m_Stream = &fileStream;
+    m_IsLeadSilenceTrimming = options.IsLeadSilenceTrimmingEnabled();
+    m_MaxSamples = options.GetMaxFrames() * m_Channels;
+    m_WriteBlockPerSamples = options.GetWriteBlockPerSamples();
+    m_WrittenSamples = 0;
+
+    m_RecordingBuffer.SetReadBlockSamples(GetReadBlockSamples(m_Channels));
+    m_RecordingBuffer.Clear();
+
+    if (Prepare() < 0) {
+        Stop(false);
+        return false;
+    }
+
+    OnStart();
+    return true;
+}
+
 uint32_t DeviceOutRecorder::GetReadBlockSamples(uint32_t channels) const {
-    return channels * 2;
+    return channels * sizeof(int16_t);
 }
 
 int32_t DeviceOutRecorder::Prepare() {

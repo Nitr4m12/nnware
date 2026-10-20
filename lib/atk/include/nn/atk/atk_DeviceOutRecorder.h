@@ -52,10 +52,10 @@ public:
         void SetWriteBlockPerSamples(uint32_t value) { m_WriteBlockPerSamples = value; }
 
     private:
-        uint32_t m_Channels;
-        bool m_IsLeadSilenceTrimmingEnabled;
-        uint32_t m_MaxFrames;
-        uint32_t m_WriteBlockPerSamples;
+        uint32_t m_Channels{0};
+        bool m_IsLeadSilenceTrimmingEnabled{false};
+        uint32_t m_MaxFrames{0};
+        uint32_t m_WriteBlockPerSamples{DefaultWriteBlockPerSamples};
     };
     static_assert(sizeof(RecordingOptions) == 0x10);
 
@@ -138,7 +138,11 @@ public:
 
     size_t GetRequiredMemorySizeForRecording();
 
-    bool Start(detail::fnd::FileStream& fileStream);
+    bool Start(detail::fnd::FileStream& fileStream) {
+        RecordingOptions param;
+        return Start(fileStream, param);
+    }
+
     bool Start(detail::fnd::FileStream& fileStream, const RecordingOptions& options);
 
     void Stop(bool isBlocking);
