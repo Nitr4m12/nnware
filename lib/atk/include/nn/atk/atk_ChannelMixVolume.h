@@ -23,7 +23,7 @@ public:
     void InitializeChannelVolume();
 
 private:
-    int m_ChannelCount;
+    int m_ChannelCount{ChannelIndex_Count};
     float m_ChannelVolume[ChannelCountMax];
 };
 static_assert(sizeof(ChannelMixVolume) == 0x64);
