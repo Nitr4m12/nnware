@@ -189,6 +189,25 @@ void DeviceOutRecorder::Finalize() {
     m_ThreadStack = nullptr;
 }
 
+bool DeviceOutRecorder::StartThread(uint32_t priority, int32_t idealCoreNumber) {
+    uintptr_t message;
+    while (m_MessageQueue.TryReceive(&message)) {
+    }
+
+    m_MessageDoneEvent.Clear();
+
+    detail::fnd::Thread::RunArgs args;
+    args.name = "nn::atk::DeviceOutRecorder";
+    args.stack = m_ThreadStack;
+    args.stackSize = RequiredThreadStackSize;
+    args.idealCoreNumber = idealCoreNumber;
+    args.priority = priority;
+    args.param = nullptr;
+    args.handler = this;
+
+    return m_Thread.Run(args);
+}
+
 void DeviceOutRecorder::Stop(bool isBlocking) {
     if (!IsInitialized())
         return;
