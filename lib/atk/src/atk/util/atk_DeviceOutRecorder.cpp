@@ -282,6 +282,17 @@ uint32_t DeviceOutRecorder::GetReadBlockSamples(uint32_t channels) const {
     return channels * 2;
 }
 
+int32_t DeviceOutRecorder::Prepare() {
+    if (!IsInitialized())
+        return -1;
+
+    m_MessageDoneEvent.Clear();
+    m_MessageQueue.Send(Message_Prepare);
+    m_MessageDoneEvent.Wait();
+
+    return m_MessageResult;
+}
+
 bool DeviceOutRecorder::SendMessage(Message message) {
     if (!IsInitialized())
         return false;
