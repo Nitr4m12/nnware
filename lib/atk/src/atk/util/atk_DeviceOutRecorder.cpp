@@ -171,6 +171,29 @@ DeviceOutRecorder::~DeviceOutRecorder() {
     Finalize();
 }
 
+void DeviceOutRecorder::Stop(bool isBlocking) {
+    if (!IsInitialized())
+        return;
+
+    State state{static_cast<State>(m_State | State_Initialized)};
+    if (state == State_Recorded)
+        OnStop();
+
+    if (isBlocking)
+        m_MessageDoneEvent.Clear();
+
+    uintptr_t message;
+    while (m_MessageQueue.TryReceive(&message)) {
+    }
+
+    SendMessage(Message_RequestStop);
+
+    if (isBlocking)
+        m_MessageDoneEvent.Wait();
+
+    m_Stream = nullptr;
+}
+
 bool DeviceOutRecorder::SendMessage(Message message) {
     if (!IsInitialized())
         return false;
