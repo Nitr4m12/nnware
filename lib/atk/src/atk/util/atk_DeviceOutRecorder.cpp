@@ -194,6 +194,19 @@ void DeviceOutRecorder::Stop(bool isBlocking) {
     m_Stream = nullptr;
 }
 
+void DeviceOutRecorder::StopThread() {
+    if (!IsInitialized())
+        return;
+
+    uintptr_t message;
+    while (m_MessageQueue.TryReceive(&message)) {
+    }
+    SendMessage(Message_Exit);
+
+    m_Thread.WaitForExit();
+    m_Thread.Release();
+}
+
 bool DeviceOutRecorder::SendMessage(Message message) {
     if (!IsInitialized())
         return false;
