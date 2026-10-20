@@ -1,6 +1,5 @@
 #include <nn/atk/atk_DeviceOutRecorder.h>
 
-#include <nn/atk/atk_HardwareManager.h>
 #include <nn/atk/atk_SoundSystem.h>
 
 namespace nn::atk {
@@ -327,6 +326,16 @@ bool DeviceOutRecorder::SendMessage(Message message) {
 
     m_MessageQueue.Send(message);
     return true;
+}
+
+void DeviceOutRecorder::RecordSamples(const int16_t* sampleBuffer, uint32_t samples) {
+    if (!IsInitialized())
+        return;
+
+    if (m_State == State_Recording) {
+        m_RecordingBuffer.Push(sampleBuffer, samples);
+        PostMessage(Message_WriteSamples);
+    }
 }
 
 bool DeviceOutRecorder::PostMessage(Message message) {
