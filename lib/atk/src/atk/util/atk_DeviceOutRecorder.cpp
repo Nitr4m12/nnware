@@ -345,4 +345,18 @@ bool DeviceOutRecorder::PostMessage(Message message) {
     return m_MessageQueue.TrySend(message);
 }
 
+int32_t DeviceOutRecorder::OnPrepare() {
+    if (m_Stream == nullptr)
+        return -1;
+
+    if (!m_Stream->IsOpened())
+        return -1;
+
+    if (!m_WavOutStream.Open(*m_Stream, m_Channels, GetSamplesPerSec()) ||
+        !m_WavOutStream.IsAvailable())
+        return -1;
+
+    return 0;
+}
+
 }  // namespace nn::atk
