@@ -345,6 +345,8 @@ bool DeviceOutRecorder::PostMessage(Message message) {
     return m_MessageQueue.TrySend(message);
 }
 
+// TODO: DeviceOutRecorder::Run
+
 int32_t DeviceOutRecorder::OnPrepare() {
     if (m_Stream == nullptr)
         return -1;
@@ -357,6 +359,10 @@ int32_t DeviceOutRecorder::OnPrepare() {
         return -1;
 
     return 0;
+}
+
+void DeviceOutRecorder::OnRequestStop() {
+    m_WavOutStream.Close();
 }
 
 }  // namespace nn::atk
