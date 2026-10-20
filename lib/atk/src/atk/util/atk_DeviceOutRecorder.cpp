@@ -486,4 +486,9 @@ void DeviceOutRecorder::OnStart() {}
 
 void DeviceOutRecorder::OnStop() {}
 
+uint32_t DeviceOutRecorder::OnProcessSamples([[maybe_unused]] int16_t* sampleBuffer,
+                                             uint32_t samples) {
+    return samples;
+}
+
 }  // namespace nn::atk
