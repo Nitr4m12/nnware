@@ -394,11 +394,86 @@ int32_t DeviceOutRecorder::OnPrepare() {
     return 0;
 }
 
+// NON_MATCHING: requires DeviceOutRecorder::GetLeadSilenceSamples
+bool DeviceOutRecorder::OnWriteSamples(bool isForceWriteMode) {
+    if (!IsInitialized())
+        return false;
+
+    while (m_State == State_Recording) {
+        uint32_t samples{m_RecordingBuffer.GetContiguousReadableCount()};
+        if (m_RecordingBuffer.GetReadableCount() < m_WriteBlockPerSamples && !isForceWriteMode)
+            break;
+
+        int16_t* sampleBuffer{m_RecordingBuffer.Peek()};
+        if (sampleBuffer == nullptr)
+            break;
+
+        if (m_IsLeadSilenceTrimming) {
+            uint32_t silenceSamples{GetLeadSilenceSamples(sampleBuffer, samples, m_Channels)};
+            sampleBuffer += silenceSamples;
+        }
+
+        if (!IsNoMoreSamples()) {
+            if (!m_WavOutStream.IsAvailable())
+                return false;
+
+            if (!m_Stream->IsOpened())
+                return false;
+
+            uint32_t writeLength{GetWritableSamples(OnProcessSamples(sampleBuffer, samples)) * 2};
+            size_t result{m_WavOutStream.Write(sampleBuffer, writeLength)};
+
+            m_WrittenSamples += result;
+        }
+
+        m_RecordingBuffer.Pop(samples);
+    }
+
+    return !IsNoMoreSamples();
+}
+
 void DeviceOutRecorder::OnRequestStop() {
     m_WavOutStream.Close();
 }
 
 void DeviceOutRecorder::OnExit() {}
+
+// NON_MATCHING
+uint32_t DeviceOutRecorder::GetLeadSilenceSamples(const int16_t* sampleBuffer, uint32_t samples,
+                                                  uint32_t channels) const {
+    if (samples == 0)
+        return 0;
+
+    if (channels == 0)
+        while (true) {
+        }
+
+    uint32_t result{0};
+
+    for (uint32_t frameLeadIndex{0}; result < samples; result += channels, ++frameLeadIndex) {
+        bool isSilentFrame{true};
+        for (uint32_t sampleOffset{result}; sampleOffset < channels; ++sampleOffset) {
+            isSilentFrame = sampleBuffer[sampleOffset] != 0;
+            if (isSilentFrame)
+                return result;
+        }
+    }
+
+    return result;
+}
+
+uint32_t DeviceOutRecorder::GetWritableSamples(uint32_t samples) const {
+    if (m_MaxSamples == 0)
+        return samples;
+
+    if (IsNoMoreSamples())
+        return 0;
+
+    if (m_MaxSamples - m_WrittenSamples < samples)
+        return m_MaxSamples - m_WrittenSamples;
+
+    return samples;
+}
 
 bool DeviceOutRecorder::IsNoMoreSamples() const {
     if (m_MaxSamples == 0)
