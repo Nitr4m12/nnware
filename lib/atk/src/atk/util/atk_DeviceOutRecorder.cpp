@@ -189,6 +189,35 @@ void DeviceOutRecorder::Finalize() {
     m_ThreadStack = nullptr;
 }
 
+bool DeviceOutRecorder::Initialize(void* recordingBuffer, size_t recordingBufferSize,
+                                   void* pThreadStack, size_t threadStackSize) {
+    InitializationOptions param;
+    return Initialize(recordingBuffer, recordingBufferSize, pThreadStack, threadStackSize, param);
+}
+
+bool DeviceOutRecorder::Initialize(void* recordingBuffer, size_t recordingBufferSize,
+                                   void* pThreadStack, [[maybe_unused]] size_t threadStackSize,
+                                   const InitializationOptions& options) {
+    if (IsInitialized())
+        return false;
+
+    const uint32_t maxFrameLength{GetMaxFrameLength()};
+    const size_t bufferLength{recordingBufferSize / maxFrameLength};
+    m_RecordingBuffer.Initialize(static_cast<int16_t*>(recordingBuffer),
+                                 (bufferLength * maxFrameLength) / 2);
+
+    m_ThreadStack = pThreadStack;
+
+    if (!StartThread(options.GetPrioritiy(), options.GetIdealCoreNumber()))
+        return false;
+
+    if (!detail::driver::HardwareManager::GetInstance().RegisterRecorder(this))
+        return false;
+
+    m_State = State_Initialized;
+    return true;
+}
+
 bool DeviceOutRecorder::StartThread(uint32_t priority, int32_t idealCoreNumber) {
     uintptr_t message;
     while (m_MessageQueue.TryReceive(&message)) {

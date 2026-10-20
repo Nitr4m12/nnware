@@ -45,8 +45,8 @@ public:
         void SetIdealCoreNumber(int value) { m_IdealCoreNumber = value; }
 
     private:
-        uint32_t m_Priority;
-        int m_IdealCoreNumber;
+        uint32_t m_Priority{detail::fnd::Thread::DefaultThreadPriority};
+        int m_IdealCoreNumber{0};
     };
     static_assert(sizeof(InitializationOptions) == 0x8);
 
