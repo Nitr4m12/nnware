@@ -398,4 +398,6 @@ void DeviceOutRecorder::OnRequestStop() {
     m_WavOutStream.Close();
 }
 
+void DeviceOutRecorder::OnExit() {}
+
 }  // namespace nn::atk
