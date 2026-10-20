@@ -400,4 +400,11 @@ void DeviceOutRecorder::OnRequestStop() {
 
 void DeviceOutRecorder::OnExit() {}
 
+bool DeviceOutRecorder::IsNoMoreSamples() const {
+    if (m_MaxSamples == 0)
+        return false;
+
+    return m_MaxSamples <= m_WrittenSamples;
+}
+
 }  // namespace nn::atk
