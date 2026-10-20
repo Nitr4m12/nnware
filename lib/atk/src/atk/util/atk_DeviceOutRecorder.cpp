@@ -1,6 +1,7 @@
 #include <nn/atk/atk_DeviceOutRecorder.h>
 
 #include <nn/atk/atk_HardwareManager.h>
+#include <nn/atk/atk_SoundSystem.h>
 
 namespace nn::atk {
 
@@ -275,6 +276,10 @@ void DeviceOutRecorder::StopThread() {
 
     m_Thread.WaitForExit();
     m_Thread.Release();
+}
+
+uint32_t DeviceOutRecorder::GetReadBlockSamples(uint32_t channels) const {
+    return channels * 2;
 }
 
 bool DeviceOutRecorder::SendMessage(Message message) {

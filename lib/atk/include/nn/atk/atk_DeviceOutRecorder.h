@@ -158,7 +158,7 @@ protected:
 
     virtual uint32_t GetMaxFrameLength() const = 0;
     virtual uint32_t GetSamplesPerSec() const = 0;
-    virtual uint32_t GetValidChannels(uint32_t) const = 0;
+    virtual uint32_t GetValidChannels(uint32_t channels) const = 0;
 
     virtual void OnStart();
     virtual void OnStop();
@@ -169,7 +169,7 @@ protected:
     uint32_t Run(void* param) override;
 
 private:
-    int32_t GetReadBlockSamples(uint32_t channels) const;
+    uint32_t GetReadBlockSamples(uint32_t channels) const;
     uint32_t GetLeadSilenceSamples(const int16_t* sampleBuffer, uint32_t samples,
                                    uint32_t channels) const;
     uint32_t GetWritableSamples(uint32_t samples) const;
