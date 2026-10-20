@@ -11,4 +11,12 @@ ChannelMixVolume::ChannelMixVolume(const MixVolume& mixVolume) {
         m_ChannelVolume[i] = mixVolume.channel[i];
 }
 
+bool ChannelMixVolume::SetChannelCount(int channelCount) {
+    if (ChannelCountMax <= static_cast<uint32_t>(channelCount) - 1)
+        return false;
+
+    m_ChannelCount = channelCount;
+    return true;
+}
+
 }  // namespace nn::atk
