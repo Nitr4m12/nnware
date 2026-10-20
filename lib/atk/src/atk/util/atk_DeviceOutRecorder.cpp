@@ -329,4 +329,11 @@ bool DeviceOutRecorder::SendMessage(Message message) {
     return true;
 }
 
+bool DeviceOutRecorder::PostMessage(Message message) {
+    if (!IsInitialized())
+        return false;
+
+    return m_MessageQueue.TrySend(message);
+}
+
 }  // namespace nn::atk
