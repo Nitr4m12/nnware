@@ -30,4 +30,28 @@ bool ChannelMixVolume::SetChannelCount(int channelCount) {
     return true;
 }
 
+bool ChannelMixVolume::SetChannelVolume(int channelIndex, float volume) {
+    if (channelIndex < 0)
+        return false;
+
+    if (channelIndex >= m_ChannelCount)
+        return false;
+
+    m_ChannelVolume[channelIndex] = volume;
+    return true;
+}
+
+bool ChannelMixVolume::SetChannelVolume(int channelIndex, const float* pVolume, int volumeCount) {
+    if (channelIndex < 0)
+        return false;
+
+    if (channelIndex - 1 + volumeCount < ChannelCountMax)
+        return false;
+
+    for (int i{0}; i < volumeCount; ++i)
+        m_ChannelVolume[i + channelIndex] = pVolume[i];
+
+    return true;
+}
+
 }  // namespace nn::atk
