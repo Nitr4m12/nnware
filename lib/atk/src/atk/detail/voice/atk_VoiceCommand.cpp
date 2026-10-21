@@ -39,4 +39,20 @@ void LowLevelVoiceCommand::LowLevelVoiceDisposeCallback([[maybe_unused]] LowLeve
     VirtualVoiceManager::GetInstance().SetLowLevelVoice(voiceId, nullptr);
 }
 
+LowLevelVoiceCommand::WaveBufferPacket* LowLevelVoiceCommand::GetFreeWaveBuffer() {
+    for (int i{0}; i < m_WaveBufferPacketCount; ++i) {
+        WaveBufferPacket* packet{&m_pWaveBufferPacket[i]};
+        switch (packet->waveBuffer.status) {
+        case WaveBuffer::Status_Free:
+        case WaveBuffer::Status_Done:
+            return packet;
+        case WaveBuffer::Status_Play:
+        case WaveBuffer::Status_Wait:
+            break;
+        }
+    }
+
+    return nullptr;
+}
+
 }  // namespace nn::atk::detail
