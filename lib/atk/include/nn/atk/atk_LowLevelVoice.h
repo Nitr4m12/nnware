@@ -1,6 +1,7 @@
 #pragma once
 
 #include <atomic>
+#include <cstring>
 
 #include <nn/audio/audio_Common.h>
 #include <nn/audio/audio_VoiceTypes.h>
@@ -40,6 +41,9 @@ public:
     void SetSampleRate(int32_t sampleRate) { m_SampleRate = sampleRate; }
     void SetSampleFormat(SampleFormat sampleFormat) { m_SampleFormat = sampleFormat; }
     void SetAdpcmParam(const AdpcmParam& adpcmParam) { m_AdpcmParam = adpcmParam; }
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    void SetSubMixIndex(int32_t subMixIndex) { m_SubMixIndex = subMixIndex; }
+#endif
 
     position_t GetPlayPosition() const { return m_PlayPosition; }
 
@@ -81,18 +85,18 @@ private:
 
     float GetClampedVoiceVolume(float volume);
 
-    AdpcmParam m_AdpcmParam{};
+    AdpcmParam m_AdpcmParam;
     audio::VoiceType m_Voice;
     bool m_IsAvailable{false};
     bool m_IsSetVoiceSlot{false};
-    VoiceParam m_VoiceParam{};
+    VoiceParam m_VoiceParam;
     int32_t m_Priority;
     VoiceState m_State;
     uint32_t m_SampleRate;
     SampleFormat m_SampleFormat;
     position_t m_PlayPosition{0};
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
-    uint32_t _c0{0};  // 0xc0
+    int32_t m_SubMixIndex{0};
 #else
     OutputReceiver* m_pOutputReceiver{};
 #endif
@@ -102,7 +106,7 @@ private:
     Voice* m_pVoice{};
     audio::NodeId m_NodeId{0};
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
-    bool m_IsRun{true};
+    bool m_IsRun;
 #endif
 };
 static_assert(sizeof(LowLevelVoice) == 0x100);

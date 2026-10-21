@@ -93,6 +93,8 @@ public:
     bool AllocVirtualVoice();
     void FreeVirtualVoice(uint32_t);
 
+    LowLevelVoice* GetLowLevelVoice(uint32_t voiceId) { return m_LowLevelVoiceTable[voiceId]; }
+
     void SetLowLevelVoice(uint32_t voiceId, LowLevelVoice* lowLevelVoice) {
         m_LowLevelVoiceTable[voiceId] = lowLevelVoice;
     }

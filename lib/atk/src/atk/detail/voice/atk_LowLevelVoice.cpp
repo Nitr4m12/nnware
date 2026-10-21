@@ -29,8 +29,8 @@ int GetOutputReceiverMixBufferIndex(const nn::atk::OutputReceiver* pOutputReceiv
 namespace nn::atk::detail {
 
 LowLevelVoice::LowLevelVoice()
-    : m_Priority{LowLevelVoiceInitialPriority}, m_State{LowLevelVoiceInitialVoiceState},
-      m_SampleRate{LowLevelVoiceInitialSampleRate},
+    : m_AdpcmParam(), m_Voice(), m_VoiceParam(), m_Priority{LowLevelVoiceInitialPriority},
+      m_State{LowLevelVoiceInitialVoiceState}, m_SampleRate{LowLevelVoiceInitialSampleRate},
       m_SampleFormat{LowLevelVoiceInitialSampleFormat} {}
 
 void LowLevelVoice::Initialize() {
@@ -40,7 +40,7 @@ void LowLevelVoice::Initialize() {
     m_SampleFormat = LowLevelVoiceInitialSampleFormat;
     m_PlayPosition = 0;
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
-    _c0 = 0;
+    m_SubMixIndex = 0;
 #else
     m_pOutputReceiver = nullptr;
 #endif

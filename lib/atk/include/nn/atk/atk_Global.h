@@ -271,9 +271,12 @@ enum SampleRateConverterType {
 struct OutputMix {
     static const int ChannelCountMax{24};
 
-    float channelGain[ChannelCountMax]{};
+    float channelGain[ChannelCountMax];
 
-    void Initialize();
+    void Initialize() {
+        for (int i{0}; i < ChannelCountMax; ++i)
+            channelGain[i] = 0;
+    }
 };
 static_assert(sizeof(OutputMix) == 0x60);
 
@@ -315,11 +318,11 @@ struct WaveBuffer {
 static_assert(sizeof(WaveBuffer) == 0x40);
 
 struct BiquadFilterCoefficients {
-    int16_t b0{0};
-    int16_t b1{0};
-    int16_t b2{0};
-    int16_t a1{0};
-    int16_t a2{0};
+    int16_t b0;
+    int16_t b1;
+    int16_t b2;
+    int16_t a1;
+    int16_t a2;
 };
 static_assert(sizeof(BiquadFilterCoefficients) == 0xa);
 
@@ -481,16 +484,14 @@ enum VoiceState {
 };
 
 struct VoiceParam {
-    float m_Volume{0};
-    float m_Pitch{0};
-    OutputMix m_TvMix{};
-    bool m_MonoFilterFlag{false};
-    bool m_BiquadFilterFlag{false};
-    BiquadFilterCoefficients m_BiquadFilterCoefficients{};
-    uint16_t m_MonoFilterCutoff{0};
-    uint8_t m_InterpolationType{0};
-
-    VoiceParam() = default;
+    float m_Volume;
+    float m_Pitch;
+    OutputMix m_TvMix;
+    bool m_MonoFilterFlag;
+    bool m_BiquadFilterFlag;
+    BiquadFilterCoefficients m_BiquadFilterCoefficients;
+    uint16_t m_MonoFilterCutoff;
+    uint8_t m_InterpolationType;
 
     void Initialize();
 };
