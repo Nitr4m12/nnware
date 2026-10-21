@@ -13,7 +13,7 @@ public:
     ChannelMixVolume(const float* pVolume, int volumeCount);
 
     bool SetChannelCount(int channelCount);
-    int GetChannelCount() const;
+    int GetChannelCount() const { return m_ChannelCount; }
 
     bool SetChannelVolume(int channelIndex, float volume);
     float GetChannelVolume(int channelIndex) const;
@@ -23,7 +23,7 @@ public:
     void InitializeChannelVolume();
 
 private:
-    int m_ChannelCount{ChannelIndex_Count};
+    int m_ChannelCount;
     float m_ChannelVolume[ChannelCountMax];
 };
 static_assert(sizeof(ChannelMixVolume) == 0x64);

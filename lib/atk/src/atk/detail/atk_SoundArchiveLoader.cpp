@@ -208,7 +208,7 @@ bool SoundArchiveLoader::LoadWaveSound(SoundArchive::ItemId soundId,
 
         } else {
             SoundArchive::ItemId itemId{
-                waveSoundSetId != SoundArchive::InvalidId ? waveSoundSetId : soundId,
+                waveSoundSetId == SoundArchive::InvalidId ? soundId : waveSoundSetId,
             };
 
             const Util::Table<uint32_t>* pWarcIdTable{

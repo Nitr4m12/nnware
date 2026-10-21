@@ -41,6 +41,13 @@ bool ChannelMixVolume::SetChannelVolume(int channelIndex, float volume) {
     return true;
 }
 
+float ChannelMixVolume::GetChannelVolume(int channelIndex) const {
+    if (channelIndex < 0 || channelIndex >= m_ChannelCount)
+        return 0.0f;
+
+    return m_ChannelVolume[channelIndex];
+}
+
 bool ChannelMixVolume::SetChannelVolume(int channelIndex, const float* pVolume, int volumeCount) {
     if (channelIndex < 0)
         return false;
