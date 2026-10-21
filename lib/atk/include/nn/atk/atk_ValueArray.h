@@ -28,7 +28,6 @@ public:
     // UNCHECKED
     void* GetBufferAddr() { return m_pValue; }
 
-    // UNCHECKED
     void Finalize() {
         m_pValue = nullptr;
         m_Count = 0;

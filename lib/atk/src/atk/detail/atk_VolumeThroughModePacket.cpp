@@ -15,4 +15,10 @@ bool VolumeThroughModePacket::Initialize(void *buffer, size_t size, int busCount
     return m_VolumeThroughMode.Initialize(buffer, size, busCount);
 }
 
+void VolumeThroughModePacket::Finalize() {
+    m_VolumeThroughMode.Finalize();
+    m_IsVolumeThroughModeUsed = false;
+    m_BinaryVolume = 1.0f;
+}
+
 }  // namespace nn::atk::detail
