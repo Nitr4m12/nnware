@@ -81,6 +81,8 @@ static_assert(sizeof(Voice) == 0xe0);
 
 class VirtualVoiceManager : Util::Singleton<VirtualVoiceManager> {
 public:
+    static VirtualVoiceManager& GetInstance();
+
     constexpr static int32_t InvalidVoiceId = -1;
 
     constexpr static uint32_t VirtualVoiceCount = 256;
@@ -90,6 +92,10 @@ public:
 
     bool AllocVirtualVoice();
     void FreeVirtualVoice(uint32_t);
+
+    void SetLowLevelVoice(uint32_t voiceId, LowLevelVoice* lowLevelVoice) {
+        m_LowLevelVoiceTable[voiceId] = lowLevelVoice;
+    }
 
     void UpdateVoiceInfo();
 

@@ -2,6 +2,8 @@
 
 #include <nn/util/util_BitUtil.h>
 
+#include <nn/atk/atk_Voice.h>
+
 namespace nn::atk::detail {
 
 LowLevelVoiceCommand& LowLevelVoiceCommand::GetInstance() {
@@ -29,6 +31,12 @@ size_t LowLevelVoiceCommand::GetRequiredWaveBufferMemSize(int32_t waveBufferPack
     size_t result{waveBufferPacketCount * sizeof(WaveBufferPacket)};
     result = util::align_up(result, 32);
     return result;
+}
+
+void LowLevelVoiceCommand::LowLevelVoiceDisposeCallback([[maybe_unused]] LowLevelVoice* voice,
+                                                        void* arg) {
+    uint32_t voiceId{static_cast<uint32_t>(reinterpret_cast<uintptr_t>(arg))};
+    VirtualVoiceManager::GetInstance().SetLowLevelVoice(voiceId, nullptr);
 }
 
 }  // namespace nn::atk::detail
