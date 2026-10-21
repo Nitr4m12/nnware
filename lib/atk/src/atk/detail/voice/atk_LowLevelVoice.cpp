@@ -45,7 +45,7 @@ void LowLevelVoice::Initialize() {
     m_pOutputReceiver = nullptr;
 #endif
     m_NodeId = 0;
-#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
     m_IsRun = true;
 #endif
 }
@@ -219,7 +219,7 @@ void LowLevelVoice::UpdateWaveBuffer(bool isRun, OutputMode outputMode) {
     }
 }
 
-// Non-matching on versions over 4.0.0
+// NON_MATCHING on versions over 4.0.0
 void LowLevelVoice::UpdateMixVolume(const OutputMix& outputMix, OutputMode outputMode) {
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
     if (driver::HardwareManager::GetInstance().IsPresetSubMixEnabled()) {
@@ -251,6 +251,62 @@ void LowLevelVoice::UpdateBiquadFilter(const VoiceParam& voiceParam) {
     parameter.numerator[2] = voiceParam.m_BiquadFilterCoefficients.b2;
     parameter.enable = voiceParam.m_BiquadFilterFlag;
     audio::SetVoiceBiquadFilterParameter(&m_Voice, 0, parameter);
+}
+
+bool LowLevelVoice::AllocVoice() {
+    const audio::AdpcmParameter* pParameter{nullptr};
+    int32_t paramSize{0};
+
+    audio::SampleFormat sampleFormat{audio::SampleFormat_PcmInt16};
+    switch (m_SampleFormat) {
+    case SampleFormat_PcmS8:
+        sampleFormat = audio::SampleFormat_PcmInt8;
+        break;
+    case SampleFormat_DspAdpcm:
+        sampleFormat = audio::SampleFormat_Adpcm;
+        pParameter = &m_AdpcmParam;
+        paramSize = sizeof(audio::AdpcmParameter);
+        break;
+    default:
+        break;
+    }
+
+    int32_t audioPriority{ConvertAtkPriorityToAudioPriority(m_Priority)};
+
+    bool result{
+        audio::AcquireVoiceSlot(&driver::HardwareManager::GetInstance().GetAudioRendererConfig(),
+                                &m_Voice, m_SampleRate, 1, sampleFormat, audioPriority, pParameter,
+                                paramSize),
+    };
+
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    if (driver::HardwareManager::GetInstance().IsPresetSubMixEnabled()) {
+        audio::SetVoiceDestination(
+            &driver::HardwareManager::GetInstance().GetAudioRendererConfig(), &m_Voice,
+            &driver::HardwareManager::GetInstance().GetSubMix(m_SubMixIndex));
+    } else {
+        audio::SetVoiceDestination(&driver::HardwareManager::GetInstance().GetAudioRendererConfig(),
+                                   &m_Voice, &driver::HardwareManager::GetInstance().GetFinalMix());
+    }
+#else
+    switch (m_pOutputReceiver->GetReceiverType()) {
+    case OutputReceiver::ReceiverType::ReceiverType_SubMix:
+        audio::SetVoiceDestination(
+            &driver::HardwareManager::GetInstance().GetAudioRendererConfig(), &m_Voice,
+            static_cast<SubMix*>(m_pOutputReceiver)->GetAudioSubMixInstance());
+        break;
+    case OutputReceiver::ReceiverType::ReceiverType_FinalMix:
+        audio::SetVoiceDestination(
+            &driver::HardwareManager::GetInstance().GetAudioRendererConfig(), &m_Voice,
+            static_cast<FinalMix*>(m_pOutputReceiver)->GetAudioFinalMixInstance());
+        break;
+    default:
+        NN_UNEXPECTED_DEFAULT;
+    }
+#endif
+
+    m_NodeId = audio::GetVoiceNodeId(&m_Voice);
+    return result;
 }
 
 float LowLevelVoice::GetClampedVoiceVolume(float volume) {

@@ -223,8 +223,19 @@ public:
     void AddSubMix(SubMix* pSubMix);
     void RemoveSubMix(SubMix* pSubMix);
 
-    SubMix* GetSubMix(int32_t subMixNumber);
-    SubMix* GetSubMix(int32_t subMixNumber) const;
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    audio::FinalMixType& GetFinalMix() { return m_FinalMix; }
+
+    audio::SubMixType& GetSubMix(int32_t subMixNumber) { return m_SubMix[subMixNumber]; }
+
+    const audio::SubMixType& GetSubMix(int32_t subMixNumber) const {
+        return m_SubMix[subMixNumber];
+    }
+
+#else
+    SubMix& GetSubMix(int32_t subMixNumber);
+    const SubMix& GetSubMix(int32_t subMixNumber) const;
+#endif
 
     int32_t GetSubMixCount() const;
     int32_t GetChannelCount() const;

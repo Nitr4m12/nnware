@@ -105,8 +105,8 @@ private:
     WaveBuffer* m_LastAppendBuffer{};
     Voice* m_pVoice{};
     audio::NodeId m_NodeId{0};
-#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
-    bool m_IsRun;
+#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
+    bool m_IsRun{true};
 #endif
 };
 static_assert(sizeof(LowLevelVoice) == 0x100);
