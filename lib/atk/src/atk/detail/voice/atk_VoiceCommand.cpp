@@ -55,4 +55,9 @@ LowLevelVoiceCommand::WaveBufferPacket* LowLevelVoiceCommand::GetFreeWaveBuffer(
     return nullptr;
 }
 
+VoiceReplyCommand& VoiceReplyCommand::GetInstance() {
+    static VoiceReplyCommand instance;
+    return instance;
+}
+
 }  // namespace nn::atk::detail
