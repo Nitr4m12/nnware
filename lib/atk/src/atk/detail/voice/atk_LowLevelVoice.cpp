@@ -277,7 +277,6 @@ void LowLevelVoice::UpdateWaveBuffer(bool isRun, OutputMode outputMode) {
     }
 }
 
-// NON_MATCHING on versions over 4.0.0
 void LowLevelVoice::UpdateMixVolume(const OutputMix& outputMix, OutputMode outputMode) {
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
     if (driver::HardwareManager::GetInstance().IsPresetSubMixEnabled()) {
@@ -286,7 +285,24 @@ void LowLevelVoice::UpdateMixVolume(const OutputMix& outputMix, OutputMode outpu
         UpdateMixVolumeOnFinalMix(outputMix, outputMode);
     }
 #else
+    const bool isSurroundMode{outputMode == OutputMode_Surround};
+    const bool isEffectEnabled{driver::HardwareManager::GetInstance().IsEffectInitialized()};
+    const int busCount{isEffectEnabled ? m_pOutputReceiver->GetBusCount() : 1};
+    const int channelCount{m_pOutputReceiver->GetChannelCount()};
 
+    for (int busIndex{0}; busIndex < busCount; ++busIndex) {
+        for (int channelIndex{0}; channelIndex < channelCount; ++channelIndex) {
+            const int mixBufferIndex{
+                GetOutputReceiverMixBufferIndex(m_pOutputReceiver, channelIndex, busIndex),
+            };
+            const float volume{
+                isSurroundMode   ? GetClampedVoiceVolume(outputMix.channelGain[mixBufferIndex]) :
+                channelIndex < 2 ? GetClampedVoiceVolume(outputMix.channelGain[mixBufferIndex]) :
+                                   0.0f,
+            };
+            SetVoiceMixVolume(volume, mixBufferIndex);
+        }
+    }
 #endif
 }
 
@@ -314,17 +330,24 @@ void LowLevelVoice::UpdateBiquadFilter(const VoiceParam& voiceParam) {
 void LowLevelVoice::SetVoiceMixVolume(float mixVolume, int destinationIndex) {
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
     if (driver::HardwareManager::GetInstance().IsPresetSubMixEnabled()) {
-        audio::SetVoiceMixVolume(&m_Voice, &driver::HardwareManager::GetInstance().GetSubMix(m_SubMixIndex), mixVolume, 0, destinationIndex);
+        audio::SetVoiceMixVolume(&m_Voice,
+                                 &driver::HardwareManager::GetInstance().GetSubMix(m_SubMixIndex),
+                                 mixVolume, 0, destinationIndex);
     } else {
-        audio::SetVoiceMixVolume(&m_Voice, &driver::HardwareManager::GetInstance().GetFinalMix(), mixVolume, 0, destinationIndex);
+        audio::SetVoiceMixVolume(&m_Voice, &driver::HardwareManager::GetInstance().GetFinalMix(),
+                                 mixVolume, 0, destinationIndex);
     }
 #else
     switch (m_pOutputReceiver->GetReceiverType()) {
     case OutputReceiver::ReceiverType::ReceiverType_SubMix:
-        audio::SetVoiceMixVolume(&m_Voice, static_cast<SubMix*>(m_pOutputReceiver)->GetAudioSubMixInstance(), mixVolume, 0, destinationIndex);
+        audio::SetVoiceMixVolume(&m_Voice,
+                                 static_cast<SubMix*>(m_pOutputReceiver)->GetAudioSubMixInstance(),
+                                 mixVolume, 0, destinationIndex);
         break;
     case OutputReceiver::ReceiverType::ReceiverType_FinalMix:
-        audio::SetVoiceMixVolume(&m_Voice, static_cast<FinalMix*>(m_pOutputReceiver)->GetAudioFinalMixInstance(), mixVolume, 0, destinationIndex);
+        audio::SetVoiceMixVolume(
+            &m_Voice, static_cast<FinalMix*>(m_pOutputReceiver)->GetAudioFinalMixInstance(),
+            mixVolume, 0, destinationIndex);
         break;
     default:
         NN_UNEXPECTED_DEFAULT;
