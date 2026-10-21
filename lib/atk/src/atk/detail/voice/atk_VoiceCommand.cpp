@@ -1,5 +1,7 @@
 #include <nn/atk/atk_VoiceCommand.h>
 
+#include <nn/util/util_BitUtil.h>
+
 namespace nn::atk::detail {
 
 LowLevelVoiceCommand& LowLevelVoiceCommand::GetInstance() {
@@ -19,6 +21,14 @@ void LowLevelVoiceCommand::Initialize(void* commandBuffer, size_t commandBufferS
     }
 
     CommandManager::Initialize(commandBuffer, commandBufferSize, ProcessCommandList);
+}
+
+// TODO: void LowLevelVoiceCommand::ProcessCommandList
+
+size_t LowLevelVoiceCommand::GetRequiredWaveBufferMemSize(int32_t waveBufferPacketCount) {
+    size_t result{waveBufferPacketCount * sizeof(WaveBufferPacket)};
+    result = util::align_up(result, 32);
+    return result;
 }
 
 }  // namespace nn::atk::detail
