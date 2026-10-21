@@ -10,7 +10,7 @@ class VolumeThroughModePacket {
 public:
     using VolumeThroughModeArray = ValueArray<uint8_t>;
 
-    VolumeThroughModePacket();
+    VolumeThroughModePacket() = default;
 
     static size_t GetRequiredMemSize(int busCount);
 

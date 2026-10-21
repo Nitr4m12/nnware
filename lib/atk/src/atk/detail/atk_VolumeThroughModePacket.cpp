@@ -11,4 +11,8 @@ size_t VolumeThroughModePacket::GetRequiredMemSize(int busCount) {
     return result;
 }
 
+bool VolumeThroughModePacket::Initialize(void *buffer, size_t size, int busCount) {
+    return m_VolumeThroughMode.Initialize(buffer, size, busCount);
+}
+
 }  // namespace nn::atk::detail

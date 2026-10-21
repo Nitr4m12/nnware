@@ -15,9 +15,8 @@ public:
     // UNCHECKED
     ValueArray() = default;
 
-    // UNCHECKED
     bool Initialize(void* buffer, [[maybe_unused]] size_t bufferSize, int count) {
-        m_pValue = reinterpret_cast<T*>(buffer);
+        m_pValue = static_cast<T*>(buffer);
         m_Count = count;
         Reset();
         return true;
@@ -35,7 +34,6 @@ public:
         m_Count = 0;
     }
 
-    // UNCHECKED
     void Reset() {
         for (int i{0}; i < m_Count; ++i)
             m_pValue[i] = 0;
