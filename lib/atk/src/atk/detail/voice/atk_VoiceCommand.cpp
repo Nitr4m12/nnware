@@ -60,4 +60,9 @@ VoiceReplyCommand& VoiceReplyCommand::GetInstance() {
     return instance;
 }
 
+void VoiceReplyCommand::ProcessCommandList(Command* commandList) {
+    for (Command* command{commandList}; command != nullptr; command = command->next) {
+    }
+}
+
 }  // namespace nn::atk::detail
