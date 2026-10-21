@@ -58,6 +58,7 @@ public:
 
 private:
     void UpdateVoiceParam(const VoiceParam& voiceParam, OutputMode outputMode);
+
     bool AllocVoice();
 
     void UpdateStatePlay(bool isRun, OutputMode outputMode);
@@ -68,6 +69,7 @@ private:
     void UpdateWaveBuffer(bool isRun, OutputMode outputMode);
     void UpdateWaveBufferOnPlayState();
     void UpdateWaveBufferOnStopState(OutputMode outputMode);
+
     bool AppendWaveBufferToVoice(WaveBuffer* waveBuffer);
 
     void UpdateMixVolume(const OutputMix& outputMix, OutputMode outputMode);
