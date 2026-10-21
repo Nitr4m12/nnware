@@ -40,7 +40,12 @@ public:
 
     void SetBinaryVolume(float volume) { m_BinaryVolume = volume; }
 
-    VolumeThroughModePacket& operator=(const VolumeThroughModePacket& rhs);
+    VolumeThroughModePacket& operator=(const VolumeThroughModePacket& rhs) {
+        m_VolumeThroughMode = rhs.m_VolumeThroughMode;
+        m_IsVolumeThroughModeUsed = rhs.m_IsVolumeThroughModeUsed;
+        m_BinaryVolume = rhs.m_BinaryVolume;
+        return *this;
+    }
 
 private:
     VolumeThroughModeArray m_VolumeThroughMode;

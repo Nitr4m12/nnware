@@ -8,11 +8,9 @@ namespace nn::atk::detail {
 template <typename T>
 class ValueArray {
 public:
-    static size_t GetRequiredMemSize(int count) {
-        return count * sizeof(T);
-    }
+    static size_t GetRequiredMemSize(int count) { return count * sizeof(T); }
 
-    // UNCHECKED
+    // NOT_CHECKED
     ValueArray() = default;
 
     bool Initialize(void* buffer, [[maybe_unused]] size_t bufferSize, int count) {
@@ -22,10 +20,10 @@ public:
         return true;
     }
 
-    // UNCHECKED
+    // NOT_CHECKED
     bool IsInitialized() const { return m_pValue != nullptr && m_Count != 0; }
 
-    // UNCHECKED
+    // NOT_CHECKED
     void* GetBufferAddr() { return m_pValue; }
 
     void Finalize() {
@@ -38,16 +36,14 @@ public:
             m_pValue[i] = 0;
     }
 
-    // UNCHECKED
+    // NOT_CHECKED
     int GetCount() const { return m_Count; }
 
-    // UNCHECKED
     void SetValue(int index, T value) { m_pValue[index] = value; }
 
-    // UNCHECKED
     T GetValue(int index) const { return m_pValue[index]; }
 
-    // UNCHECKED
+    // NOT_CHECKED
     bool TrySetValue(int index, T value) {
         if (index >= m_Count)
             return false;
@@ -56,7 +52,7 @@ public:
         return true;
     }
 
-    // UNCHECKED
+    // NOT_CHECKED
     T TryGetValue(int index) const {
         if (index >= m_Count)
             return 0;
@@ -64,15 +60,14 @@ public:
         return m_pValue[index];
     }
 
-    // UNCHECKED
     ValueArray& operator=(const ValueArray& rhs) {
         const int CopyCount{std::min(m_Count, rhs.m_Count)};
 
         for (int i{0}; i < CopyCount; ++i)
-            this->SetValue(i, rhs.GetValue(i));
+            SetValue(i, rhs.GetValue(i));
 
-        for (int i{rhs.m_Count}; i > 0; --i)
-            rhs.SetValue(i, 0);
+        for (int i{CopyCount}; i < m_Count; ++i)
+            SetValue(i, 0);
 
         return *this;
     }
