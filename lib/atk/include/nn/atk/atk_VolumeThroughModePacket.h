@@ -20,6 +20,26 @@ public:
 
     int GetBusCount() const { return m_VolumeThroughMode.GetCount(); }
 
+    uint8_t GetVolumeThroughMode(int bus) const { return m_VolumeThroughMode.GetValue(bus); }
+
+    void GetVolumeThroughMode(int bus, uint8_t volumeThroughMode) {
+        m_VolumeThroughMode.SetValue(bus, volumeThroughMode);
+    }
+
+    uint8_t TryGetVolumeThroughMode(int bus) const { return m_VolumeThroughMode.TryGetValue(bus); }
+
+    bool TrySetVolumeThroughMode(int bus, uint8_t volumeThroughMode) {
+        return m_VolumeThroughMode.TrySetValue(bus, volumeThroughMode);
+    }
+
+    bool IsVolumeThroughModeUsed() const { return m_IsVolumeThroughModeUsed; }
+
+    void SetVolumeThroughModeUsed(bool isUsed) { m_IsVolumeThroughModeUsed = isUsed; }
+
+    float GetBinaryVolume() const { return m_BinaryVolume; }
+
+    void SetBinaryVolume(float volume) { m_BinaryVolume = volume; }
+
     VolumeThroughModePacket& operator=(const VolumeThroughModePacket& rhs);
 
 private:

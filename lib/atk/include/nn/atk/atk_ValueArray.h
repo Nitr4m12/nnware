@@ -8,8 +8,9 @@ namespace nn::atk::detail {
 template <typename T>
 class ValueArray {
 public:
-    // UNCHECKED
-    static size_t GetRequiredMemSize(int count);
+    static size_t GetRequiredMemSize(int count) {
+        return count * sizeof(T);
+    }
 
     // UNCHECKED
     ValueArray() = default;
@@ -47,7 +48,7 @@ public:
     void SetValue(int index, T value) { m_pValue[index] = value; }
 
     // UNCHECKED
-    T GetValue(int index) { return m_pValue[index]; }
+    T GetValue(int index) const { return m_pValue[index]; }
 
     // UNCHECKED
     bool TrySetValue(int index, T value) {
@@ -59,7 +60,7 @@ public:
     }
 
     // UNCHECKED
-    T TryGetValue(int index) {
+    T TryGetValue(int index) const {
         if (index >= m_Count)
             return 0;
 
