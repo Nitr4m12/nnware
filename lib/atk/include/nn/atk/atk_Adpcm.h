@@ -23,5 +23,5 @@ namespace detail {
 void DecodeDspAdpcm(position_t playPosition, AdpcmContext& context, const AdpcmParam& param,
                     const void* adpcmData, size_t decodeSamples, int16_t* dest);
 
-}
+}  // namespace detail
 }  // namespace nn::atk
