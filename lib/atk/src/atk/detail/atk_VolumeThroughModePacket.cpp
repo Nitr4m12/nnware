@@ -11,12 +11,18 @@ size_t VolumeThroughModePacket::GetRequiredMemSize(int busCount) {
     return result;
 }
 
-bool VolumeThroughModePacket::Initialize(void *buffer, size_t size, int busCount) {
+bool VolumeThroughModePacket::Initialize(void* buffer, size_t size, int busCount) {
     return m_VolumeThroughMode.Initialize(buffer, size, busCount);
 }
 
 void VolumeThroughModePacket::Finalize() {
     m_VolumeThroughMode.Finalize();
+    m_IsVolumeThroughModeUsed = false;
+    m_BinaryVolume = 1.0f;
+}
+
+void VolumeThroughModePacket::Reset() {
+    m_VolumeThroughMode.Reset();
     m_IsVolumeThroughModeUsed = false;
     m_BinaryVolume = 1.0f;
 }
