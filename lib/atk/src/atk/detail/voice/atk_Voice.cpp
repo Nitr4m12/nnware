@@ -139,4 +139,10 @@ void Voice::SetMonoFilter(bool enable, uint16_t cutoff) {
         m_VoiceParam.m_MonoFilterCutoff = cutoff;
 }
 
+void Voice::SetBiquadFilter(bool enable, const BiquadFilterCoefficients* coef) {
+    m_VoiceParam.m_BiquadFilterFlag = enable;
+    if (enable)
+        m_VoiceParam.m_BiquadFilterCoefficients = *coef;
+}
+
 }  // namespace nn::atk::detail
