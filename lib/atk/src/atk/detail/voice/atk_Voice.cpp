@@ -1,5 +1,7 @@
 #include <nn/atk/atk_Voice.h>
 
+#include <nn/util/util_BitUtil.h>
+
 #include <nn/atk/atk_HardwareManager.h>
 
 namespace nn::atk::detail {
@@ -166,6 +168,8 @@ void VirtualVoiceManager::Initialize() {
     }
 }
 
+// TODO: uint32_t VirtualVoiceManager::AllocVirtualVoice
+
 void VirtualVoiceManager::FreeVirtualVoice(uint32_t voiceId) {
     uint32_t i{voiceId >> 5};
     uint32_t shift{static_cast<uint32_t>(1 << (voiceId & 31))};
@@ -191,6 +195,15 @@ void VirtualVoiceManager::UpdateVoiceInfo() {
     }
 
     m_VoiceInfoTableRead = writeIndex;
+}
+
+int32_t VirtualVoiceManager::GetAllocatedVirtualVoiceCount() const {
+    int32_t allocatedCount{0};
+
+    for (int i{0}; i < VirtualVoiceElementCount; ++i)
+        allocatedCount += util::popcount(~m_VirtualVoiceAllocationTable[i]);
+
+    return allocatedCount;
 }
 
 }  // namespace nn::atk::detail
