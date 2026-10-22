@@ -110,4 +110,11 @@ void Voice::SetState(VoiceState state) {
     m_pLowLevelVoice->SetState(state);
 }
 
+void Voice::AppendWaveBuffer(WaveBuffer* waveBuffer) {
+    if (m_pLowLevelVoice == nullptr)
+        return;
+
+    m_pLowLevelVoice->AppendWaveBuffer(waveBuffer);
+}
+
 }  // namespace nn::atk::detail
