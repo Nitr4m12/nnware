@@ -487,4 +487,30 @@ size_t LowLevelVoiceAllocator::GetRequiredMemSize(int voiceCount) {
     return result;
 }
 
+void LowLevelVoiceAllocator::Initialize(int voiceCount, void* mem,
+                                        [[maybe_unused]] size_t memSize) {
+    m_VoiceCount = voiceCount;
+
+    util::BytePtr ptr{mem};
+
+    m_ppVoiceTable = ptr.Get<LowLevelVoice*>();
+    ptr.Advance(voiceCount * sizeof(LowLevelVoice**));
+
+    m_pAssignedTableIndex = ptr.Get<int32_t>();
+    ptr.Advance(voiceCount * sizeof(int32_t)).AlignUp(alignof(LowLevelVoice));
+
+    m_pVoiceArray = ptr.Get();
+
+    for (int i{0}; i < m_VoiceCount; ++i) {
+        new (ptr.Get()) LowLevelVoice;
+        m_ppVoiceTable[i] = ptr.Get<LowLevelVoice>();
+        ptr.Advance(LowLevelVoiceAlignedSize);
+    }
+
+    for (int i{0}; i < m_VoiceCount; ++i)
+        m_pAssignedTableIndex[i] = Unassigned;
+
+    m_UsingCount = 0;
+}
+
 }  // namespace nn::atk::detail
