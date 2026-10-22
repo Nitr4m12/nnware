@@ -285,6 +285,27 @@ void LowLevelVoice::UpdateWaveBuffer(bool isRun, OutputMode outputMode) {
     }
 }
 
+bool LowLevelVoice::AppendWaveBufferToVoice(WaveBuffer* waveBuffer) {
+    const audio::AdpcmContext* pContext{nullptr};
+    size_t contextSize{0};
+    if (m_SampleFormat == SampleFormat_DspAdpcm) {
+        pContext = &waveBuffer->pAdpcmContext->audioAdpcmContext;
+        contextSize = 6;
+    }
+
+    audio::WaveBuffer audioWaveBuffer;
+    audioWaveBuffer.buffer = waveBuffer->bufferAddress;
+    audioWaveBuffer.size = waveBuffer->bufferSize;
+    audioWaveBuffer.startSampleOffset = waveBuffer->sampleOffset;
+    audioWaveBuffer.endSampleOffset = waveBuffer->sampleLength;
+    audioWaveBuffer.loop = waveBuffer->loopFlag;
+    audioWaveBuffer.pContext = pContext;
+    audioWaveBuffer.contextSize = contextSize;
+    audioWaveBuffer.isEndOfStream = true;
+
+    return audio::AppendWaveBuffer(&m_Voice, &audioWaveBuffer);
+}
+
 void LowLevelVoice::UpdateMixVolume(const OutputMix& outputMix, OutputMode outputMode) {
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
     if (driver::HardwareManager::GetInstance().IsPresetSubMixEnabled()) {
