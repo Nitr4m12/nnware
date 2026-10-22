@@ -133,4 +133,10 @@ position_t Voice::GetPlayPosition() const {
     return m_pLowLevelVoice->GetPlayPosition();
 }
 
+void Voice::SetMonoFilter(bool enable, uint16_t cutoff) {
+    m_VoiceParam.m_MonoFilterFlag = enable;
+    if (enable)
+        m_VoiceParam.m_MonoFilterCutoff = cutoff;
+}
+
 }  // namespace nn::atk::detail
