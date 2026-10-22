@@ -117,4 +117,6 @@ void Voice::AppendWaveBuffer(WaveBuffer* waveBuffer) {
     m_pLowLevelVoice->AppendWaveBuffer(waveBuffer);
 }
 
+void Voice::FreeAllWaveBuffer() {}
+
 }  // namespace nn::atk::detail
