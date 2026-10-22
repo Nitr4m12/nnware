@@ -130,7 +130,7 @@ public:
     int32_t GetAllocatedVirtualVoiceCount() const;
     int32_t GetUnreleasedLowLevelVoiceCount() const;
 
-    VirtualVoiceManager() = default;
+    VirtualVoiceManager() { Initialize(); };
 
 private:
     static const int32_t VirtualVoiceElementCount{8};

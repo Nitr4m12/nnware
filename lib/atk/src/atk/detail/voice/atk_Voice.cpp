@@ -145,4 +145,20 @@ void Voice::SetBiquadFilter(bool enable, const BiquadFilterCoefficients* coef) {
         m_VoiceParam.m_BiquadFilterCoefficients = *coef;
 }
 
+void VirtualVoiceManager::Initialize() {
+    m_VoiceInfoDirtyTable[0].Set();
+    m_VoiceInfoDirtyTable[1].Set();
+
+    for (int i{0}; i < VirtualVoiceElementCount; ++i)
+        m_VirtualVoiceAllocationTable[i] = InvalidVoiceId;
+
+    m_VoiceInfoTableRead = 0;
+
+    for (uint32_t i{0}; i < VirtualVoiceCount; ++i) {
+        m_LowLevelVoiceTable[i] = nullptr;
+        m_VoiceInfoTable[0][i].voiceState = VoiceState_Stop;
+        m_VoiceInfoTable[1][i].voiceState = VoiceState_Stop;
+    }
+}
+
 }  // namespace nn::atk::detail
