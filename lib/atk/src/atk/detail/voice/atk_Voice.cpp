@@ -64,4 +64,13 @@ bool Voice::AllocVoice(uint32_t priority) {
     return true;
 }
 
+void Voice::Free() {
+    m_State = VoiceState_Stop;
+    if (m_pLowLevelVoice == nullptr)
+        return;
+
+    driver::HardwareManager::GetInstance().GetLowLevelVoiceAllocator().FreeVoice(m_pLowLevelVoice);
+    m_pLowLevelVoice = nullptr;
+}
+
 }  // namespace nn::atk::detail
