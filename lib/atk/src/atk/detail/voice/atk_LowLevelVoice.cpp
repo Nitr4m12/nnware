@@ -22,10 +22,12 @@ int ConvertAtkPriorityToAudioPriority(int32_t atkPriority) {
     return 255 - atkPriority;
 }
 
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
 int GetOutputReceiverMixBufferIndex(const nn::atk::OutputReceiver* pOutputReceiver, int channel,
                                     int bus) {
     return channel + bus * pOutputReceiver->GetChannelCount();
 }
+#endif
 
 }  // anonymous namespace
 
@@ -37,8 +39,8 @@ LowLevelVoice::LowLevelVoice()
       m_SampleFormat{LowLevelVoiceInitialSampleFormat} {}
 
 void LowLevelVoice::Initialize() {
-    m_Priority = LowLevelVoiceInitialPriority;
     m_IsAvailable = true;
+    m_Priority = LowLevelVoiceInitialPriority;
     m_SampleRate = LowLevelVoiceInitialSampleRate;
     m_SampleFormat = LowLevelVoiceInitialSampleFormat;
     m_PlayPosition = 0;
@@ -503,8 +505,7 @@ void LowLevelVoiceAllocator::Initialize(int voiceCount, void* mem,
     m_pVoiceArray = ptr.Get();
 
     for (int i{0}; i < m_VoiceCount; ++i) {
-        new (ptr.Get()) LowLevelVoice;
-        m_ppVoiceTable[i] = ptr.Get<LowLevelVoice>();
+        m_ppVoiceTable[i] = new (ptr.Get()) LowLevelVoice;
         ptr.Advance(LowLevelVoiceAlignedSize);
     }
 
@@ -572,6 +573,10 @@ void LowLevelVoiceAllocator::FreeVoice(LowLevelVoice* pVoice) {
 
     m_pAssignedTableIndex[lastArrayIndex] = voiceTableIndex;
     m_pAssignedTableIndex[voiceArrayIndex] = Unassigned;
+}
+
+int32_t LowLevelVoiceAllocator::GetDroppedVoiceCount() const {
+    return m_DroppedVoiceCount;
 }
 
 ptrdiff_t LowLevelVoiceAllocator::GetVoiceArrayIndex(LowLevelVoice* pVoice) {

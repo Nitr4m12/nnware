@@ -129,7 +129,7 @@ public:
     LowLevelVoice* AllocVoice();
     void FreeVoice(LowLevelVoice* pVoice);
 
-    int GetDroppedVoiceCount() const;
+    int32_t GetDroppedVoiceCount() const;
 
     ptrdiff_t GetVoiceArrayIndex(LowLevelVoice* pVoice);
 
