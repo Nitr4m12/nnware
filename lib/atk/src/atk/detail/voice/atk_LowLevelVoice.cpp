@@ -556,6 +556,24 @@ LowLevelVoice* LowLevelVoiceAllocator::AllocVoice() {
     }
 }
 
+void LowLevelVoiceAllocator::FreeVoice(LowLevelVoice* pVoice) {
+    pVoice->Finalize();
+
+    const ptrdiff_t voiceArrayIndex{GetVoiceArrayIndex(pVoice)};
+    const int32_t voiceTableIndex{m_pAssignedTableIndex[voiceArrayIndex]};
+
+    m_UsingCount--;
+
+    const int lastTableIndex{m_UsingCount};
+    const ptrdiff_t lastArrayIndex{GetVoiceArrayIndex(m_ppVoiceTable[lastTableIndex])};
+
+    m_ppVoiceTable[voiceTableIndex] = m_ppVoiceTable[lastTableIndex];
+    m_ppVoiceTable[lastTableIndex] = pVoice;
+
+    m_pAssignedTableIndex[lastArrayIndex] = voiceTableIndex;
+    m_pAssignedTableIndex[voiceArrayIndex] = Unassigned;
+}
+
 ptrdiff_t LowLevelVoiceAllocator::GetVoiceArrayIndex(LowLevelVoice* pVoice) {
     return (reinterpret_cast<ptrdiff_t>(pVoice) - reinterpret_cast<ptrdiff_t>(m_pVoiceArray)) /
            LowLevelVoiceAlignedSize;
