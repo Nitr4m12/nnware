@@ -138,8 +138,8 @@ private:
     uint32_t m_VirtualVoiceAllocationTable[VirtualVoiceElementCount];
     uint32_t m_VoiceInfoTableRead;
     LowLevelVoice* m_LowLevelVoiceTable[VirtualVoiceCount];
-    VoiceInfo m_VoiceInfoTable[WaveChannelMax][VirtualVoiceCount];
-    util::BitFlagSet<VirtualVoiceCount, void> m_VoiceInfoDirtyTable[WaveChannelMax];
+    VoiceInfo m_VoiceInfoTable[2][VirtualVoiceCount];
+    util::BitFlagSet<VirtualVoiceCount, void> m_VoiceInfoDirtyTable[2];
 };
 static_assert(sizeof(VirtualVoiceManager) == 0x4868);
 

@@ -159,7 +159,6 @@ void VirtualVoiceManager::Initialize() {
     for (int i{0}; i < VirtualVoiceElementCount; ++i)
         m_VirtualVoiceAllocationTable[i] = InvalidVoiceId;
 
-
     for (uint32_t i{0}; i < VirtualVoiceCount; ++i) {
         m_LowLevelVoiceTable[i] = nullptr;
         m_VoiceInfoTable[0][i].voiceState = VoiceState_Stop;
@@ -171,6 +170,27 @@ void VirtualVoiceManager::FreeVirtualVoice(uint32_t voiceId) {
     uint32_t i{voiceId >> 5};
     uint32_t shift{static_cast<uint32_t>(1 << (voiceId & 31))};
     m_VirtualVoiceAllocationTable[i] = m_VirtualVoiceAllocationTable[i] | shift;
+}
+
+void VirtualVoiceManager::UpdateVoiceInfo() {
+    uint32_t writeIndex{m_VoiceInfoTableRead == 0};
+
+    for (uint32_t i{0}; i < VirtualVoiceCount; ++i) {
+        VoiceInfo* voiceInfo{&m_VoiceInfoTable[writeIndex][i]};
+        if (m_LowLevelVoiceTable[i] != nullptr) {
+            m_LowLevelVoiceTable[i]->UpdateVoiceInfo(voiceInfo);
+            m_VoiceInfoDirtyTable[writeIndex].Set(i);
+        } else {
+            if (m_VoiceInfoDirtyTable[writeIndex].Test(i)) {
+                voiceInfo->voiceState = VoiceState_Stop;
+                voiceInfo->waveBufferStatus = WaveBuffer::Status_Free;
+                voiceInfo->userId = nullptr;
+                m_VoiceInfoDirtyTable[writeIndex].Reset(i);
+            }
+        }
+    }
+
+    m_VoiceInfoTableRead = writeIndex;
 }
 
 }  // namespace nn::atk::detail
