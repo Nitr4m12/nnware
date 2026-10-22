@@ -522,4 +522,19 @@ void LowLevelVoiceAllocator::Finalize() {
     m_DroppedVoiceCount = 0;
 }
 
+void LowLevelVoiceAllocator::UpdateAllVoiceState(OutputMode outputMode) {
+    int32_t droppedVoiceCount{0};
+
+    for (int i{0}; i < m_UsingCount; ++i) {
+        if (m_ppVoiceTable[i]->IsVoiceDroppedFlagOn() && m_ppVoiceTable[i]->IsAvailable()) {
+            m_ppVoiceTable[i]->SetAvailable(false);
+            ++droppedVoiceCount;
+        } else {
+            m_ppVoiceTable[i]->UpdateState(outputMode);
+        }
+    }
+
+    m_DroppedVoiceCount = droppedVoiceCount;
+}
+
 }  // namespace nn::atk::detail
