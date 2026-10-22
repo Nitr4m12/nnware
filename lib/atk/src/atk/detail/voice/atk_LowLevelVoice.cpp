@@ -387,6 +387,11 @@ void LowLevelVoice::UpdateMixVolume(const OutputMix& outputMix, OutputMode outpu
 #endif
 }
 
+// TODO: These require work done towards figuring out the structure of HardwareManager
+// on lower versions
+// TODO: LowLevelVoice::UpdateMixVolumeOnSubMix
+// TODO: LowLevelVoice::UpdateMixVolumeOnFinalMix
+
 void LowLevelVoice::UpdateVolume(const VoiceParam& voiceParam) {
     float volume{GetClampedVoiceVolume(voiceParam.m_Volume)};
     audio::SetVoiceVolume(&m_Voice, volume);
@@ -472,5 +477,7 @@ void LowLevelVoice::SetVoiceMixVolume(float mixVolume, int destinationIndex) {
 float LowLevelVoice::GetClampedVoiceVolume(float volume) {
     return fnd::FloatClamp(volume, 0.0f, 128.0f);
 }
+
+LowLevelVoiceAllocator::LowLevelVoiceAllocator() = default;
 
 }  // namespace nn::atk::detail

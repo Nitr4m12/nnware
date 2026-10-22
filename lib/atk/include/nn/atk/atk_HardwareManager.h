@@ -316,8 +316,8 @@ private:
 #endif
     audio::AudioRendererParameter m_AudioRendererParameter;
     audio::DeviceSinkType m_Sink;
-    MoveValue<float, int32_t> m_AuxUserVolume[MixerCount];
-    MoveValue<float, int32_t> m_AuxUserVolumeForAdditionalEffect[AuxBusCountForAdditionalEffect];
+    MoveValue<float, int32_t> m_AuxUserVolume[MixerCount];  // SMO: 0x708 = 1800, BTD5: 0x8f8 = 2296
+    MoveValue<float, int32_t> m_AuxUserVolumeForAdditionalEffect[AuxBusCountForAdditionalEffect];  // SMO: 0x740 = 1856, BTD5: 0x928 = 2344
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
     uint8_t _0[272];
 #endif
