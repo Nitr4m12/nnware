@@ -119,7 +119,7 @@ public:
 
     LowLevelVoiceAllocator();
 
-    size_t GetRequiredMemSize(int voiceCount);
+    static size_t GetRequiredMemSize(int voiceCount);
 
     void Initialize(int voiceCount, void* mem, size_t memSize);
     void Finalize();

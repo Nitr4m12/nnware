@@ -480,4 +480,11 @@ float LowLevelVoice::GetClampedVoiceVolume(float volume) {
 
 LowLevelVoiceAllocator::LowLevelVoiceAllocator() = default;
 
+size_t LowLevelVoiceAllocator::GetRequiredMemSize(int voiceCount) {
+    size_t result{voiceCount * sizeof(audio::BiquadFilterParameter)};
+    result += (voiceCount * LowLevelVoiceAlignedSize) + alignof(LowLevelVoice);
+
+    return result;
+}
+
 }  // namespace nn::atk::detail
