@@ -167,4 +167,10 @@ void VirtualVoiceManager::Initialize() {
     }
 }
 
+void VirtualVoiceManager::FreeVirtualVoice(uint32_t voiceId) {
+    uint32_t i{voiceId >> 5};
+    uint32_t shift{static_cast<uint32_t>(1 << (voiceId & 31))};
+    m_VirtualVoiceAllocationTable[i] = m_VirtualVoiceAllocationTable[i] | shift;
+}
+
 }  // namespace nn::atk::detail
