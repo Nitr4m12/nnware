@@ -200,10 +200,23 @@ void VirtualVoiceManager::UpdateVoiceInfo() {
 int32_t VirtualVoiceManager::GetAllocatedVirtualVoiceCount() const {
     int32_t allocatedCount{0};
 
-    for (int i{0}; i < VirtualVoiceElementCount; ++i)
-        allocatedCount += util::popcount(~m_VirtualVoiceAllocationTable[i]);
+    for (int i{0}; i < VirtualVoiceElementCount; ++i) {
+        uint32_t allocatedFlag{~m_VirtualVoiceAllocationTable[i]};
+        allocatedCount += util::popcount(allocatedFlag);
+    }
 
     return allocatedCount;
+}
+
+int32_t VirtualVoiceManager::GetUnreleasedLowLevelVoiceCount() const {
+    int32_t count{0};
+
+    for (int i{0}; i < VirtualVoiceCount; ++i) {
+        if (m_LowLevelVoiceTable[i] != nullptr)
+            ++count;
+    }
+
+    return count;
 }
 
 }  // namespace nn::atk::detail
