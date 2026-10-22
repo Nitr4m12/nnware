@@ -126,4 +126,11 @@ void Voice::UpdateParam() {
     m_pLowLevelVoice->SetVoiceParam(m_VoiceParam);
 }
 
+position_t Voice::GetPlayPosition() const {
+    if (m_pLowLevelVoice == nullptr)
+        return 0;
+
+    return m_pLowLevelVoice->GetPlayPosition();
+}
+
 }  // namespace nn::atk::detail
