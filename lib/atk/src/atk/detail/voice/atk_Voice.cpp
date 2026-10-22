@@ -73,4 +73,12 @@ void Voice::Free() {
     m_pLowLevelVoice = nullptr;
 }
 
+void Voice::SetPriority(uint32_t priority) {
+    m_Priority = priority;
+    if (m_pLowLevelVoice == nullptr)
+        return;
+
+    m_pLowLevelVoice->SetPriority(priority);
+}
+
 }  // namespace nn::atk::detail
