@@ -119,4 +119,11 @@ void Voice::AppendWaveBuffer(WaveBuffer* waveBuffer) {
 
 void Voice::FreeAllWaveBuffer() {}
 
+void Voice::UpdateParam() {
+    if (m_pLowLevelVoice == nullptr)
+        return;
+
+    m_pLowLevelVoice->SetVoiceParam(m_VoiceParam);
+}
+
 }  // namespace nn::atk::detail
