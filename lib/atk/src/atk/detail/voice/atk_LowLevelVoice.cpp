@@ -310,6 +310,33 @@ void LowLevelVoice::UpdateWaveBufferOnPlayState() {
     }
 }
 
+void LowLevelVoice::UpdateWaveBufferOnStopState(OutputMode outputMode) {
+    WaveBuffer* currentWaveBuffer{m_WaveBufferListBegin};
+    if (currentWaveBuffer == nullptr)
+        return;
+
+    if (audio::GetVoicePlayState(&m_Voice) == audio::VoiceType::PlayState_Pause) {
+        audio::SetVoicePlayState(&m_Voice, audio::VoiceType::PlayState_Play);
+        return;
+    }
+
+    switch (currentWaveBuffer->status) {
+    case WaveBuffer::Status_Play:
+        FreeAllWaveBuffer();
+        break;
+    case WaveBuffer::Status_Wait:
+        AppendWaveBufferToVoice(currentWaveBuffer);
+        m_LastAppendBuffer = currentWaveBuffer;
+        audio::SetVoicePlayState(&m_Voice, audio::VoiceType::PlayState_Play);
+        UpdateMixVolume(m_VoiceParam.m_TvMix, outputMode);
+        currentWaveBuffer->status = WaveBuffer::Status_Play;
+        break;
+    case WaveBuffer::Status_Done:
+    case WaveBuffer::Status_Free:
+        break;
+    }
+}
+
 bool LowLevelVoice::AppendWaveBufferToVoice(WaveBuffer* waveBuffer) {
     const audio::AdpcmContext* pContext{nullptr};
     size_t contextSize{0};
