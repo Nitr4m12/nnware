@@ -408,6 +408,39 @@ void LowLevelVoice::UpdateBiquadFilter(const VoiceParam& voiceParam) {
     audio::SetVoiceBiquadFilterParameter(&m_Voice, 0, parameter);
 }
 
+void LowLevelVoice::UpdateLowPassFilter(const VoiceParam& voiceParam) {
+    if (static_cast<uint32_t>(voiceParam.m_MonoFilterCutoff) - 1 < 15999) {
+        BiquadFilterCoefficients coefficients;
+        if (driver::HardwareManager::GetInstance().IsPreviousSdkVersionLowPassFilterCompatible())
+            coefficients = Util::CalcLowPassFilterCoefficients(voiceParam.m_MonoFilterCutoff,
+                                                               m_SampleRate, false);
+        else
+            coefficients = Util::CalcLowPassFilterCoefficients(
+                voiceParam.m_MonoFilterCutoff,
+                driver::HardwareManager::GetInstance().GetRendererSampleRate(), true);
+
+        audio::BiquadFilterParameter parameter;
+        parameter.denominator[0] = coefficients.a1;
+        parameter.denominator[1] = coefficients.a2;
+        parameter.numerator[0] = coefficients.b0;
+        parameter.numerator[1] = coefficients.b1;
+        parameter.numerator[2] = coefficients.b2;
+        parameter.enable = voiceParam.m_MonoFilterFlag;
+
+        audio::SetVoiceBiquadFilterParameter(&m_Voice, 1, parameter);
+    } else {
+        audio::BiquadFilterParameter parameter;
+        parameter.denominator[0] = 0;
+        parameter.denominator[1] = 0;
+        parameter.numerator[0] = 0;
+        parameter.numerator[1] = 0;
+        parameter.numerator[2] = 0;
+        parameter.enable = voiceParam.m_MonoFilterFlag;
+
+        audio::SetVoiceBiquadFilterParameter(&m_Voice, 1, parameter);
+    }
+}
+
 void LowLevelVoice::SetVoiceMixVolume(float mixVolume, int destinationIndex) {
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
     if (driver::HardwareManager::GetInstance().IsPresetSubMixEnabled()) {

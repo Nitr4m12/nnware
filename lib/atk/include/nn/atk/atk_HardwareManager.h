@@ -267,12 +267,14 @@ public:
     bool IsEffectInitialized() const { return m_IsInitializedEffect; }
     bool IsPresetSubMixEnabled() const { return m_IsPresetSubMixEnabled; }
     bool IsAdditionalEffectEnabled() const { return m_IsAdditionalEffectEnabled; }
+    bool IsPreviousSdkVersionLowPassFilterCompatible() { return m_IsPreviousSdkVersionLowPassFilterCompatible; }
 
     OutputMode GetOutputMode(OutputDevice device) const { return m_OutputMode[device]; }
 
     LowLevelVoiceAllocator& GetLowLevelVoiceAllocator() { return m_LowLevelVoiceAllocator; }
 
     int32_t GetRendererSampleCount() { return m_AudioRendererParameter.sampleCount; }
+    int32_t GetRendererSampleRate() { return m_AudioRendererParameter.sampleRate; }
 
 private:
     bool m_IsInitialized;
