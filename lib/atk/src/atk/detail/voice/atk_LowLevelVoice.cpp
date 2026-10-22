@@ -172,6 +172,14 @@ void LowLevelVoice::UpdateVoiceInfo(VoiceInfo* voiceInfo) const {
     voiceInfo->playPosition = m_PlayPosition;
 }
 
+void LowLevelVoice::UpdateVoiceParam(const VoiceParam& voiceParam, OutputMode outputMode) {
+    UpdateVolume(voiceParam);
+    UpdatePitch(voiceParam);
+    UpdateBiquadFilter(voiceParam);
+    UpdateLowPassFilter(voiceParam);
+    UpdateMixVolume(voiceParam.m_TvMix, outputMode);
+}
+
 bool LowLevelVoice::AllocVoice() {
     const audio::AdpcmParameter* pParameter{nullptr};
     int32_t paramSize{0};
