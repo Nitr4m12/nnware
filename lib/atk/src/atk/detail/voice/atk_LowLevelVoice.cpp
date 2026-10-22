@@ -513,4 +513,13 @@ void LowLevelVoiceAllocator::Initialize(int voiceCount, void* mem,
     m_UsingCount = 0;
 }
 
+void LowLevelVoiceAllocator::Finalize() {
+    m_pVoiceArray = nullptr;
+    m_ppVoiceTable = nullptr;
+    m_UsingCount = 0;
+    m_pAssignedTableIndex = nullptr;
+    m_VoiceCount = 0;
+    m_DroppedVoiceCount = 0;
+}
+
 }  // namespace nn::atk::detail
