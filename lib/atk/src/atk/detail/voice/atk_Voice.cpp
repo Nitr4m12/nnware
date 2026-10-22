@@ -19,4 +19,26 @@ Voice::Voice() = default;
 
 Voice::~Voice() = default;
 
+void Voice::Initialize(uint32_t priority) {
+    m_Priority = priority;
+    m_State = VoiceState_Stop;
+
+    m_VoiceParam.Initialize();
+    m_VoiceParam.m_TvMix = DefaultTvMix;
+    m_VoiceParam.m_MonoFilterFlag = false;
+    m_VoiceParam.m_BiquadFilterFlag = false;
+    m_VoiceParam.m_BiquadFilterCoefficients = BiquadFilterCoefZero;
+    m_VoiceParam.m_MonoFilterCutoff = 0;
+    m_VoiceParam.m_InterpolationType = 0;
+
+    m_SampleFormat = SampleFormat_PcmS16;
+    m_SampleRate = 32000;
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    m_SubMixIndex = 0;
+#else
+    m_pOutputReceiver = nullptr;
+#endif
+    m_PlayPosition = 0;
+}
+
 }  // namespace nn::atk::detail

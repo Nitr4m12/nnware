@@ -493,7 +493,14 @@ struct VoiceParam {
     uint16_t m_MonoFilterCutoff;
     uint8_t m_InterpolationType;
 
-    void Initialize();
+    void Initialize() {
+        m_Volume = 1.0f;
+        m_Pitch = 1.0f;
+        m_TvMix = {};
+        m_MonoFilterCutoff = false;
+        m_BiquadFilterFlag = false;
+        m_BiquadFilterCoefficients = {};
+    }
 };
 static_assert(sizeof(VoiceParam) == 0x78);
 
