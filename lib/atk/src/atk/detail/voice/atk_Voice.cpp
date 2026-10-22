@@ -4,7 +4,7 @@ namespace nn::atk::detail {
 
 namespace {
 
-const BiquadFilterCoefficients BiquadFilterCoefZero{.b0=0, .b1=0, .b2=0, .a1=0, .a2=0};
+const BiquadFilterCoefficients BiquadFilterCoefZero{.b0 = 0, .b1 = 0, .b2 = 0, .a1 = 0, .a2 = 0};
 
 const OutputMix DefaultTvMix{
     {
@@ -13,7 +13,7 @@ const OutputMix DefaultTvMix{
     },
 };
 
-}
+}  // anonymous namespace
 
 Voice::Voice() = default;
 
@@ -39,6 +39,13 @@ void Voice::Initialize(uint32_t priority) {
     m_pOutputReceiver = nullptr;
 #endif
     m_PlayPosition = 0;
+}
+
+bool Voice::IsAvailable() const {
+    if (m_pLowLevelVoice == nullptr)
+        return false;
+
+    return m_pLowLevelVoice->IsAvailable();
 }
 
 }  // namespace nn::atk::detail

@@ -496,10 +496,6 @@ struct VoiceParam {
     void Initialize() {
         m_Volume = 1.0f;
         m_Pitch = 1.0f;
-        m_TvMix = {};
-        m_MonoFilterCutoff = false;
-        m_BiquadFilterFlag = false;
-        m_BiquadFilterCoefficients = {};
     }
 };
 static_assert(sizeof(VoiceParam) == 0x78);
