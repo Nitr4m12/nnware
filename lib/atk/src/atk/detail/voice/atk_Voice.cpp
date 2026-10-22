@@ -66,6 +66,7 @@ bool Voice::AllocVoice(uint32_t priority) {
 
 void Voice::Free() {
     m_State = VoiceState_Stop;
+
     if (m_pLowLevelVoice == nullptr)
         return;
 
@@ -75,10 +76,38 @@ void Voice::Free() {
 
 void Voice::SetPriority(uint32_t priority) {
     m_Priority = priority;
+
     if (m_pLowLevelVoice == nullptr)
         return;
 
     m_pLowLevelVoice->SetPriority(priority);
+}
+
+void Voice::SetState(VoiceState state) {
+    m_State = state;
+
+    if (m_pLowLevelVoice == nullptr)
+        return;
+
+    switch (m_State) {
+    case VoiceState_Play:
+        m_pLowLevelVoice->SetSampleRate(m_SampleRate);
+        m_pLowLevelVoice->SetSampleFormat(m_SampleFormat);
+        m_pLowLevelVoice->SetAdpcmParam(m_AdpcmParam);
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+        m_pLowLevelVoice->SetSubMixIndex(m_SubMixIndex);
+#else
+        m_pLowLevelVoice->SetOutputReceiver(m_pOutputReceiver);
+#endif
+        break;
+    case VoiceState_Stop:
+        m_pLowLevelVoice->FreeAllWaveBuffer();
+        break;
+    case VoiceState_Pause:
+        break;
+    }
+
+    m_pLowLevelVoice->SetState(state);
 }
 
 }  // namespace nn::atk::detail
