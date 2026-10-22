@@ -17,4 +17,6 @@ const OutputMix DefaultTvMix{
 
 Voice::Voice() = default;
 
+Voice::~Voice() = default;
+
 }  // namespace nn::atk::detail
