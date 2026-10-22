@@ -1,3 +1,4 @@
+#include <cstddef>
 #include <nn/atk/atk_LowLevelVoice.h>
 
 #include <nn/audio.h>
@@ -535,6 +536,11 @@ void LowLevelVoiceAllocator::UpdateAllVoiceState(OutputMode outputMode) {
     }
 
     m_DroppedVoiceCount = droppedVoiceCount;
+}
+
+ptrdiff_t LowLevelVoiceAllocator::GetVoiceArrayIndex(LowLevelVoice* pVoice) {
+    return (reinterpret_cast<ptrdiff_t>(pVoice) - reinterpret_cast<ptrdiff_t>(m_pVoiceArray)) /
+           LowLevelVoiceAlignedSize;
 }
 
 }  // namespace nn::atk::detail
