@@ -1,5 +1,7 @@
 #include <nn/atk/atk_Voice.h>
 
+#include <nn/atk/atk_HardwareManager.h>
+
 namespace nn::atk::detail {
 
 namespace {
@@ -20,8 +22,8 @@ Voice::Voice() = default;
 Voice::~Voice() = default;
 
 void Voice::Initialize(uint32_t priority) {
-    m_Priority = priority;
     m_State = VoiceState_Stop;
+    m_Priority = priority;
 
     m_VoiceParam.Initialize();
     m_VoiceParam.m_TvMix = DefaultTvMix;
@@ -46,6 +48,20 @@ bool Voice::IsAvailable() const {
         return false;
 
     return m_pLowLevelVoice->IsAvailable();
+}
+
+bool Voice::AllocVoice(uint32_t priority) {
+    LowLevelVoice* lowLevelVoice{
+        driver::HardwareManager::GetInstance().GetLowLevelVoiceAllocator().AllocVoice(),
+    };
+    if (lowLevelVoice == nullptr)
+        return false;
+
+    lowLevelVoice->SetPriority(priority);
+    lowLevelVoice->SetVoice(this);
+    m_pLowLevelVoice = lowLevelVoice;
+    Initialize(priority);
+    return true;
 }
 
 }  // namespace nn::atk::detail
