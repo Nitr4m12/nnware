@@ -538,6 +538,24 @@ void LowLevelVoiceAllocator::UpdateAllVoiceState(OutputMode outputMode) {
     m_DroppedVoiceCount = droppedVoiceCount;
 }
 
+LowLevelVoice* LowLevelVoiceAllocator::AllocVoice() {
+    if (m_UsingCount >= m_VoiceCount)
+        return nullptr;
+
+    {
+        const int assignTableIndex{m_UsingCount};
+        m_UsingCount += 1;
+
+        LowLevelVoice* pVoice{m_ppVoiceTable[assignTableIndex]};
+        const ptrdiff_t voiceArrayIndex{GetVoiceArrayIndex(pVoice)};
+
+        m_pAssignedTableIndex[voiceArrayIndex] = assignTableIndex;
+
+        pVoice->Initialize();
+        return pVoice;
+    }
+}
+
 ptrdiff_t LowLevelVoiceAllocator::GetVoiceArrayIndex(LowLevelVoice* pVoice) {
     return (reinterpret_cast<ptrdiff_t>(pVoice) - reinterpret_cast<ptrdiff_t>(m_pVoiceArray)) /
            LowLevelVoiceAlignedSize;
