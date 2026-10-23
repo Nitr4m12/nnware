@@ -102,4 +102,12 @@ void* OutputAdditionalParam::GetBufferAddr() {
     return m_pVolumeThroughModePacket;
 }
 
+SendArray* OutputAdditionalParam::GetAdditionalSendAddr() {
+    return m_pAdditionalSend;
+}
+
+const SendArray* const OutputAdditionalParam::GetAdditionalSendAddr() const {
+    return m_pAdditionalSend;
+}
+
 }  // namespace nn::atk::detail
