@@ -220,11 +220,10 @@ void MultiVoice::CalcMix() {
 
         {
             OutputMix tvMix;
-#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
-            CalcMixImpl(&tvMix, OutputDeviceIndex_Main, m_TvParam, preMix);
-#else
-            CalcMixImpl(&tvMix, OutputDeviceIndex_Main, m_TvParam, m_pTvAdditionalParam, preMix);
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+            tvMix.Initialize();
 #endif
+            CalcTvMix(&tvMix, preMix);
             voice.SetTvMix(tvMix);
         }
     }
@@ -242,6 +241,15 @@ void MultiVoice::CalcLpf() {
             voice.SetMonoFilter(true, freq);
     }
 }
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+void MultiVoice::CalcTvMix(OutputMix *mix, const PreMixVolume &preMix) {
+    CalcMixImpl(mix, OutputDeviceIndex_Main, m_TvParam, preMix);
+}
+#else
+void MultiVoice::CalcTvMix(OutputMix *mix, const PreMixVolume &preMix) {
+    CalcMixImpl(mix, OutputDeviceIndex_Main, m_TvParam, m_pTvAdditionalParam, preMix);
+}
+#endif
 
 void MultiVoice::StopAllSdkVoice() {
     for (int32_t channelIndex{0}; channelIndex < m_ChannelCount; ++channelIndex)
