@@ -183,8 +183,10 @@ float OutputAdditionalParam::GetBinaryVolume() const {
 }
 
 void OutputAdditionalParam::SetBinaryVolume(float volume) {
-    if (m_pVolumeThroughModePacket != nullptr)
-        m_pVolumeThroughModePacket->SetBinaryVolume(volume);
+    if (!IsVolumeThroughModeEnabled())
+        return;
+
+    m_pVolumeThroughModePacket->SetBinaryVolume(volume);
 }
 
 uint8_t OutputAdditionalParam::TryGetVolumeThroughMode(int32_t bus) const {
@@ -203,6 +205,13 @@ void OutputAdditionalParam::TrySetVolumeThroughMode(int32_t bus, uint8_t mode) {
 
 bool OutputAdditionalParam::IsVolumeThroughModeEnabled() const {
     return m_pVolumeThroughModePacket != nullptr;
+}
+
+bool OutputAdditionalParam::IsVolumeThroughModeUsed() const {
+    if (!IsVolumeThroughModeEnabled())
+        return false;
+
+    return m_pVolumeThroughModePacket->IsVolumeThroughModeUsed();
 }
 
 }  // namespace nn::atk::detail
