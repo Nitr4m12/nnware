@@ -81,7 +81,7 @@ void OutputAdditionalParam::Finalize() {
     }
 }
 
-void OutputAdditionalParam::Reset(){
+void OutputAdditionalParam::Reset() {
     if (m_pAdditionalSend != nullptr)
         m_pAdditionalSend->Reset();
 
@@ -90,6 +90,16 @@ void OutputAdditionalParam::Reset(){
 
     if (m_pVolumeThroughModePacket)
         m_pVolumeThroughModePacket->Reset();
+}
+
+void* OutputAdditionalParam::GetBufferAddr() {
+    if (m_pAdditionalSend != nullptr)
+        return m_pAdditionalSend;
+
+    if (m_pBusMixVolumePacket != nullptr)
+        return m_pBusMixVolumePacket;
+
+    return m_pVolumeThroughModePacket;
 }
 
 }  // namespace nn::atk::detail
