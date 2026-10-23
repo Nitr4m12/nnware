@@ -130,4 +130,12 @@ void OutputAdditionalParam::TrySetAdditionalSend(int32_t bus, float send) {
     m_pAdditionalSend->TrySetValue(Util::GetAdditionalSendIndex(bus), send);
 }
 
+BusMixVolumePacket* OutputAdditionalParam::GetBusMixVolumePacketAddr() {
+    return m_pBusMixVolumePacket;
+}
+
+const BusMixVolumePacket* const OutputAdditionalParam::GetBusMixVolumePacketAddr() const {
+    return m_pBusMixVolumePacket;
+}
+
 }  // namespace nn::atk::detail
