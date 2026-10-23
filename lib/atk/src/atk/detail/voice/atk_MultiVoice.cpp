@@ -165,6 +165,14 @@ void MultiVoice::UpdateVoiceStatus() {
     }
 }
 
+void MultiVoice::Pause(bool flag) {
+    if (m_IsPause == flag)
+        return;
+
+    m_IsPause = flag;
+    m_SyncFlag |= UpdatePause;
+}
+
 void MultiVoice::InitParam(VoiceCallback callback, void* callbackData) {
     m_SyncFlag = 0;
     m_pLastWaveBuffer = nullptr;
