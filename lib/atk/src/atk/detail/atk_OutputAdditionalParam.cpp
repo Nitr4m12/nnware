@@ -1,5 +1,7 @@
 #include <nn/atk/atk_OutputAdditionalParam.h>
 
+#include <nn/atk/atk_Util.h>
+
 namespace {
 
 int32_t GetAdditionalBusCount(int32_t busCount) {
@@ -108,6 +110,13 @@ SendArray* OutputAdditionalParam::GetAdditionalSendAddr() {
 
 const SendArray* const OutputAdditionalParam::GetAdditionalSendAddr() const {
     return m_pAdditionalSend;
+}
+
+float OutputAdditionalParam::TryGetAdditionalSend(int32_t bus) const {
+    if (bus < 4)
+        return 0.0f;
+
+    return m_pAdditionalSend->TryGetValue(Util::GetAdditionalSendIndex(bus));
 }
 
 }  // namespace nn::atk::detail

@@ -292,7 +292,10 @@ public:
     static int GetSubMixBus(int bus);
     static int GetOutputReceiverMixBufferIndex(const OutputReceiver* pOutputReceiver, int bus,
                                                int channel);
-    static int GetAdditionalSendIndex(int bus);
+
+    static int GetAdditionalSendIndex(int bus) {
+        return bus - 4;
+    }
 
     class WarningLogger : public Singleton<WarningLogger> {
     public:
