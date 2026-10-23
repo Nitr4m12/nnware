@@ -271,6 +271,29 @@ void MultiVoice::CalcLpf() {
             voice.SetMonoFilter(true, freq);
     }
 }
+
+void MultiVoice::CalcBiquadFilter() {
+    for (int channelIndex{0}; channelIndex < m_ChannelCount; ++channelIndex) {
+        Voice& voice{m_Voice[channelIndex]};
+
+        const BiquadFilterCallback* cb{
+            HardwareManager::GetInstance().GetBiquadFilterCallback(m_BiquadType),
+        };
+
+        if (cb != nullptr) {
+            if (m_BiquadValue <= 0.0) {
+                voice.SetBiquadFilter(false, nullptr);
+            } else {
+                BiquadFilterCallback::Coefficients coef;
+                cb->GetCoefficients(&coef, m_BiquadType, m_BiquadValue);
+                voice.SetBiquadFilter(true, &coef);
+            }
+        } else {
+            voice.SetBiquadFilter(false, nullptr);
+        }
+    }
+}
+
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
 void MultiVoice::CalcTvMix(OutputMix* mix, const PreMixVolume& preMix) {
     CalcMixImpl(mix, OutputDeviceIndex_Main, m_TvParam, preMix);
