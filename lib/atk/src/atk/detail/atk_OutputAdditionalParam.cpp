@@ -187,4 +187,11 @@ void OutputAdditionalParam::SetBinaryVolume(float volume) {
         m_pVolumeThroughModePacket->SetBinaryVolume(volume);
 }
 
+uint8_t OutputAdditionalParam::TryGetVolumeThroughMode(int32_t bus) const {
+    if (bus < 0)
+        return 0;
+
+    return m_pVolumeThroughModePacket->TryGetVolumeThroughMode(bus);
+}
+
 }  // namespace nn::atk::detail
