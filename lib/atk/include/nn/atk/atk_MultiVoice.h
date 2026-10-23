@@ -8,14 +8,17 @@
 
 namespace nn::atk::detail::driver {
 
-class MultiVoiceManager;
-
 class MultiVoice {
+    NN_NO_COPY(MultiVoice);
+
 public:
-    struct PreMixVolume {
-        float volume[24];
-    };
-    static_assert(sizeof(PreMixVolume) == 0x60);
+    static const int32_t UpdateStart{1 << 0};
+    static const int32_t UpdatePause{1 << 1};
+    static const int32_t UpdateSrc{1 << 2};
+    static const int32_t UpdateMix{1 << 3};
+    static const int32_t UpdateLpf{1 << 4};
+    static const int32_t UpdateBiquad{1 << 5};
+    static const int32_t UpdateVe{1 << 6};
 
     enum VoiceCallbackStatus {
         VoiceCallbackStatus_FinishWave,
@@ -26,36 +29,28 @@ public:
 
     using VoiceCallback = void (*)(MultiVoice*, VoiceCallbackStatus, void*);
 
-    constexpr static uint32_t UpdateStart = 0b0000001;
-    constexpr static uint32_t UpdatePause = 0b0000010;
-    constexpr static uint32_t UpdateSrc = 0b0000100;
-    constexpr static uint32_t UpdateMix = 0b0001000;
-    constexpr static uint32_t UpdateLpf = 0b0010000;
-    constexpr static uint32_t UpdateBiquad = 0b0100000;
-    constexpr static uint32_t UpdateVe = 0b1000000;
+    static const float VolumeMin;
+    static const float VolumeDefault;
+    static const float VolumeMax;
 
-    constexpr static uint32_t PriorityNoDrop = 255;
+    static const float PanLeft;
+    static const float PanCenter;
+    static const float PanRight;
 
-    constexpr static float VolumeMin = 0.0;
-    constexpr static float VolumeDefault = 1.0;
-    constexpr static float VolumeMax = 2.0;
+    static const float SpanFront;
+    static const float SpanCenter;
+    static const float SpanRear;
 
-    constexpr static float PanLeft = -1.0;
-    constexpr static float PanCenter = 0.0;
-    constexpr static float PanRight = 1.0;
+    static const float CutoffFreqMin;
+    static const float CutoffFreqMax;
 
-    constexpr static float SpanFront = 0.0;
-    constexpr static float SpanCenter = 1.0;
-    constexpr static float SpanRear = 2.0;
+    static const float BiquadValueMin;
+    static const float BiquadValueMax;
 
-    constexpr static float CutoffFreqMin = 0.0;
-    constexpr static float CutoffFreqMax = 1.0;
+    static const float SendMin;
+    static const float SendMax;
 
-    constexpr static float BiquadValueMin = 0.0;
-    constexpr static float BiquadValueMax = 1.0;
-
-    constexpr static float SendMin = 0.0;
-    constexpr static float SendMax = 1.0;
+    static const uint32_t PriorityNoDrop{255};
 
     MultiVoice();
 #if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
@@ -64,101 +59,91 @@ public:
     ~MultiVoice();
 
     bool Alloc(int32_t channelCount, int32_t priority, VoiceCallback callback, void* callbackData);
-    void InitParam(VoiceCallback callback, void* callbackData);
     void Free();
 
     void Start();
     void Stop();
-    void StopAllSdkVoice();
-
     void UpdateVoiceStatus();
-
-    bool IsPlayFinished() const;
-
     void Pause(bool flag);
 
     void Calc();
-    void CalcSrc(bool);
-    void CalcVe();
-    void CalcMix();
-    void CalcLpf();
-    void CalcBiquadFilter();
 
     void Update();
 
-    void RunAllSdkVoice();
-    void PauseAllSdkVoice();
+    bool IsActive() const { return m_IsActive; }
+    bool IsRun() const;
+    bool IsPause() const { return m_IsPause; }
+    bool IsPlayFinished() const;
 
     void SetSampleFormat(SampleFormat format);
     void SetSampleRate(int32_t sampleRate);
+
+    float GetVolume() const { return m_Volume; }
     void SetVolume(float volume);
+
+    float GetPitch() const { return m_Pitch; }
     void SetPitch(float pitch);
+
     void SetPanMode(PanMode panMode);
     void SetPanCurve(PanCurve panCurve);
+
+    float GetLpfFreq() const { return m_LpfFreq; }
     void SetLpfFreq(float lpfFreq);
+
+    int32_t GetBiquadType() const { return m_BiquadType; }
+    float GetBiquadValue() const { return m_BiquadValue; }
     void SetBiquadFilter(int32_t type, float value);
+
+    int32_t GetPriority() const { return m_Priority; }
     void SetPriority(int32_t priority);
+
+    void SetInterpolationType(uint8_t interpolationType);
+
+    int32_t GetSdkVoiceCount() const { return m_ChannelCount; }
+
+    const Voice& detail_GetSdkVoice(int32_t channelIndex) const;
+
     void SetOutputLine(uint32_t lineFlag);
-    void SetOutputParamImpl(const OutputParam& in, const OutputParam& out);
-#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
-    void SetOutputAdditionalParamImpl(const SendArray* pAdditionalSend,
-                                      const BusMixVolumePacket* pBusMixVolumePacket,
-                                      const OutputBusMixVolume* pBusMixVolume,
-                                      const VolumeThroughModePacket* pVolumeThroughModePacket);
-#endif
-    void SetOutputBusMixVolumeImpl(const BusMixVolumePacket& in,
-                                   const OutputBusMixVolume& busMixVolume,
-                                   const BusMixVolumePacket& out);
-    void SetOutputVolumeThroughModePacketImpl(const VolumeThroughModePacket&,
-                                              const VolumeThroughModePacket&);
+    uint32_t GetOutputLine() const { return m_OutputLineFlag; }
+
     void SetTvParam(const OutputParam& param);
+    const OutputParam& GetTvParam() const { return m_TvParam; }
+
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    void SetSubMixIndex(int32_t subMixIndex);
+#endif
+
 #if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
     void SetTvAdditionalParam(const OutputAdditionalParam& param);
+
     void SetTvAdditionalParam(const SendArray* pAdditionalSend,
                               const BusMixVolumePacket* pBusMixVolumePacket,
                               const OutputBusMixVolume* pBusMixVolume,
                               const VolumeThroughModePacket* pVolumeThroughModePacket);
-    void SetOutputReceiver(OutputReceiver* pOutputReceiver);
+
+    const OutputAdditionalParam* const GetTvAdditionalParamAddr() const {
+        return m_pTvAdditionalParam;
+    }
 #endif
-    void SetSubMixIndex(int32_t subMixIndex);
-
-    void SetUpdateType(UpdateType updateType) { m_UpdateType = updateType; }
-    UpdateType GetUpdateType() const { return m_UpdateType; }
-
-#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
-    void CalcPreMixVolume(PreMixVolume* mix, const OutputParam& param, int32_t channelIndex,
-                          OutputDevice device);
-#else
-    void CalcPreMixVolume(PreMixVolume* mix, const OutputParam& param,
-                          OutputAdditionalParam* pAdditionalParam, int32_t channelIndex,
-                          OutputDevice device);
-#endif
-    void CalcTvMix(OutputMix* mix, const PreMixVolume& pre);
-    void CalcMixImpl(OutputMix* mix, uint32_t outputDeviceIndex, const OutputParam& param,
-                     const PreMixVolume& pre);
-#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
-    void CalcMixImpl(OutputMix* mix, uint32_t outputDeviceIndex, const OutputParam& param,
-                     OutputAdditionalParam* pAdditionalParam, const PreMixVolume& pre);
-#endif
-
-    MultiVoice* detail_GetSdkVoice(int32_t) const;
-
-    int GetSdkVoiceCount() const { return m_ChannelCount; }
 
     position_t GetCurrentPlayingSample() const;
     SampleFormat GetFormat() const;
 
-    bool IsRun() const;
+    static size_t FrameToByte(position_t sample, SampleFormat format);
 
-    void SetInterpolationType(uint8_t interpolationType);
+    static void CalcOffsetAdpcmParam(AdpcmContext* context, const AdpcmParam& param,
+                                     position_t offsetSamples, const void* dataAddress);
 
     void AppendWaveBuffer(int32_t channelIndex, WaveBuffer* pBuffer, bool lastFlag);
 
     void SetAdpcmParam(int32_t channelIndex, const AdpcmParam& param);
 
-    static uint64_t FrameToByte(int64_t, SampleFormat);
-    static void CalcOffsetAdpcmParam(AdpcmContext* context, const AdpcmParam& param,
-                                     position_t offsetSamples, const void* dataAddress);
+    void SetUpdateType(UpdateType updateType) { m_UpdateType = updateType; }
+    UpdateType GetUpdateType() const { return m_UpdateType; }
+
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+    void SetOutputReceiver(OutputReceiver* pOutputReceiver);
+#endif
 
     os::Tick GetProcessTick(const SoundProfile& profile) {
         os::Tick totalTick{0};
@@ -170,20 +155,68 @@ public:
     }
 
 private:
-    friend MultiVoiceManager;
+    struct PreMixVolume {
+        float volume[OutputMix::ChannelCountMax];
+    };
+    static_assert(sizeof(PreMixVolume) == 0x60);
 
-    Voice m_Voice[2];
-    int32_t m_ChannelCount;
-    VoiceCallback m_Callback;
+    void InitParam(VoiceCallback callback, void* callbackData);
+
+    void CalcSrc(bool initialUpdate);
+    void CalcVe();
+    void CalcMix();
+    void CalcLpf();
+    void CalcBiquadFilter();
+
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    void CalcPreMixVolume(PreMixVolume* mix, const OutputParam& param, int32_t channelIndex,
+                          OutputDevice device);
+#else
+    void CalcPreMixVolume(PreMixVolume* mix, const OutputParam& param,
+                          const OutputAdditionalParam* const pAdditionalParam, int32_t channelIndex,
+                          OutputDevice device);
+#endif
+
+    void CalcTvMix(OutputMix* mix, const PreMixVolume& preMix);
+
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    void CalcMixImpl(OutputMix* mix, uint32_t outputDeviceIndex, const OutputParam& param,
+                     const PreMixVolume& pre);
+#else
+    void CalcMixImpl(OutputMix* mix, uint32_t outputDeviceIndex, const OutputParam& param,
+                     OutputAdditionalParam* pAdditionalParam, const PreMixVolume& pre);
+#endif
+
+    void RunAllSdkVoice();
+    void StopAllSdkVoice();
+    void PauseAllSdkVoice();
+
+    void SetOutputParamImpl(const OutputParam& in, const OutputParam& out);
+
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+    void
+    SetOutputAdditionalParamImpl(const SendArray* const pAdditionalSend,
+                                 const BusMixVolumePacket* const pBusMixVolumePacket,
+                                 const OutputBusMixVolume* const pBusMixVolume,
+                                 const VolumeThroughModePacket* const pVolumeThroughModePacket);
+    void SetOutputBusMixVolumeImpl(const BusMixVolumePacket& in,
+                                   const OutputBusMixVolume& busMixVolume, BusMixVolumePacket& out);
+    void SetOutputVolumeThroughModePacketImpl(const VolumeThroughModePacket& in,
+                                              VolumeThroughModePacket& out);
+#endif
+
+    Voice m_Voice[WaveChannelMax];
+    int32_t m_ChannelCount{0};
+    VoiceCallback m_Callback{};
     void* m_pCallbackData;
-    bool m_IsActive;
-    bool m_IsStart;
-    bool m_IsStarted;
-    bool m_IsPause;
+    bool m_IsActive{false};
+    bool m_IsStart{false};
+    bool m_IsStarted{false};
+    bool m_IsPause{false};
     bool m_IsPausing;
     bool m_IsInitialized;
     WaveBuffer* m_pLastWaveBuffer;
-    uint16_t m_SyncFlag;
+    uint16_t m_SyncFlag{0};
     uint8_t m_BiquadType;
     bool m_IsEnableFrontBypass;
     float m_Volume;
@@ -196,14 +229,16 @@ private:
     uint32_t m_OutputLineFlag;
     OutputParam m_TvParam;
 #if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
-    OutputAdditionalParam* m_pTvAdditionalParam;
+    OutputAdditionalParam* m_pTvAdditionalParam{};
 #endif
     SampleFormat m_Format;
-    std::uintptr_t m_VoiceUser;
-    UpdateType m_UpdateType;
+    uintptr_t m_VoiceUser;
+    UpdateType m_UpdateType{UpdateType_AudioFrame};
 #if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
-    OutputReceiver* m_pOutputReceiver;
+    OutputReceiver* m_pOutputReceiver{};
 #endif
+
+public:
     util::IntrusiveListNode m_LinkNode;
 };
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
