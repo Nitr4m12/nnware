@@ -284,6 +284,13 @@ void MultiVoice::SetPanCurve(PanCurve panCurve) {
     }
 }
 
+void MultiVoice::SetLpfFreq(float lpfFreq) {
+    if (m_LpfFreq != lpfFreq) {
+        m_LpfFreq = lpfFreq;
+        m_SyncFlag |= UpdateLpf;
+    }
+}
+
 void MultiVoice::InitParam(VoiceCallback callback, void* callbackData) {
     m_SyncFlag = 0;
     m_pLastWaveBuffer = nullptr;
