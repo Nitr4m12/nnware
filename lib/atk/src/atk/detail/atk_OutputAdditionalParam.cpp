@@ -138,4 +138,12 @@ const BusMixVolumePacket* const OutputAdditionalParam::GetBusMixVolumePacketAddr
     return m_pBusMixVolumePacket;
 }
 
+float OutputAdditionalParam::GetBusMixVolume(int32_t waveChannel, int32_t mixChannel) const {
+    return m_pBusMixVolumePacket->GetBusMixVolume(waveChannel, mixChannel);
+}
+
+const OutputBusMixVolume& OutputAdditionalParam::GetBusMixVolume() const {
+    return m_pBusMixVolumePacket->GetBusMixVolume();
+}
+
 }  // namespace nn::atk::detail
