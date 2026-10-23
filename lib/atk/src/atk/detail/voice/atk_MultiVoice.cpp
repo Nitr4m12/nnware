@@ -254,6 +254,15 @@ void MultiVoice::SetSampleRate(int32_t sampleRate) {
         m_Voice[i].SetSampleRate(sampleRate);
 }
 
+void MultiVoice::SetVolume(float volume) {
+    volume = volume < 0 ? 0 : volume;
+
+    if (volume != m_Volume) {
+        m_Volume = volume;
+        m_SyncFlag |= UpdateVe;
+    }
+}
+
 void MultiVoice::InitParam(VoiceCallback callback, void* callbackData) {
     m_SyncFlag = 0;
     m_pLastWaveBuffer = nullptr;
