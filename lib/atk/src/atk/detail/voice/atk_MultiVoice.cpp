@@ -1,4 +1,5 @@
 #include <nn/atk/atk_MultiVoice.h>
+#include "nn/atk/fnd/basis/atkfnd_Inlines.h"
 
 namespace nn::atk::detail::driver {
 
@@ -59,6 +60,39 @@ MultiVoice::MultiVoice(OutputAdditionalParam* pAdditionalParam)
 MultiVoice::~MultiVoice() {
     for (int channelIndex{0}; channelIndex < m_ChannelCount; ++channelIndex)
         m_Voice[channelIndex].Free();
+}
+
+bool MultiVoice::Alloc(int32_t channelCount, int32_t priority, VoiceCallback callback,
+                       void* callbackData) {
+    channelCount = fnd::Clamp(channelCount, 1, 2);
+    m_ChannelCount = 0;
+
+    int allocCount{0};
+
+    for (int i{0}; i < channelCount; ++i) {
+        if (!m_Voice[i].AllocVoice(priority))
+            break;
+
+        ++allocCount;
+    }
+
+    if (allocCount != channelCount) {
+        for (int i{0}; i < allocCount; ++i)
+            m_Voice[i].Free();
+
+        return false;
+    }
+
+    m_ChannelCount = allocCount;
+    InitParam(callback, callbackData);
+
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+    if (m_pTvAdditionalParam != nullptr)
+        m_pTvAdditionalParam->Reset();
+#endif
+
+    m_IsActive = true;
+    return true;
 }
 
 void MultiVoice::InitParam(VoiceCallback callback, void* callbackData) {
