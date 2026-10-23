@@ -485,6 +485,13 @@ void MultiVoice::SetTvParam(const OutputParam& param) {
     SetOutputParamImpl(param, m_TvParam);
 }
 
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+void MultiVoice::SetSubMixIndex(int32_t subMixIndex) {
+    for (int channelIndex{0}; channelIndex < m_ChannelCount; ++channelIndex)
+        m_Voice[channelIndex].SetSubMixIndex(subMixIndex);
+}
+#endif
+
 #if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
 void MultiVoice::SetTvAdditionalParam(const OutputAdditionalParam& param) {
     if (param.IsBusMixVolumeEnabled()) {
@@ -505,12 +512,12 @@ void MultiVoice::SetTvAdditionalParam(const SendArray* pAdditionalSend,
     SetOutputAdditionalParamImpl(pAdditionalSend, pBusMixVolumePacket, pBusMixVolume,
                                  pVolumeThroughModePacket);
 }
-#endif
 
-#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
-void MultiVoice::SetSubMixIndex(int32_t subMixIndex) {
-    for (int channelIndex{0}; channelIndex < m_ChannelCount; ++channelIndex)
-        m_Voice[channelIndex].SetSubMixIndex(subMixIndex);
+void MultiVoice::SetOutputReceiver(OutputReceiver* pOutputReceiver) {
+    for (int channelIndex{0}; channelIndex < m_ChannelCount; ++channelIndex) {
+        m_Voice[channelIndex].SetOutputReceiver(pOutputReceiver);
+        m_pOutputReceiver = pOutputReceiver;
+    }
 }
 #endif
 
