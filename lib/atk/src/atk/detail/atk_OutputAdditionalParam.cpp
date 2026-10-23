@@ -154,4 +154,8 @@ void OutputAdditionalParam::SetBusMixVolume(const OutputBusMixVolume& param) {
     m_pBusMixVolumePacket->SetBusMixVolume(param);
 }
 
+bool OutputAdditionalParam::IsBusMixVolumeUsed() const {
+    return m_pBusMixVolumePacket->IsUsed();
+}
+
 }  // namespace nn::atk::detail
