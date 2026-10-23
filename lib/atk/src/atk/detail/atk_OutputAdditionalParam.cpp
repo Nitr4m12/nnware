@@ -81,4 +81,15 @@ void OutputAdditionalParam::Finalize() {
     }
 }
 
+void OutputAdditionalParam::Reset(){
+    if (m_pAdditionalSend != nullptr)
+        m_pAdditionalSend->Reset();
+
+    if (m_pBusMixVolumePacket != nullptr)
+        m_pBusMixVolumePacket->Reset();
+
+    if (m_pVolumeThroughModePacket)
+        m_pVolumeThroughModePacket->Reset();
+}
+
 }  // namespace nn::atk::detail
