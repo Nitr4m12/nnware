@@ -109,6 +109,12 @@ void MultiVoice::Free() {
     m_IsActive = false;
 }
 
+void MultiVoice::Start() {
+    m_IsStart = true;
+    m_IsPause = false;
+    m_SyncFlag |= UpdateStart;
+}
+
 void MultiVoice::InitParam(VoiceCallback callback, void* callbackData) {
     m_SyncFlag = 0;
     m_pLastWaveBuffer = nullptr;
