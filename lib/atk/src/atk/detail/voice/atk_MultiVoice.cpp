@@ -318,6 +318,13 @@ void MultiVoice::SetPriority(int32_t priority) {
         m_Voice[channelIndex].SetPriority(m_Priority);
 }
 
+void MultiVoice::SetOutputLine(uint32_t lineFlag) {
+    if (m_OutputLineFlag != lineFlag) {
+        m_OutputLineFlag = lineFlag;
+        m_SyncFlag |= UpdateMix;
+    }
+}
+
 void MultiVoice::InitParam(VoiceCallback callback, void* callbackData) {
     m_SyncFlag = 0;
     m_pLastWaveBuffer = nullptr;
