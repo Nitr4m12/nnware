@@ -126,6 +126,45 @@ void MultiVoice::Stop() {
     m_IsStart = false;
 }
 
+void MultiVoice::UpdateVoiceStatus() {
+    if (!m_IsActive || !m_IsStarted)
+        return;
+
+    if (IsPlayFinished()) {
+        if (m_Callback)
+            m_Callback(this, VoiceCallbackStatus_FinishWave, m_pCallbackData);
+
+        m_IsStart = false;
+        m_IsStarted = false;
+    } else {
+        bool dropFlag{false};
+        for (int ch{0}; ch < m_ChannelCount; ++ch) {
+            if (!m_Voice[ch].IsAvailable()) {
+                dropFlag = true;
+                break;
+            }
+        }
+
+        if (!dropFlag)
+            return;
+
+        for (int ch{0}; ch < m_ChannelCount; ++ch) {
+            m_Voice[ch].Free();
+        }
+
+        m_ChannelCount = 0;
+        m_IsActive = false;
+
+        MultiVoiceManager::GetInstance().FreeVoice(this);
+
+        if (m_Callback)
+            m_Callback(this, VoiceCallbackStatus_DropDsp, m_pCallbackData);
+
+        m_IsStart = false;
+        m_IsStarted = false;
+    }
+}
+
 void MultiVoice::InitParam(VoiceCallback callback, void* callbackData) {
     m_SyncFlag = 0;
     m_pLastWaveBuffer = nullptr;
