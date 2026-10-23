@@ -314,6 +314,11 @@ void MultiVoice::StopAllSdkVoice() {
         m_Voice[channelIndex].SetState(VoiceState_Stop);
 }
 
+void MultiVoice::PauseAllSdkVoice() {
+    for (int32_t channelIndex{0}; channelIndex < m_ChannelCount; ++channelIndex)
+        m_Voice[channelIndex].SetState(VoiceState_Pause);
+}
+
 bool MultiVoice::IsPlayFinished() const {
     if (m_ChannelCount <= 0)
         return false;
