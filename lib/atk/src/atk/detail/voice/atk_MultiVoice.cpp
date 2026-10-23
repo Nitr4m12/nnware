@@ -121,8 +121,8 @@ void MultiVoice::Stop() {
         m_IsStarted = false;
     }
 
-    m_IsPause = false;
     m_IsPausing = false;
+    m_IsPause = false;
     m_IsStart = false;
 }
 
@@ -227,6 +227,19 @@ void MultiVoice::CalcMix() {
 #endif
             voice.SetTvMix(tvMix);
         }
+    }
+}
+
+void MultiVoice::CalcLpf() {
+    uint16_t freq{Util::CalcLpfFreq(m_LpfFreq)};
+
+    for (int channelIndex{0}; channelIndex < m_ChannelCount; ++channelIndex) {
+        Voice& voice{m_Voice[channelIndex]};
+        // 16000 = Util::CalcLpfFreqTableSize[Util::CalcLpfFreqTableSize - 1]
+        if (freq >= 16000)
+            voice.SetMonoFilter(false, 0);
+        else
+            voice.SetMonoFilter(true, freq);
     }
 }
 
