@@ -162,4 +162,8 @@ void OutputAdditionalParam::SetBusMixVolumeUsed(bool isUsed) {
     m_pBusMixVolumePacket->SetUsed(isUsed);
 }
 
+bool OutputAdditionalParam::IsBusMixVolumeEnabledForBus(int32_t bus) const {
+    return m_pBusMixVolumePacket->IsEnabled(bus);
+}
+
 }  // namespace nn::atk::detail
