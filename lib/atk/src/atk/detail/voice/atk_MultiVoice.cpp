@@ -310,6 +310,14 @@ void MultiVoice::SetBiquadFilter(int32_t type, float value) {
         m_SyncFlag |= UpdateBiquad;
 }
 
+void MultiVoice::SetPriority(int32_t priority) {
+    m_Priority = priority;
+    MultiVoiceManager::GetInstance().ChangeVoicePriority(this);
+
+    for (int channelIndex{0}; channelIndex < m_ChannelCount; ++channelIndex)
+        m_Voice[channelIndex].SetPriority(m_Priority);
+}
+
 void MultiVoice::InitParam(VoiceCallback callback, void* callbackData) {
     m_SyncFlag = 0;
     m_pLastWaveBuffer = nullptr;
