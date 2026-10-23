@@ -25,19 +25,20 @@ public:
     void* GetBufferAddr();
 
     SendArray* GetAdditionalSendAddr();
-    SendArray* GetAdditionalSendAddr() const;
-
-    float TryGetAdditionalSend(int32_t bus) const;
+    const SendArray* const GetAdditionalSendAddr() const;
 
     bool IsAdditionalSendEnabled() const;
 
+    float TryGetAdditionalSend(int32_t bus) const;
     void TrySetAdditionalSend(int32_t bus, float send);
 
     BusMixVolumePacket* GetBusMixVolumePacketAddr();
-    BusMixVolumePacket* GetBusMixVolumePacketAddr() const;
+    const BusMixVolumePacket* const GetBusMixVolumePacketAddr() const;
+
+    bool IsBusMixVolumeEnabled() const;
 
     float GetBusMixVolume(int32_t waveChannel, int32_t mixChannel) const;
-    OutputBusMixVolume* GetBusMixVolume() const;
+    const OutputBusMixVolume& GetBusMixVolume() const;
 
     void SetBusMixVolume(int32_t waveChannel, int32_t mixChannel, float volume);
     void SetBusMixVolume(const OutputBusMixVolume& param);
@@ -48,19 +49,18 @@ public:
     bool IsBusMixVolumeEnabledForBus(int32_t bus) const;
     void SetBusMixVolumeEnabledForBus(int32_t bus, bool isEnabled);
 
-    bool IsBusMixVolumeEnabled() const;
-
     VolumeThroughModePacket* GetVolumeThroughModePacketAddr();
-    VolumeThroughModePacket* GetVolumeThroughModePacketAddr() const;
+    const VolumeThroughModePacket* const GetVolumeThroughModePacketAddr() const;
+
+    bool IsVolumeThroughModeEnabled() const;
 
     float GetBinaryVolume() const;
     void SetBinaryVolume(float volume);
 
     uint8_t TryGetVolumeThroughMode(int32_t bus) const;
-    void TrySetVolumeThroughMode(int32_t bus, uint8_t volumeThroughMode);
-    bool IsVolumeThroughModeEnabled() const;
+    void TrySetVolumeThroughMode(int32_t bus, uint8_t mode);
 
-    bool IsVolumeThroughModeUsed();
+    bool IsVolumeThroughModeUsed() const;
     void SetVolumeThroughModeUsed(bool isUsed);
 
     OutputAdditionalParam& operator=(const OutputAdditionalParam& rhs);
@@ -68,7 +68,7 @@ public:
 private:
     SendArray* m_pAdditionalSend{};
     BusMixVolumePacket* m_pBusMixVolumePacket{};
-    VolumeThroughModePacket* VolumeThroughModePacket{};
+    VolumeThroughModePacket* m_pVolumeThroughModePacket{};
 };
 static_assert(sizeof(OutputAdditionalParam) == 0x18);
 
