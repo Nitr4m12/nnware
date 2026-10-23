@@ -135,4 +135,9 @@ void MultiVoice::InitParam(VoiceCallback callback, void* callbackData) {
     m_TvParam.Initialize();
 }
 
+void MultiVoice::StopAllSdkVoice() {
+    for (int32_t channelIndex{0}; channelIndex < m_ChannelCount; ++channelIndex)
+        m_Voice[channelIndex].SetState(VoiceState_Stop);
+}
+
 }  // namespace nn::atk::detail::driver
