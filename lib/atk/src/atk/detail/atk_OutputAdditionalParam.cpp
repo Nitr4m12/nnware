@@ -166,4 +166,8 @@ bool OutputAdditionalParam::IsBusMixVolumeEnabledForBus(int32_t bus) const {
     return m_pBusMixVolumePacket->IsEnabled(bus);
 }
 
+void OutputAdditionalParam::SetBusMixVolumeEnabledForBus(int32_t bus, bool isEnabled) {
+    m_pBusMixVolumePacket->SetEnabled(bus, isEnabled);
+}
+
 }  // namespace nn::atk::detail
