@@ -123,4 +123,11 @@ bool OutputAdditionalParam::IsAdditionalSendEnabled() const {
     return m_pAdditionalSend != nullptr;
 }
 
+void OutputAdditionalParam::TrySetAdditionalSend(int32_t bus, float send) {
+    if (bus < 4)
+        return;
+
+    m_pAdditionalSend->TrySetValue(Util::GetAdditionalSendIndex(bus), send);
+}
+
 }  // namespace nn::atk::detail

@@ -42,7 +42,6 @@ public:
 
     T GetValue(int index) const { return m_pValue[index]; }
 
-    // NOT_CHECKED
     bool TrySetValue(int index, T value) {
         if (index >= m_Count)
             return false;
