@@ -1,5 +1,7 @@
 #include <nn/atk/atk_MultiVoice.h>
 
+#include <algorithm>
+
 #include <nn/atk/atk_MultiVoiceManager.h>
 #include <nn/atk/fnd/basis/atkfnd_Inlines.h>
 
@@ -378,6 +380,106 @@ void MultiVoice::SetOutputParamImpl(const OutputParam& in, OutputParam& out) {
         }
     }
 }
+
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+// NON_MATCHING: requires MultiVoice::SetOutputVolumeThroughModePacketImpl and missing m_SyncFlag
+// set
+void MultiVoice::SetOutputAdditionalParamImpl(
+    const SendArray* const pAdditionalSend, const BusMixVolumePacket* const pBusMixVolumePacket,
+    const OutputBusMixVolume* const pBusMixVolume,
+    const VolumeThroughModePacket* const pVolumeThroughModePacket) {
+    if (m_pTvAdditionalParam == nullptr)
+        return;
+
+    if (pAdditionalSend != nullptr && m_pTvAdditionalParam->IsAdditionalSendEnabled()) {
+        const int BusCount{m_pOutputReceiver->GetBusCount()};
+        if (BusCount > DefaultBusCount) {
+            for (int i{DefaultBusCount}; i < BusCount; ++i) {
+                float send{pAdditionalSend->TryGetValue(i - 4)};
+                if (send != m_pTvAdditionalParam->TryGetAdditionalSend(i)) {
+                    m_pTvAdditionalParam->TrySetAdditionalSend(i, send);
+                    m_SyncFlag |= UpdateMix;
+                }
+            }
+        }
+    }
+
+    if (pBusMixVolume != nullptr && pBusMixVolumePacket != nullptr &&
+        m_pTvAdditionalParam->IsBusMixVolumeEnabled()) {
+        SetOutputBusMixVolumeImpl(*pBusMixVolumePacket, *pBusMixVolume,
+                                  *m_pTvAdditionalParam->GetBusMixVolumePacketAddr());
+    }
+
+    if (pVolumeThroughModePacket != nullptr && m_pTvAdditionalParam->IsVolumeThroughModeEnabled()) {
+        SetOutputVolumeThroughModePacketImpl(
+            *pVolumeThroughModePacket, *m_pTvAdditionalParam->GetVolumeThroughModePacketAddr());
+    }
+}
+
+void MultiVoice::SetOutputBusMixVolumeImpl(const BusMixVolumePacket& in,
+                                           const OutputBusMixVolume& busMixVolume,
+                                           BusMixVolumePacket& out) {
+    if (in.IsUsed() != out.IsUsed()) {
+        out.SetUsed(in.IsUsed());
+        m_SyncFlag |= UpdateMix;
+    }
+
+    if (out.IsUsed()) {
+        const int BusCount{std::min(in.GetBusCount(), out.GetBusCount())};
+        for (int i{0}; i < BusCount; ++i) {
+            if (in.IsEnabled(i) != out.IsEnabled(i)) {
+                out.SetEnabled(i, in.IsEnabled(i));
+                m_SyncFlag |= UpdateMix;
+            }
+        }
+
+        const int MixBufferCount{m_pOutputReceiver->GetBusCount() *
+                                 m_pOutputReceiver->GetChannelCount()};
+        for (int i{0}; i < WaveChannelMax; ++i) {
+            for (int j{0}; j < MixBufferCount; ++j) {
+                if (busMixVolume.volume[i][j] != out.GetBusMixVolume(i, j)) {
+                    out.SetBusMixVolume(i, j, busMixVolume.volume[i][j]);
+                    m_SyncFlag |= UpdateMix;
+                }
+            }
+        }
+    }
+}
+
+// WIP
+void MultiVoice::SetOutputVolumeThroughModePacketImpl(const VolumeThroughModePacket& in,
+                                                      VolumeThroughModePacket& out) {
+    bool isChanged{false};
+    bool volumeThroughModeUsed{in.IsVolumeThroughModeUsed()};
+    if (volumeThroughModeUsed != out.IsVolumeThroughModeUsed()) {
+        out.SetVolumeThroughModeUsed(volumeThroughModeUsed);
+        if (!out.IsVolumeThroughModeUsed()) {
+            m_SyncFlag |= (UpdateVe | UpdateMix);
+            return;
+        }
+        isChanged = true;
+    } else {
+        m_SyncFlag |= (UpdateVe | UpdateMix);
+        return;
+    }
+
+    float volume{in.GetBinaryVolume()};
+    volume = volume < 0 ? 0 : volume;
+    if (volume != out.GetBinaryVolume()) {
+        out.SetBinaryVolume(volume);
+        m_SyncFlag |= (UpdateVe | UpdateMix);
+    }
+
+    const int BusCount{m_pOutputReceiver->GetBusCount()};
+    for (int i{0}; i < BusCount; ++i) {
+        uint8_t volumeThroughMode{in.TryGetVolumeThroughMode(i)};
+        if (volumeThroughMode != out.TryGetVolumeThroughMode(i)) {
+            out.TrySetVolumeThroughMode(i, volumeThroughMode);
+            m_SyncFlag |= UpdateMix;
+        }
+    }
+}
+#endif
 
 void MultiVoice::InitParam(VoiceCallback callback, void* callbackData) {
     m_SyncFlag = 0;
