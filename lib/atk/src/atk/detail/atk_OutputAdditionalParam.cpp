@@ -29,4 +29,41 @@ size_t OutputAdditionalParam::GetRequiredMemSize(const SoundInstanceConfig& conf
     return result;
 }
 
+void OutputAdditionalParam::Initialize(void* buffer, [[maybe_unused]] size_t bufferSize,
+                                       const SoundInstanceConfig& config) {
+    uint8_t* ptr{static_cast<uint8_t*>(buffer)};
+
+    if (config.busCount > 4) {
+        m_pAdditionalSend = reinterpret_cast<SendArray*>(ptr);
+        new (m_pAdditionalSend) SendArray;
+        ptr += sizeof(SendArray);
+
+        const int AdditionalSendCount{GetAdditionalBusCount(config.busCount)};
+        const size_t BufferSize{SendArray::GetRequiredMemSize(AdditionalSendCount)};
+        m_pAdditionalSend->Initialize(ptr, BufferSize, AdditionalSendCount);
+
+        ptr += BufferSize;
+    }
+
+    if (config.isBusMixVolumeEnabled) {
+        m_pBusMixVolumePacket = reinterpret_cast<BusMixVolumePacket*>(ptr);
+        new (m_pBusMixVolumePacket) BusMixVolumePacket;
+        ptr += sizeof(BusMixVolumePacket);
+
+        const size_t BufferSize{BusMixVolumePacket::GetRequiredMemSize(config.busCount)};
+        m_pBusMixVolumePacket->Initialize(ptr, BufferSize, config.busCount);
+
+        ptr += BufferSize;
+    }
+
+    if (config.isVolumeThroughModeEnabled) {
+        m_pVolumeThroughModePacket = reinterpret_cast<VolumeThroughModePacket*>(ptr);
+        new (m_pVolumeThroughModePacket) VolumeThroughModePacket;
+        ptr += sizeof(VolumeThroughModePacket);
+
+        const size_t BufferSize{VolumeThroughModePacket::GetRequiredMemSize(config.busCount)};
+        m_pVolumeThroughModePacket->Initialize(ptr, BufferSize, config.busCount);
+    }
+}
+
 }  // namespace nn::atk::detail

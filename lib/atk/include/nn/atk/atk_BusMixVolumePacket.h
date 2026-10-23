@@ -8,7 +8,7 @@ struct BusMixVolumePacket {
 public:
     static size_t GetRequiredMemSize(int busCount);
 
-    BusMixVolumePacket();
+    BusMixVolumePacket() = default;
 
     bool Initialize(void* buffer, size_t size, int busCount);
     void Finalize();
@@ -39,8 +39,8 @@ public:
 
 private:
     OutputBusMixVolume m_BusMixVolume;
-    bool m_IsUsed;
-    bool* m_pIsEnabledTable;
+    bool m_IsUsed{false};
+    bool* m_pIsEnabledTable{};
     int m_BusCount;
 };
 static_assert(sizeof(BusMixVolumePacket) == 0xd8);

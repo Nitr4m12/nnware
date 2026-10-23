@@ -49,8 +49,8 @@ public:
 
 private:
     VolumeThroughModeArray m_VolumeThroughMode;
-    bool m_IsVolumeThroughModeUsed;
-    float m_BinaryVolume;
+    bool m_IsVolumeThroughModeUsed{false};
+    float m_BinaryVolume{1.0f};
 };
 static_assert(sizeof(VolumeThroughModePacket) == 0x18);
 
