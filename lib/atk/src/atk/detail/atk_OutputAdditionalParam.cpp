@@ -221,4 +221,41 @@ void OutputAdditionalParam::SetVolumeThroughModeUsed(bool isUsed) {
     m_pVolumeThroughModePacket->SetVolumeThroughModeUsed(isUsed);
 }
 
+OutputAdditionalParam& OutputAdditionalParam::operator=(const OutputAdditionalParam& rhs) {
+    if (m_pAdditionalSend != nullptr) {
+        if (rhs.m_pAdditionalSend != nullptr)
+            *m_pAdditionalSend = *rhs.m_pAdditionalSend;
+        else
+            m_pAdditionalSend->Reset();
+    }
+
+    if (m_pBusMixVolumePacket != nullptr && rhs.m_pBusMixVolumePacket != nullptr) {
+        m_pBusMixVolumePacket->SetUsed(rhs.m_pBusMixVolumePacket->IsUsed());
+        if (m_pBusMixVolumePacket->IsUsed()) {
+            m_pBusMixVolumePacket->SetBusMixVolume(rhs.m_pBusMixVolumePacket->GetBusMixVolume());
+            const int CopyCount{std::min(m_pBusMixVolumePacket->GetBusCount(),
+                                         rhs.m_pBusMixVolumePacket->GetBusCount())};
+
+            for (int i{0}; i < CopyCount; ++i) {
+                const bool isEnabled{rhs.m_pBusMixVolumePacket->IsEnabled(i)};
+                m_pBusMixVolumePacket->SetEnabled(i, isEnabled);
+            }
+
+            if (CopyCount < m_pBusMixVolumePacket->GetBusCount()) {
+                for (int i{CopyCount}; m_pBusMixVolumePacket->GetBusCount() != 0; ++i)
+                    m_pBusMixVolumePacket->SetEnabled(i, false);
+            }
+        }
+    }
+
+    if (m_pVolumeThroughModePacket != nullptr) {
+        if (rhs.m_pVolumeThroughModePacket != nullptr)
+            *m_pVolumeThroughModePacket = *rhs.m_pVolumeThroughModePacket;
+        else
+            m_pVolumeThroughModePacket->Reset();
+    }
+
+    return *this;
+}
+
 }  // namespace nn::atk::detail

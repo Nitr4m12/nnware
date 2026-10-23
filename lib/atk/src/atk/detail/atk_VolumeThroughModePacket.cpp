@@ -27,4 +27,11 @@ void VolumeThroughModePacket::Reset() {
     m_BinaryVolume = 1.0f;
 }
 
+VolumeThroughModePacket& VolumeThroughModePacket::operator=(const VolumeThroughModePacket& rhs) {
+    m_VolumeThroughMode = rhs.m_VolumeThroughMode;
+    m_IsVolumeThroughModeUsed = rhs.m_IsVolumeThroughModeUsed;
+    m_BinaryVolume = rhs.m_BinaryVolume;
+    return *this;
+}
+
 }  // namespace nn::atk::detail
