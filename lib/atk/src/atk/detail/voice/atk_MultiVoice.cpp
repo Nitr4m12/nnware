@@ -203,6 +203,46 @@ void MultiVoice::Calc() {
     }
 }
 
+void MultiVoice::Update() {
+    if (!m_IsActive)
+        return;
+
+    enum {
+        NONE,
+        RUN,
+        PAUSE,
+    } runFlag{NONE};
+
+    if ((m_SyncFlag & UpdateStart) && m_IsStart && !m_IsStarted) {
+        CalcSrc(true);
+        CalcMix();
+        CalcVe();
+        runFlag = RUN;
+        m_IsStarted = true;
+        m_SyncFlag &= ~(UpdateStart | UpdateSrc | UpdateMix);
+    }
+
+    if (m_IsStarted && (m_SyncFlag & UpdatePause) && m_IsStart) {
+        runFlag = m_IsPause ? PAUSE : RUN;
+        m_IsPausing = m_IsPause;
+        m_SyncFlag &= ~UpdatePause;
+    }
+
+    for (int i{0}; i < m_ChannelCount; ++i)
+        m_Voice[i].UpdateParam();
+
+    switch (runFlag) {
+    case NONE:
+        break;
+    case RUN:
+        RunAllSdkVoice();
+        break;
+    case PAUSE:
+        PauseAllSdkVoice();
+        break;
+    }
+}
+
 void MultiVoice::InitParam(VoiceCallback callback, void* callbackData) {
     m_SyncFlag = 0;
     m_pLastWaveBuffer = nullptr;
