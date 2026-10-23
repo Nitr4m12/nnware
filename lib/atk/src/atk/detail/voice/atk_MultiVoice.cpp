@@ -200,6 +200,13 @@ void MultiVoice::CalcSrc([[maybe_unused]] bool initialUpdate) {
         m_Voice[channelIndex].SetPitch(ratio);
 }
 
+void MultiVoice::CalcVe() {
+    float volume{m_Volume * HardwareManager::GetInstance().GetOutputVolume()};
+
+    for (int channelIndex{0}; channelIndex < m_ChannelCount; ++channelIndex)
+        m_Voice[channelIndex].SetVolume(volume);
+}
+
 void MultiVoice::StopAllSdkVoice() {
     for (int32_t channelIndex{0}; channelIndex < m_ChannelCount; ++channelIndex)
         m_Voice[channelIndex].SetState(VoiceState_Stop);
