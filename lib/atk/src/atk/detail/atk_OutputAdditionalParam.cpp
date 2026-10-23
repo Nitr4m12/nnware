@@ -170,6 +170,10 @@ void OutputAdditionalParam::SetBusMixVolumeEnabledForBus(int32_t bus, bool isEna
     m_pBusMixVolumePacket->SetEnabled(bus, isEnabled);
 }
 
+bool OutputAdditionalParam::IsBusMixVolumeEnabled() const {
+    return m_pBusMixVolumePacket != nullptr;
+}
+
 VolumeThroughModePacket* OutputAdditionalParam::GetVolumeThroughModePacketAddr() {
     return m_pVolumeThroughModePacket;
 }
@@ -233,8 +237,10 @@ OutputAdditionalParam& OutputAdditionalParam::operator=(const OutputAdditionalPa
         m_pBusMixVolumePacket->SetUsed(rhs.m_pBusMixVolumePacket->IsUsed());
         if (m_pBusMixVolumePacket->IsUsed()) {
             m_pBusMixVolumePacket->SetBusMixVolume(rhs.m_pBusMixVolumePacket->GetBusMixVolume());
-            const int CopyCount{std::min(m_pBusMixVolumePacket->GetBusCount(),
-                                         rhs.m_pBusMixVolumePacket->GetBusCount())};
+            const int CopyCount{
+                std::min(m_pBusMixVolumePacket->GetBusCount(),
+                         rhs.m_pBusMixVolumePacket->GetBusCount()),
+            };
 
             for (int i{0}; i < CopyCount; ++i) {
                 const bool isEnabled{rhs.m_pBusMixVolumePacket->IsEnabled(i)};
