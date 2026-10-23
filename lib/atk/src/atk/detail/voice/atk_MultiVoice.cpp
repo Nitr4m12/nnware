@@ -264,9 +264,16 @@ void MultiVoice::SetVolume(float volume) {
 }
 
 void MultiVoice::SetPitch(float pitch) {
-    if (pitch != m_Pitch) {
+    if (m_Pitch != pitch) {
         m_Pitch = pitch;
         m_SyncFlag |= UpdateSrc;
+    }
+}
+
+void MultiVoice::SetPanMode(PanMode panMode) {
+    if (m_PanMode != panMode) {
+        m_PanMode = panMode;
+        m_SyncFlag |= UpdateMix;
     }
 }
 
