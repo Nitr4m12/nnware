@@ -61,4 +61,24 @@ MultiVoice::~MultiVoice() {
         m_Voice[channelIndex].Free();
 }
 
+void MultiVoice::InitParam(VoiceCallback callback, void* callbackData) {
+    m_SyncFlag = 0;
+    m_pLastWaveBuffer = nullptr;
+    m_IsStart = false;
+    m_IsStarted = false;
+    m_IsPause = false;
+    m_IsPausing = false;
+    m_Callback = callback;
+    m_pCallbackData = callbackData;
+    m_Volume = VolumeDefault;
+    m_Pitch = VolumeDefault;
+    m_PanMode = PanMode_Dual;
+    m_PanCurve = PanCurve_Sqrt;
+    m_LpfFreq = CutoffFreqMax;
+    m_BiquadType = BiquadFilterType_None;
+    m_IsEnableFrontBypass = false;
+    m_BiquadValue = BiquadValueMin;
+    m_TvParam.Initialize();
+}
+
 }  // namespace nn::atk::detail::driver
