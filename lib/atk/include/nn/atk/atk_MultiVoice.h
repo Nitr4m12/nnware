@@ -156,9 +156,17 @@ public:
 
 private:
     struct PreMixVolume {
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+        float volume[ChannelIndex_Count];
+#else
         float volume[OutputMix::ChannelCountMax];
+#endif
     };
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    static_assert(sizeof(PreMixVolume) == 0x18);
+#else
     static_assert(sizeof(PreMixVolume) == 0x60);
+#endif
 
     void InitParam(VoiceCallback callback, void* callbackData);
 

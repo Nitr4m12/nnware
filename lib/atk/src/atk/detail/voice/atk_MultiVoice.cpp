@@ -207,6 +207,29 @@ void MultiVoice::CalcVe() {
         m_Voice[channelIndex].SetVolume(volume);
 }
 
+void MultiVoice::CalcMix() {
+    for (int channelIndex{0}; channelIndex < m_ChannelCount; ++channelIndex) {
+        Voice& voice{m_Voice[channelIndex]};
+
+        PreMixVolume preMix;
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+        CalcPreMixVolume(&preMix, m_TvParam, channelIndex, OutputDevice_Main);
+#else
+        CalcPreMixVolume(&preMix, m_TvParam, m_pTvAdditionalParam, channelIndex, OutputDevice_Main);
+#endif
+
+        {
+            OutputMix tvMix;
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+            CalcMixImpl(&tvMix, OutputDeviceIndex_Main, m_TvParam, preMix);
+#else
+            CalcMixImpl(&tvMix, OutputDeviceIndex_Main, m_TvParam, m_pTvAdditionalParam, preMix);
+#endif
+            voice.SetTvMix(tvMix);
+        }
+    }
+}
+
 void MultiVoice::StopAllSdkVoice() {
     for (int32_t channelIndex{0}; channelIndex < m_ChannelCount; ++channelIndex)
         m_Voice[channelIndex].SetState(VoiceState_Stop);
