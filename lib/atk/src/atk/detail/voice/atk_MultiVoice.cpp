@@ -485,6 +485,13 @@ void MultiVoice::SetTvParam(const OutputParam& param) {
     SetOutputParamImpl(param, m_TvParam);
 }
 
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+void MultiVoice::SetSubMixIndex(int32_t subMixIndex) {
+    for (int channelIndex{0}; channelIndex < m_ChannelCount; ++channelIndex)
+        m_Voice[channelIndex].SetSubMixIndex(subMixIndex);
+}
+#endif
+
 void MultiVoice::InitParam(VoiceCallback callback, void* callbackData) {
     m_SyncFlag = 0;
     m_pLastWaveBuffer = nullptr;
