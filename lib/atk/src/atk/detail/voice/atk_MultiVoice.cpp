@@ -243,6 +243,12 @@ void MultiVoice::Update() {
     }
 }
 
+void MultiVoice::SetSampleFormat(SampleFormat format) {
+    m_Format = format;
+    for (int i{0}; i < m_ChannelCount; ++i)
+        m_Voice[i].SetSampleFormat(format);
+}
+
 void MultiVoice::InitParam(VoiceCallback callback, void* callbackData) {
     m_SyncFlag = 0;
     m_pLastWaveBuffer = nullptr;
