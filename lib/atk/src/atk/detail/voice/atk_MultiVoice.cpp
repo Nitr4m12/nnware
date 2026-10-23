@@ -325,6 +325,60 @@ void MultiVoice::SetOutputLine(uint32_t lineFlag) {
     }
 }
 
+void MultiVoice::SetOutputParamImpl(const OutputParam& in, OutputParam& out) {
+    {
+        float volume = in.volume < VolumeMin ? VolumeMin : in.volume;
+        if (volume != out.volume) {
+            out.volume = volume;
+            m_SyncFlag |= UpdateMix;
+        }
+    }
+
+    if (in.mixMode != out.mixMode) {
+        out.mixMode = in.mixMode;
+        m_SyncFlag |= UpdateMix;
+    }
+
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+    if (out.mixMode == MixMode_Mixparameter) {
+#endif
+        for (int i{0}; i < WaveChannelMax; ++i) {
+            for (int j{0}; j < ChannelIndex_Count; ++j) {
+                if (in.mixParameter[i].ch[j] != out.mixParameter[i].ch[j]) {
+                    out.mixParameter[i].ch[j] = in.mixParameter[i].ch[j];
+                    m_SyncFlag |= UpdateMix;
+                }
+            }
+        }
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+    }
+#endif
+
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+    if (out.mixMode == MixMode_Pan) {
+#endif
+        if (in.pan != out.pan) {
+            out.pan = in.pan;
+            m_SyncFlag |= UpdateMix;
+        }
+
+        if (in.span != out.span) {
+            out.span = in.span;
+            m_SyncFlag |= UpdateMix;
+        }
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+    }
+#endif
+
+    for (int i{0}; i < DefaultBusCount; ++i) {
+        float send{in.send[i]};
+        if (send != out.send[i]) {
+            out.send[i] = send;
+            m_SyncFlag |= UpdateMix;
+        }
+    }
+}
+
 void MultiVoice::InitParam(VoiceCallback callback, void* callbackData) {
     m_SyncFlag = 0;
     m_pLastWaveBuffer = nullptr;

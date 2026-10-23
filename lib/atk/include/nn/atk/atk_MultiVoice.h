@@ -199,7 +199,7 @@ private:
     void StopAllSdkVoice();
     void PauseAllSdkVoice();
 
-    void SetOutputParamImpl(const OutputParam& in, const OutputParam& out);
+    void SetOutputParamImpl(const OutputParam& in, OutputParam& out);
 
 #if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
     void
