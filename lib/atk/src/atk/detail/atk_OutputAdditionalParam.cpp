@@ -178,4 +178,8 @@ const VolumeThroughModePacket* const OutputAdditionalParam::GetVolumeThroughMode
     return m_pVolumeThroughModePacket;
 }
 
+float OutputAdditionalParam::GetBinaryVolume() const {
+    return m_pVolumeThroughModePacket->GetBinaryVolume();
+}
+
 }  // namespace nn::atk::detail
