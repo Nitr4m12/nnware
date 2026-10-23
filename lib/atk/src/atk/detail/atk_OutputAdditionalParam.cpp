@@ -119,4 +119,8 @@ float OutputAdditionalParam::TryGetAdditionalSend(int32_t bus) const {
     return m_pAdditionalSend->TryGetValue(Util::GetAdditionalSendIndex(bus));
 }
 
+bool OutputAdditionalParam::IsAdditionalSendEnabled() const {
+    return m_pAdditionalSend != nullptr;
+}
+
 }  // namespace nn::atk::detail

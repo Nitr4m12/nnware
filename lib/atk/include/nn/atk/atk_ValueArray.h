@@ -10,7 +10,6 @@ class ValueArray {
 public:
     static size_t GetRequiredMemSize(int count) { return count * sizeof(T); }
 
-    // NOT_CHECKED
     ValueArray() = default;
 
     bool Initialize(void* buffer, [[maybe_unused]] size_t bufferSize, int count) {
@@ -52,7 +51,6 @@ public:
         return true;
     }
 
-    // NOT_CHECKED
     T TryGetValue(int index) const {
         if (index >= m_Count)
             return 0;
