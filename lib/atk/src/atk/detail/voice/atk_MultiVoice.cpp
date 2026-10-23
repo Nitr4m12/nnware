@@ -291,6 +291,25 @@ void MultiVoice::SetLpfFreq(float lpfFreq) {
     }
 }
 
+void MultiVoice::SetBiquadFilter(int32_t type, float value) {
+    value = fnd::Clamp(value, BiquadValueMin, BiquadValueMax);
+
+    bool isUpdate{false};
+
+    if (m_BiquadType != type) {
+        m_BiquadType = type;
+        isUpdate = true;
+    }
+
+    if (value != m_BiquadValue) {
+        m_BiquadValue = value;
+        isUpdate = true;
+    }
+
+    if (isUpdate)
+        m_SyncFlag |= UpdateBiquad;
+}
+
 void MultiVoice::InitParam(VoiceCallback callback, void* callbackData) {
     m_SyncFlag = 0;
     m_pLastWaveBuffer = nullptr;
