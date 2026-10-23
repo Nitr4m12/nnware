@@ -1,5 +1,7 @@
 #include <nn/atk/atk_MultiVoice.h>
-#include "nn/atk/fnd/basis/atkfnd_Inlines.h"
+
+#include <nn/atk/atk_MultiVoiceManager.h>
+#include <nn/atk/fnd/basis/atkfnd_Inlines.h>
 
 namespace nn::atk::detail::driver {
 
@@ -93,6 +95,18 @@ bool MultiVoice::Alloc(int32_t channelCount, int32_t priority, VoiceCallback cal
 
     m_IsActive = true;
     return true;
+}
+
+void MultiVoice::Free() {
+    if (!m_IsActive)
+        return;
+
+    for (int channelIndex{0}; channelIndex < m_ChannelCount; ++channelIndex)
+        m_Voice[channelIndex].Free();
+
+    m_ChannelCount = 0;
+    MultiVoiceManager::GetInstance().FreeVoice(this);
+    m_IsActive = false;
 }
 
 void MultiVoice::InitParam(VoiceCallback callback, void* callbackData) {
