@@ -173,6 +173,36 @@ void MultiVoice::Pause(bool flag) {
     m_SyncFlag |= UpdatePause;
 }
 
+void MultiVoice::Calc() {
+    if (!m_IsStart)
+        return;
+
+    if (m_SyncFlag & UpdateSrc) {
+        CalcSrc(false);
+        m_SyncFlag &= ~UpdateSrc;
+    }
+
+    if (m_SyncFlag & UpdateVe) {
+        CalcVe();
+        m_SyncFlag &= ~UpdateVe;
+    }
+
+    if (m_SyncFlag & UpdateMix) {
+        CalcMix();
+        m_SyncFlag &= ~UpdateMix;
+    }
+
+    if (m_SyncFlag & UpdateLpf) {
+        CalcLpf();
+        m_SyncFlag &= ~UpdateLpf;
+    }
+
+    if (m_SyncFlag & UpdateBiquad) {
+        CalcBiquadFilter();
+        m_SyncFlag &= ~UpdateBiquad;
+    }
+}
+
 void MultiVoice::InitParam(VoiceCallback callback, void* callbackData) {
     m_SyncFlag = 0;
     m_pLastWaveBuffer = nullptr;
@@ -242,11 +272,11 @@ void MultiVoice::CalcLpf() {
     }
 }
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
-void MultiVoice::CalcTvMix(OutputMix *mix, const PreMixVolume &preMix) {
+void MultiVoice::CalcTvMix(OutputMix* mix, const PreMixVolume& preMix) {
     CalcMixImpl(mix, OutputDeviceIndex_Main, m_TvParam, preMix);
 }
 #else
-void MultiVoice::CalcTvMix(OutputMix *mix, const PreMixVolume &preMix) {
+void MultiVoice::CalcTvMix(OutputMix* mix, const PreMixVolume& preMix) {
     CalcMixImpl(mix, OutputDeviceIndex_Main, m_TvParam, m_pTvAdditionalParam, preMix);
 }
 #endif
