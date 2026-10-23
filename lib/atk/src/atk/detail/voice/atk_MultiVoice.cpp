@@ -115,6 +115,17 @@ void MultiVoice::Start() {
     m_SyncFlag |= UpdateStart;
 }
 
+void MultiVoice::Stop() {
+    if (m_IsStarted) {
+        StopAllSdkVoice();
+        m_IsStarted = false;
+    }
+
+    m_IsPause = false;
+    m_IsPausing = false;
+    m_IsStart = false;
+}
+
 void MultiVoice::InitParam(VoiceCallback callback, void* callbackData) {
     m_SyncFlag = 0;
     m_pLastWaveBuffer = nullptr;
