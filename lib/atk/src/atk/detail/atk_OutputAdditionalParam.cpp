@@ -170,4 +170,12 @@ void OutputAdditionalParam::SetBusMixVolumeEnabledForBus(int32_t bus, bool isEna
     m_pBusMixVolumePacket->SetEnabled(bus, isEnabled);
 }
 
+VolumeThroughModePacket* OutputAdditionalParam::GetVolumeThroughModePacketAddr() {
+    return m_pVolumeThroughModePacket;
+}
+
+const VolumeThroughModePacket* const OutputAdditionalParam::GetVolumeThroughModePacketAddr() const {
+    return m_pVolumeThroughModePacket;
+}
+
 }  // namespace nn::atk::detail
