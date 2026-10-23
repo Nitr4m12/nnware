@@ -481,6 +481,10 @@ void MultiVoice::SetOutputVolumeThroughModePacketImpl(const VolumeThroughModePac
 }
 #endif
 
+void MultiVoice::SetTvParam(const OutputParam& param) {
+    SetOutputParamImpl(param, m_TvParam);
+}
+
 void MultiVoice::InitParam(VoiceCallback callback, void* callbackData) {
     m_SyncFlag = 0;
     m_pLastWaveBuffer = nullptr;
