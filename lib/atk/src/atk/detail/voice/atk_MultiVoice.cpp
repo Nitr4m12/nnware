@@ -193,6 +193,13 @@ void MultiVoice::InitParam(VoiceCallback callback, void* callbackData) {
     m_TvParam.Initialize();
 }
 
+void MultiVoice::CalcSrc([[maybe_unused]] bool initialUpdate) {
+    float ratio{m_Pitch};
+
+    for (int channelIndex{0}; channelIndex < m_ChannelCount; ++channelIndex)
+        m_Voice[channelIndex].SetPitch(ratio);
+}
+
 void MultiVoice::StopAllSdkVoice() {
     for (int32_t channelIndex{0}; channelIndex < m_ChannelCount; ++channelIndex)
         m_Voice[channelIndex].SetState(VoiceState_Stop);
