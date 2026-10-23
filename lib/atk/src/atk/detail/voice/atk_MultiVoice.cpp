@@ -304,6 +304,11 @@ void MultiVoice::CalcTvMix(OutputMix* mix, const PreMixVolume& preMix) {
 }
 #endif
 
+void MultiVoice::RunAllSdkVoice() {
+    for (int32_t channelIndex{0}; channelIndex < m_ChannelCount; ++channelIndex)
+        m_Voice[channelIndex].SetState(VoiceState_Play);
+}
+
 void MultiVoice::StopAllSdkVoice() {
     for (int32_t channelIndex{0}; channelIndex < m_ChannelCount; ++channelIndex)
         m_Voice[channelIndex].SetState(VoiceState_Stop);
