@@ -263,6 +263,13 @@ void MultiVoice::SetVolume(float volume) {
     }
 }
 
+void MultiVoice::SetPitch(float pitch) {
+    if (pitch != m_Pitch) {
+        m_Pitch = pitch;
+        m_SyncFlag |= UpdateSrc;
+    }
+}
+
 void MultiVoice::InitParam(VoiceCallback callback, void* callbackData) {
     m_SyncFlag = 0;
     m_pLastWaveBuffer = nullptr;
