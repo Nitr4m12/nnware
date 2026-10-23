@@ -151,4 +151,18 @@ void MultiVoice::StopAllSdkVoice() {
         m_Voice[channelIndex].SetState(VoiceState_Stop);
 }
 
+bool MultiVoice::IsPlayFinished() const {
+    if (m_ChannelCount <= 0)
+        return false;
+
+    if (m_pLastWaveBuffer == nullptr)
+        return false;
+
+    if (m_pLastWaveBuffer->status == WaveBuffer::Status_Wait ||
+        m_pLastWaveBuffer->status == WaveBuffer::Status_Play)
+        return false;
+
+    return true;
+}
+
 }  // namespace nn::atk::detail::driver
