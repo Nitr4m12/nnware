@@ -277,6 +277,13 @@ void MultiVoice::SetPanMode(PanMode panMode) {
     }
 }
 
+void MultiVoice::SetPanCurve(PanCurve panCurve) {
+    if (m_PanCurve != panCurve) {
+        m_PanCurve = panCurve;
+        m_SyncFlag |= UpdateMix;
+    }
+}
+
 void MultiVoice::InitParam(VoiceCallback callback, void* callbackData) {
     m_SyncFlag = 0;
     m_pLastWaveBuffer = nullptr;
