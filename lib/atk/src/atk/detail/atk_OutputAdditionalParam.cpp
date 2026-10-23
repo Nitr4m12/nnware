@@ -66,4 +66,19 @@ void OutputAdditionalParam::Initialize(void* buffer, [[maybe_unused]] size_t buf
     }
 }
 
+void OutputAdditionalParam::Finalize() {
+    if (m_pAdditionalSend != nullptr) {
+        m_pAdditionalSend->Finalize();
+        m_pAdditionalSend = nullptr;
+    }
+
+    if (m_pBusMixVolumePacket != nullptr)
+        m_pBusMixVolumePacket = nullptr;
+
+    if (m_pVolumeThroughModePacket != nullptr) {
+        m_pVolumeThroughModePacket->Finalize();
+        m_pVolumeThroughModePacket = nullptr;
+    }
+}
+
 }  // namespace nn::atk::detail
