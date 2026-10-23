@@ -194,4 +194,11 @@ uint8_t OutputAdditionalParam::TryGetVolumeThroughMode(int32_t bus) const {
     return m_pVolumeThroughModePacket->TryGetVolumeThroughMode(bus);
 }
 
+void OutputAdditionalParam::TrySetVolumeThroughMode(int32_t bus, uint8_t mode) {
+    if (bus < 0)
+        return;
+
+    m_pVolumeThroughModePacket->TrySetVolumeThroughMode(bus, mode);
+}
+
 }  // namespace nn::atk::detail
