@@ -242,6 +242,7 @@ public:
     float GetOutputVolume() const;
 
     void SetOutputDeviceFlag(int32_t, uint8_t);
+    uint8_t GetOutputDeviceFlag(uint32_t outputLineIndex) { return m_OutputDeviceFlag[outputLineIndex]; }
 
     void SetMasterVolume(float volume, int32_t fadeFrames);
     void SetSrcType(SampleRateConverterType sampleRateConverter);

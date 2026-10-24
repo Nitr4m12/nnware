@@ -864,6 +864,101 @@ void MultiVoice::CalcTvMix(OutputMix* mix, const PreMixVolume& preMix) {
 }
 #endif
 
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+// NON_MATCHING: mix->channelGain gets trapped in a loop, when all values
+// should be assigned independently
+void MultiVoice::CalcMixImpl(OutputMix* mix, uint32_t outputDeviceIndex, const OutputParam& param,
+                             const PreMixVolume& pre) {
+    float mainSend{0.0f};
+    float fxSend[AuxBus_Count];
+    for (int i{0}; i < AuxBus_Count; ++i)
+        fxSend[i] = 0;
+
+    uint32_t outputDeviceFlag{0};
+    for (int i{0}; i < OutputLineIndex_Max; ++i) {
+        if (m_OutputLineFlag & (1 << i))
+            outputDeviceFlag |= HardwareManager::GetInstance().GetOutputDeviceFlag(i);
+    }
+
+    if (outputDeviceFlag & (1 << outputDeviceIndex)) {
+        mainSend = fnd::Clamp(param.send[0] + SendMax, SendMin, SendMax);
+
+        for (int i{0}; i < AuxBus_Count; ++i) {
+            fxSend[i] = fnd::Clamp(param.send[i + 1], SendMin, SendMax);
+        }
+    }
+
+    for (int bus{0}; bus < DefaultBusCount; ++bus) {
+        for (int channelIndex{0}; channelIndex < ChannelIndex_Count; ++channelIndex) {
+            float volume{pre.volume[channelIndex] * param.volume};
+            volume *= bus == 0 ? mainSend : fxSend[bus - 1];
+
+            mix->channelGain[channelIndex + bus] = volume;
+        }
+    }
+}
+#else
+void MultiVoice::CalcMixImpl(OutputMix* mix, uint32_t outputDeviceIndex, const OutputParam& param,
+                             const OutputAdditionalParam* const pAdditionalParam,
+                             const PreMixVolume& pre) {
+    float sendVolume[OutputMix::ChannelCountMax];
+    const int BusCount{m_pOutputReceiver->GetBusCount()};
+    for (int i{0}; i < BusCount; ++i)
+        sendVolume[i] = 0;
+
+    uint32_t outputDeviceFlag{0};
+    for (int i{0}; i < OutputLineIndex_Max; ++i) {
+        if (m_OutputLineFlag & (1 << i))
+            outputDeviceFlag |= HardwareManager::GetInstance().GetOutputDeviceFlag(i);
+    }
+
+    if (outputDeviceFlag & (1 << outputDeviceIndex)) {
+        for (int i{0}; i < BusCount; ++i) {
+            if (i < DefaultBusCount) {
+                const float actualSend{i == 0 ? param.send[i] + SendMax : param.send[i]};
+                if (m_pOutputReceiver->IsSoundSendClampEnabled(i))
+                    sendVolume[i] = fnd::Clamp(actualSend, SendMin, SendMax);
+                else
+                    sendVolume[i] = std::max(actualSend, 0.0f);
+
+                continue;
+            }
+
+            if (pAdditionalParam == nullptr || !pAdditionalParam->IsAdditionalSendEnabled())
+                break;
+
+            if (m_pOutputReceiver->IsSoundSendClampEnabled(i))
+                sendVolume[i] =
+                    fnd::Clamp(pAdditionalParam->TryGetAdditionalSend(i), SendMin, SendMax);
+            else
+                sendVolume[i] = std::max(pAdditionalParam->TryGetAdditionalSend(i), 0.0f);
+        }
+    }
+
+    for (int bus{0}; bus < BusCount; ++bus) {
+        for (int voiceChannel{0}; voiceChannel < std::min(m_pOutputReceiver->GetChannelCount(),
+                                                          (int32_t)ChannelIndex_Count);
+             ++voiceChannel) {
+            const int MixBufferIndex{
+                GetOutputReceiverMixBufferIndex(m_pOutputReceiver, voiceChannel, bus),
+            };
+
+            float volume{param.volume * sendVolume[bus] * pre.volume[MixBufferIndex]};
+
+            if (pAdditionalParam != nullptr && pAdditionalParam->IsVolumeThroughModeUsed()) {
+                const bool IsThroughBinaryVolume{
+                    (pAdditionalParam->TryGetVolumeThroughMode(bus) & 1) == 0,
+                };
+                if (IsThroughBinaryVolume)
+                    volume *= pAdditionalParam->GetBinaryVolume();
+            }
+
+            mix->channelGain[MixBufferIndex] = volume;
+        }
+    }
+}
+#endif
+
 void MultiVoice::RunAllSdkVoice() {
     for (int32_t channelIndex{0}; channelIndex < m_ChannelCount; ++channelIndex)
         m_Voice[channelIndex].SetState(VoiceState_Play);

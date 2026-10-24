@@ -192,7 +192,7 @@ private:
                      const PreMixVolume& pre);
 #else
     void CalcMixImpl(OutputMix* mix, uint32_t outputDeviceIndex, const OutputParam& param,
-                     OutputAdditionalParam* pAdditionalParam, const PreMixVolume& pre);
+                     const OutputAdditionalParam* const pAdditionalParam, const PreMixVolume& pre);
 #endif
 
     void RunAllSdkVoice();
