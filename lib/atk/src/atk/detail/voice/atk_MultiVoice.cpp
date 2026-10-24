@@ -985,6 +985,10 @@ position_t MultiVoice::GetCurrentPlayingSample() const {
     return m_Voice[0].GetPlayPosition();
 }
 
+SampleFormat MultiVoice::GetFormat() const {
+    return m_Format;
+}
+
 bool MultiVoice::IsPlayFinished() const {
     if (m_ChannelCount <= 0)
         return false;
