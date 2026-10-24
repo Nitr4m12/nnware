@@ -974,6 +974,10 @@ void MultiVoice::PauseAllSdkVoice() {
         m_Voice[channelIndex].SetState(VoiceState_Pause);
 }
 
+const Voice& MultiVoice::detail_GetSdkVoice(int32_t channelIndex) const {
+    return m_Voice[channelIndex];
+}
+
 bool MultiVoice::IsPlayFinished() const {
     if (m_ChannelCount <= 0)
         return false;
