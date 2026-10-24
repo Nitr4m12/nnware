@@ -978,6 +978,13 @@ const Voice& MultiVoice::detail_GetSdkVoice(int32_t channelIndex) const {
     return m_Voice[channelIndex];
 }
 
+position_t MultiVoice::GetCurrentPlayingSample() const {
+    if (!IsActive())
+        return 0;
+
+    return m_Voice[0].GetPlayPosition();
+}
+
 bool MultiVoice::IsPlayFinished() const {
     if (m_ChannelCount <= 0)
         return false;

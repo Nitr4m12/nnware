@@ -70,7 +70,7 @@ public:
 
     void Update();
 
-    bool IsActive() const { return m_IsActive; }
+    bool IsActive() const { return m_ChannelCount > 0; }
     bool IsRun() const;
     bool IsPause() const { return m_IsPause; }
     bool IsPlayFinished() const;
