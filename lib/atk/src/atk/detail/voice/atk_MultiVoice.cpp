@@ -989,6 +989,13 @@ SampleFormat MultiVoice::GetFormat() const {
     return m_Format;
 }
 
+bool MultiVoice::IsRun() const {
+    if (!IsActive())
+        return false;
+
+    return m_Voice[0].GetState() == VoiceState_Play;
+}
+
 bool MultiVoice::IsPlayFinished() const {
     if (m_ChannelCount <= 0)
         return false;
