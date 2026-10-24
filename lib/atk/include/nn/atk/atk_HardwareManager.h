@@ -267,7 +267,9 @@ public:
     bool IsEffectInitialized() const { return m_IsInitializedEffect; }
     bool IsPresetSubMixEnabled() const { return m_IsPresetSubMixEnabled; }
     bool IsAdditionalEffectEnabled() const { return m_IsAdditionalEffectEnabled; }
-    bool IsPreviousSdkVersionLowPassFilterCompatible() { return m_IsPreviousSdkVersionLowPassFilterCompatible; }
+    bool IsPreviousSdkVersionLowPassFilterCompatible() {
+        return m_IsPreviousSdkVersionLowPassFilterCompatible;
+    }
 
     OutputMode GetOutputMode(OutputDevice device) const { return m_OutputMode[device]; }
 
@@ -278,6 +280,10 @@ public:
 
     const BiquadFilterCallback* GetBiquadFilterCallback(int type) {
         return m_BiquadFilterCallbackTable[type];
+    }
+
+    OutputMode GetEndUserOutputMode(OutputDevice device) const {
+        return m_EndUserOutputMode[device];
     }
 
 private:

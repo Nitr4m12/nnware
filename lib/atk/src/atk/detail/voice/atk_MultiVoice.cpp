@@ -11,24 +11,88 @@ namespace {
 
 size_t DspAdpcmFrameToNibbleAddress(position_t frame, size_t nibbleAddress) {}
 
-void PanCurveToPanInfo(Util::PanInfo& panInfo, PanCurve curve) {}
+void PanCurveToPanInfo(Util::PanInfo& panInfo, PanCurve curve) {
+    switch (curve) {
+    case PanCurve_Sqrt:
+        panInfo.curve = Util::PanCurve_Sqrt;
+        break;
+    case PanCurve_Sqrt0Db:
+        panInfo.curve = Util::PanCurve_Sqrt;
+        panInfo.centerZeroFlag = true;
+        break;
+    case PanCurve_Sqrt0DbClamp:
+        panInfo.curve = Util::PanCurve_Sqrt;
+        panInfo.centerZeroFlag = true;
+        panInfo.zeroClampFlag = true;
+        break;
+    case PanCurve_Sincos:
+        panInfo.curve = Util::PanCurve_Sincos;
+        break;
+    case PanCurve_Sincos0Db:
+        panInfo.curve = Util::PanCurve_Sincos;
+        panInfo.centerZeroFlag = true;
+        break;
+    case PanCurve_Sincos0DbClamp:
+        panInfo.curve = Util::PanCurve_Sincos;
+        panInfo.centerZeroFlag = true;
+        panInfo.zeroClampFlag = true;
+        break;
+    case PanCurve_Linear:
+        panInfo.curve = Util::PanCurve_Linear;
+        break;
+    case PanCurve_Linear0Db:
+        panInfo.curve = Util::PanCurve_Linear;
+        panInfo.centerZeroFlag = true;
+        break;
+    case PanCurve_Linear0DbClamp:
+        panInfo.curve = Util::PanCurve_Linear;
+        panInfo.centerZeroFlag = true;
+        panInfo.zeroClampFlag = true;
+        break;
+    default:
+        panInfo.curve = Util::PanCurve_Sqrt;
+        break;
+    }
+}
 
 void CalcBarancePanForStereo(float* left, float* right, const float& pan, int32_t channelIndex,
-                             const Util::PanInfo& panInfo, OutputMode mode) {}
+                             const Util::PanInfo& panInfo, OutputMode mode) {
+    if (channelIndex == ChannelIndex_FrontLeft) {
+        *left = Util::CalcPanRatio(pan, panInfo, mode);
+        *right = MultiVoice::PanCenter;
+    } else if (channelIndex == ChannelIndex_FrontRight) {
+        *left = MultiVoice::PanCenter;
+        *right = Util::CalcPanRatio(MultiVoice::PanCenter - pan, panInfo, mode);
+    }
+}
 
 void CalcSurroundPanForSurround(float* front, float* rear, const float& span,
-                                const Util::PanInfo& panInfo) {}
+                                const Util::PanInfo& panInfo) {
+    *front = Util::CalcSurroundPanRatio(span, panInfo);
+    *rear = Util::CalcSurroundPanRatio(MultiVoice::SpanRear - span, panInfo);
+}
 
-void CalcPanForMono(float* left, float* right, const Util::PanInfo& panInfo) {}
+void CalcPanForMono(float* left, float* right, const Util::PanInfo& panInfo) {
+    *left = Util::CalcPanRatio(MultiVoice::PanCenter, panInfo, OutputMode_Monaural);
+    *right = *left;
+}
 
 void CalcDualPanForStereo(float* left, float* right, const float& pan, const Util::PanInfo& panInfo,
-                          OutputMode mode) {}
+                          OutputMode mode) {
+    *left = Util::CalcPanRatio(pan, panInfo, mode);
+    *right = Util::CalcPanRatio(MultiVoice::PanCenter - pan, panInfo, mode);
+}
 
-void CalcSurroundPanForMono(float* front, float* rear, const Util::PanInfo& panInfo) {}
+void CalcSurroundPanForMono(float* front, float* rear, const Util::PanInfo& panInfo) {
+    *front = Util::CalcSurroundPanRatio(MultiVoice::SpanFront, panInfo);
+    *rear = Util::CalcSurroundPanRatio(MultiVoice::SpanRear, panInfo);
+}
 
 #if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
 int32_t GetOutputReceiverMixBufferIndex(const OutputReceiver* pOutputReceiver, int32_t channel,
-                                        int32_t bus) {}
+                                        int32_t bus) {
+    return channel + bus * pOutputReceiver->GetChannelCount();
+}
 #endif
 
 }  // anonymous namespace
@@ -38,7 +102,7 @@ const float MultiVoice::VolumeDefault{1.0};
 const float MultiVoice::VolumeMax{2.0};
 
 const float MultiVoice::PanLeft{-1.0};
-const float MultiVoice::PanCenter{-0.0};
+const float MultiVoice::PanCenter{0.0};
 const float MultiVoice::PanRight{1.0};
 
 const float MultiVoice::SpanFront{0.0};
@@ -610,6 +674,184 @@ void MultiVoice::CalcBiquadFilter() {
             voice.SetBiquadFilter(false, nullptr);
         }
     }
+}
+
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+void MultiVoice::CalcPreMixVolume(PreMixVolume* mix, const OutputParam& param, int32_t channelIndex,
+                                  OutputDevice device)
+#else
+void MultiVoice::CalcPreMixVolume(PreMixVolume* mix, const OutputParam& param,
+                                  const OutputAdditionalParam* const pAdditionalParam,
+                                  int32_t channelIndex, OutputDevice device)
+#endif
+{
+    const OutputMode nwMode{HardwareManager::GetInstance().GetOutputMode(device)};
+
+    float fL = 0;
+    float fR = 0;
+    float rL = 0;
+    float rR = 0;
+    float fC = 0;
+    float lfe = 0;
+    if (param.mixMode == MixMode_Pan) {
+        float left = 0;
+        float right = 0;
+        float front = 0;
+        float rear = 0;
+
+        Util::PanInfo panInfo;
+        PanCurveToPanInfo(panInfo, m_PanCurve);
+
+        switch (nwMode) {
+        case OutputMode_Monaural:
+            CalcPanForMono(&left, &right, panInfo);
+            break;
+        case OutputMode_Stereo:
+        case OutputMode_Surround: {
+            if (m_ChannelCount >= static_cast<int32_t>(WaveChannelMax)) {
+                if (m_PanMode == PanMode_Balance) {
+                    CalcBarancePanForStereo(&left, &right, param.pan, channelIndex, panInfo,
+                                            nwMode);
+                    break;
+                }
+            }
+
+            float voicePan{param.pan};
+            if (m_ChannelCount == static_cast<int32_t>(WaveChannelMax)) {
+                if (channelIndex == ChannelIndex_FrontLeft)
+                    voicePan += PanLeft;
+                else if (channelIndex == ChannelIndex_FrontRight)
+                    voicePan += PanRight;
+            }
+
+            CalcDualPanForStereo(&left, &right, voicePan, panInfo, nwMode);
+            break;
+        }
+        default:
+            break;
+        }
+
+        switch (nwMode) {
+        case OutputMode_Monaural:
+        case OutputMode_Stereo:
+            CalcSurroundPanForMono(&front, &rear, panInfo);
+            break;
+        case OutputMode_Surround:
+            CalcSurroundPanForSurround(&front, &rear, param.span, panInfo);
+            break;
+        default:
+            break;
+        }
+
+        fL = front * left;
+        fR = front * right;
+        rL = rear * left;
+        rR = rear * right;
+        lfe = fC;
+    } else {
+        fL = param.mixParameter[channelIndex].fL;
+        fR = param.mixParameter[channelIndex].fR;
+        rL = param.mixParameter[channelIndex].rL;
+        rR = param.mixParameter[channelIndex].rR;
+        fC = param.mixParameter[channelIndex].fC;
+        lfe = param.mixParameter[channelIndex].lfe;
+    }
+
+    const OutputMode endUserMode{HardwareManager::GetInstance().GetEndUserOutputMode(device)};
+    switch (endUserMode) {
+    case OutputMode_Monaural: {
+        switch (nwMode) {
+        case OutputMode_Stereo: {
+            float mono{fL + fR};
+            mono /= WaveChannelMax;
+            fL = mono;
+            fR = mono;
+            break;
+        }
+        case OutputMode_Surround: {
+            float mono{rL + fL};
+            mono += rR + fR;
+            mono /= WaveChannelMax;
+            fL = mono;
+            fR = mono;
+            rL = 0.0f;
+            rR = 0.0f;
+            break;
+        }
+        default:
+            break;
+        }
+        break;
+    }
+    case OutputMode_Stereo: {
+        switch (nwMode) {
+        case OutputMode_Surround: {
+            float left{fL + rL};
+            float right{fR + rR};
+
+            fR = right;
+            fL = left;
+            rL = 0.0f;
+            rR = 0.0f;
+            break;
+        }
+        default:
+            break;
+        }
+        break;
+    }
+    default:
+        break;
+    }
+
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    mix->volume[ChannelIndex_FrontLeft] = fL;
+    mix->volume[ChannelIndex_FrontRight] = fR;
+    mix->volume[ChannelIndex_RearLeft] = rL;
+    mix->volume[ChannelIndex_RearRight] = rR;
+    mix->volume[ChannelIndex_FrontCenter] = fC;
+    mix->volume[ChannelIndex_Lfe] = lfe;
+#else
+    for (int i{0}; i < OutputMix::ChannelCountMax; ++i) {
+        const int BusIndex{i / m_pOutputReceiver->GetChannelCount()};
+        if (BusIndex >= m_pOutputReceiver->GetBusCount()) {
+            mix->volume[i] = 0;
+            continue;
+        }
+
+        if (pAdditionalParam != nullptr && pAdditionalParam->IsBusMixVolumeEnabled() &&
+            pAdditionalParam->IsBusMixVolumeUsed() &&
+            pAdditionalParam->IsBusMixVolumeEnabledForBus(BusIndex)) {
+            mix->volume[i] = pAdditionalParam->GetBusMixVolume(channelIndex, i);
+            continue;
+        }
+
+        const int ChannelIndex{i % m_pOutputReceiver->GetChannelCount()};
+        switch (ChannelIndex) {
+        case ChannelIndex_FrontLeft:
+            mix->volume[i] = fL;
+            break;
+        case ChannelIndex_FrontRight:
+            mix->volume[i] = fR;
+            break;
+        case ChannelIndex_RearLeft:
+            mix->volume[i] = rL;
+            break;
+        case ChannelIndex_RearRight:
+            mix->volume[i] = rR;
+            break;
+        case ChannelIndex_FrontCenter:
+            mix->volume[i] = fC;
+            break;
+        case ChannelIndex_Lfe:
+            mix->volume[i] = lfe;
+            break;
+        default:
+            mix->volume[i] = 0;
+            break;
+        }
+    }
+#endif
 }
 
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)

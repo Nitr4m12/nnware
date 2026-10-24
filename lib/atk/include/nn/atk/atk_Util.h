@@ -33,10 +33,10 @@ public:
     };
 
     struct PanInfo {
-        PanCurve curve;
-        bool centerZeroFlag;
-        bool zeroClampFlag;
-        bool isEnableFrontBypass;
+        PanCurve curve{PanCurve_Sqrt};
+        bool centerZeroFlag{false};
+        bool zeroClampFlag{false};
+        bool isEnableFrontBypass{false};
     };
     static_assert(sizeof(PanInfo) == 0x8);
 
