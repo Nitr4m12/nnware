@@ -1007,6 +1007,10 @@ void MultiVoice::AppendWaveBuffer(int32_t channelIndex, WaveBuffer* pBuffer, boo
         m_pLastWaveBuffer = pBuffer;
 }
 
+void MultiVoice::SetAdpcmParam(int32_t channelIndex, const AdpcmParam& param) {
+    m_Voice[channelIndex].SetAdpcmParam(param);
+}
+
 bool MultiVoice::IsPlayFinished() const {
     if (m_ChannelCount <= 0)
         return false;
