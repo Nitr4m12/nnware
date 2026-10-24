@@ -996,6 +996,11 @@ bool MultiVoice::IsRun() const {
     return m_Voice[0].GetState() == VoiceState_Play;
 }
 
+void MultiVoice::SetInterpolationType(uint8_t interpolationType) {
+    for (int32_t channelIndex{0}; channelIndex < m_ChannelCount; ++channelIndex)
+        m_Voice[channelIndex].SetInterpolationType(interpolationType);
+}
+
 bool MultiVoice::IsPlayFinished() const {
     if (m_ChannelCount <= 0)
         return false;
