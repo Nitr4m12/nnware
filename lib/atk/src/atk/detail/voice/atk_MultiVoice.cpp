@@ -9,7 +9,15 @@ namespace nn::atk::detail::driver {
 
 namespace {
 
-size_t DspAdpcmFrameToNibbleAddress(position_t frame, size_t nibbleAddress) {}
+size_t DspAdpcmFrameToNibbleAddress(position_t frame) {
+    size_t mod{static_cast<size_t>(frame % 14)};
+    size_t nibbleAddress{static_cast<size_t>((frame / 14) * 16)};
+
+    if (mod != 0)
+        mod += 2;
+
+    return (mod + nibbleAddress) / 2;
+}
 
 void PanCurveToPanInfo(Util::PanInfo& panInfo, PanCurve curve) {
     switch (curve) {
@@ -996,6 +1004,20 @@ bool MultiVoice::IsRun() const {
     return m_Voice[0].GetState() == VoiceState_Play;
 }
 
+bool MultiVoice::IsPlayFinished() const {
+    if (m_ChannelCount <= 0)
+        return false;
+
+    if (m_pLastWaveBuffer == nullptr)
+        return false;
+
+    if (m_pLastWaveBuffer->status == WaveBuffer::Status_Wait ||
+        m_pLastWaveBuffer->status == WaveBuffer::Status_Play)
+        return false;
+
+    return true;
+}
+
 void MultiVoice::SetInterpolationType(uint8_t interpolationType) {
     for (int32_t channelIndex{0}; channelIndex < m_ChannelCount; ++channelIndex)
         m_Voice[channelIndex].SetInterpolationType(interpolationType);
@@ -1011,18 +1033,23 @@ void MultiVoice::SetAdpcmParam(int32_t channelIndex, const AdpcmParam& param) {
     m_Voice[channelIndex].SetAdpcmParam(param);
 }
 
-bool MultiVoice::IsPlayFinished() const {
-    if (m_ChannelCount <= 0)
-        return false;
+size_t MultiVoice::FrameToByte(position_t sample, SampleFormat format) {
+    size_t result{0};
+    switch (format) {
+    case SampleFormat_DspAdpcm:
+        result = DspAdpcmFrameToNibbleAddress(sample);
+        break;
+    case SampleFormat_PcmS8:
+        result = sample;
+        break;
+    case SampleFormat_PcmS16:
+        result = sample * 2;
+        break;
+    default:
+        break;
+    }
 
-    if (m_pLastWaveBuffer == nullptr)
-        return false;
-
-    if (m_pLastWaveBuffer->status == WaveBuffer::Status_Wait ||
-        m_pLastWaveBuffer->status == WaveBuffer::Status_Play)
-        return false;
-
-    return true;
+    return result;
 }
 
 }  // namespace nn::atk::detail::driver
