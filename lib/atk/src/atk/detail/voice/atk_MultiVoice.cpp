@@ -1035,6 +1035,7 @@ void MultiVoice::SetAdpcmParam(int32_t channelIndex, const AdpcmParam& param) {
 
 size_t MultiVoice::FrameToByte(position_t sample, SampleFormat format) {
     size_t result{0};
+
     switch (format) {
     case SampleFormat_DspAdpcm:
         result = DspAdpcmFrameToNibbleAddress(sample);
@@ -1050,6 +1051,20 @@ size_t MultiVoice::FrameToByte(position_t sample, SampleFormat format) {
     }
 
     return result;
+}
+
+void MultiVoice::CalcOffsetAdpcmParam(AdpcmContext* context, const AdpcmParam& param,
+                                      position_t offsetSamples, const void* dataAddress) {
+    position_t currentSample{0};
+    const uint8_t* InputAddress{static_cast<const uint8_t*>(dataAddress)};
+    const uint32_t DecodeSampleCount{14};
+
+    int16_t output[DecodeSampleCount]{0};
+
+    while (currentSample < offsetSamples) {
+        DecodeDspAdpcm(currentSample, *context, param, InputAddress, DecodeSampleCount, output);
+        currentSample += DecodeSampleCount;
+    }
 }
 
 }  // namespace nn::atk::detail::driver
