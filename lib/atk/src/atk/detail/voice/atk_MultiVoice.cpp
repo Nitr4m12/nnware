@@ -1001,6 +1001,12 @@ void MultiVoice::SetInterpolationType(uint8_t interpolationType) {
         m_Voice[channelIndex].SetInterpolationType(interpolationType);
 }
 
+void MultiVoice::AppendWaveBuffer(int32_t channelIndex, WaveBuffer* pBuffer, bool lastFlag) {
+    m_Voice[channelIndex].AppendWaveBuffer(pBuffer);
+    if (lastFlag)
+        m_pLastWaveBuffer = pBuffer;
+}
+
 bool MultiVoice::IsPlayFinished() const {
     if (m_ChannelCount <= 0)
         return false;
