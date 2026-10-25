@@ -495,12 +495,26 @@ uint32_t SoundArchiveFileReader::GetSoundUserParam(SoundArchive::ItemId soundId)
     return soundInfo->GetUserParam();
 }
 
-bool SoundArchiveFileReader::ReadSoundUserParam(uint32_t *pOutValue, SoundArchive::ItemId soundId, int32_t index) const {
+bool SoundArchiveFileReader::ReadSoundUserParam(uint32_t* pOutValue, SoundArchive::ItemId soundId,
+                                                int32_t index) const {
     const SoundArchiveFile::SoundInfo* soundInfo{m_pInfoBlockBody->GetSoundInfo(soundId)};
     if (soundInfo == nullptr)
         return false;
 
     return soundInfo->ReadUserParam(pOutValue, index);
+}
+
+const Util::Table<uint32_t>*
+SoundArchiveFileReader::GetAttachedGroupTable(SoundArchive::FileId id) const {
+    const SoundArchiveFile::FileInfo* fileInfo{m_pInfoBlockBody->GetFileInfo(id)};
+    if (fileInfo == nullptr)
+        return nullptr;
+
+    const SoundArchiveFile::InternalFileInfo* internalFileInfo{fileInfo->GetInternalFileInfo()};
+    if (internalFileInfo == nullptr)
+        return nullptr;
+
+    return internalFileInfo->GetAttachedGroupTable();
 }
 
 }  // namespace nn::atk::detail

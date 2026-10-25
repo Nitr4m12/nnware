@@ -2,22 +2,23 @@
 
 #include <cstddef>
 #include <cstdint>
+
 #include <nn/atk/fnd/io/atkfnd_FileStream.h>
 
 namespace nn::atk::detail {
 
 class SoundArchiveFilesHook {
 public:
-    constexpr static const char ItemTypeWaveSound[] = "wsd";
-    constexpr static const char ItemTypeStreamSound[] = "stm";
-    constexpr static const char ItemTypeSequenceSound[] = "seq";
+    static const char ItemTypeStreamSound[];
+    static const char ItemTypeWaveSound[];
+    static const char ItemTypeSequenceSound[];
 
-    constexpr static const char FileTypeStreamBinary[] = "bxstm";
-    constexpr static const char FileTypeWaveSoundBinary[] = "bxwsd";
-    constexpr static const char FileTypeSequenceBinary[] = "bxseq";
-    constexpr static const char FileTypeBankBinary[] = "bxbnk";
-    constexpr static const char FileTypeWaveArchiveBinary[] = "bxwar";
-    constexpr static const char FileTypeStreamPrefetchBinary[] = "bxstp";
+    static const char FileTypeStreamBinary[];
+    static const char FileTypeWaveSoundBinary[];
+    static const char FileTypeSequenceBinary[];
+    static const char FileTypeBankBinary[];
+    static const char FileTypeWaveArchiveBinary[];
+    static const char FileTypeStreamPrefetchBinary[];
 
     bool GetIsEnable() const { return m_IsEnable; }
     void SetIsEnable(bool value) { m_IsEnable = value; }
