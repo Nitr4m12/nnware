@@ -233,4 +233,10 @@ int32_t MultiVoiceManager::GetVoiceCount() const {
     return voiceCount;
 }
 
+size_t MultiVoiceManager::GetActiveCount() const {
+    AtkStateAndParameterUpdateLock lock{};
+
+    return m_PrioVoiceList.size();
+}
+
 }  // namespace nn::atk::detail::driver
