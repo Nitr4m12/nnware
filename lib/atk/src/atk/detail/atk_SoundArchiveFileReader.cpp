@@ -55,4 +55,8 @@ bool SoundArchiveFileReader::IsStreamPrefetchAvailable() const {
     return m_Header.version >= StrmprefetchSupportedVersionSar;
 }
 
+void SoundArchiveFileReader::SetStringBlock(const void* stringBlock) {
+    m_pStringBlockBody = &static_cast<const SoundArchiveFile::StringBlock*>(stringBlock)->body;
+}
+
 }  // namespace nn::atk::detail

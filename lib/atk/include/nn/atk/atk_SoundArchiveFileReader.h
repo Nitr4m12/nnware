@@ -88,8 +88,8 @@ public:
 
 private:
     SoundArchiveFile::FileHeader m_Header;
-    SoundArchiveFile::StringBlockBody* m_pStringBlockBody{};
-    SoundArchiveFile::InfoBlockBody* m_pInfoBlockBody{};
+    const SoundArchiveFile::StringBlockBody* m_pStringBlockBody{};
+    const SoundArchiveFile::InfoBlockBody* m_pInfoBlockBody{};
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
     SoundArchiveFile::FileBlock* m_pFileBlock{};
 #endif
