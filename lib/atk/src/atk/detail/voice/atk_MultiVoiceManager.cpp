@@ -124,6 +124,13 @@ void MultiVoiceManager::FreeVoice(MultiVoice* voice) {
     RemoveVoiceList(voice);
 }
 
+void MultiVoiceManager::UpdateAllVoiceStatus() {
+    for (auto itr{m_PrioVoiceList.begin()}; itr != m_PrioVoiceList.end();) {
+        auto curItr{itr++};
+        curItr->UpdateVoiceStatus();
+    }
+}
+
 void MultiVoiceManager::AppendVoiceList(MultiVoice* voice) {
     auto itr{m_PrioVoiceList.rbegin()};
     while (itr != m_PrioVoiceList.rend()) {
