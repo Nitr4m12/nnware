@@ -76,6 +76,21 @@ void MultiVoiceManager::Initialize(void* mem, size_t memSize, const SoundInstanc
     m_Initialized = true;
 }
 
+void MultiVoiceManager::Finalize() {
+    if (!m_Initialized)
+        return;
+
+    StopAllVoices();
+
+    while (!m_FreeVoiceList.empty()) {
+        MultiVoice& voice{m_FreeVoiceList.front()};
+        m_FreeVoiceList.pop_front();
+        voice.~MultiVoice();
+    }
+
+    m_Initialized = false;
+}
+
 void MultiVoiceManager::StopAllVoices() {
     while (!m_PrioVoiceList.empty()) {
         MultiVoice& voice{m_PrioVoiceList.front()};
