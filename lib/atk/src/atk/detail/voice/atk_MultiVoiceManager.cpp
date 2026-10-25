@@ -131,6 +131,15 @@ void MultiVoiceManager::UpdateAllVoiceStatus() {
     }
 }
 
+void MultiVoiceManager::UpdateAudioFrameVoiceStatus() {
+    for (auto itr{m_PrioVoiceList.begin()}; itr != m_PrioVoiceList.end();) {
+        auto curItr{itr++};
+
+        if (curItr->GetUpdateType() == UpdateType_AudioFrame)
+            curItr->UpdateVoiceStatus();
+    }
+}
+
 void MultiVoiceManager::AppendVoiceList(MultiVoice* voice) {
     auto itr{m_PrioVoiceList.rbegin()};
     while (itr != m_PrioVoiceList.rend()) {
