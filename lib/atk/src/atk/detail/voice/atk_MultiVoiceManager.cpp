@@ -34,7 +34,12 @@ size_t MultiVoiceManager::GetRequiredMemSize(int32_t voiceCount,
 }
 #endif
 
-void MultiVoiceManager::Initialize(void* mem, size_t memSize, const SoundInstanceConfig& config) {
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+void MultiVoiceManager::Initialize(void* mem, size_t memSize)
+#else
+void MultiVoiceManager::Initialize(void* mem, size_t memSize, const SoundInstanceConfig& config)
+#endif
+{
     if (m_Initialized)
         return;
 
@@ -53,6 +58,7 @@ void MultiVoiceManager::Initialize(void* mem, size_t memSize, const SoundInstanc
 
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
         new (voicePtr) MultiVoice();
+        ptr += sizeof(MultiVoice);
 #else
         ptr += sizeof(MultiVoice);
         OutputAdditionalParam* additionalParamPtr{};

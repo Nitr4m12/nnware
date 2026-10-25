@@ -18,7 +18,11 @@ public:
     size_t GetRequiredMemSize(int32_t voiceCount, const SoundInstanceConfig& config);
 #endif
 
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    void Initialize(void* mem, size_t memSize);
+#else
     void Initialize(void* mem, size_t memSize, const SoundInstanceConfig& config);
+#endif
     void Finalize();
 
     MultiVoice* AllocVoice(int32_t voiceChannelCount, int32_t priority,

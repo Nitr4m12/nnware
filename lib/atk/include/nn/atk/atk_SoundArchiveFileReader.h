@@ -1,5 +1,7 @@
 #pragma once
 
+#include <nn/util/util_BinTypes.h>
+
 #include <nn/atk/atk_SoundArchive.h>
 #include <nn/atk/atk_SoundArchiveFile.h>
 
@@ -7,11 +9,12 @@ namespace nn::atk::detail {
 
 class SoundArchiveFileReader {
 public:
-    constexpr static int32_t SignatureFile = 0x52415346;  // FSAR
-    constexpr static int32_t InvalidOffset = -1;
-    constexpr static int32_t InvalidSize = -1;
+    static const uint32_t SignatureFile{util::MakeSignature('F', 'S', 'A', 'R')};
+    static const uint32_t InvalidOffset{0xffffffff};
+    static const uint32_t InvalidSize{0xffffffff};
 
     SoundArchiveFileReader();
+    ~SoundArchiveFileReader() = default;
 
     void Initialize(const void* soundArchiveData);
     void Finalize();
@@ -23,16 +26,26 @@ public:
     void SetStringBlock(const void* stringBlock);
     void SetInfoBlock(const void* infoBlock);
 
-    int32_t GetStringCount() const;
-    char* GetString(uint32_t) const;
+    uint32_t GetStringBlockSize() const { return m_Header.GetStringBlockSize(); }
+    int32_t GetStringBlockOffset() const { return m_Header.GetStringBlockOffset(); }
 
-    void DumpTree() const;
+    uint32_t GetInfoBlockSize() const { return m_Header.GetInfoBlockSize(); }
+    int32_t GetInfoBlockOffset() const { return m_Header.GetInfoBlockOffset(); }
+
+    uint32_t GetFileBlockSize() const { return m_Header.GetFileBlockSize(); }
+    int32_t GetFileBlockOffset() const { return m_Header.GetFileBlockOffset(); }
+
+    uint32_t GetStringCount() const;
 
     SoundArchive::ItemId GetItemId(const char* pStr);
     const char* GetItemLabel(SoundArchive::ItemId id) const;
 
     SoundArchive::FileId GetItemFileId(SoundArchive::ItemId id) const;
     SoundArchive::FileId GetItemPrefetchFileId(SoundArchive::ItemId id) const;
+
+    void DumpTree() const;
+
+    const char* GetString(SoundArchive::StringId stringId) const;
 
     uint32_t GetSoundCount() const;
     uint32_t GetBankCount() const;
@@ -48,10 +61,17 @@ public:
     bool ReadSoundGroupInfo(SoundArchive::ItemId soundGroupId,
                             SoundArchive::SoundGroupInfo* info) const;
     bool ReadGroupInfo(SoundArchive::ItemId groupId, SoundArchive::GroupInfo* info) const;
-    bool ReadFileInfo(SoundArchive::FileId id, SoundArchive::FileInfo* info, int32_t index) const;
     bool ReadWaveArchiveInfo(SoundArchive::ItemId warcId,
                              SoundArchive::WaveArchiveInfo* info) const;
+    bool ReadFileInfo(SoundArchive::FileId id, SoundArchive::FileInfo* info, int32_t index) const;
+
     bool ReadSoundArchivePlayerInfo(SoundArchive::SoundArchivePlayerInfo* info) const;
+
+    SoundArchive::SoundType GetSoundType(SoundArchive::ItemId soundId) const;
+    uint32_t GetSoundUserParam(SoundArchive::ItemId soundId) const;
+
+    bool ReadSoundUserParam(uint32_t* pOutValue, SoundArchive::ItemId soundId, int32_t index) const;
+
     bool ReadSound3DInfo(SoundArchive::ItemId soundId, SoundArchive::Sound3DInfo* info) const;
     bool ReadSequenceSoundInfo(SoundArchive::ItemId soundId,
                                SoundArchive::SequenceSoundInfo* info) const;
@@ -63,29 +83,15 @@ public:
     bool ReadAdvancedWaveSoundInfo(SoundArchive::ItemId soundId,
                                    SoundArchive::AdvancedWaveSoundInfo* info) const;
 
-    Util::Table<uint32_t>* GetWaveArchiveIdTable(SoundArchive::ItemId id) const;
-    SoundArchive::SoundType GetSoundType(SoundArchive::ItemId soundId) const;
-    uint32_t GetSoundUserParam(uint32_t) const;
-
-    bool ReadSoundUserParam(uint32_t*, uint32_t, int32_t) const;
-    const detail::Util::Table<uint32_t>* GetAttachedGroupTable(uint32_t) const;
-
-    int GetInfoBlockOffset() const { return m_Header.GetInfoBlockOffset(); }
-    int GetFileBlockOffset() const { return m_Header.GetFileBlockOffset(); }
-    int GetStringBlockOffset() const { return m_Header.GetStringBlockOffset(); }
-
-    uint32_t GetInfoBlockSize() const { return m_Header.GetInfoBlockSize(); }
-    uint32_t GetFileBlockSize() const { return m_Header.GetFileBlockSize(); }
-    uint32_t GetStringBlockSize() const { return m_Header.GetStringBlockSize(); }
+    const Util::Table<uint32_t>* GetWaveArchiveIdTable(SoundArchive::ItemId id) const;
+    const Util::Table<uint32_t>* GetAttachedGroupTable(SoundArchive::FileId id) const;
 
 private:
-    friend SoundArchive;
-
     SoundArchiveFile::FileHeader m_Header;
-    SoundArchiveFile::StringBlockBody* m_pStringBlockBody;
-    SoundArchiveFile::InfoBlockBody* m_pInfoBlockBody;
+    SoundArchiveFile::StringBlockBody* m_pStringBlockBody{};
+    SoundArchiveFile::InfoBlockBody* m_pInfoBlockBody{};
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
-    SoundArchiveFile::FileBlock* m_pFileBlock;
+    SoundArchiveFile::FileBlock* m_pFileBlock{};
 #endif
 };
 
