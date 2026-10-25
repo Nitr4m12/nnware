@@ -101,4 +101,8 @@ SoundArchive::FileId SoundArchiveFileReader::GetItemPrefetchFileId(SoundArchive:
     return m_pInfoBlockBody->GetItemPrefetchFileId(id);
 }
 
+uint32_t SoundArchiveFileReader::GetSoundCount() const {
+    return m_pInfoBlockBody->GetSoundCount();
+}
+
 }  // namespace nn::atk::detail
