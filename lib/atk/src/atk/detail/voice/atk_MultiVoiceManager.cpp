@@ -239,4 +239,10 @@ size_t MultiVoiceManager::GetActiveCount() const {
     return m_PrioVoiceList.size();
 }
 
+size_t MultiVoiceManager::GetFreeCount() const {
+    AtkStateAndParameterUpdateLock lock{};
+
+    return m_FreeVoiceList.size();
+}
+
 }  // namespace nn::atk::detail::driver
