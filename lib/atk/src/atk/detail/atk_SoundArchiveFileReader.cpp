@@ -186,4 +186,27 @@ bool SoundArchiveFileReader::ReadSoundGroupInfo(SoundArchive::ItemId soundGroupI
     return true;
 }
 
+bool SoundArchiveFileReader::ReadFileInfo(SoundArchive::FileId id, SoundArchive::FileInfo* info,
+                                          [[maybe_unused]] int32_t index) const {
+    const SoundArchiveFile::FileInfo* data{m_pInfoBlockBody->GetFileInfo(id)};
+    if (data == nullptr)
+        return false;
+
+    switch (data->GetFileLocationType()) {
+    case SoundArchiveFile::FileLocationType_Internal: {
+        const SoundArchiveFile::InternalFileInfo* location{data->GetInternalFileInfo()};
+        info->fileSize = location->GetFileSize();
+        info->offsetFromFileBlockHead = location->GetOffsetFromFileBlockHead();
+        return true;
+    }
+    case SoundArchiveFile::FileLocationType_External: {
+        const SoundArchiveFile::ExternalFileInfo* location{data->GetExternalFileInfo()};
+        info->externalFilePath = location->filePath;
+        return true;
+    }
+    default:
+        return false;
+    }
+}
+
 }  // namespace nn::atk::detail

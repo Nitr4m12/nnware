@@ -458,7 +458,12 @@ public:
 
         uint32_t GetFileSize() const { return toFileImageFromFileBlockBody.size; }
 
-        uint32_t GetOffsetFromFileBlockHead() const { return toFileImageFromFileBlockBody.offset; }
+        uint32_t GetOffsetFromFileBlockHead() const {
+            if (toFileImageFromFileBlockBody.offset == InvalidOffset)
+                return InvalidOffset;
+
+            return toFileImageFromFileBlockBody.offset + 8;
+        }
 
         const Util::Table<uint32_t>* GetAttachedGroupTable() const {
             return util::ConstBytePtr(this, toAttachedGroupIdTable.offset)
