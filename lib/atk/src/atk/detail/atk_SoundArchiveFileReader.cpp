@@ -63,4 +63,8 @@ void SoundArchiveFileReader::SetInfoBlock(const void* infoBlock) {
     m_pInfoBlockBody = &static_cast<const SoundArchiveFile::InfoBlock*>(infoBlock)->body;
 }
 
+uint32_t SoundArchiveFileReader::GetStringCount() const {
+    return m_pStringBlockBody->GetStringCount();
+}
+
 }  // namespace nn::atk::detail
