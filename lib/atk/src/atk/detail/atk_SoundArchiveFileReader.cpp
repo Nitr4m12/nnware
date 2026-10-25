@@ -113,4 +113,8 @@ uint32_t SoundArchiveFileReader::GetPlayerCount() const {
     return m_pInfoBlockBody->GetPlayerCount();
 }
 
+uint32_t SoundArchiveFileReader::GetSoundGroupCount() const {
+    return m_pInfoBlockBody->GetSoundGroupCount();
+}
+
 }  // namespace nn::atk::detail
