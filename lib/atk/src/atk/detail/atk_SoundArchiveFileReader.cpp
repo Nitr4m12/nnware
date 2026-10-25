@@ -71,4 +71,8 @@ const char* SoundArchiveFileReader::GetString(SoundArchive::StringId stringId) c
     return m_pStringBlockBody->GetString(stringId);
 }
 
+void SoundArchiveFileReader::DumpTree() const {
+    m_pStringBlockBody->DumpTree();
+}
+
 }  // namespace nn::atk::detail
