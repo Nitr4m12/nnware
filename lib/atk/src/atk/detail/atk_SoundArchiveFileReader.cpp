@@ -35,4 +35,12 @@ void SoundArchiveFileReader::Initialize(const void* soundArchiveData) {
         m_Header = *static_cast<const SoundArchiveFile::FileHeader*>(soundArchiveData);
 }
 
+void SoundArchiveFileReader::Finalize() {
+    m_pStringBlockBody = nullptr;
+    m_pInfoBlockBody = nullptr;
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    m_pFileBlock = nullptr;
+#endif
+}
+
 }  // namespace nn::atk::detail
