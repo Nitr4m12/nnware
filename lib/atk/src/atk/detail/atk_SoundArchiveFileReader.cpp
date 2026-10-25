@@ -47,4 +47,8 @@ bool SoundArchiveFileReader::IsStreamSendAvailable() const {
     return m_Header.version >= StrmsendSupportedVersionSar;
 }
 
+bool SoundArchiveFileReader::IsFilterSupportedVersion() const {
+    return m_Header.version >= FilterSupportedVersionSar;
+}
+
 }  // namespace nn::atk::detail
