@@ -188,7 +188,7 @@ public:
     struct SoundGroupInfo {
         ItemId startId{InvalidId};
         ItemId endId{InvalidId};
-        detail::Util::Table<FileId>* fileIdTable{};
+        const detail::Util::Table<FileId>* fileIdTable{};
 
         SoundGroupInfo() = default;
     };

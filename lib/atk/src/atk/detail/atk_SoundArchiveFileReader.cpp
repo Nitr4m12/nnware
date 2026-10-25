@@ -173,4 +173,17 @@ bool SoundArchiveFileReader::ReadPlayerInfo(SoundArchive::ItemId playerId,
     return true;
 }
 
+bool SoundArchiveFileReader::ReadSoundGroupInfo(SoundArchive::ItemId soundGroupId,
+                                                SoundArchive::SoundGroupInfo* info) const {
+    const SoundArchiveFile::SoundGroupInfo* data{m_pInfoBlockBody->GetSoundGroupInfo(soundGroupId)};
+    if (data == nullptr)
+        return false;
+
+    info->startId = data->startId;
+    info->endId = data->endId;
+    info->fileIdTable = data->GetFileIdTable();
+
+    return true;
+}
+
 }  // namespace nn::atk::detail
