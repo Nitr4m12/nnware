@@ -24,7 +24,10 @@ bool IsValidFileHeaderSar(const void* soundArchiveData) {
 }
 
 const SoundArchiveFile::StreamTrackInfo*
-GetStreamTrackInfo(uint32_t index, SoundArchiveFile::StreamTrackInfoTable& table) {}
+GetStreamTrackInfo(uint32_t index, const SoundArchiveFile::StreamTrackInfoTable& table) {
+    return static_cast<const SoundArchiveFile::StreamTrackInfo*>(
+        table.table.GetReferedItem(index, ElementType_SoundArchiveFile_StreamSoundTrackInfo));
+}
 
 }  // anonymous namespace
 
@@ -296,6 +299,91 @@ bool SoundArchiveFileReader::ReadSequenceSoundInfo(SoundArchive::ItemId soundId,
     info->channelPriority = seqSoundInfo.GetChannelPriority();
     info->isReleasePriorityFix = seqSoundInfo.IsReleasePriorityFix();
     seqSoundInfo.GetBankIds(info->bankIds);
+
+    return true;
+}
+
+bool SoundArchiveFileReader::ReadStreamSoundInfo(SoundArchive::ItemId soundId,
+                                                 SoundArchive::StreamSoundInfo* info) const {
+    const SoundArchiveFile::SoundInfo* soundInfo{m_pInfoBlockBody->GetSoundInfo(soundId)};
+    if (soundInfo == nullptr || soundInfo->GetSoundType() != SoundArchive::SoundType_Stream)
+        return false;
+
+    const SoundArchiveFile::StreamSoundInfo& strmSoundInfo{soundInfo->GetStreamSoundInfo()};
+
+    info->allocateTrackFlags = strmSoundInfo.allocateTrackFlags;
+    info->allocateChannelCount = strmSoundInfo.allocateChannelCount;
+
+    const SoundArchiveFile::StreamSoundExtension* strmSoundExt{
+        strmSoundInfo.GetStreamSoundExtension(),
+    };
+
+    info->streamFileType = strmSoundExt != nullptr ? strmSoundExt->GetStreamFileType() :
+                                                     SoundArchive::StreamFileType_NwStreamBinary;
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+    info->decodeMode =
+        strmSoundExt != nullptr ? strmSoundExt->GetDecodeMode() : SoundArchive::DecodeMode_Default;
+#endif
+
+    if (IsStreamSendAvailable()) {
+        info->pitch = strmSoundInfo.pitch;
+        const SoundArchiveFile::SendValue send{strmSoundInfo.GetSendValue()};
+        info->mainSend = send.mainSend;
+        for (uint32_t i{0}; i < AuxBus_Count; ++i)
+            info->fxSend[i] = send.fxSend[i];
+    } else {
+        info->pitch = 1.0f;
+        info->mainSend = 127;
+        for (uint32_t i{0}; i < AuxBus_Count; ++i)
+            info->fxSend[i] = 0;
+    }
+
+    info->prefetchFileId =
+        IsStreamPrefetchAvailable() ? strmSoundInfo.prefetchFileId : SoundArchive::InvalidId;
+
+    const SoundArchiveFile::StreamTrackInfoTable* table{strmSoundInfo.GetTrackInfoTable()};
+    if (table == nullptr)
+        return true;
+
+    uint32_t tableCount{table->GetTrackCount()};
+    for (uint32_t i{0}; i < StreamTrackCount && i < tableCount; ++i) {
+        SoundArchive::StreamTrackInfo& tmp{info->trackInfo[i]};
+        const SoundArchiveFile::StreamTrackInfo* pTrackInfo{GetStreamTrackInfo(i, *table)};
+
+        tmp.volume = pTrackInfo->volume;
+        tmp.pan = pTrackInfo->pan;
+        tmp.surroundPan = pTrackInfo->span;
+        tmp.flags = pTrackInfo->flags;
+        tmp.channelCount = pTrackInfo->GetTrackChannelCount();
+
+        if (IsStreamSendAvailable()) {
+            const SoundArchiveFile::SendValue send{pTrackInfo->GetSendValue()};
+            tmp.mainSend = send.mainSend;
+            for (uint32_t j{0}; j < AuxBus_Count; ++j)
+                tmp.fxSend[j] = send.fxSend[j];
+        } else {
+            tmp.mainSend = 127;
+            for (uint32_t j{0}; j < AuxBus_Count; ++j)
+                tmp.fxSend[j] = 0;
+        }
+
+        if (IsFilterSupportedVersion()) {
+            tmp.lowPassFilterFrequency = pTrackInfo->lpfFreq;
+            tmp.biquadType = pTrackInfo->biquadType;
+            tmp.biquadValue = pTrackInfo->biquadValue;
+        } else {
+            tmp.lowPassFilterFrequency = 64;
+            tmp.biquadType = BiquadFilterType_None;
+            tmp.biquadValue = 0;
+        }
+
+        uint32_t count{tmp.channelCount};
+        if (tmp.channelCount >= 2)
+            count = 2;
+
+        for (uint32_t j{0}; j < count; ++j)
+            tmp.globalChannelIndex[j] = pTrackInfo->GetGlobalChannelIndex(j);
+    }
 
     return true;
 }

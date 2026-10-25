@@ -275,27 +275,13 @@ public:
         uint32_t loopEndFrame;
 
         SoundArchive::StreamFileType GetStreamFileType() const {
-            switch (Util::DivideBy8bit(streamTypeInfo, 0)) {
-            case 1:
-                return SoundArchive::StreamFileType_NwStreamBinary;
-            case 3:
-                return SoundArchive::StreamFileType_Opus;
-            default:
-                return SoundArchive::StreamFileType_Invalid;
-            }
+            return static_cast<SoundArchive::StreamFileType>(Util::DivideBy8bit(streamTypeInfo, 0));
         }
 
         bool IsLoop() const { return Util::DivideBy8bit(streamTypeInfo, 1) != 0; }
 
         SoundArchive::DecodeMode GetDecodeMode() const {
-            switch (Util::DivideBy8bit(streamTypeInfo, 2)) {
-            case 1:
-                return SoundArchive::DecodeMode_Cpu;
-            case 2:
-                return SoundArchive::DecodeMode_Accelerator;
-            default:
-                return SoundArchive::DecodeMode_Default;
-            }
+            return static_cast<SoundArchive::DecodeMode>(Util::DivideBy8bit(streamTypeInfo, 2));
         }
     };
     static_assert(sizeof(StreamSoundExtension) == 0xc);
