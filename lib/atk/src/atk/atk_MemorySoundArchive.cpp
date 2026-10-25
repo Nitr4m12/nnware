@@ -22,4 +22,10 @@ bool MemorySoundArchive::Initialize(const void* buffer) {
     return true;
 }
 
+void MemorySoundArchive::Finalize() {
+    m_pBuffer = nullptr;
+    m_ArchiveReader.Finalize();
+    SoundArchive::Finalize();
+}
+
 }  // namespace nn::atk
