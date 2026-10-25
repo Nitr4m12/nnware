@@ -125,4 +125,8 @@ uint32_t SoundArchiveFileReader::GetWaveArchiveCount() const {
     return m_pInfoBlockBody->GetWaveArchiveCount();
 }
 
+uint32_t SoundArchiveFileReader::GetFileCount() const {
+    return m_pInfoBlockBody->GetFileCount();
+}
+
 }  // namespace nn::atk::detail
