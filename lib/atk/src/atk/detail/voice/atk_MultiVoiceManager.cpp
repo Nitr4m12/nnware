@@ -120,6 +120,10 @@ MultiVoice* MultiVoiceManager::AllocVoice(int32_t voiceChannelCount, int32_t pri
     return &voice;
 }
 
+void MultiVoiceManager::FreeVoice(MultiVoice* voice) {
+    RemoveVoiceList(voice);
+}
+
 void MultiVoiceManager::AppendVoiceList(MultiVoice* voice) {
     auto itr{m_PrioVoiceList.rbegin()};
     while (itr != m_PrioVoiceList.rend()) {
