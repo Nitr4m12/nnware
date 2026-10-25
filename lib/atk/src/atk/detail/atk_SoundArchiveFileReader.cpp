@@ -129,4 +129,25 @@ uint32_t SoundArchiveFileReader::GetFileCount() const {
     return m_pInfoBlockBody->GetFileCount();
 }
 
+bool SoundArchiveFileReader::ReadSoundInfo(SoundArchive::ItemId soundId,
+                                           SoundArchive::SoundInfo* info) const {
+    const SoundArchiveFile::SoundInfo* data{m_pInfoBlockBody->GetSoundInfo(soundId)};
+    if (data == nullptr)
+        return false;
+
+    info->fileId = data->fileId;
+    info->playerId = data->playerId;
+    info->volume = data->volume;
+    info->panMode = data->GetPanMode();
+    info->panCurve = data->GetPanCurve();
+    info->singlePlayType = data->GetSinglePlayType();
+    info->singlePlayEffectiveDuration = data->GetSinglePlayEffectiveDuration();
+    info->playerPriority = data->GetPlayerPriority();
+    info->actorPlayerId = data->GetActorPlayerId();
+    info->remoteFilter = data->remoteFilter;
+    info->isFrontBypass = data->IsFrontBypass();
+
+    return true;
+}
+
 }  // namespace nn::atk::detail
