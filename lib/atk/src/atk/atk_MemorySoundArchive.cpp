@@ -92,4 +92,8 @@ MemorySoundArchive::OpenExtStream([[maybe_unused]] void* buffer, [[maybe_unused]
     return nullptr;
 }
 
+size_t MemorySoundArchive::detail_GetRequiredStreamBufferSize() const {
+    return sizeof(detail::MemoryFileStream);
+}
+
 }  // namespace nn::atk
