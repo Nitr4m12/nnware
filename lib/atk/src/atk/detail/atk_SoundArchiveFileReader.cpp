@@ -439,4 +439,45 @@ bool SoundArchiveFileReader::ReadAdvancedWaveSoundInfo(
     return true;
 }
 
+const Util::Table<uint32_t>*
+SoundArchiveFileReader::GetWaveArchiveIdTable(SoundArchive::ItemId id) const {
+    switch (Util::GetItemType(id)) {
+    case ItemType_Sound: {
+        const SoundArchiveFile::SoundInfo* pInfo{m_pInfoBlockBody->GetSoundInfo(id)};
+        if (pInfo->GetSoundType() != SoundArchive::SoundType_Wave)
+            return nullptr;
+
+        for (uint32_t i{0}; i < m_pInfoBlockBody->GetSoundGroupCount(); ++i) {
+            const SoundArchiveFile::SoundGroupInfo* pGroupInfo;
+            pGroupInfo =
+                m_pInfoBlockBody->GetSoundGroupInfo(Util::GetMaskedItemId(i, ItemType_SoundGroup));
+
+            if (pGroupInfo->startId <= id && id <= pGroupInfo->endId) {
+                const SoundArchiveFile::WaveSoundGroupInfo* pWaveSoundGroupInfo{
+                    pGroupInfo->GetWaveSoundGroupInfo(),
+                };
+                return pWaveSoundGroupInfo->GetWaveArchiveItemIdTable();
+            }
+        }
+
+        return nullptr;
+    }
+    case ItemType_SoundGroup: {
+        const SoundArchiveFile::SoundGroupInfo* pInfo{m_pInfoBlockBody->GetSoundGroupInfo(id)};
+
+        const SoundArchiveFile::WaveSoundGroupInfo* pWaveSoundGroupInfo{
+            pInfo->GetWaveSoundGroupInfo(),
+        };
+        return pWaveSoundGroupInfo->GetWaveArchiveItemIdTable();
+    }
+    case ItemType_Bank: {
+        const SoundArchiveFile::BankInfo* pInfo{m_pInfoBlockBody->GetBankInfo(id)};
+
+        return pInfo->GetWaveArchiveItemIdTable();
+    }
+    default:
+        return nullptr;
+    }
+}
+
 }  // namespace nn::atk::detail
