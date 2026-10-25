@@ -84,4 +84,12 @@ detail::fnd::FileStream* MemorySoundArchive::OpenStream(void* buffer, size_t siz
     return pStream;
 }
 
+detail::fnd::FileStream*
+MemorySoundArchive::OpenExtStream([[maybe_unused]] void* buffer, [[maybe_unused]] size_t size,
+                                  [[maybe_unused]] const char* extFilePath,
+                                  [[maybe_unused]] void* cacheBuffer,
+                                  [[maybe_unused]] size_t cacheSize) const {
+    return nullptr;
+}
+
 }  // namespace nn::atk
