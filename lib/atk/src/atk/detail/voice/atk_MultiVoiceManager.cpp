@@ -101,4 +101,16 @@ void MultiVoiceManager::StopAllVoices() {
     }
 }
 
+void MultiVoiceManager::AppendVoiceList(MultiVoice* voice) {
+    auto itr{m_PrioVoiceList.rbegin()};
+    while (itr != m_PrioVoiceList.rend()) {
+        if (itr->GetPriority() <= voice->GetPriority())
+            break;
+
+        ++itr;
+    }
+
+    m_PrioVoiceList.insert(itr.base(), *voice);
+}
+
 }  // namespace nn::atk::detail::driver
