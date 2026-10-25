@@ -18,10 +18,9 @@ public:
     size_t detail_GetRequiredStreamBufferSize() const override;
 
     detail::fnd::FileStream* OpenStream(void* buffer, size_t size, position_t begin,
-                                                size_t length) const override;
-    detail::fnd::FileStream* OpenExtStream(void* buffer, size_t size,
-                                                   const char* extFilePath, void* cacheBuffer,
-                                                   size_t cacheSize) const override;
+                                        size_t length) const override;
+    detail::fnd::FileStream* OpenExtStream(void* buffer, size_t size, const char* extFilePath,
+                                           void* cacheBuffer, size_t cacheSize) const override;
 
 private:
     const void* m_pBuffer{};

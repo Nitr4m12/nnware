@@ -2,6 +2,7 @@
 
 #include <nn/atk/atk_GroupFileReader.h>
 #include <nn/atk/atk_SoundArchiveFileReader.h>
+#include <nn/atk/detail/atk_MemoryFileStream.h>
 
 namespace nn::atk {
 
@@ -69,6 +70,18 @@ const void* MemorySoundArchive::detail_GetFileAddress(FileId fileId) const {
     }
 
     return nullptr;
+}
+
+detail::fnd::FileStream* MemorySoundArchive::OpenStream(void* buffer, size_t size, position_t begin,
+                                                        size_t length) const {
+    detail::fnd::FileStream* pStream{};
+
+    if (m_pBuffer != nullptr && size >= sizeof(detail::MemoryFileStream)) {
+        const void* bufferBegin{util::ConstBytePtr(m_pBuffer, begin).Get()};
+        pStream = new (buffer) detail::MemoryFileStream(bufferBegin, length);
+    }
+
+    return pStream;
 }
 
 }  // namespace nn::atk
