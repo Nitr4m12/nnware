@@ -161,4 +161,16 @@ bool SoundArchiveFileReader::ReadBankInfo(SoundArchive::ItemId bankId,
     return true;
 }
 
+bool SoundArchiveFileReader::ReadPlayerInfo(SoundArchive::ItemId playerId,
+                                            SoundArchive::PlayerInfo* info) const {
+    const SoundArchiveFile::PlayerInfo* data{m_pInfoBlockBody->GetPlayerInfo(playerId)};
+    if (data == nullptr)
+        return false;
+
+    info->playableSoundMax = data->playableSoundMax;
+    info->playerHeapSize = data->GetPlayerHeapSize();
+
+    return true;
+}
+
 }  // namespace nn::atk::detail
