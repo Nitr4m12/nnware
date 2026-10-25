@@ -75,4 +75,11 @@ void SoundArchiveFileReader::DumpTree() const {
     m_pStringBlockBody->DumpTree();
 }
 
+SoundArchive::ItemId SoundArchiveFileReader::GetItemId(const char* pStr) const {
+    if (m_pStringBlockBody == nullptr)
+        return SoundArchive::InvalidId;
+
+    return m_pStringBlockBody->GetItemId(pStr);
+}
+
 }  // namespace nn::atk::detail

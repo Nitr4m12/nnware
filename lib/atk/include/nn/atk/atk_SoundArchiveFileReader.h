@@ -37,7 +37,7 @@ public:
 
     uint32_t GetStringCount() const;
 
-    SoundArchive::ItemId GetItemId(const char* pStr);
+    SoundArchive::ItemId GetItemId(const char* pStr) const;
     const char* GetItemLabel(SoundArchive::ItemId id) const;
 
     SoundArchive::FileId GetItemFileId(SoundArchive::ItemId id) const;
