@@ -30,4 +30,9 @@ GetStreamTrackInfo(uint32_t index, SoundArchiveFile::StreamTrackInfoTable& table
 
 SoundArchiveFileReader::SoundArchiveFileReader() = default;
 
+void SoundArchiveFileReader::Initialize(const void* soundArchiveData) {
+    if (IsValidFileHeaderSar(soundArchiveData))
+        m_Header = *static_cast<const SoundArchiveFile::FileHeader*>(soundArchiveData);
+}
+
 }  // namespace nn::atk::detail
