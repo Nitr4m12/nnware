@@ -408,4 +408,19 @@ bool SoundArchiveFileReader::ReadStreamSoundInfo2(SoundArchive::ItemId soundId,
     return true;
 }
 
+bool SoundArchiveFileReader::ReadWaveSoundInfo(SoundArchive::ItemId soundId,
+                                               SoundArchive::WaveSoundInfo* info) const {
+    const SoundArchiveFile::SoundInfo* soundInfo{m_pInfoBlockBody->GetSoundInfo(soundId)};
+    if (soundInfo == nullptr || soundInfo->GetSoundType() != SoundArchive::SoundType_Wave)
+        return false;
+
+    const SoundArchiveFile::WaveSoundInfo& waveSoundInfo{soundInfo->GetWaveSoundInfo()};
+    info->index = waveSoundInfo.index;
+    info->allocateTrackCount = waveSoundInfo.allocateTrackCount;
+    info->channelPriority = waveSoundInfo.GetChannelPriority();
+    info->isReleasePriorityFix = waveSoundInfo.GetIsReleasePriorityFix();
+
+    return true;
+}
+
 }  // namespace nn::atk::detail
