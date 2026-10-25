@@ -59,4 +59,8 @@ void SoundArchiveFileReader::SetStringBlock(const void* stringBlock) {
     m_pStringBlockBody = &static_cast<const SoundArchiveFile::StringBlock*>(stringBlock)->body;
 }
 
+void SoundArchiveFileReader::SetInfoBlock(const void* infoBlock) {
+    m_pInfoBlockBody = &static_cast<const SoundArchiveFile::InfoBlock*>(infoBlock)->body;
+}
+
 }  // namespace nn::atk::detail
