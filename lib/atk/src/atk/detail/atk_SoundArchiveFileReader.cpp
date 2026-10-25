@@ -97,4 +97,8 @@ SoundArchive::FileId SoundArchiveFileReader::GetItemFileId(SoundArchive::ItemId 
     return m_pInfoBlockBody->GetItemFileId(id);
 }
 
+SoundArchive::FileId SoundArchiveFileReader::GetItemPrefetchFileId(SoundArchive::ItemId id) const {
+    return m_pInfoBlockBody->GetItemPrefetchFileId(id);
+}
+
 }  // namespace nn::atk::detail
