@@ -278,7 +278,7 @@ public:
             return static_cast<SoundArchive::StreamFileType>(Util::DivideBy8bit(streamTypeInfo, 0));
         }
 
-        bool IsLoop() const { return Util::DivideBy8bit(streamTypeInfo, 1) != 0; }
+        bool IsLoop() const { return Util::DivideBy8bit(streamTypeInfo, 1) == 1; }
 
         SoundArchive::DecodeMode GetDecodeMode() const {
             return static_cast<SoundArchive::DecodeMode>(Util::DivideBy8bit(streamTypeInfo, 2));

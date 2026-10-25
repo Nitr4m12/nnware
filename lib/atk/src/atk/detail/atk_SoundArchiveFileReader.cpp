@@ -388,4 +388,24 @@ bool SoundArchiveFileReader::ReadStreamSoundInfo(SoundArchive::ItemId soundId,
     return true;
 }
 
+bool SoundArchiveFileReader::ReadStreamSoundInfo2(SoundArchive::ItemId soundId,
+                                                  SoundArchive::StreamSoundInfo2* info) const {
+    const SoundArchiveFile::SoundInfo* soundInfo{m_pInfoBlockBody->GetSoundInfo(soundId)};
+    if (soundInfo == nullptr || soundInfo->GetSoundType() != SoundArchive::SoundType_Stream)
+        return false;
+
+    const SoundArchiveFile::StreamSoundInfo& strmSoundInfo{soundInfo->GetStreamSoundInfo()};
+    const SoundArchiveFile::StreamSoundExtension* strmSoundExt{
+        strmSoundInfo.GetStreamSoundExtension(),
+    };
+
+    if (strmSoundExt == nullptr)
+        return false;
+
+    info->isLoop = strmSoundExt->IsLoop();
+    info->loopStartFrame = strmSoundExt->loopStartFrame;
+    info->loopEndFrame = strmSoundExt->loopEndFrame;
+    return true;
+}
+
 }  // namespace nn::atk::detail
