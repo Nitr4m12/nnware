@@ -8,6 +8,8 @@
 
 namespace nn::atk::detail::driver {
 
+class MultiVoiceManager;
+
 class MultiVoice {
     NN_NO_COPY(MultiVoice);
 
@@ -155,6 +157,8 @@ public:
     }
 
 private:
+    friend MultiVoiceManager;
+
     struct PreMixVolume {
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
         float volume[ChannelIndex_Count];

@@ -76,4 +76,14 @@ void MultiVoiceManager::Initialize(void* mem, size_t memSize, const SoundInstanc
     m_Initialized = true;
 }
 
+void MultiVoiceManager::StopAllVoices() {
+    while (!m_PrioVoiceList.empty()) {
+        MultiVoice& voice{m_PrioVoiceList.front()};
+        voice.Stop();
+        if (voice.m_Callback != nullptr)
+            voice.m_Callback(&voice, MultiVoice::VoiceCallbackStatus_Cancel, voice.m_pCallbackData);
+        voice.Free();
+    }
+}
+
 }  // namespace nn::atk::detail::driver
