@@ -1,5 +1,7 @@
 #include <nn/atk/atk_MultiVoiceManager.h>
 
+#include <nn/atk/atk_SoundThread.h>
+
 namespace nn::atk::detail::driver {
 
 MultiVoiceManager& MultiVoiceManager::GetInstance() {
@@ -219,6 +221,16 @@ int32_t MultiVoiceManager::DropLowestPriorityVoice(int32_t priority) {
         callbackFunc(dropVoice, MultiVoice::VoiceCallbackStatus_DropVoice, callbackData);
 
     return dropCount;
+}
+
+int32_t MultiVoiceManager::GetVoiceCount() const {
+    AtkStateAndParameterUpdateLock lock{};
+
+    int32_t voiceCount{0};
+    for (auto itr{m_PrioVoiceList.begin()}; itr != m_PrioVoiceList.end(); ++itr)
+        voiceCount += itr->GetSdkVoiceCount();
+
+    return voiceCount;
 }
 
 }  // namespace nn::atk::detail::driver
