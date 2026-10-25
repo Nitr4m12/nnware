@@ -283,4 +283,21 @@ bool SoundArchiveFileReader::ReadSound3DInfo(SoundArchive::ItemId soundId,
     return true;
 }
 
+bool SoundArchiveFileReader::ReadSequenceSoundInfo(SoundArchive::ItemId soundId,
+                                                   SoundArchive::SequenceSoundInfo* info) const {
+    const SoundArchiveFile::SoundInfo* soundInfo{m_pInfoBlockBody->GetSoundInfo(soundId)};
+    if (soundInfo == nullptr || soundInfo->GetSoundType() != SoundArchive::SoundType_Sequence)
+        return false;
+
+    const SoundArchiveFile::SequenceSoundInfo& seqSoundInfo{soundInfo->GetSequenceSoundInfo()};
+
+    info->startOffset = seqSoundInfo.GetStartOffset();
+    info->allocateTrackFlags = seqSoundInfo.allocateTrackFlags;
+    info->channelPriority = seqSoundInfo.GetChannelPriority();
+    info->isReleasePriorityFix = seqSoundInfo.IsReleasePriorityFix();
+    seqSoundInfo.GetBankIds(info->bankIds);
+
+    return true;
+}
+
 }  // namespace nn::atk::detail
