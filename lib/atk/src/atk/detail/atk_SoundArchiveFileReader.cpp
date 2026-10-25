@@ -51,4 +51,8 @@ bool SoundArchiveFileReader::IsFilterSupportedVersion() const {
     return m_Header.version >= FilterSupportedVersionSar;
 }
 
+bool SoundArchiveFileReader::IsStreamPrefetchAvailable() const {
+    return m_Header.version >= StrmprefetchSupportedVersionSar;
+}
+
 }  // namespace nn::atk::detail
