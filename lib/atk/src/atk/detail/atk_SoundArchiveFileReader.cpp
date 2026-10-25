@@ -495,4 +495,12 @@ uint32_t SoundArchiveFileReader::GetSoundUserParam(SoundArchive::ItemId soundId)
     return soundInfo->GetUserParam();
 }
 
+bool SoundArchiveFileReader::ReadSoundUserParam(uint32_t *pOutValue, SoundArchive::ItemId soundId, int32_t index) const {
+    const SoundArchiveFile::SoundInfo* soundInfo{m_pInfoBlockBody->GetSoundInfo(soundId)};
+    if (soundInfo == nullptr)
+        return false;
+
+    return soundInfo->ReadUserParam(pOutValue, index);
+}
+
 }  // namespace nn::atk::detail
