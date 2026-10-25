@@ -480,4 +480,12 @@ SoundArchiveFileReader::GetWaveArchiveIdTable(SoundArchive::ItemId id) const {
     }
 }
 
+SoundArchive::SoundType SoundArchiveFileReader::GetSoundType(SoundArchive::ItemId soundId) const {
+    const SoundArchiveFile::SoundInfo* soundInfo{m_pInfoBlockBody->GetSoundInfo(soundId)};
+    if (soundInfo == nullptr)
+        return SoundArchive::SoundType_Invalid;
+
+    return soundInfo->GetSoundType();
+}
+
 }  // namespace nn::atk::detail
