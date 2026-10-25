@@ -505,8 +505,9 @@ void MultiVoice::SetOutputBusMixVolumeImpl(const BusMixVolumePacket& in,
             }
         }
 
-        const int MixBufferCount{m_pOutputReceiver->GetBusCount() *
-                                 m_pOutputReceiver->GetChannelCount()};
+        const int MixBufferCount{
+            m_pOutputReceiver->GetBusCount() * m_pOutputReceiver->GetChannelCount(),
+        };
         for (int i{0}; i < WaveChannelMax; ++i) {
             for (int j{0}; j < MixBufferCount; ++j) {
                 if (busMixVolume.volume[i][j] != out.GetBusMixVolume(i, j)) {

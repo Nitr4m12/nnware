@@ -39,7 +39,7 @@ public:
     size_t GetActiveCount() const;
     size_t GetFreeCount() const;
 
-    VoiceList* GetVoiceList() const;
+    const VoiceList& GetVoiceList() const;
 
 private:
     friend MultiVoice;

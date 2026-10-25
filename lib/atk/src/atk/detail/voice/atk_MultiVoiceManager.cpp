@@ -245,4 +245,8 @@ size_t MultiVoiceManager::GetFreeCount() const {
     return m_FreeVoiceList.size();
 }
 
+const MultiVoiceManager::VoiceList& MultiVoiceManager::GetVoiceList() const {
+    return m_PrioVoiceList;
+}
+
 }  // namespace nn::atk::detail::driver
