@@ -38,6 +38,8 @@ public:
     VoiceList* GetVoiceList() const;
 
 private:
+    friend MultiVoice;
+
     MultiVoiceManager();
 
     void ChangeVoicePriority(MultiVoice* voice);
