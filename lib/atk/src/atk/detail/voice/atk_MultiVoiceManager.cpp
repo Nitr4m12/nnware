@@ -101,6 +101,25 @@ void MultiVoiceManager::StopAllVoices() {
     }
 }
 
+MultiVoice* MultiVoiceManager::AllocVoice(int32_t voiceChannelCount, int32_t priority,
+                                          MultiVoice::VoiceCallback callback, void* callbackData) {
+    if (m_FreeVoiceList.empty()) {
+        if (DropLowestPriorityVoice(priority) == 0)
+            return nullptr;
+    }
+
+    MultiVoice& voice{m_FreeVoiceList.front()};
+    if (!voice.Alloc(voiceChannelCount, priority, callback, callbackData))
+        return nullptr;
+
+    voice.m_Priority = priority & MultiVoice::PriorityNoDrop;
+
+    m_FreeVoiceList.erase(m_FreeVoiceList.iterator_to(voice));
+
+    AppendVoiceList(&voice);
+    return &voice;
+}
+
 void MultiVoiceManager::AppendVoiceList(MultiVoice* voice) {
     auto itr{m_PrioVoiceList.rbegin()};
     while (itr != m_PrioVoiceList.rend()) {
@@ -118,7 +137,8 @@ int32_t MultiVoiceManager::DropLowestPriorityVoice(int32_t priority) {
         return 0;
 
     MultiVoice* dropVoice{&m_PrioVoiceList.front()};
-    if (dropVoice->GetPriority() == MultiVoice::PriorityNoDrop || priority < dropVoice->GetPriority())
+    if (dropVoice->GetPriority() == MultiVoice::PriorityNoDrop ||
+        priority < dropVoice->GetPriority())
         return 0;
 
     int32_t dropCount{dropVoice->GetSdkVoiceCount()};
