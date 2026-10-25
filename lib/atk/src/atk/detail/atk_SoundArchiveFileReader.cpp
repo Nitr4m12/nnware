@@ -208,6 +208,19 @@ bool SoundArchiveFileReader::ReadGroupInfo(SoundArchive::ItemId groupId,
     return true;
 }
 
+bool SoundArchiveFileReader::ReadWaveArchiveInfo(SoundArchive::ItemId warcId,
+                                                 SoundArchive::WaveArchiveInfo* info) const {
+    const SoundArchiveFile::WaveArchiveInfo* data{m_pInfoBlockBody->GetWaveArchiveInfo(warcId)};
+    if (data == nullptr)
+        return false;
+
+    info->fileId = data->fileId;
+    info->waveCount = data->GetWaveCount();
+    info->isLoadIndividual = data->isLoadIndividual;
+
+    return true;
+}
+
 bool SoundArchiveFileReader::ReadFileInfo(SoundArchive::FileId id, SoundArchive::FileInfo* info,
                                           [[maybe_unused]] int32_t index) const {
     const SoundArchiveFile::FileInfo* data{m_pInfoBlockBody->GetFileInfo(id)};
