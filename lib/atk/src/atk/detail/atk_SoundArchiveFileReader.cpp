@@ -444,19 +444,18 @@ SoundArchiveFileReader::GetWaveArchiveIdTable(SoundArchive::ItemId id) const {
     switch (Util::GetItemType(id)) {
     case ItemType_Sound: {
         const SoundArchiveFile::SoundInfo* pInfo{m_pInfoBlockBody->GetSoundInfo(id)};
-        if (pInfo->GetSoundType() != SoundArchive::SoundType_Wave)
-            return nullptr;
+        if (pInfo->GetSoundType() == SoundArchive::SoundType_Wave) {
+            for (uint32_t i{0}; i < m_pInfoBlockBody->GetSoundGroupCount(); ++i) {
+                const SoundArchiveFile::SoundGroupInfo* pGroupInfo;
+                pGroupInfo = m_pInfoBlockBody->GetSoundGroupInfo(
+                    Util::GetMaskedItemId(i, ItemType_SoundGroup));
 
-        for (uint32_t i{0}; i < m_pInfoBlockBody->GetSoundGroupCount(); ++i) {
-            const SoundArchiveFile::SoundGroupInfo* pGroupInfo;
-            pGroupInfo =
-                m_pInfoBlockBody->GetSoundGroupInfo(Util::GetMaskedItemId(i, ItemType_SoundGroup));
-
-            if (pGroupInfo->startId <= id && id <= pGroupInfo->endId) {
-                const SoundArchiveFile::WaveSoundGroupInfo* pWaveSoundGroupInfo{
-                    pGroupInfo->GetWaveSoundGroupInfo(),
-                };
-                return pWaveSoundGroupInfo->GetWaveArchiveItemIdTable();
+                if (pGroupInfo->startId <= id && id <= pGroupInfo->endId) {
+                    const SoundArchiveFile::WaveSoundGroupInfo* pWaveSoundGroupInfo{
+                        pGroupInfo->GetWaveSoundGroupInfo(),
+                    };
+                    return pWaveSoundGroupInfo->GetWaveArchiveItemIdTable();
+                }
             }
         }
 
@@ -486,6 +485,14 @@ SoundArchive::SoundType SoundArchiveFileReader::GetSoundType(SoundArchive::ItemI
         return SoundArchive::SoundType_Invalid;
 
     return soundInfo->GetSoundType();
+}
+
+uint32_t SoundArchiveFileReader::GetSoundUserParam(SoundArchive::ItemId soundId) const {
+    const SoundArchiveFile::SoundInfo* soundInfo{m_pInfoBlockBody->GetSoundInfo(soundId)};
+    if (soundInfo == nullptr)
+        return 0;
+
+    return soundInfo->GetUserParam();
 }
 
 }  // namespace nn::atk::detail

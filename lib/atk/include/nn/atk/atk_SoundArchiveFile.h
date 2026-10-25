@@ -381,6 +381,11 @@ public:
         }
 
         const WaveSoundGroupInfo* GetWaveSoundGroupInfo() const {
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+            if (!toDetailSoundGroupInfo.IsValidTypeId(ElementType_SoundArchiveFile_WaveSoundGroupInfo))
+                return nullptr;
+#endif
+
             return util::ConstBytePtr(this, toDetailSoundGroupInfo.offset)
                 .Get<WaveSoundGroupInfo>();
         }
