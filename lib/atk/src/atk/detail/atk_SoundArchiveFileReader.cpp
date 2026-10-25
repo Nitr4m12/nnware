@@ -43,4 +43,8 @@ void SoundArchiveFileReader::Finalize() {
 #endif
 }
 
+bool SoundArchiveFileReader::IsStreamSendAvailable() const {
+    return m_Header.version >= StrmsendSupportedVersionSar;
+}
+
 }  // namespace nn::atk::detail
