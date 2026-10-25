@@ -11,8 +11,12 @@ public:
 
     static MultiVoiceManager& GetInstance();
 
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    size_t GetRequiredMemSize(int32_t voiceCount);
+#else
     size_t GetObjectSize(const SoundInstanceConfig& config);
     size_t GetRequiredMemSize(int32_t voiceCount, const SoundInstanceConfig& config);
+#endif
 
     void Initialize(void* mem, size_t memSize, const SoundInstanceConfig& config);
     void Finalize();
