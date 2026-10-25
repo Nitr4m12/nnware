@@ -244,4 +244,25 @@ bool SoundArchiveFileReader::ReadFileInfo(SoundArchive::FileId id, SoundArchive:
     }
 }
 
+bool SoundArchiveFileReader::ReadSoundArchivePlayerInfo(
+    SoundArchive::SoundArchivePlayerInfo* info) const {
+    const SoundArchiveFile::SoundArchivePlayerInfo* data{
+        m_pInfoBlockBody->GetSoundArchivePlayerInfo(),
+    };
+    if (data == nullptr)
+        return false;
+
+    info->sequenceSoundCount = data->sequenceSoundCount;
+    info->sequenceTrackCount = data->sequenceTrackCount;
+    info->streamSoundCount = data->streamSoundCount;
+    info->streamTrackCount = data->streamTrackCount;
+    info->streamChannelCount = data->streamChannelCount;
+    info->waveSoundCount = data->waveSoundCount;
+    info->waveTrackCount = data->waveTrackCount;
+    info->streamBufferTimes = IsStreamPrefetchAvailable() ? data->streamBufferTimes : 1;
+    info->isAdvancedWaveSoundEnabled = data->developFlags & 1;
+
+    return true;
+}
+
 }  // namespace nn::atk::detail
