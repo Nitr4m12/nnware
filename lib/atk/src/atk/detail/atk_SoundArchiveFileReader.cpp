@@ -186,6 +186,28 @@ bool SoundArchiveFileReader::ReadSoundGroupInfo(SoundArchive::ItemId soundGroupI
     return true;
 }
 
+bool SoundArchiveFileReader::ReadGroupInfo(SoundArchive::ItemId groupId,
+                                           SoundArchive::GroupInfo* info) const {
+    {
+        const SoundArchiveFile::GroupInfo* data{m_pInfoBlockBody->GetGroupInfo(groupId)};
+        if (data == nullptr)
+            return false;
+
+        info->fileId = data->fileId;
+    }
+
+    {
+        SoundArchive::FileInfo fileInfo{};
+        bool result{ReadFileInfo(info->fileId, &fileInfo, 0)};
+        if (!result)
+            return false;
+
+        info->groupFileSize = fileInfo.fileSize;
+    }
+
+    return true;
+}
+
 bool SoundArchiveFileReader::ReadFileInfo(SoundArchive::FileId id, SoundArchive::FileInfo* info,
                                           [[maybe_unused]] int32_t index) const {
     const SoundArchiveFile::FileInfo* data{m_pInfoBlockBody->GetFileInfo(id)};
