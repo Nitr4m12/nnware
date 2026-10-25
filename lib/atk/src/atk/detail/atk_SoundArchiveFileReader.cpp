@@ -82,4 +82,15 @@ SoundArchive::ItemId SoundArchiveFileReader::GetItemId(const char* pStr) const {
     return m_pStringBlockBody->GetItemId(pStr);
 }
 
+const char* SoundArchiveFileReader::GetItemLabel(SoundArchive::ItemId id) const {
+    if (m_pStringBlockBody == nullptr)
+        return nullptr;
+
+    SoundArchive::StringId stringId{m_pInfoBlockBody->GetItemStringId(id)};
+    if (stringId == SoundArchive::InvalidId)
+        return nullptr;
+
+    return m_pStringBlockBody->GetString(stringId);
+}
+
 }  // namespace nn::atk::detail
