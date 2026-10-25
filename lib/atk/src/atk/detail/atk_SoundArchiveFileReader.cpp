@@ -105,4 +105,8 @@ uint32_t SoundArchiveFileReader::GetSoundCount() const {
     return m_pInfoBlockBody->GetSoundCount();
 }
 
+uint32_t SoundArchiveFileReader::GetBankCount() const {
+    return m_pInfoBlockBody->GetBankCount();
+}
+
 }  // namespace nn::atk::detail
