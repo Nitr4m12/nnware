@@ -67,4 +67,8 @@ uint32_t SoundArchiveFileReader::GetStringCount() const {
     return m_pStringBlockBody->GetStringCount();
 }
 
+const char* SoundArchiveFileReader::GetString(SoundArchive::StringId stringId) const {
+    return m_pStringBlockBody->GetString(stringId);
+}
+
 }  // namespace nn::atk::detail
