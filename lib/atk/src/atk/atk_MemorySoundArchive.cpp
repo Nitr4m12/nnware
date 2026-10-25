@@ -4,4 +4,6 @@ namespace nn::atk {
 
 MemorySoundArchive::MemorySoundArchive() = default;
 
-}
+MemorySoundArchive::~MemorySoundArchive() = default;
+
+}  // namespace nn::atk
