@@ -47,7 +47,7 @@ private:
     MultiVoiceManager();
 
     void ChangeVoicePriority(MultiVoice* voice);
-    bool DropLowestPriorityVoice(int32_t priority);
+    int32_t DropLowestPriorityVoice(int32_t priority);
 
     void UpdateEachVoicePriority(const VoiceList::iterator&, const VoiceList::iterator&);
 

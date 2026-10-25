@@ -113,4 +113,25 @@ void MultiVoiceManager::AppendVoiceList(MultiVoice* voice) {
     m_PrioVoiceList.insert(itr.base(), *voice);
 }
 
+int32_t MultiVoiceManager::DropLowestPriorityVoice(int32_t priority) {
+    if (m_PrioVoiceList.empty())
+        return 0;
+
+    MultiVoice* dropVoice{&m_PrioVoiceList.front()};
+    if (dropVoice->GetPriority() == MultiVoice::PriorityNoDrop || priority < dropVoice->GetPriority())
+        return 0;
+
+    int32_t dropCount{dropVoice->GetSdkVoiceCount()};
+
+    MultiVoice::VoiceCallback callbackFunc{dropVoice->m_Callback};
+    void* callbackData{dropVoice->m_pCallbackData};
+
+    dropVoice->Stop();
+    dropVoice->Free();
+    if (callbackFunc != nullptr)
+        callbackFunc(dropVoice, MultiVoice::VoiceCallbackStatus_DropVoice, callbackData);
+
+    return dropCount;
+}
+
 }  // namespace nn::atk::detail::driver
