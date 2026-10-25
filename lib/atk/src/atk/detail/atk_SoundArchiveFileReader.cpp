@@ -150,4 +150,15 @@ bool SoundArchiveFileReader::ReadSoundInfo(SoundArchive::ItemId soundId,
     return true;
 }
 
+bool SoundArchiveFileReader::ReadBankInfo(SoundArchive::ItemId bankId,
+                                          SoundArchive::BankInfo* info) const {
+    const SoundArchiveFile::BankInfo* data{m_pInfoBlockBody->GetBankInfo(bankId)};
+    if (data == nullptr)
+        return false;
+
+    info->fileId = data->fileId;
+
+    return true;
+}
+
 }  // namespace nn::atk::detail
