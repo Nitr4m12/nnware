@@ -132,6 +132,11 @@ void MultiVoiceManager::AppendVoiceList(MultiVoice* voice) {
     m_PrioVoiceList.insert(itr.base(), *voice);
 }
 
+void MultiVoiceManager::RemoveVoiceList(MultiVoice* voice) {
+    m_PrioVoiceList.erase(m_PrioVoiceList.iterator_to(*voice));
+    m_FreeVoiceList.push_back(*voice);
+}
+
 int32_t MultiVoiceManager::DropLowestPriorityVoice(int32_t priority) {
     if (m_PrioVoiceList.empty())
         return 0;
