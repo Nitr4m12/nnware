@@ -415,10 +415,26 @@ bool SoundArchiveFileReader::ReadWaveSoundInfo(SoundArchive::ItemId soundId,
         return false;
 
     const SoundArchiveFile::WaveSoundInfo& waveSoundInfo{soundInfo->GetWaveSoundInfo()};
+
     info->index = waveSoundInfo.index;
     info->allocateTrackCount = waveSoundInfo.allocateTrackCount;
     info->channelPriority = waveSoundInfo.GetChannelPriority();
     info->isReleasePriorityFix = waveSoundInfo.GetIsReleasePriorityFix();
+
+    return true;
+}
+
+bool SoundArchiveFileReader::ReadAdvancedWaveSoundInfo(
+    SoundArchive::ItemId soundId, SoundArchive::AdvancedWaveSoundInfo* info) const {
+    const SoundArchiveFile::SoundInfo* soundInfo{m_pInfoBlockBody->GetSoundInfo(soundId)};
+    if (soundInfo == nullptr || soundInfo->GetSoundType() != SoundArchive::SoundType_Wave)
+        return false;
+
+    const SoundArchiveFile::AdvancedWaveSoundInfo& advancedWaveSoundInfo{
+        soundInfo->GetAdvancedWaveSoundInfo(),
+    };
+
+    info->waveArchiveId = advancedWaveSoundInfo.waveArchiveId;
 
     return true;
 }
