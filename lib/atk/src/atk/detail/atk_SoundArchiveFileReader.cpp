@@ -93,4 +93,8 @@ const char* SoundArchiveFileReader::GetItemLabel(SoundArchive::ItemId id) const 
     return m_pStringBlockBody->GetString(stringId);
 }
 
+SoundArchive::FileId SoundArchiveFileReader::GetItemFileId(SoundArchive::ItemId id) const {
+    return m_pInfoBlockBody->GetItemFileId(id);
+}
+
 }  // namespace nn::atk::detail
