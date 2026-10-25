@@ -140,6 +140,18 @@ void MultiVoiceManager::UpdateAudioFrameVoiceStatus() {
     }
 }
 
+void MultiVoiceManager::UpdateAllVoices() {
+    for (auto itr{m_PrioVoiceList.begin()}; itr != m_PrioVoiceList.end();) {
+        auto curItr{itr++};
+        curItr->Calc();
+    }
+
+    for (auto itr{m_PrioVoiceList.begin()}; itr != m_PrioVoiceList.end();) {
+        auto curItr{itr++};
+        curItr->Update();
+    }
+}
+
 void MultiVoiceManager::AppendVoiceList(MultiVoice* voice) {
     auto itr{m_PrioVoiceList.rbegin()};
     while (itr != m_PrioVoiceList.rend()) {
