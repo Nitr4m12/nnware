@@ -265,4 +265,22 @@ bool SoundArchiveFileReader::ReadSoundArchivePlayerInfo(
     return true;
 }
 
+bool SoundArchiveFileReader::ReadSound3DInfo(SoundArchive::ItemId soundId,
+                                             SoundArchive::Sound3DInfo* info) const {
+    const SoundArchiveFile::SoundInfo* soundInfo{m_pInfoBlockBody->GetSoundInfo(soundId)};
+    if (soundInfo == nullptr)
+        return false;
+
+    const SoundArchiveFile::Sound3DInfo* sound3dInfo{soundInfo->GetSound3DInfo()};
+    if (sound3dInfo == nullptr)
+        return false;
+
+    info->flags = sound3dInfo->flags;
+    info->decayRatio = sound3dInfo->decayRatio;
+    info->decayCurve = sound3dInfo->decayCurve;
+    info->dopplerFactor = sound3dInfo->dopplerFactor;
+
+    return true;
+}
+
 }  // namespace nn::atk::detail
