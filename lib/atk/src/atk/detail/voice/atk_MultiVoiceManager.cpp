@@ -190,6 +190,15 @@ void MultiVoiceManager::ChangeVoicePriority(MultiVoice* voice) {
     AppendVoiceList(voice);
 }
 
+void MultiVoiceManager::UpdateAllVoicesSync(uint32_t syncFlag) {
+    for (auto itr{m_PrioVoiceList.begin()}; itr != m_PrioVoiceList.end();) {
+        auto curItr{itr++};
+
+        if (curItr->m_IsActive)
+            curItr->m_SyncFlag |= syncFlag;
+    }
+}
+
 int32_t MultiVoiceManager::DropLowestPriorityVoice(int32_t priority) {
     if (m_PrioVoiceList.empty())
         return 0;
