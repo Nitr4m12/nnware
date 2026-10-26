@@ -118,6 +118,9 @@ public:
     bool IsFirstComeBased() { return m_IsFirstComeBased; }
     void SetFirstComeBased(bool isFirstComeBased) { m_IsFirstComeBased = isFirstComeBased; }
 
+    template <class Function>
+    Function ForEachSound(Function function, bool reverse);
+
 private:
     detail::BasicSound* GetLowestPrioritySound() { return &m_PriorityList.front(); }
 
