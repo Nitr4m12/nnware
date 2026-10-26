@@ -1,4 +1,5 @@
 #include <nn/atk/atk_SoundArchivePlayer.h>
+#include "nn/atk/atk_SoundArchive.h"
 
 namespace {
 
@@ -28,5 +29,7 @@ void SetupSoundInstanceConfigForSoundPlayer(const nn::atk::detail::SoundInstance
 namespace nn::atk {
 
 SoundArchivePlayer::SoundArchivePlayer() = default;
+
+SoundArchivePlayer::~SoundArchivePlayer() = default;
 
 }  // namespace nn::atk
