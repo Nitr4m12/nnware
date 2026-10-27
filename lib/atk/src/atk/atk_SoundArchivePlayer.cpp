@@ -32,4 +32,8 @@ SoundArchivePlayer::SoundArchivePlayer() = default;
 
 SoundArchivePlayer::~SoundArchivePlayer() = default;
 
+bool SoundArchivePlayer::IsAvailable() const {
+    return m_SoundArchiveManager.IsAvailable();
+}
+
 }  // namespace nn::atk
