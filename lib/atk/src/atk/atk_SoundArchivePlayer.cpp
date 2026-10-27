@@ -54,6 +54,29 @@ bool SoundArchivePlayer::Initialize(const SoundArchive* arc, const SoundDataMana
     return Initialize(param);
 }
 
+void SoundArchivePlayer::Finalize() {
+    if (!m_IsInitialized)
+        return;
+
+    StopAllSound(0, true);
+    DisposeInstances();
+
+    if (m_IsMemoryPoolForStreamInstanceAttached) {
+        SoundSystem::DetachMemoryPool(&m_MemoryPoolForStreamInstance);
+        m_IsMemoryPoolForStreamInstanceAttached = false;
+    }
+
+    if (m_IsMemoryPoolForPlayerHeapAttached) {
+        SoundSystem::DetachMemoryPool(&m_MemoryPoolForPlayerHeap);
+        m_IsMemoryPoolForPlayerHeapAttached = false;
+    }
+
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+    m_pDefaultOutputReceiver = nullptr;
+#endif
+    m_IsInitialized = false;
+}
+
 size_t SoundArchivePlayer::GetRequiredStreamInstanceSize(const SoundArchive* pArchive) {
     SoundArchive::SoundArchivePlayerInfo info;
     if (!pArchive->ReadSoundArchivePlayerInfo(&info))
