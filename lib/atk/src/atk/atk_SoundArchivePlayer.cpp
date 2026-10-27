@@ -1,5 +1,4 @@
 #include <nn/atk/atk_SoundArchivePlayer.h>
-#include "nn/atk/atk_SoundArchive.h"
 
 namespace {
 
@@ -34,6 +33,14 @@ SoundArchivePlayer::~SoundArchivePlayer() = default;
 
 bool SoundArchivePlayer::IsAvailable() const {
     return m_SoundArchiveManager.IsAvailable();
+}
+
+size_t SoundArchivePlayer::GetRequiredStreamInstanceSize(const SoundArchive* pArchive) {
+    SoundArchive::SoundArchivePlayerInfo info;
+    if (!pArchive->ReadSoundArchivePlayerInfo(&info))
+        return 0;
+
+    return detail::StreamSoundRuntime::GetRequiredStreamInstanceSize(info.streamSoundCount);
 }
 
 }  // namespace nn::atk
