@@ -1,5 +1,7 @@
 #include <nn/atk/atk_SoundArchivePlayer.h>
 
+#include <nn/atk/atk_DriverCommand.h>
+#include <nn/atk/atk_SoundPlayer.h>
 #include <nn/atk/atk_SoundSystem.h>
 
 namespace {
@@ -110,6 +112,17 @@ bool SoundArchivePlayer::Initialize(const InitializeParam& param) {
 
     m_IsInitialized = true;
     return true;
+}
+
+void SoundArchivePlayer::StopAllSound(int32_t fadeFrames, bool isCommandFlushed) {
+    for (SoundArchive::ItemId playerId{0}; playerId < m_SoundPlayerCount; ++playerId)
+        m_pSoundPlayers[playerId].StopAllSound(fadeFrames);
+
+    if (isCommandFlushed) {
+        detail::DriverCommand& cmdmgr{detail::DriverCommand::GetInstance()};
+        uint32_t tag{cmdmgr.FlushCommand(true, true)};
+        cmdmgr.WaitCommandReply(tag);
+    }
 }
 
 }  // namespace nn::atk
