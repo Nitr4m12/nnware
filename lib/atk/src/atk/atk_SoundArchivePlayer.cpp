@@ -221,6 +221,11 @@ size_t SoundArchivePlayer::GetRequiredStreamBufferTimes(const SoundArchive* arc)
     return m_StreamSoundRuntime.GetRequiredStreamBufferTimes(arc);
 }
 
+size_t SoundArchivePlayer::GetRequiredStreamCacheSize(const SoundArchive* arc,
+                                                      size_t cacheSizePerSound) {
+    return detail::StreamSoundRuntime::GetRequiredStreamCacheSize(arc, cacheSizePerSound);
+}
+
 bool SoundArchivePlayer::Initialize(const InitializeParam& param) {
     if (m_IsInitialized)
         return false;
