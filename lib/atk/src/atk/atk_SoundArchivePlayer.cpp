@@ -9,8 +9,21 @@ namespace {
 const int32_t MemAlignSize{64};
 const size_t FileLoadAlignSize{256};
 
-size_t GetRequiredSoundArchivePlayerMemSizeWithoutStreamSoundInstance(
-    nn::atk::SoundArchive* arc, size_t userParamSizePerSound, int32_t addonSoundArchiveCount);
+size_t
+GetRequiredSoundArchivePlayerMemSizeWithoutStreamSoundInstance(const nn::atk::SoundArchive* arc,
+                                                               size_t userParamSizePerSound,
+                                                               int32_t addonSoundArchiveCount) {
+    size_t result{nn::atk::SoundArchivePlayer::GetRequiredMemSize(arc, userParamSizePerSound,
+                                                                  addonSoundArchiveCount)};
+
+    const size_t alignedStreamInstanceSize{
+        nn::util::align_up(nn::atk::SoundArchivePlayer::GetRequiredStreamInstanceSize(arc),
+                           nn::atk::SoundArchivePlayer::BufferAlignSize),
+    };
+    result -= alignedStreamInstanceSize;
+
+    return result;
+}
 
 #if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
 nn::atk::OutputReceiver* GetOutputReceiver(const nn::atk::detail::StartInfoReader& reader,
@@ -24,8 +37,26 @@ const nn::atk::SoundDataManager*
 GetTargetSoundDataManager(const nn::atk::detail::SoundArchiveManager& soundArchiveManager,
                           const char* soundArchiveName);
 
-size_t GetSoundPlayerInstanceSize(const nn::atk::detail::SoundInstanceConfig& config);
-void SetupSoundInstanceConfigForSoundPlayer(const nn::atk::detail::SoundInstanceConfig& config);
+#if NN_WARE_VER > NN_MAKE_VER(4, 0, 0)
+size_t GetSoundPlayerInstanceSize(const nn::atk::detail::SoundInstanceConfig& config) {
+    size_t result{sizeof(nn::atk::SoundPlayer)};
+    const size_t AdditionalParamBufferSize{
+        nn::atk::detail::OutputAdditionalParam::GetRequiredMemSize(config),
+    };
+
+    if (AdditionalParamBufferSize != 0) {
+        result += sizeof(nn::atk::detail::OutputAdditionalParam);
+        result += AdditionalParamBufferSize;
+    }
+
+    return result;
+}
+
+void SetupSoundInstanceConfigForSoundPlayer(nn::atk::detail::SoundInstanceConfig& config) {
+    config.isBusMixVolumeEnabled = false;
+    config.isVolumeThroughModeEnabled = false;
+}
+#endif
 
 }  // anonymous namespace
 
@@ -75,6 +106,102 @@ void SoundArchivePlayer::Finalize() {
     m_pDefaultOutputReceiver = nullptr;
 #endif
     m_IsInitialized = false;
+}
+
+size_t SoundArchivePlayer::GetRequiredMemSize(const SoundArchive* arc) {
+    return GetRequiredMemSize(arc, 0, 0);
+}
+
+size_t SoundArchivePlayer::GetRequiredMemSize(const SoundArchive* arc,
+                                              size_t userParamSizePerSound) {
+    return GetRequiredMemSize(arc, userParamSizePerSound, 0);
+}
+
+size_t SoundArchivePlayer::GetRequiredMemSize(const SoundArchive* arc, size_t userParamSizePerSound,
+                                              int32_t addonSoundArchiveCount) {
+    size_t size{0};
+    {
+#if NN_WARE_VER > NN_MAKE_VER(4, 0, 0)
+        detail::SoundInstanceConfig config{SoundSystem::GetSoundInstanceConfig()};
+        SetupSoundInstanceConfigForSoundPlayer(config);
+#endif
+
+        uint32_t playerCount{arc->GetPlayerCount()};
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+        size += util::align_up(playerCount * sizeof(SoundPlayer), BufferAlignSize);
+#else
+        size += util::align_up(playerCount * GetSoundPlayerInstanceSize(config), BufferAlignSize);
+#endif
+        for (uint32_t playerIndex{0}; playerIndex < playerCount; ++playerIndex) {
+            SoundArchive::PlayerInfo playerInfo;
+            if (!arc->ReadPlayerInfo(&playerInfo, detail::Util::GetMaskedItemId(
+                                                      playerIndex, detail::ItemType_Player)))
+                continue;
+
+            if (playerInfo.playerHeapSize != 0) {
+                for (int i{0}; i < playerInfo.playableSoundMax; ++i) {
+                    size += util::align_up(playerInfo.playerHeapSize, BufferAlignSize);
+                    size += BufferAlignSize;
+                }
+            }
+        }
+    }
+
+    SoundArchive::SoundArchivePlayerInfo soundArchivePlayerInfo;
+    if (arc->ReadSoundArchivePlayerInfo(&soundArchivePlayerInfo)) {
+        size +=
+            detail::StreamSoundRuntime::GetRequiredMemorySize(soundArchivePlayerInfo, MemAlignSize);
+
+        bool isAdvancedWaveSoundEnabled{soundArchivePlayerInfo.isAdvancedWaveSoundEnabled};
+
+        size += detail::SequenceSoundRuntime::GetRequiredMemorySize(soundArchivePlayerInfo,
+                                                                    MemAlignSize);
+
+        if (isAdvancedWaveSoundEnabled)
+            size += detail::AdvancedWaveSoundRuntime::GetRequiredMemorySize(soundArchivePlayerInfo,
+                                                                            MemAlignSize);
+        else
+            size += detail::WaveSoundRuntime::GetRequiredMemorySize(soundArchivePlayerInfo,
+                                                                    MemAlignSize);
+        size += detail::SequenceSoundRuntime::GetRequiredSequenceTrackMemorySize(
+            soundArchivePlayerInfo, MemAlignSize);
+    }
+
+    if (addonSoundArchiveCount > 0) {
+        size_t containersSize{sizeof(detail::AddonSoundArchiveContainer)};
+        containersSize *= addonSoundArchiveCount;
+        containersSize = util::align_up(containersSize, MemAlignSize);
+
+        size += containersSize;
+    }
+
+    if (userParamSizePerSound != 0) {
+        uint32_t soundCount{0};
+        soundCount += soundArchivePlayerInfo.sequenceSoundCount;
+        soundCount += soundArchivePlayerInfo.waveSoundCount;
+        soundCount += soundArchivePlayerInfo.streamSoundCount;
+
+        size_t adjustSize{util::align_up(userParamSizePerSound, UserParamBoundary)};
+        adjustSize *= soundCount;
+
+        size += adjustSize;
+    }
+
+    return size;
+}
+
+// NON_MATCHING: this function matches when GetRequiredMemSize(const SoundArchive*, size_t, int)
+// is not implemented, but as soon as we implement it, it breaks the match. We can force a match if we uninline
+// GetRequiredSoundArchivePlayerMemSizeWithoutStreamSoundInstance and only call GetRequiredMemSize(...) once,
+// but we know GetRequiredSoundArchivePlayerMemSizeWithoutStreamSoundInstance is used here because of DWARF info
+size_t SoundArchivePlayer::GetRequiredMemSize(const InitializeParam& param) {
+    if (param.enablePreparingStreamInstanceBufferFromSetupBuffer) {
+        return GetRequiredMemSize(param.pSoundArchive, param.userParamSizePerSound,
+                                  param.addonSoundArchiveCount);
+    }
+
+    return GetRequiredSoundArchivePlayerMemSizeWithoutStreamSoundInstance(
+        param.pSoundArchive, param.userParamSizePerSound, param.addonSoundArchiveCount);
 }
 
 size_t SoundArchivePlayer::GetRequiredStreamInstanceSize(const SoundArchive* pArchive) {
@@ -127,8 +254,10 @@ bool SoundArchivePlayer::Initialize(const InitializeParam& param) {
     m_SequenceSoundRuntime.SetSoundArchiveManager(&m_SoundArchiveManager);
 
     if (param.pStreamCacheBuffer != nullptr) {
-        bool setupStreamCacheBufferResult{m_StreamSoundRuntime.SetupStreamCacheBuffer(
-            param.pSoundArchive, param.pStreamCacheBuffer, param.streamCacheSize)};
+        bool setupStreamCacheBufferResult{
+            m_StreamSoundRuntime.SetupStreamCacheBuffer(
+                param.pSoundArchive, param.pStreamCacheBuffer, param.streamCacheSize),
+        };
         if (!setupStreamCacheBufferResult)
             return false;
     }

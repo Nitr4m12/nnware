@@ -178,8 +178,8 @@ public:
     static_assert(sizeof(WaveArchiveInfo) == 0xc);
 
     struct PlayerInfo {
-        int playableSoundMax;
-        uint32_t playerHeapSize;
+        int playableSoundMax{0};
+        uint32_t playerHeapSize{0};
 
         PlayerInfo() = default;
     };
