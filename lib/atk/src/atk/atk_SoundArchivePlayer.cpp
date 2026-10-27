@@ -205,16 +205,20 @@ size_t SoundArchivePlayer::GetRequiredMemSize(const InitializeParam& param) {
         param.pSoundArchive, param.userParamSizePerSound, param.addonSoundArchiveCount);
 }
 
-size_t SoundArchivePlayer::GetRequiredStreamBufferSize(const SoundArchive* arc) const {
-    return m_StreamSoundRuntime.GetRequiredStreamBufferSize(arc);
-}
-
 size_t SoundArchivePlayer::GetRequiredStreamInstanceSize(const SoundArchive* pArchive) {
     SoundArchive::SoundArchivePlayerInfo info;
     if (!pArchive->ReadSoundArchivePlayerInfo(&info))
         return 0;
 
     return detail::StreamSoundRuntime::GetRequiredStreamInstanceSize(info.streamSoundCount);
+}
+
+size_t SoundArchivePlayer::GetRequiredStreamBufferSize(const SoundArchive* arc) const {
+    return m_StreamSoundRuntime.GetRequiredStreamBufferSize(arc);
+}
+
+size_t SoundArchivePlayer::GetRequiredStreamBufferTimes(const SoundArchive* arc) const {
+    return m_StreamSoundRuntime.GetRequiredStreamBufferTimes(arc);
 }
 
 bool SoundArchivePlayer::Initialize(const InitializeParam& param) {
