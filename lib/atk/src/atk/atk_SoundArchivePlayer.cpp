@@ -280,6 +280,61 @@ bool SoundArchivePlayer::Initialize(const InitializeParam& param) {
     return true;
 }
 
+bool SoundArchivePlayer::SetupMram(const SoundArchive* pArc, void* buffer, size_t size,
+                                   size_t userParamSizePerSound, int32_t addonSoundArchiveCount,
+                                   void* streamSoundInstanceBuffer,
+                                   size_t streamSoundInstanceBufferSize) {
+    if (!util::BytePtr(buffer).IsAligned(BufferAlignSize))
+        return false;
+
+    const void* endAddr{util::ConstBytePtr(buffer, size).Get()};
+
+    void* curAddr{buffer};
+    if (!SetupSoundPlayer(pArc, &curAddr, endAddr))
+        return false;
+
+    SoundArchive::SoundArchivePlayerInfo soundArchivePlayerInfo;
+    if (pArc->ReadSoundArchivePlayerInfo(&soundArchivePlayerInfo)) {
+        if (!m_StreamSoundRuntime.Initialize(soundArchivePlayerInfo.streamSoundCount, &curAddr,
+                                             endAddr, streamSoundInstanceBuffer,
+                                             streamSoundInstanceBufferSize))
+            return false;
+
+        m_IsAdvancedWaveSoundEnabled = soundArchivePlayerInfo.isAdvancedWaveSoundEnabled;
+
+        if (!m_SequenceSoundRuntime.Initialize(soundArchivePlayerInfo.sequenceSoundCount, &curAddr,
+                                               endAddr))
+            return false;
+
+        if (m_IsAdvancedWaveSoundEnabled) {
+            if (!m_AdvancedWaveSoundRuntime.Initialize(soundArchivePlayerInfo.waveSoundCount,
+                                                       &curAddr, endAddr))
+                return false;
+        } else {
+            if (!m_WaveSoundRuntime.Initialize(soundArchivePlayerInfo.waveSoundCount, &curAddr,
+                                               endAddr))
+                return false;
+        }
+
+        if (!m_SequenceSoundRuntime.SetupSequenceTrack(soundArchivePlayerInfo.sequenceTrackCount,
+                                                       &curAddr, endAddr))
+            return false;
+    }
+
+    if (addonSoundArchiveCount > 0) {
+        if (!SetupAddonSoundArchiveContainer(addonSoundArchiveCount, &curAddr, endAddr))
+            return false;
+    }
+
+    if (userParamSizePerSound != 0) {
+        if (!SetupUserParamForBasicSound(soundArchivePlayerInfo, &curAddr, endAddr,
+                                         userParamSizePerSound))
+            return false;
+    }
+
+    return true;
+}
+
 bool SoundArchivePlayer::SetupAddonSoundArchiveContainer(int32_t addonSoundArchiveCount,
                                                          void** pOutAllocatedAddr,
                                                          const void* endAddr) {
@@ -306,11 +361,13 @@ bool SoundArchivePlayer::SetupAddonSoundArchiveContainer(int32_t addonSoundArchi
     return true;
 }
 
-bool SoundArchivePlayer::SetupUserParamForBasicSound(const SoundArchive::SoundArchivePlayerInfo &info, void **pOutAllocatedAddr, const void *endAddr, size_t userParamSizePerSound) {
+bool SoundArchivePlayer::SetupUserParamForBasicSound(
+    const SoundArchive::SoundArchivePlayerInfo& info, void** pOutAllocatedAddr, const void* endAddr,
+    size_t userParamSizePerSound) {
     if (reinterpret_cast<uintptr_t>(*pOutAllocatedAddr) % MemAlignSize != 0)
         return false;
 
-    int32_t soundCount{info.sequenceSoundCount +info.waveSoundCount+ info.streamSoundCount};
+    int32_t soundCount{info.sequenceSoundCount + info.waveSoundCount + info.streamSoundCount};
     size_t adjustSize{util::align_up(userParamSizePerSound, UserParamBoundary)};
     size_t requireSize{adjustSize * soundCount};
 
