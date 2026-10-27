@@ -306,6 +306,32 @@ bool SoundArchivePlayer::SetupAddonSoundArchiveContainer(int32_t addonSoundArchi
     return true;
 }
 
+bool SoundArchivePlayer::SetupUserParamForBasicSound(const SoundArchive::SoundArchivePlayerInfo &info, void **pOutAllocatedAddr, const void *endAddr, size_t userParamSizePerSound) {
+    if (reinterpret_cast<uintptr_t>(*pOutAllocatedAddr) % MemAlignSize != 0)
+        return false;
+
+    int32_t soundCount{info.sequenceSoundCount +info.waveSoundCount+ info.streamSoundCount};
+    size_t adjustSize{util::align_up(userParamSizePerSound, UserParamBoundary)};
+    size_t requireSize{adjustSize * soundCount};
+
+    void* estimateEndAddr{util::BytePtr(*pOutAllocatedAddr, requireSize).Get()};
+
+    void* curAddr{*pOutAllocatedAddr};
+    *pOutAllocatedAddr = estimateEndAddr;
+
+    if (m_IsAdvancedWaveSoundEnabled)
+        m_AdvancedWaveSoundRuntime.SetupUserParam(&curAddr, adjustSize);
+    else
+        m_WaveSoundRuntime.SetupUserParam(&curAddr, adjustSize);
+
+    m_SequenceSoundRuntime.SetupUserParam(&curAddr, adjustSize);
+    m_StreamSoundRuntime.SetupUserParam(&curAddr, adjustSize);
+
+    m_SoundUserParamSize = adjustSize;
+
+    return util::ConstBytePtr(endAddr).Distance(curAddr) <= 0;
+}
+
 void SoundArchivePlayer::StopAllSound(int32_t fadeFrames, bool isCommandFlushed) {
     for (SoundArchive::ItemId playerId{0}; playerId < m_SoundPlayerCount; ++playerId)
         m_pSoundPlayers[playerId].StopAllSound(fadeFrames);
