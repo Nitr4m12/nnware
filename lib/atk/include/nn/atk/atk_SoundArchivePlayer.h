@@ -10,19 +10,19 @@ namespace nn::atk {
 class SoundArchivePlayer : public SoundStartable {
 public:
     struct InitializeParam {
-        const SoundArchive* pSoundArchive;
-        const SoundDataManager* pSoundDataManager;
-        void* pSetupBuffer;
-        size_t setupBufferSize;
-        void* pStreamBuffer;
-        size_t streamBufferSize;
-        void* pStreamCacheBuffer;
-        size_t streamCacheSize;
-        bool enablePreparingStreamInstanceBufferFromSetupBuffer;
-        void* pStreamInstanceBuffer;
-        size_t streamInstanceBufferSize;
-        size_t userParamSizePerSound;
-        int32_t addonSoundArchiveCount;
+        const SoundArchive* pSoundArchive{};
+        const SoundDataManager* pSoundDataManager{};
+        void* pSetupBuffer{};
+        size_t setupBufferSize{0};
+        void* pStreamBuffer{};
+        size_t streamBufferSize{0};
+        void* pStreamCacheBuffer{};
+        size_t streamCacheSize{0};
+        bool enablePreparingStreamInstanceBufferFromSetupBuffer{true};
+        void* pStreamInstanceBuffer{};
+        size_t streamInstanceBufferSize{0};
+        size_t userParamSizePerSound{0};
+        int32_t addonSoundArchiveCount{0};
 
         InitializeParam() = default;
     };
