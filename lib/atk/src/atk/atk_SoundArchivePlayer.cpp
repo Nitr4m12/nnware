@@ -335,6 +335,38 @@ bool SoundArchivePlayer::SetupMram(const SoundArchive* pArc, void* buffer, size_
     return true;
 }
 
+detail::PlayerHeap* SoundArchivePlayer::CreatePlayerHeap(void** pOutAllocatedAddr,
+                                                         const void* endAddr, size_t heapSize) {
+    if (!util::BytePtr(*pOutAllocatedAddr).IsAligned(BufferAlignSize))
+        return nullptr;
+
+    void* estimateEndAddr{
+        util::BytePtr(*pOutAllocatedAddr, sizeof(detail::PlayerHeap))
+            .AlignUp(BufferAlignSize)
+            .Get(),
+    };
+    if (util::ConstBytePtr(endAddr).Distance(estimateEndAddr) > 0)
+        return nullptr;
+
+    void* curAddr{*pOutAllocatedAddr};
+    *pOutAllocatedAddr = estimateEndAddr;
+
+    detail::PlayerHeap* playerHeap{new (curAddr) detail::PlayerHeap};
+
+    estimateEndAddr =
+        util::BytePtr(*pOutAllocatedAddr, util::align_up(heapSize, BufferAlignSize)).Get();
+    if (util::ConstBytePtr(endAddr).Distance(estimateEndAddr) > 0)
+        return nullptr;
+
+    curAddr = *pOutAllocatedAddr;
+    *pOutAllocatedAddr = estimateEndAddr;
+
+    if (!playerHeap->Create(curAddr, heapSize))
+        return nullptr;
+
+    return playerHeap;
+}
+
 bool SoundArchivePlayer::SetupAddonSoundArchiveContainer(int32_t addonSoundArchiveCount,
                                                          void** pOutAllocatedAddr,
                                                          const void* endAddr) {
