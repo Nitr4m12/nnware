@@ -280,6 +280,32 @@ bool SoundArchivePlayer::Initialize(const InitializeParam& param) {
     return true;
 }
 
+bool SoundArchivePlayer::SetupAddonSoundArchiveContainer(int32_t addonSoundArchiveCount,
+                                                         void** pOutAllocatedAddr,
+                                                         const void* endAddr) {
+    if (reinterpret_cast<uintptr_t>(*pOutAllocatedAddr) % MemAlignSize != 0)
+        return false;
+
+    size_t requireSize{
+        util::align_up(addonSoundArchiveCount * sizeof(detail::AddonSoundArchiveContainer),
+                       MemAlignSize),
+    };
+    void* estimateEndAddr{util::BytePtr(*pOutAllocatedAddr, requireSize).Get()};
+    if (util::ConstBytePtr(endAddr).Distance(estimateEndAddr) > 0)
+        return false;
+
+    void* currentAddr{*pOutAllocatedAddr};
+    *pOutAllocatedAddr = estimateEndAddr;
+
+    m_pArchiveContainers = static_cast<detail::AddonSoundArchiveContainer*>(currentAddr);
+    m_ArchiveContainerCount = addonSoundArchiveCount;
+
+    for (int i{0}; i < m_ArchiveContainerCount; ++i)
+        new (&m_pArchiveContainers[i]) detail::AddonSoundArchiveContainer;
+
+    return true;
+}
+
 void SoundArchivePlayer::StopAllSound(int32_t fadeFrames, bool isCommandFlushed) {
     for (SoundArchive::ItemId playerId{0}; playerId < m_SoundPlayerCount; ++playerId)
         m_pSoundPlayers[playerId].StopAllSound(fadeFrames);
