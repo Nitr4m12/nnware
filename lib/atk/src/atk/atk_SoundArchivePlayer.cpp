@@ -125,4 +125,19 @@ void SoundArchivePlayer::StopAllSound(int32_t fadeFrames, bool isCommandFlushed)
     }
 }
 
+void SoundArchivePlayer::DisposeInstances() {
+    m_pArchiveContainers = nullptr;
+    m_ArchiveContainerCount = 0;
+    m_SoundPlayerCount = 0;
+    m_pSoundPlayers = nullptr;
+
+    m_SoundArchiveManager.Finalize();
+    m_SequenceSoundRuntime.Finalize();
+    if (m_IsAdvancedWaveSoundEnabled)
+        m_AdvancedWaveSoundRuntime.Finalize();
+    else
+        m_WaveSoundRuntime.Finalize();
+    m_StreamSoundRuntime.Finalize();
+}
+
 }  // namespace nn::atk
