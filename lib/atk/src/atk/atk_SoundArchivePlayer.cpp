@@ -191,9 +191,10 @@ size_t SoundArchivePlayer::GetRequiredMemSize(const SoundArchive* arc, size_t us
 }
 
 // NON_MATCHING: this function matches when GetRequiredMemSize(const SoundArchive*, size_t, int)
-// is not implemented, but as soon as we implement it, it breaks the match. We can force a match if we uninline
-// GetRequiredSoundArchivePlayerMemSizeWithoutStreamSoundInstance and only call GetRequiredMemSize(...) once,
-// but we know GetRequiredSoundArchivePlayerMemSizeWithoutStreamSoundInstance is used here because of DWARF info
+// is not implemented, but as soon as we implement it, it breaks the match. We can force a match if
+// we uninline GetRequiredSoundArchivePlayerMemSizeWithoutStreamSoundInstance and only call
+// GetRequiredMemSize(const SoundArchive*, size_t, int), but we know
+// GetRequiredSoundArchivePlayerMemSizeWithoutStreamSoundInstance is used here because of DWARF info
 size_t SoundArchivePlayer::GetRequiredMemSize(const InitializeParam& param) {
     if (param.enablePreparingStreamInstanceBufferFromSetupBuffer) {
         return GetRequiredMemSize(param.pSoundArchive, param.userParamSizePerSound,
@@ -202,6 +203,10 @@ size_t SoundArchivePlayer::GetRequiredMemSize(const InitializeParam& param) {
 
     return GetRequiredSoundArchivePlayerMemSizeWithoutStreamSoundInstance(
         param.pSoundArchive, param.userParamSizePerSound, param.addonSoundArchiveCount);
+}
+
+size_t SoundArchivePlayer::GetRequiredStreamBufferSize(const SoundArchive* arc) const {
+    return m_StreamSoundRuntime.GetRequiredStreamBufferSize(arc);
 }
 
 size_t SoundArchivePlayer::GetRequiredStreamInstanceSize(const SoundArchive* pArchive) {
