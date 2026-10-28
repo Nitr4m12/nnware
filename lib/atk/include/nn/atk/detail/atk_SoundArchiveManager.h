@@ -71,7 +71,7 @@ public:
     const SoundDataManager* GetAddonSoundDataManager(const char* soundArchiveName) const;
 
     void SetParametersHook(SoundArchiveParametersHook* parametersHook);
-    SoundArchiveParametersHook* GetParametersHook() const { return m_pParametersHook; }
+    SoundArchiveParametersHook* GetParametersHook() const;
 
 private:
     using ContainerList = IntrusiveList<AddonSoundArchiveContainer>;

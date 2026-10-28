@@ -607,6 +607,30 @@ const void* SoundArchivePlayer::detail_GetFileAddress(SoundArchive::FileId fileI
     return pSoundDataManager->detail_GetFileAddress(fileId);
 }
 
+void SoundArchivePlayer::AddAddonSoundArchive(const char* name,
+                                              const AddonSoundArchive* pSoundArchive,
+                                              const SoundDataManager* pSoundDataManager) {
+    detail::AddonSoundArchiveContainer* pContainer{};
+    for (int i{0}; i < m_ArchiveContainerCount; ++i) {
+        if (!m_pArchiveContainers[i].IsActive()) {
+            pContainer = &m_pArchiveContainers[i];
+            break;
+        }
+    }
+
+    pContainer->Initialize(name, pSoundArchive, pSoundDataManager);
+
+    AddonSoundArchive* pEditableSoundArchive{const_cast<AddonSoundArchive*>(pSoundArchive)};
+    pEditableSoundArchive->detail_SetParametersHook(m_SoundArchiveManager.GetParametersHook());
+
+    m_SoundArchiveManager.Add(*pContainer);
+
+    os::Tick tick{os::GetSystemTick()};
+    pContainer->SetAddTick(tick);
+
+    m_AddonSoundArchiveLastAddTick = tick;
+}
+
 void SoundArchivePlayer::StopAllSound(int32_t fadeFrames, bool isCommandFlushed) {
     for (SoundArchive::ItemId playerId{0}; playerId < m_SoundPlayerCount; ++playerId)
         m_pSoundPlayers[playerId].StopAllSound(fadeFrames);

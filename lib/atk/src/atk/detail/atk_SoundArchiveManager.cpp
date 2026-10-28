@@ -127,4 +127,8 @@ void SoundArchiveManager::SetParametersHook(SoundArchiveParametersHook* paramete
     }
 }
 
+SoundArchiveParametersHook* SoundArchiveManager::GetParametersHook() const {
+    return m_pParametersHook;
+}
+
 }  // namespace nn::atk::detail
