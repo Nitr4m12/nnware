@@ -32,7 +32,12 @@ public:
         LockImpl();
     }
 
-    void Unlock();
+    void Unlock() {
+        if (!m_IsEnable)
+            return;
+
+        UnlockImpl();
+    }
 
     fnd::FileStream* OpenFile(void* buffer, size_t bufferLength, void* cacheBuffer,
                               size_t cacheBufferLength, const char* itemLabel,
@@ -61,7 +66,7 @@ protected:
     virtual void Impl1();
     virtual void Impl2();
     virtual void LockImpl();
-    virtual void Impl4();
+    virtual void UnlockImpl();
     virtual fnd::FileStream* OpenFileImpl(void* buffer, size_t bufferLength, void* cacheBuffer,
                                           size_t cacheBufferLength, const char* itemLabel,
                                           const char* fileType);

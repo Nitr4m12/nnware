@@ -2,6 +2,7 @@
 
 #include <nn/atk/atk_DriverCommand.h>
 #include <nn/atk/atk_SoundArchiveFilesHook.h>
+#include <nn/atk/atk_SoundArchiveParametersHook.h>
 #include <nn/atk/atk_SoundPlayer.h>
 #include <nn/atk/atk_SoundSystem.h>
 
@@ -674,10 +675,17 @@ bool SoundArchivePlayer::IsSoundArchiveFileHooksEnabled() const {
 }
 
 void SoundArchivePlayer::LockSoundArchiveFileHooks() {
-    if (m_pSoundArchiveFilesHook == nullptr)
+    if (!IsSoundArchiveFileHooksEnabled())
         return;
 
     m_pSoundArchiveFilesHook->Lock();
+}
+
+void SoundArchivePlayer::UnlockSoundArchiveFileHooks() {
+    if (!IsSoundArchiveFileHooksEnabled())
+        return;
+
+    return m_pSoundArchiveFilesHook->Unlock();
 }
 
 void SoundArchivePlayer::StopAllSound(int32_t fadeFrames, bool isCommandFlushed) {
