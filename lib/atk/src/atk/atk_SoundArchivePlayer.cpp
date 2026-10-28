@@ -511,6 +511,32 @@ bool SoundArchivePlayer::SetupUserParamForBasicSound(
     return util::ConstBytePtr(endAddr).Distance(curAddr) <= 0;
 }
 
+SoundPlayer& SoundArchivePlayer::GetSoundPlayer(SoundArchive::ItemId playerId) {
+    // XXX: DWARF shows the const version of the function is being called here
+    return const_cast<SoundPlayer&>(
+        static_cast<const SoundArchivePlayer*>(this)->GetSoundPlayer(playerId));
+}
+
+const SoundPlayer& SoundArchivePlayer::GetSoundPlayer(SoundArchive::ItemId playerId) const {
+    uint32_t itemIndex{detail::Util::GetItemIndex(playerId)};
+
+    return m_pSoundPlayers[itemIndex];
+}
+
+SoundPlayer& SoundArchivePlayer::GetSoundPlayer(const char* pStr) {
+    // XXX: DWARF shows the const version of the function is being called here
+    return const_cast<SoundPlayer&>(
+        static_cast<const SoundArchivePlayer*>(this)->GetSoundPlayer(pStr));
+}
+
+const SoundPlayer& SoundArchivePlayer::GetSoundPlayer(const char* pStr) const {
+    const SoundArchive* pSoundArchive{m_SoundArchiveManager.GetMainSoundArchive()};
+
+    SoundArchive::ItemId playerId{pSoundArchive->GetItemId(pStr)};
+
+    return GetSoundPlayer(playerId);
+}
+
 void SoundArchivePlayer::StopAllSound(int32_t fadeFrames, bool isCommandFlushed) {
     for (SoundArchive::ItemId playerId{0}; playerId < m_SoundPlayerCount; ++playerId)
         m_pSoundPlayers[playerId].StopAllSound(fadeFrames);
