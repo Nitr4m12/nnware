@@ -1,6 +1,7 @@
 #include <nn/atk/atk_SoundArchivePlayer.h>
 
 #include <nn/atk/atk_DriverCommand.h>
+#include <nn/atk/atk_SoundArchiveFilesHook.h>
 #include <nn/atk/atk_SoundPlayer.h>
 #include <nn/atk/atk_SoundSystem.h>
 
@@ -663,6 +664,13 @@ SoundStartable::StartResult SoundArchivePlayer::detail_SetupSound(SoundHandle* h
                                                                   const StartInfo* startInfo) {
     return detail_SetupSoundImpl(handle, soundId, nullptr, nullptr, holdFlag, soundArchiveName,
                                  startInfo);
+}
+
+bool SoundArchivePlayer::IsSoundArchiveFileHooksEnabled() const {
+    if (m_pSoundArchiveFilesHook == nullptr)
+        return false;
+
+    return m_pSoundArchiveFilesHook->GetIsEnable();
 }
 
 void SoundArchivePlayer::StopAllSound(int32_t fadeFrames, bool isCommandFlushed) {
