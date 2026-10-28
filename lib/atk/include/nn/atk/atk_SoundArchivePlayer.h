@@ -1,5 +1,6 @@
 #pragma once
 
+#include <nn/atk/atk_AddonSoundArchive.h>
 #include <nn/atk/atk_SequenceSoundRuntime.h>
 #include <nn/atk/atk_StreamSoundRuntime.h>
 #include <nn/atk/atk_WaveSoundRuntime.h>

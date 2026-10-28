@@ -3,6 +3,7 @@
 #include <nn/os.h>
 #include <nn/util/util_IntrusiveList.h>
 
+#include <nn/atk/atk_AddonSoundArchive.h>
 #include <nn/atk/atk_SoundArchive.h>
 #include <nn/atk/atk_SoundDataManager.h>
 

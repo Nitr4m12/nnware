@@ -352,6 +352,4 @@ private:
 };
 static_assert(sizeof(SoundArchive) == 0x2a0);
 
-class AddonSoundArchive : public SoundArchive {};
-
 }  // namespace nn::atk
