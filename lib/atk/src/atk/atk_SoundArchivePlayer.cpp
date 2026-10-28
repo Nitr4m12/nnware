@@ -511,6 +511,28 @@ bool SoundArchivePlayer::SetupUserParamForBasicSound(
     return util::ConstBytePtr(endAddr).Distance(curAddr) <= 0;
 }
 
+void SoundArchivePlayer::Update() {
+    detail::Util::WarningLogger::GetInstance().SwapBuffer();
+    if (m_IsEnableWarningPrint)
+        detail::Util::WarningLogger::GetInstance().Print();
+
+    for (uint32_t playerIndex{0}; playerIndex < m_SoundPlayerCount; ++playerIndex)
+        GetSoundPlayer(playerIndex).Update();
+
+    m_SequenceSoundRuntime.Update();
+
+    if (m_IsAdvancedWaveSoundEnabled)
+        m_AdvancedWaveSoundRuntime.Update();
+    else
+        m_WaveSoundRuntime.Update();
+
+    m_StreamSoundRuntime.Update();
+
+    detail::DriverCommand& cmdmgr{detail::DriverCommand::GetInstance()};
+    cmdmgr.RecvCommandReply();
+    cmdmgr.FlushCommand(false, false);
+}
+
 SoundPlayer& SoundArchivePlayer::GetSoundPlayer(SoundArchive::ItemId playerId) {
     // XXX: DWARF shows the const version of the function is being called here
     return const_cast<SoundPlayer&>(
