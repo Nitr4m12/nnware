@@ -13,8 +13,10 @@ size_t
 GetRequiredSoundArchivePlayerMemSizeWithoutStreamSoundInstance(const nn::atk::SoundArchive* arc,
                                                                size_t userParamSizePerSound,
                                                                int32_t addonSoundArchiveCount) {
-    size_t result{nn::atk::SoundArchivePlayer::GetRequiredMemSize(arc, userParamSizePerSound,
-                                                                  addonSoundArchiveCount)};
+    size_t result{
+        nn::atk::SoundArchivePlayer::GetRequiredMemSize(arc, userParamSizePerSound,
+                                                        addonSoundArchiveCount),
+    };
 
     const size_t alignedStreamInstanceSize{
         nn::util::align_up(nn::atk::SoundArchivePlayer::GetRequiredStreamInstanceSize(arc),
@@ -337,7 +339,7 @@ bool SoundArchivePlayer::SetupMram(const SoundArchive* pArc, void* buffer, size_
 
 detail::PlayerHeap* SoundArchivePlayer::CreatePlayerHeap(void** pOutAllocatedAddr,
                                                          const void* endAddr, size_t heapSize) {
-    if (!util::BytePtr(*pOutAllocatedAddr).IsAligned(BufferAlignSize))
+    if (reinterpret_cast<uintptr_t>(*pOutAllocatedAddr) % BufferAlignSize != 0)
         return nullptr;
 
     void* estimateEndAddr{
@@ -361,10 +363,98 @@ detail::PlayerHeap* SoundArchivePlayer::CreatePlayerHeap(void** pOutAllocatedAdd
     curAddr = *pOutAllocatedAddr;
     *pOutAllocatedAddr = estimateEndAddr;
 
-    if (!playerHeap->Create(curAddr, heapSize))
+    bool result{playerHeap->Create(curAddr, heapSize)};
+    if (!result)
         return nullptr;
 
     return playerHeap;
+}
+
+bool SoundArchivePlayer::SetupSoundPlayer(const SoundArchive* pArc, void** pOutAllocatedAddr,
+                                          const void* endAddr) {
+    if (reinterpret_cast<uintptr_t>(*pOutAllocatedAddr) % BufferAlignSize != 0)
+        return false;
+
+    const size_t SoundPlayerSize{sizeof(SoundPlayer)};
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+    detail::SoundInstanceConfig config{SoundSystem::GetSoundInstanceConfig()};
+    SetupSoundInstanceConfigForSoundPlayer(config);
+    const size_t AdditionalParamBufferSize{
+        detail::OutputAdditionalParam::GetRequiredMemSize(config),
+    };
+    const size_t AdditionalParamSize{
+        AdditionalParamBufferSize != 0 ? sizeof(detail::OutputAdditionalParam) : 0,
+    };
+#endif
+
+    uint32_t playerCount{pArc->GetPlayerCount()};
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    size_t requireSize{util::align_up(playerCount * sizeof(SoundPlayer), BufferAlignSize)};
+#else
+    size_t requireSize{
+        util::align_up(playerCount * GetSoundPlayerInstanceSize(config), BufferAlignSize),
+    };
+#endif
+
+    void* estimateEndAddr{util::BytePtr(*pOutAllocatedAddr, requireSize).Get()};
+    if (util::ConstBytePtr(endAddr).Distance(estimateEndAddr) > 0)
+        return false;
+
+    void* curAddr{*pOutAllocatedAddr};
+    *pOutAllocatedAddr = estimateEndAddr;
+
+    m_pSoundPlayers = static_cast<SoundPlayer*>(curAddr);
+    m_SoundPlayerCount = playerCount;
+
+    uint8_t* ptr{static_cast<uint8_t*>(curAddr)};
+    [[maybe_unused]] uint8_t* additionalParamPtr{ptr + playerCount * SoundPlayerSize};
+    for (uint32_t playerIndex{0}; playerIndex < playerCount;
+         ++playerIndex, ptr += SoundPlayerSize) {
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+        SoundPlayer* player{new (ptr) SoundPlayer};
+#else
+        detail::OutputAdditionalParam* pAdditionalParam{};
+        if (AdditionalParamBufferSize != 0) {
+            pAdditionalParam = new (additionalParamPtr) detail::OutputAdditionalParam;
+            additionalParamPtr += AdditionalParamSize;
+
+            void* pAdditionalParamBuffer{additionalParamPtr};
+            additionalParamPtr += AdditionalParamBufferSize;
+
+            pAdditionalParam->Initialize(pAdditionalParamBuffer, AdditionalParamBufferSize, config);
+        }
+        SoundPlayer* player{new (ptr) SoundPlayer(pAdditionalParam)};
+#endif
+
+        SoundArchive::PlayerInfo playerInfo;
+        if (pArc->ReadPlayerInfo(
+                &playerInfo, detail::Util::GetMaskedItemId(playerIndex, detail::ItemType_Player))) {
+            player->SetPlayableSoundCount(playerInfo.playableSoundMax);
+            if (playerInfo.playerHeapSize != 0) {
+                for (int i{0}; i < playerInfo.playableSoundMax; ++i) {
+                    detail::PlayerHeap* playerHeap{
+                        CreatePlayerHeap(pOutAllocatedAddr, endAddr, playerInfo.playerHeapSize),
+                    };
+                    if (playerHeap == nullptr)
+                        return false;
+
+                    player->detail_AppendPlayerHeap(playerHeap);
+                }
+                player->detail_SetPlayableSoundLimit(playerInfo.playableSoundMax);
+            }
+        }
+    }
+
+    size_t playerHeapSizeDiff{
+        static_cast<size_t>(util::ConstBytePtr(estimateEndAddr).Distance(*pOutAllocatedAddr)),
+    };
+    if (playerHeapSizeDiff != 0) {
+        SoundSystem::AttachMemoryPool(&m_MemoryPoolForPlayerHeap, estimateEndAddr,
+                                      playerHeapSizeDiff);
+        m_IsMemoryPoolForPlayerHeapAttached = true;
+    }
+
+    return true;
 }
 
 bool SoundArchivePlayer::SetupAddonSoundArchiveContainer(int32_t addonSoundArchiveCount,
