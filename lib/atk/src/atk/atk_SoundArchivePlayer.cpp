@@ -579,16 +579,16 @@ SoundPlayer& SoundArchivePlayer::GetSoundPlayer(SoundArchive::ItemId playerId) {
         static_cast<const SoundArchivePlayer*>(this)->GetSoundPlayer(playerId));
 }
 
-const SoundPlayer& SoundArchivePlayer::GetSoundPlayer(SoundArchive::ItemId playerId) const {
-    uint32_t itemIndex{detail::Util::GetItemIndex(playerId)};
-
-    return m_pSoundPlayers[itemIndex];
-}
-
 SoundPlayer& SoundArchivePlayer::GetSoundPlayer(const char* pStr) {
     // XXX: DWARF shows the const version of the function is being called here
     return const_cast<SoundPlayer&>(
         static_cast<const SoundArchivePlayer*>(this)->GetSoundPlayer(pStr));
+}
+
+const SoundPlayer& SoundArchivePlayer::GetSoundPlayer(SoundArchive::ItemId playerId) const {
+    uint32_t itemIndex{detail::Util::GetItemIndex(playerId)};
+
+    return m_pSoundPlayers[itemIndex];
 }
 
 const SoundPlayer& SoundArchivePlayer::GetSoundPlayer(const char* pStr) const {
@@ -597,6 +597,14 @@ const SoundPlayer& SoundArchivePlayer::GetSoundPlayer(const char* pStr) const {
     SoundArchive::ItemId playerId{pSoundArchive->GetItemId(pStr)};
 
     return GetSoundPlayer(playerId);
+}
+
+const void* SoundArchivePlayer::detail_GetFileAddress(SoundArchive::FileId fileId) const {
+    const SoundDataManager* pSoundDataManager{m_SoundArchiveManager.GetMainSoundDataManager()};
+    if (pSoundDataManager == nullptr)
+        return nullptr;
+
+    return pSoundDataManager->detail_GetFileAddress(fileId);
 }
 
 void SoundArchivePlayer::StopAllSound(int32_t fadeFrames, bool isCommandFlushed) {
