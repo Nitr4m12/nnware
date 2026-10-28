@@ -3,6 +3,7 @@
 #include <nn/atk/atk_DriverCommand.h>
 #include <nn/atk/atk_SoundPlayer.h>
 #include <nn/atk/atk_SoundSystem.h>
+#include "nn/atk/detail/atk_AddonSoundArchiveContainer.h"
 
 namespace {
 
@@ -531,6 +532,25 @@ void SoundArchivePlayer::Update() {
     detail::DriverCommand& cmdmgr{detail::DriverCommand::GetInstance()};
     cmdmgr.RecvCommandReply();
     cmdmgr.FlushCommand(false, false);
+}
+
+const SoundArchive& SoundArchivePlayer::GetSoundArchive() const {
+    return *m_SoundArchiveManager.GetMainSoundArchive();
+}
+
+const AddonSoundArchive*
+SoundArchivePlayer::GetAddonSoundArchive(const char* soundArchiveName) const {
+    const SoundArchive* pArchive{m_SoundArchiveManager.GetAddonSoundArchive(soundArchiveName)};
+
+    return static_cast<const AddonSoundArchive*>(pArchive);
+}
+
+const AddonSoundArchive* SoundArchivePlayer::GetAddonSoundArchive(int32_t index) const {
+    const detail::AddonSoundArchiveContainer* pContainer{
+        m_SoundArchiveManager.GetAddonSoundArchiveContainer(index),
+    };
+
+    return static_cast<const AddonSoundArchive*>(pContainer->GetSoundArchive());
 }
 
 SoundPlayer& SoundArchivePlayer::GetSoundPlayer(SoundArchive::ItemId playerId) {
