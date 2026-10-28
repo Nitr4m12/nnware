@@ -697,6 +697,18 @@ void SoundArchivePlayer::UnlockSoundArchiveFileHooks() {
     return m_pSoundArchiveFilesHook->Unlock();
 }
 
+bool SoundArchivePlayer::IsSequenceSoundEdited(const char* soundName) const {
+    if (soundName == nullptr)
+        return false;
+
+    if (m_pSoundArchiveFilesHook->GetFileAddress(
+            soundName, detail::SoundArchiveFilesHook::ItemTypeSequenceSound,
+            detail::SoundArchiveFilesHook::FileTypeSequenceBinary, 0) == nullptr)
+        return false;
+
+    return true;
+}
+
 void SoundArchivePlayer::StopAllSound(int32_t fadeFrames, bool isCommandFlushed) {
     for (SoundArchive::ItemId playerId{0}; playerId < m_SoundPlayerCount; ++playerId)
         m_pSoundPlayers[playerId].StopAllSound(fadeFrames);
