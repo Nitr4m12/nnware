@@ -709,6 +709,13 @@ bool SoundArchivePlayer::IsSequenceSoundEdited(const char* soundName) const {
     return true;
 }
 
+bool SoundArchivePlayer::IsStreamSoundEdited(const char* soundName) const {
+    if (soundName == nullptr)
+        return false;
+
+    return true;
+}
+
 void SoundArchivePlayer::StopAllSound(int32_t fadeFrames, bool isCommandFlushed) {
     for (SoundArchive::ItemId playerId{0}; playerId < m_SoundPlayerCount; ++playerId)
         m_pSoundPlayers[playerId].StopAllSound(fadeFrames);
