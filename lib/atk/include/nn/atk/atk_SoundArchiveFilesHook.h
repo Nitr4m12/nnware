@@ -25,7 +25,13 @@ public:
 
     bool IsTargetItem(const char* itemLabel);
 
-    void Lock();
+    void Lock() {
+        if (!m_IsEnable)
+            return;
+
+        LockImpl();
+    }
+
     void Unlock();
 
     fnd::FileStream* OpenFile(void* buffer, size_t bufferLength, void* cacheBuffer,
@@ -54,7 +60,7 @@ protected:
     virtual void Impl0();
     virtual void Impl1();
     virtual void Impl2();
-    virtual void Impl3();
+    virtual void LockImpl();
     virtual void Impl4();
     virtual fnd::FileStream* OpenFileImpl(void* buffer, size_t bufferLength, void* cacheBuffer,
                                           size_t cacheBufferLength, const char* itemLabel,

@@ -673,6 +673,13 @@ bool SoundArchivePlayer::IsSoundArchiveFileHooksEnabled() const {
     return m_pSoundArchiveFilesHook->GetIsEnable();
 }
 
+void SoundArchivePlayer::LockSoundArchiveFileHooks() {
+    if (m_pSoundArchiveFilesHook == nullptr)
+        return;
+
+    m_pSoundArchiveFilesHook->Lock();
+}
+
 void SoundArchivePlayer::StopAllSound(int32_t fadeFrames, bool isCommandFlushed) {
     for (SoundArchive::ItemId playerId{0}; playerId < m_SoundPlayerCount; ++playerId)
         m_pSoundPlayers[playerId].StopAllSound(fadeFrames);
