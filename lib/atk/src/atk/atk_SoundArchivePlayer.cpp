@@ -651,6 +651,12 @@ void SoundArchivePlayer::RemoveAddonSoundArchive(const AddonSoundArchive* pSound
     m_SoundArchiveManager.Remove(*pContainer);
 }
 
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+void SoundArchivePlayer::SetDefaultOutputReceiver(OutputReceiver* pOutputReceiver) {
+    m_pDefaultOutputReceiver = pOutputReceiver;
+}
+#endif
+
 void SoundArchivePlayer::StopAllSound(int32_t fadeFrames, bool isCommandFlushed) {
     for (SoundArchive::ItemId playerId{0}; playerId < m_SoundPlayerCount; ++playerId)
         m_pSoundPlayers[playerId].StopAllSound(fadeFrames);
