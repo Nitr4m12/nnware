@@ -229,8 +229,8 @@ protected:
 
 private:
     void EnableHook(const SoundArchive* pSoundArchive, bool isHookDisabled);
-    bool IsSoundArchiveFileHooksEnabled() const;
 
+    bool IsSoundArchiveFileHooksEnabled() const;
     void LockSoundArchiveFileHooks();
     void UnlockSoundArchiveFileHooks();
 

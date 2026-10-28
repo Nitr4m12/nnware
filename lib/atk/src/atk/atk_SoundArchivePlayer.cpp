@@ -667,6 +667,15 @@ SoundStartable::StartResult SoundArchivePlayer::detail_SetupSound(SoundHandle* h
                                  startInfo);
 }
 
+void SoundArchivePlayer::EnableHook(const SoundArchive* pSoundArchive, bool isHookDisabled) {
+    if (isHookDisabled) {
+        pSoundArchive->detail_GetParametersHook()->SetIsEnable(true);
+        m_pSoundArchiveFilesHook->SetIsEnable(true);
+    }
+
+    UnlockSoundArchiveFileHooks();
+}
+
 bool SoundArchivePlayer::IsSoundArchiveFileHooksEnabled() const {
     if (m_pSoundArchiveFilesHook == nullptr)
         return false;
