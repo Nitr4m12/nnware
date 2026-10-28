@@ -667,6 +667,13 @@ SoundStartable::StartResult SoundArchivePlayer::detail_SetupSound(SoundHandle* h
                                  startInfo);
 }
 
+void SoundArchivePlayer::SetCommonSoundParam(detail::BasicSound* sound,
+                                             const SoundArchive::SoundInfo* commonInfo) {
+    sound->SetInitialVolume(commonInfo->volume / 127.0f);
+    sound->SetPanMode(commonInfo->panMode);
+    sound->SetPanCurve(commonInfo->panCurve);
+}
+
 void SoundArchivePlayer::EnableHook(const SoundArchive* pSoundArchive, bool isHookDisabled) {
     if (isHookDisabled) {
         pSoundArchive->detail_GetParametersHook()->SetIsEnable(true);
