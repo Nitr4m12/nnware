@@ -561,6 +561,14 @@ const char* SoundArchivePlayer::GetAddonSoundArchiveName(int32_t index) const {
     return pContainer->GetSoundArchiveName();
 }
 
+os::Tick SoundArchivePlayer::GetAddonSoundArchiveAddTick(int32_t index) const {
+    const detail::AddonSoundArchiveContainer* pContainer{
+        m_SoundArchiveManager.GetAddonSoundArchiveContainer(index),
+    };
+
+    return pContainer->GetAddTick();
+}
+
 SoundPlayer& SoundArchivePlayer::GetSoundPlayer(SoundArchive::ItemId playerId) {
     // XXX: DWARF shows the const version of the function is being called here
     return const_cast<SoundPlayer&>(
