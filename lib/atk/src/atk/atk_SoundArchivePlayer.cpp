@@ -631,6 +631,26 @@ void SoundArchivePlayer::AddAddonSoundArchive(const char* name,
     m_AddonSoundArchiveLastAddTick = tick;
 }
 
+void SoundArchivePlayer::RemoveAddonSoundArchive(const AddonSoundArchive* pSoundArchive) {
+    detail::AddonSoundArchiveContainer* pContainer{};
+    for (int i{0}; i < m_ArchiveContainerCount; ++i) {
+        if (m_pArchiveContainers[i].IsActive() &&
+            m_pArchiveContainers[i].GetSoundArchive() == pSoundArchive) {
+            pContainer = &m_pArchiveContainers[i];
+            break;
+        }
+    }
+
+    if (pContainer == nullptr)
+        return;
+
+    AddonSoundArchive* pEditableSoundArchive{const_cast<AddonSoundArchive*>(pSoundArchive)};
+    pEditableSoundArchive->detail_SetParametersHook(nullptr);
+
+    pContainer->Finalize();
+    m_SoundArchiveManager.Remove(*pContainer);
+}
+
 void SoundArchivePlayer::StopAllSound(int32_t fadeFrames, bool isCommandFlushed) {
     for (SoundArchive::ItemId playerId{0}; playerId < m_SoundPlayerCount; ++playerId)
         m_pSoundPlayers[playerId].StopAllSound(fadeFrames);
