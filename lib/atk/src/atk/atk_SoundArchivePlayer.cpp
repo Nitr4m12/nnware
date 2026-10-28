@@ -3,7 +3,6 @@
 #include <nn/atk/atk_DriverCommand.h>
 #include <nn/atk/atk_SoundPlayer.h>
 #include <nn/atk/atk_SoundSystem.h>
-#include "nn/atk/detail/atk_AddonSoundArchiveContainer.h"
 
 namespace {
 
@@ -567,6 +566,11 @@ os::Tick SoundArchivePlayer::GetAddonSoundArchiveAddTick(int32_t index) const {
     };
 
     return pContainer->GetAddTick();
+}
+
+const SoundDataManager*
+SoundArchivePlayer::GetAddonSoundDataManager(const char* soundArchiveName) const {
+    return m_SoundArchiveManager.GetAddonSoundDataManager(soundArchiveName);
 }
 
 SoundPlayer& SoundArchivePlayer::GetSoundPlayer(SoundArchive::ItemId playerId) {
