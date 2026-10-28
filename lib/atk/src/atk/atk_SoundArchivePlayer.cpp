@@ -657,6 +657,14 @@ void SoundArchivePlayer::SetDefaultOutputReceiver(OutputReceiver* pOutputReceive
 }
 #endif
 
+SoundStartable::StartResult SoundArchivePlayer::detail_SetupSound(SoundHandle* handle,
+                                                                  uint32_t soundId, bool holdFlag,
+                                                                  const char* soundArchiveName,
+                                                                  const StartInfo* startInfo) {
+    return detail_SetupSoundImpl(handle, soundId, nullptr, nullptr, holdFlag, soundArchiveName,
+                                 startInfo);
+}
+
 void SoundArchivePlayer::StopAllSound(int32_t fadeFrames, bool isCommandFlushed) {
     for (SoundArchive::ItemId playerId{0}; playerId < m_SoundPlayerCount; ++playerId)
         m_pSoundPlayers[playerId].StopAllSound(fadeFrames);
