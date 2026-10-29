@@ -1206,6 +1206,33 @@ Result SoundArchivePlayer::ReadWaveSoundDataInfo(WaveSoundDataInfo* pOutInfo,
     return ReadWaveSoundDataInfo(pOutInfo, waveSoundId, pSoundArchive, pSoundDataManager);
 }
 
+Result SoundArchivePlayer::ReadWaveSoundDataInfo(WaveSoundDataInfo* pOutInfo,
+                                                 const char* waveSoundName,
+                                                 const char* soundArchiveName) const {
+    const SoundArchive* pSoundArchive{
+        GetTargetSoundArchive(m_SoundArchiveManager, soundArchiveName),
+    };
+    const SoundDataManager* pSoundDataManager{
+        GetTargetSoundDataManager(m_SoundArchiveManager, soundArchiveName),
+    };
+
+    const SoundArchive::ItemId id{pSoundArchive->GetItemId(waveSoundName)};
+    if (id == SoundArchive::InvalidId)
+        return ResultError3();
+
+    return ReadWaveSoundDataInfo(pOutInfo, id, pSoundArchive, pSoundDataManager);
+}
+
+Result SoundArchivePlayer::ReadWaveSoundDataInfo(WaveSoundDataInfo* pOutInfo,
+                                                 SoundArchive::ItemId waveSoundId) const {
+    return ReadWaveSoundDataInfo(pOutInfo, waveSoundId, nullptr);
+}
+
+Result SoundArchivePlayer::ReadWaveSoundDataInfo(WaveSoundDataInfo* pOutInfo,
+                                                 const char* waveSoundName) const {
+    return ReadWaveSoundDataInfo(pOutInfo, waveSoundName, nullptr);
+}
+
 void SoundArchivePlayer::StopAllSound(int32_t fadeFrames, bool isCommandFlushed) {
     for (SoundArchive::ItemId playerId{0}; playerId < m_SoundPlayerCount; ++playerId)
         m_pSoundPlayers[playerId].StopAllSound(fadeFrames);
