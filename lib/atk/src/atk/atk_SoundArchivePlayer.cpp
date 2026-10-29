@@ -59,10 +59,21 @@ nn::atk::OutputReceiver* GetOutputReceiver(const nn::atk::detail::StartInfoReade
 
 const nn::atk::SoundArchive*
 GetTargetSoundArchive(const nn::atk::detail::SoundArchiveManager& soundArchiveManager,
-                      const char* soundArchiveName);
+                      const char* soundArchiveName) {
+    if (soundArchiveName == nullptr)
+        return soundArchiveManager.GetMainSoundArchive();
+
+    return soundArchiveManager.GetAddonSoundArchive(soundArchiveName);
+}
+
 const nn::atk::SoundDataManager*
 GetTargetSoundDataManager(const nn::atk::detail::SoundArchiveManager& soundArchiveManager,
-                          const char* soundArchiveName);
+                          const char* soundArchiveName) {
+    if (soundArchiveName == nullptr)
+        return soundArchiveManager.GetMainSoundDataManager();
+
+    return soundArchiveManager.GetAddonSoundDataManager(soundArchiveName);
+}
 
 #if NN_WARE_VER > NN_MAKE_VER(4, 0, 0)
 size_t GetSoundPlayerInstanceSize(const nn::atk::detail::SoundInstanceConfig& config) {
@@ -1146,7 +1157,6 @@ Result SoundArchivePlayer::ReadWaveSoundDataInfo(WaveSoundDataInfo* pOutInfo,
                                                  SoundArchive::ItemId waveSoundId,
                                                  const SoundArchive* pSoundArchive,
                                                  const SoundDataManager* pSoundDataManager) const {
-    // TODO: refactor to use Result types properly
     SoundArchive::SoundInfo soundInfo;
     if (!pSoundArchive->ReadSoundInfo(&soundInfo, waveSoundId))
         return ResultError2();
@@ -1181,6 +1191,19 @@ Result SoundArchivePlayer::ReadWaveSoundDataInfo(WaveSoundDataInfo* pOutInfo,
     pOutInfo->channelCount = std::min(waveInfo.channelCount, 2);
 
     return nn::ResultSuccess();
+}
+
+Result SoundArchivePlayer::ReadWaveSoundDataInfo(WaveSoundDataInfo* pOutInfo,
+                                                 SoundArchive::ItemId waveSoundId,
+                                                 const char* soundArchiveName) const {
+    const SoundArchive* pSoundArchive{
+        GetTargetSoundArchive(m_SoundArchiveManager, soundArchiveName),
+    };
+    const SoundDataManager* pSoundDataManager{
+        GetTargetSoundDataManager(m_SoundArchiveManager, soundArchiveName),
+    };
+
+    return ReadWaveSoundDataInfo(pOutInfo, waveSoundId, pSoundArchive, pSoundDataManager);
 }
 
 void SoundArchivePlayer::StopAllSound(int32_t fadeFrames, bool isCommandFlushed) {

@@ -6,7 +6,7 @@ namespace nn::atk {
 
 R_DEFINE_NAMESPACE_RESULT_MODULE(209)
 
-// TODO: Replace placeholder error names with actual values
+// TODO: Replace placeholder names with actual names
 R_DEFINE_ERROR_RESULT(Error1, 1);  // 0x2d1
 
 R_DEFINE_ERROR_RESULT(Error2, 101);   // 0xcad1
