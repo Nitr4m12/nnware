@@ -1025,7 +1025,7 @@ SoundArchivePlayer::PreprocessSinglePlay(const SoundArchive::SoundInfo& info, ui
     case SinglePlayType_None:
         break;
     case SinglePlayType_PrioritizeOldest:
-        effectiveDuration = 481201171875 << 16; // Unknown constant
+        effectiveDuration = 481201171875 << 16;  // Unknown constant
     case SinglePlayType_PrioritizeOldestEffectiveDuration: {
         bool isFound{false};
         os::Tick setupTick{0};
@@ -1045,7 +1045,7 @@ SoundArchivePlayer::PreprocessSinglePlay(const SoundArchive::SoundInfo& info, ui
         break;
     }
     case SinglePlayType_PrioritizeNewest:
-        effectiveDuration = 481201171875 << 16; // Unknown constant
+        effectiveDuration = 481201171875 << 16;  // Unknown constant
     case SinglePlayType_PrioritizeNewestEffectiveDuration:
         player.ForEachSound(
             [soundId, currentTick, effectiveDuration](SoundHandle& handle) -> void {
@@ -1125,12 +1125,16 @@ bool SoundArchivePlayer::IsWaveSoundEdited(const char* soundName) const {
     return true;
 }
 
-void SoundArchivePlayer::SetSequenceUserProcCallback(SequenceUserProcCallback callback, void *arg) {
+void SoundArchivePlayer::SetSequenceUserProcCallback(SequenceUserProcCallback callback, void* arg) {
     m_SequenceSoundRuntime.SetSequenceUserProcCallback(callback, arg);
 }
 
 void SoundArchivePlayer::SetSequenceSkipIntervalTick(int32_t intervalTick) {
     detail::SequenceSoundRuntime::SetSequenceSkipIntervalTick(intervalTick);
+}
+
+int32_t SoundArchivePlayer::GetSequenceSkipIntervalTick() {
+    return detail::SequenceSoundRuntime::GetSequenceSkipIntervalTick();
 }
 
 void SoundArchivePlayer::StopAllSound(int32_t fadeFrames, bool isCommandFlushed) {
