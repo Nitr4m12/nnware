@@ -11,6 +11,7 @@
 #include <nn/atk/atk_SoundPlayer.h>
 #include <nn/atk/atk_SoundSystem.h>
 #include <nn/atk/atk_WaveFileReader.h>
+#include <nn/atk/fnd/io/atkfnd_FileStreamImpl.h>
 
 namespace {
 
@@ -40,7 +41,8 @@ nn::atk::OutputReceiver* GetOutputReceiver(const nn::atk::detail::StartInfoReade
                                            nn::atk::OutputReceiver* pDefaultOutputReceiver) {
     nn::atk::OutputReceiver* pOutputReceiver{};
     nn::atk::detail::driver::HardwareManager& hardwareManager{
-        nn::atk::detail::driver::HardwareManager().GetInstance()};
+        nn::atk::detail::driver::HardwareManager().GetInstance(),
+    };
 
     if (hardwareManager.IsPresetSubMixEnabled()) {
         pOutputReceiver = &hardwareManager.GetSubMix(reader.GetSubMixIndex());
@@ -1035,7 +1037,8 @@ SoundArchivePlayer::PreprocessSinglePlay(const SoundArchive::SoundInfo& info, ui
                                          SoundPlayer& player) {
     const os::Tick currentTick{os::GetSystemTick()};
     nn::TimeSpan effectiveDuration{
-        nn::TimeSpan::FromMilliSeconds(info.singlePlayEffectiveDuration)};
+        nn::TimeSpan::FromMilliSeconds(info.singlePlayEffectiveDuration),
+    };
 
     switch (info.singlePlayType) {
     case SinglePlayType_None:
@@ -1159,27 +1162,27 @@ Result SoundArchivePlayer::ReadWaveSoundDataInfo(WaveSoundDataInfo* pOutInfo,
                                                  const SoundDataManager* pSoundDataManager) const {
     SoundArchive::SoundInfo soundInfo;
     if (!pSoundArchive->ReadSoundInfo(&soundInfo, waveSoundId))
-        return ResultError2();
+        return ResultErrorCAD1();
 
     SoundArchive::WaveSoundInfo waveSoundInfo;
     if (!pSoundArchive->detail_ReadWaveSoundInfo(waveSoundId, &waveSoundInfo))
-        return ResultError2();
+        return ResultErrorCAD1();
 
     const void* pWsdFile{pSoundDataManager->detail_GetFileAddress(soundInfo.fileId)};
     if (pWsdFile == nullptr)
-        return ResultError5();
+        return ResultErrorD0D1();
 
     const void* pWaveFile{
         detail::Util::GetWaveFileOfWaveSound(pWsdFile, waveSoundInfo.index, *pSoundArchive,
                                              *pSoundDataManager),
     };
     if (pWaveFile == nullptr)
-        return ResultError5();
+        return ResultErrorD0D1();
 
     detail::WaveFileReader waveFileReader{pWaveFile, WaveType_Nwwav};
     detail::WaveInfo waveInfo;
     if (!waveFileReader.ReadWaveInfo(&waveInfo, nullptr))
-        return ResultError4();
+        return ResultErrorCED1();
 
     pOutInfo->loopFlag = waveInfo.loopFlag;
     pOutInfo->sampleRate = waveInfo.sampleRate;
@@ -1218,7 +1221,7 @@ Result SoundArchivePlayer::ReadWaveSoundDataInfo(WaveSoundDataInfo* pOutInfo,
 
     const SoundArchive::ItemId id{pSoundArchive->GetItemId(waveSoundName)};
     if (id == SoundArchive::InvalidId)
-        return ResultError3();
+        return ResultErrorCCD1();
 
     return ReadWaveSoundDataInfo(pOutInfo, id, pSoundArchive, pSoundDataManager);
 }
@@ -1231,6 +1234,122 @@ Result SoundArchivePlayer::ReadWaveSoundDataInfo(WaveSoundDataInfo* pOutInfo,
 Result SoundArchivePlayer::ReadWaveSoundDataInfo(WaveSoundDataInfo* pOutInfo,
                                                  const char* waveSoundName) const {
     return ReadWaveSoundDataInfo(pOutInfo, waveSoundName, nullptr);
+}
+
+// NON_MATCHING: mismatched stack size
+Result SoundArchivePlayer::ReadStreamSoundDataInfo(StreamSoundDataInfo* pOutInfo,
+                                                   const SoundArchive* pSoundArchive,
+                                                   SoundArchive::ItemId streamSoundId) const {
+    bool isStreamSoundPlaying{false};
+    for (uint32_t i{0}; i < m_SoundPlayerCount; ++i) {
+        m_pSoundPlayers[i].ForEachSound(
+            [&isStreamSoundPlaying, streamSoundId](const SoundHandle& handle) -> void {
+                if (handle.GetId() == streamSoundId)
+                    isStreamSoundPlaying = true;
+            },
+            false);
+    }
+
+    if (isStreamSoundPlaying)
+        return ResultErrorD2D1();
+
+    char filePath[detail::FilePathMax + 130];
+    if (!pSoundArchive->ReadStreamSoundFilePath(filePath, sizeof(filePath), streamSoundId))
+        return ResultErrorD4D1();
+
+    detail::fnd::FileStreamImpl fileStream;
+    detail::fnd::FndResult result{
+        fileStream.Open(filePath, detail::fnd::FileStream::AccessMode_Read),
+    };
+    if (result.IsFailed()) {
+        fileStream.Close();
+        return ResultErrorD8D1();
+    }
+
+    const size_t HeaderSize{sizeof(detail::StreamSoundFile::FileHeader) + 0x1c};
+    char headerBuffer[HeaderSize];
+    size_t readSize{fileStream.Read(headerBuffer, HeaderSize, nullptr)};
+    if (readSize != HeaderSize) {
+        fileStream.Close();
+        return ResultErrorD8D1();
+    }
+
+    const auto* header{reinterpret_cast<detail::StreamSoundFile::FileHeader*>(headerBuffer)};
+    if (!detail::StreamSoundFileReader::IsValidFileHeader(header)) {
+        fileStream.Close();
+        return ResultErrorCED1();
+    }
+
+    fileStream.Seek(header->GetInfoBlockOffset(), detail::fnd::Stream::SeekOrigin_Begin);
+
+    detail::StreamSoundFile::InfoBlock infoBlock;
+    readSize = fileStream.Read(&infoBlock, sizeof(detail::StreamSoundFile::InfoBlock), nullptr);
+    if (readSize != sizeof(detail::StreamSoundFile::InfoBlock)) {
+        fileStream.Close();
+        return ResultErrorD8D1();
+    }
+
+    fileStream.Seek(header->GetInfoBlockOffset() + sizeof(detail::BinaryBlockHeader) +
+                        infoBlock.body.toStreamSoundInfo.offset,
+                    detail::fnd::Stream::SeekOrigin_Begin);
+
+    detail::StreamSoundFile::StreamSoundInfo strmInfo;
+    readSize =
+        fileStream.Read(&strmInfo, sizeof(detail::StreamSoundFile::StreamSoundInfo), nullptr);
+
+    fileStream.Close();
+
+    if (readSize != sizeof(detail::StreamSoundFile::StreamSoundInfo))
+        return ResultErrorD8D1();
+
+    pOutInfo->channelCount = strmInfo.channelCount;
+    pOutInfo->sampleRate = strmInfo.sampleRate;
+    pOutInfo->loopFlag = strmInfo.isLoop;
+    pOutInfo->compatibleLoopStart = strmInfo.loopStart;
+    pOutInfo->compatibleLoopEnd = strmInfo.frameCount;
+    if (detail::StreamSoundFileReader::IsOriginalLoopAvailableImpl(header)) {
+        pOutInfo->loopStart = strmInfo.originalLoopStart;
+        pOutInfo->loopEnd = strmInfo.originalLoopEnd;
+    } else {
+        pOutInfo->loopStart = strmInfo.loopStart;
+        pOutInfo->loopEnd = strmInfo.frameCount;
+    }
+
+    return nn::ResultSuccess();
+}
+
+Result SoundArchivePlayer::ReadStreamSoundDataInfo(StreamSoundDataInfo* pOutInfo,
+                                                   SoundArchive::ItemId streamSoundId,
+                                                   const char* soundArchiveName) const {
+    const SoundArchive* pSoundArchive{
+        GetTargetSoundArchive(m_SoundArchiveManager, soundArchiveName),
+    };
+
+    return ReadStreamSoundDataInfo(pOutInfo, pSoundArchive, streamSoundId);
+}
+
+Result SoundArchivePlayer::ReadStreamSoundDataInfo(StreamSoundDataInfo* pOutInfo,
+                                                   const char* streamSoundName,
+                                                   const char* soundArchiveName) const {
+    const SoundArchive* pSoundArchive{
+        GetTargetSoundArchive(m_SoundArchiveManager, soundArchiveName),
+    };
+
+    const SoundArchive::ItemId id{pSoundArchive->GetItemId(streamSoundName)};
+    if (id == SoundArchive::InvalidId)
+        return ResultErrorCCD1();
+
+    return ReadStreamSoundDataInfo(pOutInfo, pSoundArchive, id);
+}
+
+Result SoundArchivePlayer::ReadStreamSoundDataInfo(StreamSoundDataInfo* pOutInfo,
+                                                   SoundArchive::ItemId streamSoundId) const {
+    return ReadStreamSoundDataInfo(pOutInfo, streamSoundId, nullptr);
+}
+
+Result SoundArchivePlayer::ReadStreamSoundDataInfo(StreamSoundDataInfo* pOutInfo,
+                                                   const char* streamSoundName) const {
+    return ReadStreamSoundDataInfo(pOutInfo, streamSoundName, nullptr);
 }
 
 void SoundArchivePlayer::StopAllSound(int32_t fadeFrames, bool isCommandFlushed) {
