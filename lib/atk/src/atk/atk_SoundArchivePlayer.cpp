@@ -1007,6 +1007,56 @@ SoundStartable::StartResult SoundArchivePlayer::detail_SetupSoundImpl(
     return result;
 }
 
+SoundStartable::StartResult
+SoundArchivePlayer::PreprocessSinglePlay(const SoundArchive::SoundInfo& info, uint32_t soundId,
+                                         SoundPlayer& player) {
+    const os::Tick currentTick{os::GetSystemTick()};
+    nn::TimeSpan effectiveDuration{
+        nn::TimeSpan::FromMilliSeconds(info.singlePlayEffectiveDuration)};
+
+    switch (info.singlePlayType) {
+    case SinglePlayType_None:
+        break;
+    case SinglePlayType_PrioritizeOldest:
+        effectiveDuration = 481201171875 << 16;
+    case SinglePlayType_PrioritizeOldestEffectiveDuration: {
+        bool isFound{false};
+        os::Tick setupTick{0};
+
+        player.ForEachSound(
+            [&isFound, &setupTick, soundId](SoundHandle& handle) -> void {
+                if (handle.GetId() == soundId) {
+                    setupTick = handle.detail_GetAttachedSound()->GetSetupTick();
+                    isFound = true;
+                }
+            },
+            false);
+
+        if (isFound && (currentTick - setupTick).ToTimeSpan() < effectiveDuration)
+            return StartResult::ResultCode_CanceledBySinglePlay;
+
+        break;
+    }
+    case SinglePlayType_PrioritizeNewest:
+        effectiveDuration = 0x7009d32da30000;
+    case SinglePlayType_PrioritizeNewestEffectiveDuration:
+        player.ForEachSound(
+            [soundId, currentTick, effectiveDuration](SoundHandle& handle) -> void {
+                if (handle.GetId() == soundId) {
+                    if ((currentTick - handle.detail_GetAttachedSound()->GetSetupTick())
+                            .ToTimeSpan() < effectiveDuration)
+                        handle.Stop(0);
+                }
+            },
+            false);
+        break;
+    default:
+        NN_UNEXPECTED_DEFAULT;
+    }
+
+    return StartResult::ResultCode_Success;
+}
+
 void SoundArchivePlayer::SetCommonSoundParam(detail::BasicSound* sound,
                                              const SoundArchive::SoundInfo* commonInfo) {
     sound->SetInitialVolume(commonInfo->volume / 127.0f);
