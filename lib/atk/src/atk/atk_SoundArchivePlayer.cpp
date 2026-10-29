@@ -1129,6 +1129,10 @@ void SoundArchivePlayer::SetSequenceUserProcCallback(SequenceUserProcCallback ca
     m_SequenceSoundRuntime.SetSequenceUserProcCallback(callback, arg);
 }
 
+void SoundArchivePlayer::SetSequenceSkipIntervalTick(int32_t intervalTick) {
+    detail::SequenceSoundRuntime::SetSequenceSkipIntervalTick(intervalTick);
+}
+
 void SoundArchivePlayer::StopAllSound(int32_t fadeFrames, bool isCommandFlushed) {
     for (SoundArchive::ItemId playerId{0}; playerId < m_SoundPlayerCount; ++playerId)
         m_pSoundPlayers[playerId].StopAllSound(fadeFrames);
