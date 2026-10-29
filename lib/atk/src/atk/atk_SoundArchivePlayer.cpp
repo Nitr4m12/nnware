@@ -1,6 +1,7 @@
 #include <nn/atk/atk_SoundArchivePlayer.h>
 
 #include <nn/atk/atk_DriverCommand.h>
+#include <nn/atk/atk_SoundActor.h>
 #include <nn/atk/atk_SoundArchiveFilesHook.h>
 #include <nn/atk/atk_SoundArchiveParametersHook.h>
 #include <nn/atk/atk_SoundPlayer.h>
@@ -31,7 +32,24 @@ GetRequiredSoundArchivePlayerMemSizeWithoutStreamSoundInstance(const nn::atk::So
 
 #if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
 nn::atk::OutputReceiver* GetOutputReceiver(const nn::atk::detail::StartInfoReader& reader,
-                                           nn::atk::OutputReceiver* pDefaultOutputReceiver);
+                                           nn::atk::OutputReceiver* pDefaultOutputReceiver) {
+    nn::atk::OutputReceiver* pOutputReceiver{};
+    nn::atk::detail::driver::HardwareManager& hardwareManager{
+        nn::atk::detail::driver::HardwareManager().GetInstance()};
+
+    if (hardwareManager.IsPresetSubMixEnabled()) {
+        pOutputReceiver = &hardwareManager.GetSubMix(reader.GetSubMixIndex());
+    } else {
+        pOutputReceiver = reader.GetOutputReceiver();
+        if (pOutputReceiver == nullptr) {
+            pOutputReceiver = &hardwareManager.GetFinalMix();
+            if (pDefaultOutputReceiver != nullptr)
+                pOutputReceiver = pDefaultOutputReceiver;
+        }
+    }
+
+    return pOutputReceiver;
+}
 #endif
 
 const nn::atk::SoundArchive*
@@ -665,6 +683,328 @@ SoundStartable::StartResult SoundArchivePlayer::detail_SetupSound(SoundHandle* h
                                                                   const StartInfo* startInfo) {
     return detail_SetupSoundImpl(handle, soundId, nullptr, nullptr, holdFlag, soundArchiveName,
                                  startInfo);
+}
+
+SoundStartable::StartResult SoundArchivePlayer::detail_SetupSoundImpl(
+    SoundHandle* handle, uint32_t soundId, detail::BasicSound::AmbientInfo* ambientArgInfo,
+    SoundActor* actor, bool holdFlag, const char* soundArchiveName, const StartInfo* startInfo) {
+    m_SoundArchiveManager.ChangeTargetArchive(soundArchiveName);
+    const detail::SoundArchiveManager::SnapShot snapShot{m_SoundArchiveManager.GetSnapShot()};
+    const SoundArchive& soundArchive{snapShot.GetCurrentSoundArchive()};
+
+    if (!m_SoundArchiveManager.IsAvailable())
+        return StartResult::ResultCode_ErrorNotAvailable;
+
+    if (handle->IsAttachedSound())
+        handle->DetachSound();
+
+    const char* soundLabel{soundArchive.GetItemLabel(soundId)};
+    SoundArchive::SoundType soundType{SoundArchive::SoundType_Invalid};
+
+    volatile bool isHookDisabled{false};
+
+    if (IsSoundArchiveFileHooksEnabled() && soundLabel != nullptr) {
+        LockSoundArchiveFileHooks();
+
+        if (m_pSoundArchiveFilesHook->IsTargetItem(soundLabel)) {
+            soundType = soundArchive.detail_GetParametersHook()->GetSoundType(soundLabel);
+
+            if (soundArchiveName != nullptr)
+                soundId = soundArchive.detail_GetParametersHook()->GetItemId(soundLabel);
+
+            switch (soundType) {
+            case SoundArchive::SoundType_Sequence:
+                isHookDisabled = !IsSequenceSoundEdited(soundLabel);
+                break;
+            case SoundArchive::SoundType_Stream:
+                isHookDisabled = false;
+                break;
+            case SoundArchive::SoundType_Wave:
+                isHookDisabled = !IsWaveSoundEdited(soundLabel);
+                break;
+            default:
+                break;
+            }
+
+            if (isHookDisabled) {
+                soundArchive.detail_GetParametersHook()->SetIsEnable(false);
+                m_pSoundArchiveFilesHook->SetIsEnable(false);
+            }
+        } else {
+            soundArchive.detail_GetParametersHook()->SetIsEnable(false);
+            m_pSoundArchiveFilesHook->SetIsEnable(false);
+            isHookDisabled = true;
+
+            soundType = soundArchive.GetSoundType(soundId);
+        }
+    } else {
+        if (soundId == SoundArchive::InvalidId)
+            return StartResult::ResultCode_ErrorInvalidLabelString;
+
+        soundType = soundArchive.GetSoundType(soundId);
+    }
+
+    SoundArchive::SoundInfo soundInfo;
+    if (!soundArchive.ReadSoundInfo(&soundInfo, soundId)) {
+        EnableHook(&soundArchive, isHookDisabled);
+
+        StartResult result{StartResult::ResultCode_ErrorInvalidSoundId};
+        return result;
+    }
+
+    detail::StartInfoReader startInfoReader{soundInfo};
+    startInfoReader.Read(startInfo);
+
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+    OutputReceiver* pOutputReceiver{GetOutputReceiver(startInfoReader, m_pDefaultOutputReceiver)};
+#endif
+
+    if (soundInfo.singlePlayType != SinglePlayType_None) {
+        const StartResult result{
+            PreprocessSinglePlay(soundInfo, soundId, GetSoundPlayer(startInfoReader.GetPlayerId())),
+        };
+
+        if (!result.IsSuccess()) {
+            EnableHook(&soundArchive, isHookDisabled);
+
+            return result;
+        }
+    }
+
+    int playerPriority{startInfoReader.GetPlayerPriority() - holdFlag};
+
+    int ambientPriority{0};
+    if (ambientArgInfo != nullptr)
+        ambientPriority = detail::BasicSound::GetAmbientPriority(*ambientArgInfo, soundId);
+
+    int allocPriority{
+        detail::fnd::Clamp(playerPriority + ambientPriority, PlayerPriorityMin, PlayerPriorityMax),
+    };
+
+    detail::ExternalSoundPlayer* extPlayer{};
+    if (actor != nullptr) {
+        extPlayer = actor->detail_GetActorPlayer(startInfoReader.GetActorPlayerId());
+        if (extPlayer == nullptr) {
+            EnableHook(&soundArchive, isHookDisabled);
+
+            return StartResult::ResultCode_ErrorInvalidParameter;
+        }
+    }
+
+    SoundArchive::ItemId playerId{startInfoReader.GetPlayerId()};
+    if (!IsSoundArchiveFileHooksEnabled() && soundArchive.IsAddon()) {
+        const char* playerName{soundArchive.GetItemLabel(soundInfo.playerId)};
+        playerId = snapShot.GetMainSoundArchive().GetItemId(playerName);
+    }
+
+    if (playerId == SoundArchive::InvalidId) {
+        EnableHook(&soundArchive, isHookDisabled);
+
+        return StartResult::ResultCode_ErrorInvalidParameter;
+    }
+
+    SoundPlayer& player{GetSoundPlayer(playerId)};
+    if (!player.detail_CanPlaySound(allocPriority)) {
+        EnableHook(&soundArchive, isHookDisabled);
+
+        return StartResult::ResultCode_ErrorLowPriority;
+    }
+
+    if (extPlayer != nullptr && !extPlayer->CanPlaySound(allocPriority)) {
+        EnableHook(&soundArchive, isHookDisabled);
+
+        return StartResult::ResultCode_ErrorLowPriority;
+    }
+
+    detail::BasicSound* sound{};
+    detail::SequenceSound* seqSound{};
+    detail::StreamSound* strmSound{};
+    detail::WaveSound* waveSound{};
+    detail::AdvancedWaveSound* advancedWaveSound{};
+
+    switch (soundType) {
+    case SoundArchive::SoundType_Sequence:
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+        seqSound = m_SequenceSoundRuntime.AllocSound(soundId, playerPriority, ambientPriority,
+                                                     ambientArgInfo);
+#else
+        seqSound = m_SequenceSoundRuntime.AllocSound(soundId, playerPriority, ambientPriority,
+                                                     ambientArgInfo, pOutputReceiver);
+#endif
+        if (seqSound == nullptr) {
+            detail::Debug_GetWarningFlag(DebugWarningFlag_NotEnoughSeqsound);
+
+            EnableHook(&soundArchive, isHookDisabled);
+
+            SoundStartable::StartResult result{StartResult::ResultCode_ErrorNotEnoughInstance};
+            return result;
+        }
+
+        sound = seqSound;
+        break;
+    case SoundArchive::SoundType_Stream:
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+        sound = m_StreamSoundRuntime.AllocSound(soundId, playerPriority, ambientPriority,
+                                                ambientArgInfo);
+#else
+        sound = m_StreamSoundRuntime.AllocSound(soundId, playerPriority, ambientPriority,
+                                                ambientArgInfo, pOutputReceiver);
+#endif
+        if (sound == nullptr) {
+            detail::Debug_GetWarningFlag(DebugWarningFlag_NotEnoughStrmsound);
+
+            EnableHook(&soundArchive, isHookDisabled);
+
+            SoundStartable::StartResult result{StartResult::ResultCode_ErrorNotEnoughInstance};
+            return result;
+        }
+
+        strmSound = static_cast<detail::StreamSound*>(sound);
+        break;
+    case SoundArchive::SoundType_Wave:
+        if (m_IsAdvancedWaveSoundEnabled) {
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+            sound = m_AdvancedWaveSoundRuntime.AllocSound(soundId, playerPriority, ambientPriority,
+                                                          ambientArgInfo);
+#else
+            sound = m_AdvancedWaveSoundRuntime.AllocSound(soundId, playerPriority, ambientPriority,
+                                                          ambientArgInfo, pOutputReceiver);
+#endif
+            if (sound == nullptr) {
+                detail::Debug_GetWarningFlag(DebugWarningFlag_NotEnoughWavesound);
+
+                EnableHook(&soundArchive, isHookDisabled);
+
+                SoundStartable::StartResult result{StartResult::ResultCode_ErrorNotEnoughInstance};
+                return result;
+            }
+
+            advancedWaveSound = static_cast<detail::AdvancedWaveSound*>(sound);
+        } else {
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+            sound = m_WaveSoundRuntime.AllocSound(soundId, playerPriority, ambientPriority,
+                                                  ambientArgInfo);
+#else
+            sound = m_WaveSoundRuntime.AllocSound(soundId, playerPriority, ambientPriority,
+                                                  ambientArgInfo, pOutputReceiver);
+#endif
+            if (sound == nullptr) {
+                detail::Debug_GetWarningFlag(DebugWarningFlag_NotEnoughWavesound);
+
+                EnableHook(&soundArchive, isHookDisabled);
+
+                SoundStartable::StartResult result{StartResult::ResultCode_ErrorNotEnoughInstance};
+                return result;
+            }
+
+            waveSound = static_cast<detail::WaveSound*>(sound);
+        }
+
+        break;
+    default: {
+        EnableHook(&soundArchive, isHookDisabled);
+
+        return StartResult::ResultCode_ErrorInvalidSoundId;
+    }
+    }
+
+    if (!player.detail_AppendSound(sound)) {
+        sound->Finalize();
+        EnableHook(&soundArchive, isHookDisabled);
+
+        SoundStartable::StartResult result{StartResult::ResultCode_ErrorUnknown};
+        return result;
+    }
+
+    if (startInfo != nullptr &&
+        (startInfo->enableFlag & StartInfo::EnableFlagBit_SoundStopCallback))
+        sound->SetSoundStopCallback(startInfo->soundStopCallback);
+
+    sound->ResetOutputLine();
+
+    switch (soundType) {
+    case SoundArchive::SoundType_Sequence: {
+        SoundStartable::StartResult result{
+            m_SequenceSoundRuntime.PrepareImpl(snapShot, soundId, seqSound, &soundInfo,
+                                               startInfoReader),
+        };
+        if (!result.IsSuccess()) {
+            seqSound->Finalize();
+            EnableHook(&soundArchive, isHookDisabled);
+
+            return result;
+        }
+        break;
+    }
+    case SoundArchive::SoundType_Stream: {
+        SoundStartable::StartResult result{
+            m_StreamSoundRuntime.PrepareImpl(&soundArchive, &snapShot.GetCurrentSoundDataManager(),
+                                             soundId, strmSound, &soundInfo, startInfoReader),
+        };
+        if (!result.IsSuccess()) {
+            strmSound->Finalize();
+            EnableHook(&soundArchive, isHookDisabled);
+
+            return result;
+        }
+        break;
+    }
+    case SoundArchive::SoundType_Wave: {
+        if (m_IsAdvancedWaveSoundEnabled) {
+            SoundStartable::StartResult result{
+                m_AdvancedWaveSoundRuntime.PrepareImpl(
+                    &soundArchive, &snapShot.GetCurrentSoundDataManager(), soundId,
+                    advancedWaveSound, &soundInfo, startInfoReader),
+            };
+            if (!result.IsSuccess()) {
+                EnableHook(&soundArchive, isHookDisabled);
+
+                return result;
+            }
+        } else {
+            SoundStartable::StartResult result{
+                m_WaveSoundRuntime.PrepareImpl(&soundArchive,
+                                               &snapShot.GetCurrentSoundDataManager(), soundId,
+                                               waveSound, &soundInfo, startInfoReader),
+            };
+            if (!result.IsSuccess()) {
+                waveSound->Finalize();
+                EnableHook(&soundArchive, isHookDisabled);
+
+                return result;
+            }
+        }
+        break;
+    }
+    default: {
+        sound->Finalize();
+        EnableHook(&soundArchive, isHookDisabled);
+
+        return StartResult::ResultCode_ErrorInvalidSoundId;
+    }
+    }
+
+    EnableHook(&soundArchive, isHookDisabled);
+    SetCommonSoundParam(sound, &soundInfo);
+
+    if (extPlayer != nullptr && !extPlayer->AppendSound(sound)) {
+        sound->Finalize();
+
+        return StartResult::ResultCode_ErrorUnknown;
+    }
+
+    if (actor != nullptr)
+        sound->AttachSoundActor(actor);
+
+    if (holdFlag)
+        sound->SetPlayerPriority(startInfoReader.GetPlayerPriority());
+
+    sound->SetSoundArchive(&soundArchive);
+    sound->SetSetupTick(os::GetSystemTick());
+    handle->detail_AttachSound(sound);
+
+    SoundStartable::StartResult result{StartResult::ResultCode_Success};
+    return result;
 }
 
 void SoundArchivePlayer::SetCommonSoundParam(detail::BasicSound* sound,

@@ -23,7 +23,12 @@ public:
     bool GetIsEnable() const { return m_IsEnable; }
     void SetIsEnable(bool value) { m_IsEnable = value; }
 
-    bool IsTargetItem(const char* itemLabel);
+    bool IsTargetItem(const char* itemLabel) {
+        if (!m_IsEnable)
+            return false;
+
+        return IsTargetItemImpl(itemLabel);
+    }
 
     void Lock() {
         if (!m_IsEnable)
@@ -64,7 +69,7 @@ protected:
 
     virtual void Impl0();
     virtual void Impl1();
-    virtual void Impl2();
+    virtual bool IsTargetItemImpl(const char* itemLabel);
     virtual void LockImpl();
     virtual void UnlockImpl();
     virtual fnd::FileStream* OpenFileImpl(void* buffer, size_t bufferLength, void* cacheBuffer,

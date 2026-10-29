@@ -137,6 +137,7 @@ public:
     static_assert(sizeof(HardwareManagerParameter) == 0x2c);
 
     HardwareManager();
+    ~HardwareManager();
 
     void ResetParameters();
 
@@ -233,6 +234,9 @@ public:
     }
 
 #else
+    FinalMix& GetFinalMix() { return m_FinalMix; }
+    const FinalMix& GetFinalMix() const { return m_FinalMix; }
+
     SubMix& GetSubMix(int32_t subMixNumber);
     const SubMix& GetSubMix(int32_t subMixNumber) const;
 #endif

@@ -5,6 +5,7 @@
 #include <nn/atk/atk_BasicSound.h>
 #include <nn/atk/atk_OutputAdditionalParam.h>
 #include <nn/atk/atk_PlayerHeap.h>
+#include <nn/atk/atk_SoundHandle.h>
 
 namespace nn::atk {
 
@@ -119,7 +120,25 @@ public:
     void SetFirstComeBased(bool isFirstComeBased) { m_IsFirstComeBased = isFirstComeBased; }
 
     template <class Function>
-    Function ForEachSound(Function function, bool reverse);
+    Function ForEachSound(Function function, bool reverse) {
+        if (reverse) {
+            for (auto itr{m_SoundList.rbegin()}; itr != m_SoundList.rend();) {
+                auto curItr{itr++};
+                SoundHandle handle;
+                handle.detail_AttachSoundAsTempHandle(&*curItr);
+                function(handle);
+            }
+        } else {
+            for (auto itr{m_SoundList.begin()}; itr != m_SoundList.end();) {
+                auto curItr{itr++};
+                SoundHandle handle;
+                handle.detail_AttachSoundAsTempHandle(&*curItr);
+                function(handle);
+            }
+        }
+
+        return function;
+    }
 
 private:
     detail::BasicSound* GetLowestPrioritySound() { return &m_PriorityList.front(); }

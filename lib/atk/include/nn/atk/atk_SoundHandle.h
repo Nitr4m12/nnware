@@ -23,7 +23,7 @@ public:
     };
 
     SoundHandle() = default;
-    ~SoundHandle() = default;
+    ~SoundHandle() { DetachSound(); }
 
     void StartPrepared() {
         if (IsAttachedSound())
