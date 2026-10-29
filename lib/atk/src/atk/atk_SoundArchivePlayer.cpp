@@ -1,11 +1,16 @@
 #include <nn/atk/atk_SoundArchivePlayer.h>
 
+#include <algorithm>
+
+#include <nn/atk/atk_Result.h>
+
 #include <nn/atk/atk_DriverCommand.h>
 #include <nn/atk/atk_SoundActor.h>
 #include <nn/atk/atk_SoundArchiveFilesHook.h>
 #include <nn/atk/atk_SoundArchiveParametersHook.h>
 #include <nn/atk/atk_SoundPlayer.h>
 #include <nn/atk/atk_SoundSystem.h>
+#include <nn/atk/atk_WaveFileReader.h>
 
 namespace {
 
@@ -1135,6 +1140,47 @@ void SoundArchivePlayer::SetSequenceSkipIntervalTick(int32_t intervalTick) {
 
 int32_t SoundArchivePlayer::GetSequenceSkipIntervalTick() {
     return detail::SequenceSoundRuntime::GetSequenceSkipIntervalTick();
+}
+
+Result SoundArchivePlayer::ReadWaveSoundDataInfo(WaveSoundDataInfo* pOutInfo,
+                                                 SoundArchive::ItemId waveSoundId,
+                                                 const SoundArchive* pSoundArchive,
+                                                 const SoundDataManager* pSoundDataManager) const {
+    // TODO: refactor to use Result types properly
+    SoundArchive::SoundInfo soundInfo;
+    if (!pSoundArchive->ReadSoundInfo(&soundInfo, waveSoundId))
+        return ResultError2();
+
+    SoundArchive::WaveSoundInfo waveSoundInfo;
+    if (!pSoundArchive->detail_ReadWaveSoundInfo(waveSoundId, &waveSoundInfo))
+        return ResultError2();
+
+    const void* pWsdFile{pSoundDataManager->detail_GetFileAddress(soundInfo.fileId)};
+    if (pWsdFile == nullptr)
+        return ResultError5();
+
+    const void* pWaveFile{
+        detail::Util::GetWaveFileOfWaveSound(pWsdFile, waveSoundInfo.index, *pSoundArchive,
+                                             *pSoundDataManager),
+    };
+    if (pWaveFile == nullptr)
+        return ResultError5();
+
+    detail::WaveFileReader waveFileReader{pWaveFile, WaveType_Nwwav};
+    detail::WaveInfo waveInfo;
+    if (!waveFileReader.ReadWaveInfo(&waveInfo, nullptr))
+        return ResultError4();
+
+    pOutInfo->loopFlag = waveInfo.loopFlag;
+    pOutInfo->sampleRate = waveInfo.sampleRate;
+    pOutInfo->loopStart = waveInfo.originalLoopStartFrame;
+    pOutInfo->loopEnd =
+        waveInfo.loopEndFrame - waveInfo.loopStartFrame + waveInfo.originalLoopStartFrame;
+    pOutInfo->compatibleLoopStart = waveInfo.loopStartFrame;
+    pOutInfo->compatibleLoopEnd = waveInfo.loopEndFrame;
+    pOutInfo->channelCount = std::min(waveInfo.channelCount, 2);
+
+    return nn::ResultSuccess();
 }
 
 void SoundArchivePlayer::StopAllSound(int32_t fadeFrames, bool isCommandFlushed) {
