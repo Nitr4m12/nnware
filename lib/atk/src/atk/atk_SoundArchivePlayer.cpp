@@ -1007,6 +1007,13 @@ SoundStartable::StartResult SoundArchivePlayer::detail_SetupSoundImpl(
     return result;
 }
 
+void SoundArchivePlayer::SetCommonSoundParam(detail::BasicSound* sound,
+                                             const SoundArchive::SoundInfo* commonInfo) {
+    sound->SetInitialVolume(commonInfo->volume / 127.0f);
+    sound->SetPanMode(commonInfo->panMode);
+    sound->SetPanCurve(commonInfo->panCurve);
+}
+
 SoundStartable::StartResult
 SoundArchivePlayer::PreprocessSinglePlay(const SoundArchive::SoundInfo& info, uint32_t soundId,
                                          SoundPlayer& player) {
@@ -1018,7 +1025,7 @@ SoundArchivePlayer::PreprocessSinglePlay(const SoundArchive::SoundInfo& info, ui
     case SinglePlayType_None:
         break;
     case SinglePlayType_PrioritizeOldest:
-        effectiveDuration = 481201171875 << 16;
+        effectiveDuration = 481201171875 << 16; // Unknown constant
     case SinglePlayType_PrioritizeOldestEffectiveDuration: {
         bool isFound{false};
         os::Tick setupTick{0};
@@ -1038,7 +1045,7 @@ SoundArchivePlayer::PreprocessSinglePlay(const SoundArchive::SoundInfo& info, ui
         break;
     }
     case SinglePlayType_PrioritizeNewest:
-        effectiveDuration = 0x7009d32da30000;
+        effectiveDuration = 481201171875 << 16; // Unknown constant
     case SinglePlayType_PrioritizeNewestEffectiveDuration:
         player.ForEachSound(
             [soundId, currentTick, effectiveDuration](SoundHandle& handle) -> void {
@@ -1055,13 +1062,6 @@ SoundArchivePlayer::PreprocessSinglePlay(const SoundArchive::SoundInfo& info, ui
     }
 
     return StartResult::ResultCode_Success;
-}
-
-void SoundArchivePlayer::SetCommonSoundParam(detail::BasicSound* sound,
-                                             const SoundArchive::SoundInfo* commonInfo) {
-    sound->SetInitialVolume(commonInfo->volume / 127.0f);
-    sound->SetPanMode(commonInfo->panMode);
-    sound->SetPanCurve(commonInfo->panCurve);
 }
 
 void SoundArchivePlayer::EnableHook(const SoundArchive* pSoundArchive, bool isHookDisabled) {
@@ -1123,6 +1123,10 @@ bool SoundArchivePlayer::IsWaveSoundEdited(const char* soundName) const {
         return false;
 
     return true;
+}
+
+void SoundArchivePlayer::SetSequenceUserProcCallback(SequenceUserProcCallback callback, void *arg) {
+    m_SequenceSoundRuntime.SetSequenceUserProcCallback(callback, arg);
 }
 
 void SoundArchivePlayer::StopAllSound(int32_t fadeFrames, bool isCommandFlushed) {
