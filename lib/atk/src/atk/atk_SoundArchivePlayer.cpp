@@ -1535,6 +1535,16 @@ Result SoundArchivePlayer::ReadStreamSoundRegionDataInfo(StreamSoundRegionDataIn
 
 void SoundArchivePlayer::DumpMemory() const {}
 
+bool SoundArchivePlayer::ReadStreamSoundInstanceState(StreamSoundInstanceState* pOutInfo) const {
+    if (pOutInfo == nullptr)
+        return false;
+
+    pOutInfo->activeStreamSoundInstanceCount = m_StreamSoundRuntime.GetActiveCount();
+    pOutInfo->activeStreamChannelCount = m_StreamSoundRuntime.GetActiveChannelCount();
+    pOutInfo->activeStreamTrackCount = m_StreamSoundRuntime.GetActiveTrackCount();
+    return true;
+}
+
 void SoundArchivePlayer::StopAllSound(int32_t fadeFrames, bool isCommandFlushed) {
     for (SoundArchive::ItemId playerId{0}; playerId < m_SoundPlayerCount; ++playerId)
         m_pSoundPlayers[playerId].StopAllSound(fadeFrames);
