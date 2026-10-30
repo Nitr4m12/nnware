@@ -1533,6 +1533,8 @@ Result SoundArchivePlayer::ReadStreamSoundRegionDataInfo(StreamSoundRegionDataIn
                                          pSoundArchive, buffer, bufferSize);
 }
 
+void SoundArchivePlayer::DumpMemory() const {}
+
 void SoundArchivePlayer::StopAllSound(int32_t fadeFrames, bool isCommandFlushed) {
     for (SoundArchive::ItemId playerId{0}; playerId < m_SoundPlayerCount; ++playerId)
         m_pSoundPlayers[playerId].StopAllSound(fadeFrames);
