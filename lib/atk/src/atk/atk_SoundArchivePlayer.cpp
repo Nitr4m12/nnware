@@ -2,9 +2,10 @@
 
 #include <algorithm>
 
-#include <nn/atk/atk_Result.h>
+#include <nn/util/util_StringUtil.h>
 
 #include <nn/atk/atk_DriverCommand.h>
+#include <nn/atk/atk_Result.h>
 #include <nn/atk/atk_SoundActor.h>
 #include <nn/atk/atk_SoundArchiveFilesHook.h>
 #include <nn/atk/atk_SoundArchiveParametersHook.h>
@@ -1354,6 +1355,182 @@ Result SoundArchivePlayer::ReadStreamSoundDataInfo(StreamSoundDataInfo* pOutInfo
 
 size_t SoundArchivePlayer::GetRequiredWorkBufferSizeToReadStreamSoundHeader() {
     return FileLoadAlignSize * 0x53;
+}
+
+Result SoundArchivePlayer::ReadStreamSoundRegionDataInfo(
+    StreamSoundRegionDataInfo* pOutInfo, SoundArchive::ItemId streamSoundId,
+    const char* const* pRegionName, int32_t infoCount, const SoundArchive* pSoundArchive,
+    void* buffer, [[maybe_unused]] size_t bufferSize) const {
+    bool isStreamSoundPlaying{false};
+    for (uint32_t i{0}; i < m_SoundPlayerCount; ++i) {
+        m_pSoundPlayers[i].ForEachSound(
+            [&isStreamSoundPlaying, streamSoundId](const SoundHandle& handle) -> void {
+                if (handle.GetId() == streamSoundId)
+                    isStreamSoundPlaying = true;
+            },
+            false);
+    }
+
+    if (isStreamSoundPlaying)
+        return ResultErrorD2D1();
+
+    char filePath[detail::FilePathMax + 130];
+    if (!pSoundArchive->ReadStreamSoundFilePath(filePath, sizeof(filePath), streamSoundId))
+        return ResultErrorD4D1();
+
+    detail::fnd::FileStreamImpl fileStream;
+    detail::fnd::FndResult result{
+        fileStream.Open(filePath, detail::fnd::FileStream::AccessMode_Read),
+    };
+    if (result.IsFailed()) {
+        fileStream.Close();
+        return ResultErrorD8D1();
+    }
+
+    detail::StreamSoundFileLoader fileLoader;
+    fileLoader.Initialize(&fileStream);
+
+    const size_t requiredSize{0x5300};
+    void* const alignedBuffer{util::BytePtr(buffer).AlignUp(FileLoadAlignSize).Get()};
+    detail::StreamSoundFileReader reader;
+    if (!fileLoader.LoadFileHeader(&reader, alignedBuffer, requiredSize)) {
+        fileStream.Close();
+        return ResultErrorD6D1();
+    }
+
+    detail::StreamSoundFile::StreamSoundInfo streamInfo;
+    if (!reader.ReadStreamSoundInfo(&streamInfo)) {
+        fileStream.Close();
+        return ResultError2D1();
+    }
+
+    if (streamInfo.regionCount == 0) {
+        fileStream.Close();
+        return ResultErrorDAD1();
+    }
+
+    detail::StreamSoundFile::RegionInfo regionInfo;
+    for (int k{0}; k < infoCount; ++k)
+        pOutInfo[k].regionNo = -1;
+
+    int readCount{0};
+    for (int i{0}; i < streamInfo.regionCount && readCount != infoCount; ++i) {
+        if (!fileLoader.ReadRegionInfo(&regionInfo, i))
+            continue;
+
+        for (int k{0}; k < infoCount; ++k) {
+            if (pOutInfo[k].regionNo == -1) {
+                if (util::Strncmp(regionInfo.regionName, pRegionName[k],
+                                  sizeof(regionInfo.regionName)) != 0)
+                    continue;
+
+                pOutInfo[k].startSamplePosition = regionInfo.start;
+                pOutInfo[k].endSamplePosition = regionInfo.end;
+                pOutInfo[k].regionNo = i;
+                util::Strlcpy(pOutInfo[k].regionName, regionInfo.regionName,
+                              sizeof(regionInfo.regionName));
+
+                ++readCount;
+            }
+        }
+    }
+
+    fileStream.Close();
+
+    if (readCount == infoCount)
+        return nn::ResultSuccess();
+
+    if (readCount < 0)
+        return ResultError2D1();
+
+    if (readCount >= infoCount)
+        return ResultError2D1();
+
+    return ResultErrorDCD1();
+}
+
+Result SoundArchivePlayer::ReadStreamSoundRegionDataInfo(StreamSoundRegionDataInfo* pOutInfo,
+                                                         SoundArchive::ItemId streamSoundId,
+                                                         const char* regionName, void* buffer,
+                                                         size_t bufferSize) const {
+    return ReadStreamSoundRegionDataInfo(pOutInfo, streamSoundId, &regionName, 1, buffer,
+                                         bufferSize, nullptr);
+}
+
+Result SoundArchivePlayer::ReadStreamSoundRegionDataInfo(StreamSoundRegionDataInfo* pOutInfo,
+                                                         const char* streamSoundName,
+                                                         const char* regionName, void* buffer,
+                                                         size_t bufferSize) const {
+    return ReadStreamSoundRegionDataInfo(pOutInfo, streamSoundName, &regionName, 1, buffer,
+                                         bufferSize, nullptr);
+}
+
+Result SoundArchivePlayer::ReadStreamSoundRegionDataInfo(StreamSoundRegionDataInfo* pOutInfo,
+                                                         SoundArchive::ItemId streamSoundId,
+                                                         const char* const* pRegionName,
+                                                         int32_t infoCount, void* buffer,
+                                                         size_t bufferSize) const {
+    return ReadStreamSoundRegionDataInfo(pOutInfo, streamSoundId, pRegionName, infoCount, buffer,
+                                         bufferSize, nullptr);
+}
+
+Result SoundArchivePlayer::ReadStreamSoundRegionDataInfo(StreamSoundRegionDataInfo* pOutInfo,
+                                                         const char* streamSoundName,
+                                                         const char* const* pRegionName,
+                                                         int32_t infoCount, void* buffer,
+                                                         size_t bufferSize) const {
+    return ReadStreamSoundRegionDataInfo(pOutInfo, streamSoundName, pRegionName, infoCount, buffer,
+                                         bufferSize, nullptr);
+}
+
+Result SoundArchivePlayer::ReadStreamSoundRegionDataInfo(StreamSoundRegionDataInfo* pOutInfo,
+                                                         const char* streamSoundName,
+                                                         const char* regionName, void* buffer,
+                                                         size_t bufferSize,
+                                                         const char* soundArchiveName) const {
+    return ReadStreamSoundRegionDataInfo(pOutInfo, streamSoundName, &regionName, 1, buffer,
+                                         bufferSize, soundArchiveName);
+}
+
+Result SoundArchivePlayer::ReadStreamSoundRegionDataInfo(StreamSoundRegionDataInfo* pOutInfo,
+                                                         SoundArchive::ItemId streamSoundId,
+                                                         const char* regionName, void* buffer,
+                                                         size_t bufferSize,
+                                                         const char* soundArchiveName) const {
+    return ReadStreamSoundRegionDataInfo(pOutInfo, streamSoundId, &regionName, 1, buffer,
+                                         bufferSize, soundArchiveName);
+}
+
+Result SoundArchivePlayer::ReadStreamSoundRegionDataInfo(StreamSoundRegionDataInfo* pOutInfo,
+                                                         const char* streamSoundName,
+                                                         const char* const* pRegionName,
+                                                         int32_t infoCount, void* buffer,
+                                                         size_t bufferSize,
+                                                         const char* soundArchiveName) const {
+    const SoundArchive* pSoundArchive{
+        GetTargetSoundArchive(m_SoundArchiveManager, soundArchiveName),
+    };
+    const SoundArchive::ItemId id{pSoundArchive->GetItemId(streamSoundName)};
+
+    if (id == SoundArchive::InvalidId)
+        return ResultErrorCCD1();
+
+    return ReadStreamSoundRegionDataInfo(pOutInfo, id, pRegionName, infoCount, pSoundArchive,
+                                         buffer, bufferSize);
+}
+
+Result SoundArchivePlayer::ReadStreamSoundRegionDataInfo(StreamSoundRegionDataInfo* pOutInfo,
+                                                         SoundArchive::ItemId streamSoundId,
+                                                         const char* const* pRegionName,
+                                                         int32_t infoCount, void* buffer,
+                                                         size_t bufferSize,
+                                                         const char* soundArchiveName) const {
+    const SoundArchive* pSoundArchive{
+        GetTargetSoundArchive(m_SoundArchiveManager, soundArchiveName),
+    };
+
+    return ReadStreamSoundRegionDataInfo(pOutInfo, streamSoundId, pRegionName, infoCount,
+                                         pSoundArchive, buffer, bufferSize);
 }
 
 void SoundArchivePlayer::StopAllSound(int32_t fadeFrames, bool isCommandFlushed) {
