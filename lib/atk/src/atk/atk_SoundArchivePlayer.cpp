@@ -1352,6 +1352,10 @@ Result SoundArchivePlayer::ReadStreamSoundDataInfo(StreamSoundDataInfo* pOutInfo
     return ReadStreamSoundDataInfo(pOutInfo, streamSoundName, nullptr);
 }
 
+size_t SoundArchivePlayer::GetRequiredWorkBufferSizeToReadStreamSoundHeader() {
+    return FileLoadAlignSize * 0x53;
+}
+
 void SoundArchivePlayer::StopAllSound(int32_t fadeFrames, bool isCommandFlushed) {
     for (SoundArchive::ItemId playerId{0}; playerId < m_SoundPlayerCount; ++playerId)
         m_pSoundPlayers[playerId].StopAllSound(fadeFrames);
