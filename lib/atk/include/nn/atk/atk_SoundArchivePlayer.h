@@ -187,9 +187,16 @@ public:
                                       SoundActor* actor, bool holdFlag,
                                       const char* soundArchiveName, const StartInfo* startInfo);
 
-    SoundArchive::ItemId detail_GetItemId(const char* pString) override;
+    SoundArchive::ItemId detail_GetItemId(const char* pString) override {
+        return detail_GetItemId(pString, nullptr);
+    }
+
     SoundArchive::ItemId detail_GetItemId(const char* pString,
-                                          const char* soundArchiveName) override;
+                                          const char* soundArchiveName) override {
+        m_SoundArchiveManager.ChangeTargetArchive(soundArchiveName);
+
+        return m_SoundArchiveManager.GetCurrentSoundArchive()->GetItemId(pString);
+    }
 
     bool detail_IsEnableWarningPrint() const { return m_IsEnableWarningPrint; }
 
