@@ -2,6 +2,7 @@
 
 #include <algorithm>
 
+#include <nn/fs/fs_Directories.h>
 #include <nn/util/util_StringUtil.h>
 
 #include <nn/atk/atk_DriverCommand.h>
@@ -1543,6 +1544,46 @@ bool SoundArchivePlayer::ReadStreamSoundInstanceState(StreamSoundInstanceState* 
     pOutInfo->activeStreamChannelCount = m_StreamSoundRuntime.GetActiveChannelCount();
     pOutInfo->activeStreamTrackCount = m_StreamSoundRuntime.GetActiveTrackCount();
     return true;
+}
+
+Result SoundArchivePlayer::CheckStreamSoundFileExisting(SoundArchive::ItemId streamSoundId) const {
+    return CheckStreamSoundFileExisting(streamSoundId, nullptr);
+}
+
+Result SoundArchivePlayer::CheckStreamSoundFileExisting(const char* streamSoundName) const {
+    return CheckStreamSoundFileExisting(streamSoundName, nullptr);
+}
+
+Result SoundArchivePlayer::CheckStreamSoundFileExisting(SoundArchive::ItemId streamSoundId,
+                                                        const char* soundArchiveName) const {
+    const SoundArchive* pSoundArchive{
+        GetTargetSoundArchive(m_SoundArchiveManager, soundArchiveName),
+    };
+
+    return CheckStreamSoundFileExisting(pSoundArchive, streamSoundId);
+}
+
+Result SoundArchivePlayer::CheckStreamSoundFileExisting(const char* streamSoundName,
+                                                        const char* soundArchiveName) const {
+    const SoundArchive* pSoundArchive{
+        GetTargetSoundArchive(m_SoundArchiveManager, soundArchiveName),
+    };
+
+    SoundArchive::ItemId id{pSoundArchive->GetItemId(streamSoundName)};
+    if (id == SoundArchive::InvalidId)
+        return ResultErrorCCD1();
+
+    return CheckStreamSoundFileExisting(pSoundArchive, id);
+}
+
+Result SoundArchivePlayer::CheckStreamSoundFileExisting(const SoundArchive* pSoundArchive,
+                                                        SoundArchive::ItemId streamSoundId) const {
+    char filePath[detail::FilePathMax + 130];
+    if (!pSoundArchive->ReadStreamSoundFilePath(filePath, sizeof(filePath), streamSoundId))
+        return ResultErrorD4D1();
+
+    fs::DirectoryEntryType entryType;
+    return fs::GetEntryType(&entryType, filePath);
 }
 
 void SoundArchivePlayer::StopAllSound(int32_t fadeFrames, bool isCommandFlushed) {
