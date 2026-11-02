@@ -1,6 +1,7 @@
 #include <nn/atk/atk_SoundSystem.h>
 
 #include <nn/atk/atk_ChannelManager.h>
+#include <nn/atk/atk_DriverCommand.h>
 #include <nn/atk/fnd/basis/atkfnd_Inlines.h>
 
 NN_MIDDLEWARE(g_MiddlewareInfo, "Nintendo", "NintendoWare_Atk" NN_SDK_BUILD_STR);
@@ -200,6 +201,30 @@ size_t SoundSystem::GetRequiredMemSizeForCircularBufferSink(const SoundSystemPar
 
     return nn::atk::detail::driver::HardwareManager::GetInstance()
         .GetRequiredCircularBufferSinkWithMemoryPoolBufferSize(hardwareManagerParameter);
+}
+
+void SoundSystem::detail_InitializeDriverCommandManager(const SoundSystemParam& param,
+                                                        uintptr_t workMem,
+                                                        [[maybe_unused]] size_t workMemSize,
+                                                        [[maybe_unused]] uintptr_t memoryPoolMem,
+                                                        [[maybe_unused]] size_t memoryPoolMemSize) {
+    if (g_IsInitializedDriverCommandManager)
+        return;
+
+    uintptr_t ptr{workMem};
+    uintptr_t soundThreadCommandBufferPtr{ptr};
+    ptr += param.soundThreadCommandBufferSize;
+
+    detail::DriverCommand::GetInstance().Initialize(
+        reinterpret_cast<void*>(soundThreadCommandBufferPtr), param.soundThreadCommandBufferSize);
+
+    uintptr_t taskThreadCommandBufferPtr{ptr};
+    detail::DriverCommand::GetInstanceForTaskThread().Initialize(
+        reinterpret_cast<void*>(taskThreadCommandBufferPtr), param.taskThreadCommandBufferSize);
+
+    g_SoundThreadCommandBufferSize = param.soundThreadCommandBufferSize;
+    g_TaskThreadCommandBufferSize = param.taskThreadCommandBufferSize;
+    g_IsInitializedDriverCommandManager = true;
 }
 
 #if NN_WARE_VER >= NN_MAKE_VER(5, 0, 0)
