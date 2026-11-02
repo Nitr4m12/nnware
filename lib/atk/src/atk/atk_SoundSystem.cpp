@@ -1,5 +1,7 @@
 #include <nn/atk/atk_SoundSystem.h>
 
+#include <nn/atk/fnd/basis/atkfnd_Inlines.h>
+
 NN_MIDDLEWARE(g_MiddlewareInfo, "Nintendo", "NintendoWare_Atk" NN_SDK_BUILD_STR);
 
 namespace {
@@ -32,7 +34,7 @@ GetRequiredSoundSystemMemSizeForMemoryPool(const nn::atk::SoundSystem::SoundSyst
 const int32_t AdditionalSubMixBusIndex{0};
 
 int32_t ClampBusCountMax(int32_t busCountMax) {
-    // TODO
+    return nn::atk::detail::fnd::Clamp(busCountMax, 1, nn::atk::OutputMix::ChannelCountMax);
 }
 
 int32_t ConvertAuxBusIndexToSubMixBusIndex(nn::atk::AuxBus bus) {
@@ -59,5 +61,23 @@ bool SoundSystem::g_IsSoundThreadEnabled{true};
 int32_t SoundSystem::g_BusCountMax{detail::DefaultBusCount};
 
 SoundSystem::SoundSystemParam::SoundSystemParam() = default;
+
+detail::SoundInstanceConfig SoundSystem::GetSoundInstanceConfig() {
+    detail::SoundInstanceConfig config;
+    config.isBusMixVolumeEnabled = g_IsBusMixVolumeEnabled;
+    config.isVolumeThroughModeEnabled = g_IsVolumeThroughModeEnabled;
+    config.busCount = g_BusCountMax;
+
+    return config;
+}
+
+detail::SoundInstanceConfig SoundSystem::GetSoundInstanceConfig(const SoundSystemParam &param) {
+    detail::SoundInstanceConfig config;
+    config.isBusMixVolumeEnabled = param.enableBusMixVolume;
+    config.isVolumeThroughModeEnabled = param.enableVolumeThroughMode;
+    config.busCount = ClampBusCountMax(param.busCountMax);
+
+    return config;
+}
 
 }  // namespace nn::atk
