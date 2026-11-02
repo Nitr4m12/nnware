@@ -156,9 +156,15 @@ struct SoundSystem {
         return detail::driver::HardwareManager::GetInstance().GetAudioRendererParameter();
     }
 
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    static audio::FinalMixType& GetFinalMix() {
+        return detail::driver::HardwareManager::GetInstance().GetFinalMix();
+    }
+#else
     static FinalMix& GetFinalMix() {
         return detail::driver::HardwareManager::GetInstance().GetFinalMix();
     }
+#endif
 
     static void AttachMemoryPool(audio::MemoryPoolType* pMemoryPool, void* address, size_t size);
     static void DetachMemoryPool(audio::MemoryPoolType* pMemoryPool);

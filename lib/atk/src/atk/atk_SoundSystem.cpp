@@ -8,10 +8,15 @@ NN_MIDDLEWARE(g_MiddlewareInfo, "Nintendo", "NintendoWare_Atk" NN_SDK_BUILD_STR)
 namespace {
 
 size_t GetRequiredDriverCommandManagerMemSize(const nn::atk::SoundSystem::SoundSystemParam& param) {
-    // TODO
+    size_t result{0};
+    result += param.soundThreadCommandBufferSize;
+    result += param.taskThreadCommandBufferSize;
+    result += 0x1000;
+
+    return result;
 }
 
-void SetupHardwareManagerParameter(
+static void SetupHardwareManagerParameter(
     nn::atk::detail::driver::HardwareManager::HardwareManagerParameter* pOutValue,
     const nn::atk::SoundSystem::SoundSystemParam& parameter) {
     pOutValue->SetRendererSampleRate(parameter.rendererSampleRate);
@@ -49,22 +54,71 @@ void SetupHardwareManagerParameter(
                                   parameter.subMixCount, subMixTotalChannelCount);
 }
 
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+size_t GetRequiredSoundSystemMemSize(const nn::atk::SoundSystem::SoundSystemParam& param)
+#else
 size_t GetRequiredSoundSystemMemSize(const nn::atk::SoundSystem::SoundSystemParam& param,
-                                     const nn::atk::detail::SoundInstanceConfig& config) {
-    // TODO
+                                     const nn::atk::detail::SoundInstanceConfig& config)
+#endif
+{
+    size_t result{0};
+    result += param.taskThreadStackSize;
+
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    result += nn::atk::detail::driver::MultiVoiceManager::GetInstance().GetRequiredMemSize(
+        param.voiceCountMax);
+#else
+    result += nn::atk::detail::driver::MultiVoiceManager::GetInstance().GetRequiredMemSize(
+        param.voiceCountMax, config);
+#endif
+
+    result += param.soundThreadStackSize;
+
+    nn::atk::detail::driver::HardwareManager::HardwareManagerParameter hardwareManagerParameter;
+    SetupHardwareManagerParameter(&hardwareManagerParameter, param);
+
+    if (param.enableProfiler) {
+        result += nn::atk::detail::driver::HardwareManager::GetInstance()
+                      .GetRequiredPerformanceFramesBufferSize(&hardwareManagerParameter) *
+                  3;
+        result += 0x1040;
+    } else {
+        result += 0x1000;
+    }
+
+    if (param.enableRecordingFinalOutputs)
+        result += nn::atk::detail::driver::HardwareManager::GetInstance()
+                      .GetRequiredRecorderWorkBufferSize(hardwareManagerParameter);
+
+    result += nn::atk::detail::driver::HardwareManager::GetInstance().GetRequiredMemSize(
+        hardwareManagerParameter);
+
+    return result;
 }
 
 int32_t GetChannelCount(int32_t voiceCount) {
     return voiceCount * nn::atk::WaveChannelMax;
 }
 
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+size_t
+GetRequiredSoundSystemMemSizeForMemoryPool(const nn::atk::SoundSystem::SoundSystemParam& param)
+#else
 size_t
 GetRequiredSoundSystemMemSizeForMemoryPool(const nn::atk::SoundSystem::SoundSystemParam& param,
-                                           const nn::atk::detail::SoundInstanceConfig& config) {
+                                           const nn::atk::detail::SoundInstanceConfig& config)
+#endif
+{
     size_t result{0};
 
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    result += nn::atk::detail::driver::ChannelManager::GetInstance().GetRequiredMemSize(
+        GetChannelCount(param.voiceCountMax));
+#else
     result += nn::atk::detail::driver::ChannelManager::GetInstance().GetRequiredMemSize(
         GetChannelCount(param.voiceCountMax), config);
+#endif
+
     result +=
         nn::atk::detail::driver::HardwareManager::GetInstance().GetRequiredMemSizeForMemoryPool(
             param.voiceCountMax);
@@ -103,10 +157,38 @@ int32_t SoundSystem::g_BusCountMax{detail::DefaultBusCount};
 
 SoundSystem::SoundSystemParam::SoundSystemParam() = default;
 
+size_t SoundSystem::GetRequiredMemSize(const SoundSystemParam& param) {
+    size_t result{0};
+
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    result += GetRequiredSoundSystemMemSize(param);
+#else
+    result += GetRequiredSoundSystemMemSize(param, GetSoundInstanceConfig(param));
+#endif
+
+    result += GetRequiredDriverCommandManagerMemSize(param);
+
+    if (param.enableCircularBufferSink && param.enableCircularBufferSinkBufferManagement)
+        result += GetRequiredMemSizeForCircularBufferSink(param);
+
+    if (param.enableMemoryPoolManagement) {
+        const size_t memoryPoolMemSize{GetRequiredMemSizeForMemoryPool(param)};
+
+        result += util::align_up(memoryPoolMemSize, nn::audio::MemoryPoolType::AddressAlignment);
+        result += 0x1000;
+    }
+
+    return result;
+}
+
 size_t SoundSystem::GetRequiredMemSizeForMemoryPool(const SoundSystemParam& param) {
     size_t result{0};
 
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    result += GetRequiredSoundSystemMemSizeForMemoryPool(param);
+#else
     result += GetRequiredSoundSystemMemSizeForMemoryPool(param, GetSoundInstanceConfig(param));
+#endif
 
     return result;
 }
