@@ -1,5 +1,6 @@
 #include <nn/atk/atk_SoundSystem.h>
 
+#include <nn/atk/atk_ChannelManager.h>
 #include <nn/atk/fnd/basis/atkfnd_Inlines.h>
 
 NN_MIDDLEWARE(g_MiddlewareInfo, "Nintendo", "NintendoWare_Atk" NN_SDK_BUILD_STR);
@@ -22,13 +23,21 @@ size_t GetRequiredSoundSystemMemSize(const nn::atk::SoundSystem::SoundSystemPara
 }
 
 int32_t GetChannelCount(int32_t voiceCount) {
-    // TODO
+    return voiceCount * nn::atk::WaveChannelMax;
 }
 
 size_t
 GetRequiredSoundSystemMemSizeForMemoryPool(const nn::atk::SoundSystem::SoundSystemParam& param,
                                            const nn::atk::detail::SoundInstanceConfig& config) {
-    // TODO
+    size_t result{0};
+
+    result += nn::atk::detail::driver::ChannelManager::GetInstance().GetRequiredMemSize(
+        GetChannelCount(param.voiceCountMax), config);
+    result +=
+        nn::atk::detail::driver::HardwareManager::GetInstance().GetRequiredMemSizeForMemoryPool(
+            param.voiceCountMax);
+
+    return result;
 }
 
 const int32_t AdditionalSubMixBusIndex{0};
@@ -62,6 +71,14 @@ int32_t SoundSystem::g_BusCountMax{detail::DefaultBusCount};
 
 SoundSystem::SoundSystemParam::SoundSystemParam() = default;
 
+size_t SoundSystem::GetRequiredMemSizeForMemoryPool(const SoundSystemParam& param) {
+    size_t result{0};
+
+    result += GetRequiredSoundSystemMemSizeForMemoryPool(param, GetSoundInstanceConfig(param));
+
+    return result;
+}
+
 detail::SoundInstanceConfig SoundSystem::GetSoundInstanceConfig() {
     detail::SoundInstanceConfig config;
     config.isBusMixVolumeEnabled = g_IsBusMixVolumeEnabled;
@@ -71,7 +88,7 @@ detail::SoundInstanceConfig SoundSystem::GetSoundInstanceConfig() {
     return config;
 }
 
-detail::SoundInstanceConfig SoundSystem::GetSoundInstanceConfig(const SoundSystemParam &param) {
+detail::SoundInstanceConfig SoundSystem::GetSoundInstanceConfig(const SoundSystemParam& param) {
     detail::SoundInstanceConfig config;
     config.isBusMixVolumeEnabled = param.enableBusMixVolume;
     config.isVolumeThroughModeEnabled = param.enableVolumeThroughMode;
