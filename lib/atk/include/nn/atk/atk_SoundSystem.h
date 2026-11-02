@@ -35,7 +35,9 @@ struct SoundSystem {
         int32_t taskThreadPriority{DefaultTaskThreadPriority};
         size_t taskThreadStackSize{DefaultTaskThreadStackSize};
         size_t taskThreadCommandBufferSize{DefaultTaskThreadCommandBufferSize};
+#if NN_WARE_VER >= NN_MAKE_VER(5, 0, 0)
         FsPriority taskThreadFsPriority{FsPriority_Normal};
+#endif
         bool enableNwRenderer;
         uint32_t nwVoiceSynthesizeBufferCount;
         int32_t rendererSampleRate{DefaultRendererSampleRate};
@@ -67,13 +69,22 @@ struct SoundSystem {
         bool enableCustomSubMix{false};
         int32_t subMixCount{0};
         int32_t subMixTotalChannelCount{0};
+#if NN_WARE_VER >= NN_MAKE_VER(5, 0, 0)
         int32_t mixBufferCount{InvalidMixBufferCount};
         int32_t busCountMax{DefaultBusCountMax};
+#endif
         bool enableMemoryPoolAttachCheck{false};
         bool enableBusMixVolume{false};
         bool enableVolumeThroughMode{false};
+#if NN_WARE_VER < NN_MAKE_VER(5, 0, 0)
+        int32_t busCountMax{DefaultBusCountMax};
+#endif
     };
+#if NN_WARE_VER < NN_MAKE_VER(5, 0, 0)
+    static_assert(sizeof(SoundSystemParam) == 0x80);
+#else
     static_assert(sizeof(SoundSystemParam) == 0x88);
+#endif
 
     struct InitializeBufferSet {
         uintptr_t workMem;
@@ -199,8 +210,28 @@ struct SoundSystem {
 
     static bool detail_IsSoundThreadEnabled() { return g_IsSoundThreadEnabled; }
 
+#if NN_WARE_VER < NN_MAKE_VER(5, 0, 0)
+    static detail::SoundInstanceConfig GetSoundInstanceConfig() {
+        detail::SoundInstanceConfig config;
+        config.isBusMixVolumeEnabled = g_IsBusMixVolumeEnabled;
+        config.isVolumeThroughModeEnabled = g_IsVolumeThroughModeEnabled;
+        config.busCount = g_BusCountMax;
+
+        return config;
+    }
+
+    static detail::SoundInstanceConfig GetSoundInstanceConfig(const SoundSystemParam& param) {
+        detail::SoundInstanceConfig config;
+        config.isBusMixVolumeEnabled = param.enableBusMixVolume;
+        config.isVolumeThroughModeEnabled = param.enableVolumeThroughMode;
+        config.busCount = param.busCountMax;
+
+        return config;
+    }
+#else
     static detail::SoundInstanceConfig GetSoundInstanceConfig();
     static detail::SoundInstanceConfig GetSoundInstanceConfig(const SoundSystemParam& param);
+#endif
 
     static void SetOutputMode(OutputMode mode, OutputDevice device) {
         detail::driver::HardwareManager::GetInstance().SetOutputMode(mode, device);

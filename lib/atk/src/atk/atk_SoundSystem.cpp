@@ -13,8 +13,40 @@ size_t GetRequiredDriverCommandManagerMemSize(const nn::atk::SoundSystem::SoundS
 
 void SetupHardwareManagerParameter(
     nn::atk::detail::driver::HardwareManager::HardwareManagerParameter* pOutValue,
-    const nn::atk::SoundSystem::SoundSystemParam& parameter, int32_t subMixTotalChannelCount) {
-    // TODO
+    const nn::atk::SoundSystem::SoundSystemParam& parameter) {
+    pOutValue->SetRendererSampleRate(parameter.rendererSampleRate);
+    pOutValue->SetUserEffectCount(parameter.effectCount);
+    pOutValue->SetProfilerEnabled(parameter.enableProfiler);
+    pOutValue->SetVoiceCount(parameter.voiceCountMax);
+    pOutValue->SetEffectEnabled(parameter.enableEffect);
+    pOutValue->SetStereoModeEnabled(parameter.enableStereoMode);
+    pOutValue->SetRecordingEnabled(parameter.enableRecordingFinalOutputs);
+    pOutValue->SetRecordingAudioFrameCount(parameter.recordingAudioFrameCount);
+    pOutValue->SetUserCircularBufferSinkEnabled(parameter.enableCircularBufferSink);
+    pOutValue->SetSoundThreadEnabled(parameter.enableSoundThread);
+    pOutValue->SetVoiceDropEnabled(parameter.enableVoiceDrop);
+    pOutValue->SetCompatibleDownMixSettingEnabled(parameter.enableCompatibleDownMixSetting);
+    pOutValue->SetPreviousSdkVersionLowPassFilterCompatible(
+        parameter.enableCompatibleLowPassFilter);
+    pOutValue->SetUnusedEffectChannelMutingEnabled(parameter.enableUnusedEffectChannelMuting);
+    pOutValue->SetCompatibleBusVolumeEnabled(parameter.enableCompatibleBusVolume);
+    pOutValue->SetUserThreadRenderingEnabled(parameter.enableUserThreadRendering);
+    pOutValue->SetMemoryPoolAttachCheckEnabled(parameter.enableMemoryPoolAttachCheck);
+
+#if NN_WARE_VER < NN_MAKE_VER(5, 0, 0)
+    const int32_t subMixTotalChannelCount{parameter.subMixTotalChannelCount};
+#else
+    const int32_t subMixTotalChannelCount{
+        parameter.mixBufferCount != nn::atk::SoundSystem::SoundSystemParam::InvalidMixBufferCount ?
+            parameter.mixBufferCount :
+            parameter.subMixTotalChannelCount,
+    };
+#endif
+
+    pOutValue->SetSubMixParameter(parameter.enableStereoMode, parameter.enableEffect,
+                                  parameter.enableSubMix, parameter.enableAdditionalEffectBus,
+                                  parameter.enableAdditionalSubMix, parameter.enableCustomSubMix,
+                                  parameter.subMixCount, subMixTotalChannelCount);
 }
 
 size_t GetRequiredSoundSystemMemSize(const nn::atk::SoundSystem::SoundSystemParam& param,
@@ -79,6 +111,16 @@ size_t SoundSystem::GetRequiredMemSizeForMemoryPool(const SoundSystemParam& para
     return result;
 }
 
+size_t SoundSystem::GetRequiredMemSizeForCircularBufferSink(const SoundSystemParam& param) {
+    nn::atk::detail::driver::HardwareManager::HardwareManagerParameter hardwareManagerParameter;
+
+    SetupHardwareManagerParameter(&hardwareManagerParameter, param);
+
+    return nn::atk::detail::driver::HardwareManager::GetInstance()
+        .GetRequiredCircularBufferSinkWithMemoryPoolBufferSize(hardwareManagerParameter);
+}
+
+#if NN_WARE_VER >= NN_MAKE_VER(5, 0, 0)
 detail::SoundInstanceConfig SoundSystem::GetSoundInstanceConfig() {
     detail::SoundInstanceConfig config;
     config.isBusMixVolumeEnabled = g_IsBusMixVolumeEnabled;
@@ -96,5 +138,6 @@ detail::SoundInstanceConfig SoundSystem::GetSoundInstanceConfig(const SoundSyste
 
     return config;
 }
+#endif
 
 }  // namespace nn::atk

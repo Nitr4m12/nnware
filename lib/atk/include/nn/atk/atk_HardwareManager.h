@@ -104,35 +104,132 @@ public:
 
     class HardwareManagerParameter {
     public:
+        HardwareManagerParameter() = default;
+
+        int32_t GetRendererSampleRate() const { return m_RendererSampleRate; }
+        void SetRendererSampleRate(int32_t rendererSampleRate) {
+            m_RendererSampleRate = rendererSampleRate;
+        }
+
+        int32_t GetUserEffectCount() const { return m_UserEffectCount; }
+        void SetUserEffectCount(int32_t userEffectCount) { m_UserEffectCount = userEffectCount; }
+
+        bool IsProfilerEnabled() const { return m_IsProfilerEnabled; }
+        void SetProfilerEnabled(bool isProfilerEnabled) { m_IsProfilerEnabled = isProfilerEnabled; }
+
+        int32_t GetVoiceCount() const { return m_VoiceCount; }
+        void SetVoiceCount(int32_t voiceCount) { m_VoiceCount = voiceCount; }
+
+        bool IsAdditionalEffectBusEnabled() const { return m_IsAdditionalEffectBusEnabled; }
+        bool IsAdditionalSubMixEnabled() const { return m_IsAdditionalSubMixEnabled; }
+
+        bool IsEffectEnabled() const { return m_IsEffectEnabled; }
+        void SetEffectEnabled(bool isEffectEnabled) { m_IsEffectEnabled = isEffectEnabled; }
+
+        bool IsRecordingEnabled() const { return m_IsRecordingEnabled; }
+        void SetRecordingEnabled(bool isRecordingEnabled) {
+            m_IsRecordingEnabled = isRecordingEnabled;
+        }
+
+        int32_t GetRecordingAudioFrameCount() const { return m_RecordingAudioFrameCount; }
+        void SetRecordingAudioFrameCount(int32_t recordingAudioFrameCount) {
+            m_RecordingAudioFrameCount = recordingAudioFrameCount;
+        }
+
+        bool IsUserCircularBufferSinkEnabled() const { return m_IsUserCircularBufferSinkEnabled; }
+        void SetUserCircularBufferSinkEnabled(bool isUserCircularBufferSinkEnabled) {
+            m_IsUserCircularBufferSinkEnabled = isUserCircularBufferSinkEnabled;
+        }
+
+        bool IsPresetSubMixEnabled() const { return m_IsPresetSubMixEnabled; }
+
+        bool IsStereoModeEnabled() const { return m_IsStereoModeEnabled; }
+        void SetStereoModeEnabled(bool isStereoModeEnabled) {
+            m_IsStereoModeEnabled = isStereoModeEnabled;
+        }
+
+        bool IsSoundThreadEnabled() const { return m_IsSoundThreadEnabled; }
+        void SetSoundThreadEnabled(bool isSoundThreadEnabled) {
+            m_IsSoundThreadEnabled = isSoundThreadEnabled;
+        }
+
+        bool IsVoiceDropEnabled() const { return m_IsVoiceDropEnabled; }
+        void SetVoiceDropEnabled(bool isVoiceDropEnabled) {
+            m_IsVoiceDropEnabled = isVoiceDropEnabled;
+        }
+
+        bool IsCompatibleDownMixSettingEnabled() const {
+            return m_IsCompatibleDownMixSettingEnabled;
+        }
+        void SetCompatibleDownMixSettingEnabled(bool isCompatibleDownMixSettingEnabled) {
+            m_IsCompatibleDownMixSettingEnabled = isCompatibleDownMixSettingEnabled;
+        }
+
+        bool IsPreviousSdkVersionLowPassFilterCompatible() const {
+            return m_IsPreviousSdkVersionLowPassFilterCompatible;
+        }
+        void SetPreviousSdkVersionLowPassFilterCompatible(
+            bool isPreviousSdkVersionLowPassFilterCompatible) {
+            m_IsPreviousSdkVersionLowPassFilterCompatible =
+                isPreviousSdkVersionLowPassFilterCompatible;
+        }
+
+        bool IsUnusedEffectChannelMutingEnabled() const {
+            return m_IsUnusedEffectChannelMutingEnabled;
+        }
+        void SetUnusedEffectChannelMutingEnabled(bool isUnusedEffectChannelMutingEnabled) {
+            m_IsUnusedEffectChannelMutingEnabled = isUnusedEffectChannelMutingEnabled;
+        }
+
+        bool IsCompatibleBusVolumeEnabled() const { return m_IsCompatibleBusVolumeEnabled; }
+        void SetCompatibleBusVolumeEnabled(bool isCompatibleBusVolumeEnabled) {
+            m_IsCompatibleBusVolumeEnabled = isCompatibleBusVolumeEnabled;
+        }
+
+        bool IsUserThreadRenderingEnabled() const { return m_IsUserThreadRenderingEnabled; }
+        void SetUserThreadRenderingEnabled(bool isUserThreadRenderingEnabled) {
+            m_IsUserThreadRenderingEnabled = isUserThreadRenderingEnabled;
+        }
+
+        int32_t IsCustomSubMixEnabled() const { return m_IsCustomSubMixEnabled; }
+
+        int32_t GetSubMixCount() const { return m_SubMixCount; }
+        int32_t GetMixBufferCount() const { return m_MixBufferCount; }
+
         void SetSubMixParameter(bool isStereoModeEnabled, bool isEffectEnabled,
                                 bool isSubMixEnabled, bool isAdditionalEffectBusEnabled,
                                 bool isAdditionalSubMixEnabled, bool isCustomSubMixEnabled,
                                 int32_t customSubMixCount, int32_t customMixTotalChannelCount);
 
+        bool IsMemoryPoolAttachCheckEnabled() const { return m_IsMemoryPoolAttachCheckEnabled; }
+        void SetMemoryPoolAttachCheckEnabled(bool isMemoryPoolAttachCheckEnabled) {
+            m_IsMemoryPoolAttachCheckEnabled = isMemoryPoolAttachCheckEnabled;
+        }
+
     private:
-        int32_t m_RendererSampleRate;
-        int32_t m_UserEffectCount;
-        int32_t m_VoiceCount;
-        int32_t m_RecordingAudioFrameCount;
-        int32_t m_SubMixCount;
-        int32_t m_MixBufferCount;
-        bool m_IsProfilerEnabled;
-        bool m_IsAdditionalEffectBusEnabled;
-        bool m_IsAdditionalSubMixEnabled;
-        bool m_IsEffectEnabled;
-        bool m_IsRecordingEnabled;
-        bool m_IsUserCircularBufferSinkEnabled;
-        bool m_IsPresetSubMixEnabled;
-        bool m_IsStereoModeEnabled;
-        bool m_IsSoundThreadEnabled;
-        bool m_IsVoiceDropEnabled;
-        bool m_IsCompatibleDownMixSettingEnabled;
-        bool m_IsPreviousSdkVersionLowPassFilterCompatible;
-        bool m_IsUnusedEffectChannelMutingEnabled;
-        bool m_IsCompatibleBusVolumeEnabled;
-        bool m_IsUserThreadRenderingEnabled;
-        bool m_IsCustomSubMixEnabled;
-        bool m_IsMemoryPoolAttachCheckEnabled;
+        int32_t m_RendererSampleRate{DefaultRendererSampleRate};
+        int32_t m_UserEffectCount{DefaultRendererUserEffectCount};
+        int32_t m_VoiceCount{DefaultRendererVoiceCountMax};
+        int32_t m_RecordingAudioFrameCount{DefaultRecordingAudioFrameCount};
+        int32_t m_SubMixCount{DefaultRendererSubMixCount};
+        int32_t m_MixBufferCount{DefaultRendererMixBufferCount};
+        bool m_IsProfilerEnabled{false};
+        bool m_IsAdditionalEffectBusEnabled{false};
+        bool m_IsAdditionalSubMixEnabled{false};
+        bool m_IsEffectEnabled{true};
+        bool m_IsRecordingEnabled{false};
+        bool m_IsUserCircularBufferSinkEnabled{false};
+        bool m_IsPresetSubMixEnabled{true};
+        bool m_IsStereoModeEnabled{false};
+        bool m_IsSoundThreadEnabled{true};
+        bool m_IsVoiceDropEnabled{false};
+        bool m_IsCompatibleDownMixSettingEnabled{false};
+        bool m_IsPreviousSdkVersionLowPassFilterCompatible{false};
+        bool m_IsUnusedEffectChannelMutingEnabled{false};
+        bool m_IsCompatibleBusVolumeEnabled{false};
+        bool m_IsUserThreadRenderingEnabled{false};
+        bool m_IsCustomSubMixEnabled{false};
+        bool m_IsMemoryPoolAttachCheckEnabled{false};
     };
     static_assert(sizeof(HardwareManagerParameter) == 0x2c);
 
@@ -246,7 +343,9 @@ public:
     float GetOutputVolume() const;
 
     void SetOutputDeviceFlag(int32_t, uint8_t);
-    uint8_t GetOutputDeviceFlag(uint32_t outputLineIndex) { return m_OutputDeviceFlag[outputLineIndex]; }
+    uint8_t GetOutputDeviceFlag(uint32_t outputLineIndex) {
+        return m_OutputDeviceFlag[outputLineIndex];
+    }
 
     void SetMasterVolume(float volume, int32_t fadeFrames);
     void SetSrcType(SampleRateConverterType sampleRateConverter);
@@ -295,9 +394,7 @@ public:
         return m_AudioRendererParameter;
     }
 
-    float GetMasterVolume() const {
-        return m_MasterVolume.GetValue();
-    }
+    float GetMasterVolume() const { return m_MasterVolume.GetValue(); }
 
 private:
     bool m_IsInitialized;
