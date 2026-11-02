@@ -1255,7 +1255,7 @@ Result SoundArchivePlayer::ReadStreamSoundDataInfo(StreamSoundDataInfo* pOutInfo
     if (isStreamSoundPlaying)
         return ResultErrorD2D1();
 
-    char filePath[detail::FilePathMax + 130];
+    char filePath[fs::PathLengthMax + 1];
     if (!pSoundArchive->ReadStreamSoundFilePath(filePath, sizeof(filePath), streamSoundId))
         return ResultErrorD4D1();
 
@@ -1375,7 +1375,7 @@ Result SoundArchivePlayer::ReadStreamSoundRegionDataInfo(
     if (isStreamSoundPlaying)
         return ResultErrorD2D1();
 
-    char filePath[detail::FilePathMax + 130];
+    char filePath[fs::PathLengthMax + 1];
     if (!pSoundArchive->ReadStreamSoundFilePath(filePath, sizeof(filePath), streamSoundId))
         return ResultErrorD4D1();
 
@@ -1578,7 +1578,7 @@ Result SoundArchivePlayer::CheckStreamSoundFileExisting(const char* streamSoundN
 
 Result SoundArchivePlayer::CheckStreamSoundFileExisting(const SoundArchive* pSoundArchive,
                                                         SoundArchive::ItemId streamSoundId) const {
-    char filePath[detail::FilePathMax + 130];
+    char filePath[fs::PathLengthMax + 1];
     if (!pSoundArchive->ReadStreamSoundFilePath(filePath, sizeof(filePath), streamSoundId))
         return ResultErrorD4D1();
 

@@ -28,8 +28,8 @@ public:
     static uint32_t ParseAllocTrack(const void* baseAddress, uint32_t seqOffset,
                                     uint32_t* allocTrack);
 
-    static bool EnablePrintVar() { return *mPrintVarEnabledFlag = true; }
-    static bool IsEnabledPrintVar() { return *mPrintVarEnabledFlag; }
+    static bool EnablePrintVar() { return mPrintVarEnabledFlag = true; }
+    static bool IsEnabledPrintVar() { return mPrintVarEnabledFlag; }
 
 protected:
     virtual void CommandProc(MmlSequenceTrack* track, uint32_t command, int32_t commandArg1,
@@ -52,7 +52,7 @@ private:
     volatile int16_t* GetVariablePtr(SequenceSoundPlayer* player, SequenceTrack* track,
                                      int32_t varNo) const;
 
-    static bool* mPrintVarEnabledFlag;
+    static bool mPrintVarEnabledFlag;
 };
 static_assert(sizeof(MmlParser) == 0x8);
 

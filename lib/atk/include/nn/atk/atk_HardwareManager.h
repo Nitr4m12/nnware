@@ -291,6 +291,14 @@ public:
         return m_EndUserOutputMode[device];
     }
 
+    const audio::AudioRendererParameter& GetAudioRendererParameter() const {
+        return m_AudioRendererParameter;
+    }
+
+    float GetMasterVolume() const {
+        return m_MasterVolume.GetValue();
+    }
+
 private:
     bool m_IsInitialized;
 #if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)

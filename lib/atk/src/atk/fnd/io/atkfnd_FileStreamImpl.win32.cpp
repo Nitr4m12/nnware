@@ -70,10 +70,10 @@ FndResult FileStreamImpl::Open(const char* filePath, AccessMode accessMode) {
     if (result.IsSuccess())
         return FndResult{FndResultType_True};
 
-    if (result::detail::ErrorRange<0, 1, 2>().Includes(result))
+    if (result::detail::ErrorRange<2, 1, 2>::Includes(result))
         return FndResult{FndResultType_IoFileNotFound};
 
-    if (result::detail::ErrorRange<2, 4000, 5000>().Includes(result))
+    if (result::detail::ErrorRange<2, 4000, 5000>::Includes(result))
         return FndResult{FndResultType_IoInvalidAccess};
 
     return FndResult{FndResultType_IoTargetLocked};
