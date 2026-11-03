@@ -6,6 +6,7 @@
 #include <nn/atk/atk_DriverCommand.h>
 #include <nn/atk/atk_TaskThread.h>
 #include <nn/atk/fnd/basis/atkfnd_Inlines.h>
+#include "nn/atk/atk_MultiVoiceManager.h"
 
 NN_MIDDLEWARE(g_MiddlewareInfo, "Nintendo", "NintendoWare_Atk" NN_SDK_BUILD_STR);
 
@@ -727,6 +728,18 @@ size_t SoundSystem::GetLowLevelVoiceAllocatorBufferSize() {
 
     return detail::driver::HardwareManager::GetInstance().GetRequiredMemSizeForMemoryPool(
         g_VoiceCountMax);
+}
+
+size_t SoundSystem::GetMultiVoiceManagerBufferSize() {
+    if (!IsInitialized())
+        return 0;
+
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    return detail::driver::MultiVoiceManager::GetInstance().GetRequiredMemSize(g_VoiceCountMax);
+#else
+    return detail::driver::MultiVoiceManager::GetInstance().GetRequiredMemSize(
+        g_VoiceCountMax, GetSoundInstanceConfig());
+#endif
 }
 
 #if NN_WARE_VER >= NN_MAKE_VER(5, 0, 0)
