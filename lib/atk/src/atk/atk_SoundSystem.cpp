@@ -721,6 +721,14 @@ size_t SoundSystem::GetUserCircularBufferSinkBufferSize() {
     return bufferSize;
 }
 
+size_t SoundSystem::GetLowLevelVoiceAllocatorBufferSize() {
+    if (!IsInitialized())
+        return 0;
+
+    return detail::driver::HardwareManager::GetInstance().GetRequiredMemSizeForMemoryPool(
+        g_VoiceCountMax);
+}
+
 #if NN_WARE_VER >= NN_MAKE_VER(5, 0, 0)
 detail::SoundInstanceConfig SoundSystem::GetSoundInstanceConfig() {
     detail::SoundInstanceConfig config;
