@@ -6,6 +6,7 @@
 #include <nn/atk/atk_DriverCommand.h>
 #include <nn/atk/atk_TaskThread.h>
 #include <nn/atk/fnd/basis/atkfnd_Inlines.h>
+#include "nn/atk/atk_SoundThread.h"
 
 NN_MIDDLEWARE(g_MiddlewareInfo, "Nintendo", "NintendoWare_Atk" NN_SDK_BUILD_STR);
 
@@ -765,7 +766,7 @@ size_t SoundSystem::GetAllocatedDriverCommandBufferSize() {
     return detail::DriverCommand::GetInstance().GetAllocatedCommandBufferSize();
 }
 
-size_t SoundSystem::GetAllocatedDriverCommandCount() {
+int32_t SoundSystem::GetAllocatedDriverCommandCount() {
     return detail::DriverCommand::GetInstance().GetAllocatedCommandCount();
 }
 
@@ -788,6 +789,12 @@ detail::SoundInstanceConfig SoundSystem::GetSoundInstanceConfig(const SoundSyste
     return config;
 }
 #endif
+
+void SoundSystem::RegisterAudioRendererPerformanceReader(
+    AudioRendererPerformanceReader& performanceReader) {
+    detail::driver::SoundThread::GetInstance().RegisterAudioRendererPerformanceReader(
+        performanceReader);
+}
 
 void SoundSystem::SetupHardwareManagerParameterFromCurrentSetting(
     detail::driver::HardwareManager::HardwareManagerParameter* pOutValue) {  // 1570

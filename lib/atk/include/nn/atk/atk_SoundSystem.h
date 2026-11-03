@@ -206,7 +206,7 @@ struct SoundSystem {
     static size_t GetDriverCommandBufferSize();
     static size_t GetAllocatableDriverCommandSize();
     static size_t GetAllocatedDriverCommandBufferSize();
-    static size_t GetAllocatedDriverCommandCount();
+    static int32_t GetAllocatedDriverCommandCount();
 
     static bool detail_IsStreamLoadWait() { return g_IsStreamLoadWait; }
 
