@@ -1029,6 +1029,20 @@ void SoundSystem::ClearEffect(AuxBus bus, [[maybe_unused]] OutputDevice device,
 #endif
 }
 
+void SoundSystem::ClearEffectFromFinalMix() {
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    detail::DriverCommand& cmdmgr{detail::DriverCommand::GetInstance()};
+    auto* command{cmdmgr.AllocCommand<detail::DriverCommandEffectForMix>()};
+    command->id = detail::DriverCommandId_ClearEffectFromFinalMix;
+
+    cmdmgr.PushCommand(command);
+    uint32_t tag{cmdmgr.FlushCommand(true)};
+    cmdmgr.WaitCommandReply(tag);
+#else
+    detail::driver::HardwareManager::GetInstance().GetFinalMix().ClearEffect();
+#endif
+}
+
 void SoundSystem::SetupHardwareManagerParameterFromCurrentSetting(
     detail::driver::HardwareManager::HardwareManagerParameter* pOutValue) {  // 1570
     pOutValue->SetRendererSampleRate(g_RendererSampleRate);
