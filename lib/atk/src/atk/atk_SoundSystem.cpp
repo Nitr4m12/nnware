@@ -6,6 +6,7 @@
 #include <nn/atk/atk_DriverCommand.h>
 #include <nn/atk/atk_TaskThread.h>
 #include <nn/atk/fnd/basis/atkfnd_Inlines.h>
+#include "nn/atk/atk_VoiceCommand.h"
 
 NN_MIDDLEWARE(g_MiddlewareInfo, "Nintendo", "NintendoWare_Atk" NN_SDK_BUILD_STR);
 
@@ -1187,6 +1188,24 @@ void SoundSystem::SetAllBusChannelVolumeForAdditionalEffect(float volume, int32_
                                                             int32_t destChannelIndex) {
     SetMainBusChannelVolumeForAdditionalEffect(volume, srcChannelIndex, destChannelIndex);
     SetAllAuxBusChannelVolumeForAdditionalEffect(volume, srcChannelIndex, destChannelIndex);
+}
+
+void SoundSystem::VoiceCommandProcess(UpdateType updateType, uint32_t frameCount) {
+    if (!g_IsInitialized)
+        return;
+
+    detail::driver::SoundThread& soundThread{detail::driver::SoundThread::GetInstance()};
+    detail::LowLevelVoiceCommand& lowLevelVoiceCommand{detail::LowLevelVoiceCommand::GetInstance()};
+
+    while (lowLevelVoiceCommand.GetCommandListCount() < frameCount) {
+        soundThread.FrameProcess(updateType);
+        lowLevelVoiceCommand.RecvCommandReply();
+        lowLevelVoiceCommand.FlushCommand(true, false);
+    }
+}
+
+void SoundSystem::VoiceCommandProcess(uint32_t frameCount) {
+    VoiceCommandProcess(UpdateType_AudioFrame, frameCount);
 }
 
 void SoundSystem::SetupHardwareManagerParameterFromCurrentSetting(
