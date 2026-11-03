@@ -753,6 +753,10 @@ size_t SoundSystem::GetChannelManagerBufferSize() {
 #endif
 }
 
+size_t SoundSystem::GetDriverCommandBufferSize() {
+    return detail::DriverCommand::GetInstance().GetCommandBufferSize();
+}
+
 #if NN_WARE_VER >= NN_MAKE_VER(5, 0, 0)
 detail::SoundInstanceConfig SoundSystem::GetSoundInstanceConfig() {
     detail::SoundInstanceConfig config;
