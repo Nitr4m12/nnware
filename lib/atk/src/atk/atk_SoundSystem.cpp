@@ -1096,6 +1096,27 @@ bool SoundSystem::IsClearEffectFromAdditionalSubMixFinished() {
 #endif
 }
 
+void SoundSystem::SetAuxBusVolume(AuxBus bus, float volume, TimeSpan fadeTimes) {
+    return SetAuxBusVolume(bus, volume, fadeTimes, 0);
+}
+
+void SoundSystem::SetAuxBusVolume(AuxBus bus, float volume, TimeSpan fadeTimes,
+                                  int32_t subMixIndex) {
+    const int FadeTimesMsec{static_cast<int>(fadeTimes.GetMilliSeconds())};
+    const int SoundFrameIntervalMsec{5};
+    const int FadeFrames{(FadeTimesMsec + 4) / SoundFrameIntervalMsec};
+
+    detail::DriverCommand& cmdmgr{detail::DriverCommand::GetInstance()};
+    auto* command{cmdmgr.AllocCommand<detail::DriverCommandAuxBusVolume>()};
+    command->id = detail::DriverCommandId_AuxBusVolume;
+    command->bus = bus;
+    command->subMixIndex = subMixIndex;
+    command->volume = volume;
+    command->fadeFrames = FadeFrames;
+
+    cmdmgr.PushCommand(command);
+}
+
 void SoundSystem::SetupHardwareManagerParameterFromCurrentSetting(
     detail::driver::HardwareManager::HardwareManagerParameter* pOutValue) {  // 1570
     pOutValue->SetRendererSampleRate(g_RendererSampleRate);

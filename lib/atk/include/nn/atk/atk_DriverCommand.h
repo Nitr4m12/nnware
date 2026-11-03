@@ -99,8 +99,10 @@ enum DriverCommandId {
     DriverCommandId_ClearEffectFromFinalMix,
     DriverCommandId_ClearEffectFromAdditionalSubMix,
 #endif
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0 ,0)
     DriverCommandId_SubMixApplyDestination,
     DriverCommandId_SubMixUpdateMixVolume,
+#endif
     DriverCommandId_AuxBusVolume,
     DriverCommandId_AllVoicesSync,
     DriverCommandId_VoicePlay,
