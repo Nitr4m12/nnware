@@ -1125,6 +1125,23 @@ float SoundSystem::GetAuxBusVolume(AuxBus bus, int32_t subMixIndex) {
     return detail::driver::HardwareManager::GetInstance().GetAuxBusVolume(bus, subMixIndex);
 }
 
+void SoundSystem::SetMainBusChannelVolumeForAdditionalEffect(float volume, int32_t srcChannelIndex,
+                                                             int32_t destChannelIndex) {
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    detail::DriverCommand& cmdmgr{detail::DriverCommand::GetInstance()};
+    auto* command{cmdmgr.AllocCommand<detail::DriverCommandAuxBusVolumeForAdditionalEffect>()};
+    command->id = detail::DriverCommandId_MainBusVolumeForAdditionalEffect;
+    command->volume = volume;
+    command->srcChannelIndex = srcChannelIndex;
+    command->destChannelIndex = destChannelIndex;
+
+    cmdmgr.PushCommand(command);
+#else
+    detail::driver::HardwareManager::GetInstance().SetMainBusChannelVolumeForAdditionalEffect(
+        volume, srcChannelIndex, destChannelIndex);
+#endif
+}
+
 void SoundSystem::SetupHardwareManagerParameterFromCurrentSetting(
     detail::driver::HardwareManager::HardwareManagerParameter* pOutValue) {  // 1570
     pOutValue->SetRendererSampleRate(g_RendererSampleRate);

@@ -99,11 +99,15 @@ enum DriverCommandId {
     DriverCommandId_ClearEffectFromFinalMix,
     DriverCommandId_ClearEffectFromAdditionalSubMix,
 #endif
-#if NN_WARE_VER >= NN_MAKE_VER(4, 0 ,0)
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
     DriverCommandId_SubMixApplyDestination,
     DriverCommandId_SubMixUpdateMixVolume,
 #endif
     DriverCommandId_AuxBusVolume,
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    DriverCommandId_MainBusVolumeForAdditionalEffect,
+    DriverCommandId_AuxBusVolumeForAdditionalEffect,
+#endif
     DriverCommandId_AllVoicesSync,
     DriverCommandId_VoicePlay,
     DriverCommandId_VoiceWaveInfo,
@@ -477,12 +481,14 @@ struct DriverCommandEffectAux : Command {
 };
 static_assert(sizeof(DriverCommandEffectAux) == 0x40);
 
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
 struct DriverCommandEffectForMix : Command {
     EffectAux* effect;
     void* effectBuffer;
     size_t effectBufferSize;
 };
 static_assert(sizeof(DriverCommandEffectForMix) == 0x30);
+#endif
 
 #if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
 struct DriverCommandSubMixApplyDestination : Command {
@@ -509,6 +515,15 @@ struct DriverCommandAuxBusVolume : Command {
     int fadeFrames;
 };
 static_assert(sizeof(DriverCommandAuxBusVolume) == 0x28);
+
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+struct DriverCommandAuxBusVolumeForAdditionalEffect : Command {
+    float volume;
+    int32_t srcChannelIndex;
+    int32_t destChannelIndex;
+};
+static_assert(sizeof(DriverCommandAuxBusVolumeForAdditionalEffect) == 0x28);
+#endif
 
 struct DriverCommandAllVoicesSync : Command {
     uint32_t syncFlag;
