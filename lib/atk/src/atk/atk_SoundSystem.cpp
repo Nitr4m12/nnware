@@ -1078,6 +1078,14 @@ bool SoundSystem::IsClearEffectFinished(AuxBus bus, [[maybe_unused]] OutputDevic
 #endif
 }
 
+bool SoundSystem::IsClearEffectFromFinalMixFinished() {
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    return detail::driver::HardwareManager::GetInstance().IsFinishedClearEffectFromFinalMix();
+#else
+    return !detail::driver::HardwareManager::GetInstance().GetFinalMix().HasEffect(0);
+#endif
+}
+
 void SoundSystem::SetupHardwareManagerParameterFromCurrentSetting(
     detail::driver::HardwareManager::HardwareManagerParameter* pOutValue) {  // 1570
     pOutValue->SetRendererSampleRate(g_RendererSampleRate);

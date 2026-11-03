@@ -433,6 +433,8 @@ public:
     float GetMasterVolume() const { return m_MasterVolume.GetValue(); }
 
     bool IsFinishedClearEffect(AuxBus bus, OutputDevice device, int32_t subMixIndex) const;
+    bool IsFinishedClearEffectFromFinalMix() const;
+    bool IsFinishedClearEffectFromAdditionalSubMix() const;
 
 private:
     bool m_IsInitialized;
