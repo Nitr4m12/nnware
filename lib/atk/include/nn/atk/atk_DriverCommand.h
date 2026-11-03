@@ -469,12 +469,12 @@ struct DriverCommandEffectAux : Command {
 };
 static_assert(sizeof(DriverCommandEffectAux) == 0x40);
 
-struct DriverCommandAppendEffectToMix : Command {
+struct DriverCommandEffectForMix : Command {
     EffectAux* effect;
     void* effectBuffer;
     size_t effectBufferSize;
 };
-static_assert(sizeof(DriverCommandAppendEffectToMix) == 0x30);
+static_assert(sizeof(DriverCommandEffectForMix) == 0x30);
 
 #if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
 struct DriverCommandSubMixApplyDestination : Command {
