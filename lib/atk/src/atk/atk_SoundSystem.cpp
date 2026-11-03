@@ -1282,8 +1282,12 @@ void SoundSystem::StartCircularBufferSink() {
         manager.StartUserCircularBufferSink(false);
 }
 
+CircularBufferSinkState SoundSystem::GetCircularBufferSinkState() {
+    return detail::driver::HardwareManager::GetInstance().GetUserCircularBufferSinkState();
+}
+
 void SoundSystem::SetupHardwareManagerParameterFromCurrentSetting(
-    detail::driver::HardwareManager::HardwareManagerParameter* pOutValue) {  // 1570
+    detail::driver::HardwareManager::HardwareManagerParameter* pOutValue) {
     pOutValue->SetRendererSampleRate(g_RendererSampleRate);
     pOutValue->SetUserEffectCount(g_UserEffectCount);
     pOutValue->SetProfilerEnabled(g_IsProfilerEnabled);

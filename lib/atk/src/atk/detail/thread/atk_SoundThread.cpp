@@ -74,7 +74,7 @@ void SoundThread::Initialize(void* performanceFrameBuffer, size_t performanceFra
 #endif
     m_RendererEventWaitTimeMilliSeconds = 0;
 
-    const size_t bufferSize{performanceFrameBufferSize / 3};
+    const size_t bufferSize{performanceFrameBufferSize / MaxPerformanceBufferCount};
     m_PerformanceFrameUpdateBufferSize = bufferSize;
 
     for (int i{0}; i < 3; ++i) {
