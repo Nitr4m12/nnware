@@ -46,8 +46,8 @@ void EffectBase::SetEffectBuffer(void* effectBuffer, size_t effectBufferSize) {
     m_EffectBufferSize = effectBufferSize;
 }
 
-int32_t EffectBase::ConvertChannelModeToInt(ChannelMode channelMode) {
-    switch (channelMode) {
+int32_t EffectBase::ConvertChannelModeToInt(ChannelMode mode) {
+    switch (mode) {
     case ChannelMode_1Ch:
         return 1;
     case ChannelMode_2Ch:
@@ -70,11 +70,11 @@ EffectBase::SampleRate EffectBase::GetSampleRate() const {
     return m_SampleRate;
 }
 
-bool EffectBase::SetSampleRate(SampleRate sampleRate) {
+bool EffectBase::SetSampleRate(SampleRate rate) {
     if (m_IsActive)
         return false;
 
-    m_SampleRate = sampleRate;
+    m_SampleRate = rate;
     return true;
 }
 

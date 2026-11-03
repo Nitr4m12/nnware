@@ -440,7 +440,12 @@ struct DriverCommandEffect : Command {
     EffectBase* effect;
     void* effectBuffer;
     size_t effectBufferSize;
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    OutputDevice device;
+    int32_t subMixIndex;
+#else
     OutputMixer* pOutputMixer;
+#endif
 };
 static_assert(sizeof(DriverCommandEffect) == 0x40);
 
@@ -449,7 +454,12 @@ struct DriverCommandEffectAux : Command {
     EffectAux* effect;
     void* effectBuffer;
     size_t effectBufferSize;
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    OutputDevice device;
+    int32_t subMixIndex;
+#else
     OutputMixer* pOutputMixer;
+#endif
 };
 static_assert(sizeof(DriverCommandEffectAux) == 0x40);
 

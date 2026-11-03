@@ -6,7 +6,6 @@
 #include <nn/atk/atk_DriverCommand.h>
 #include <nn/atk/atk_TaskThread.h>
 #include <nn/atk/fnd/basis/atkfnd_Inlines.h>
-#include "nn/atk/atk_SoundThread.h"
 
 NN_MIDDLEWARE(g_MiddlewareInfo, "Nintendo", "NintendoWare_Atk" NN_SDK_BUILD_STR);
 
@@ -153,7 +152,7 @@ int32_t ClampBusCountMax(int32_t busCountMax) {
 }
 
 int32_t ConvertAuxBusIndexToSubMixBusIndex(nn::atk::AuxBus bus) {
-    // TODO
+    return static_cast<int32_t>(bus) + nn::atk::OutputDevice_Count;
 }
 
 }  // anonymous namespace
@@ -794,6 +793,81 @@ void SoundSystem::RegisterAudioRendererPerformanceReader(
     AudioRendererPerformanceReader& performanceReader) {
     detail::driver::SoundThread::GetInstance().RegisterAudioRendererPerformanceReader(
         performanceReader);
+}
+
+bool SoundSystem::AppendEffect(AuxBus bus, EffectBase* pEffect, void* effectBuffer,
+                               size_t effectBufferSize) {
+    return AppendEffect(bus, pEffect, effectBuffer, effectBufferSize, OutputDevice_Main);
+}
+
+bool SoundSystem::AppendEffect(AuxBus bus, EffectBase* pEffect, void* effectBuffer,
+                               size_t effectBufferSize, OutputDevice device) {
+    return AppendEffect(bus, pEffect, effectBuffer, effectBufferSize, device, 0);
+}
+
+bool SoundSystem::AppendEffect(AuxBus bus, EffectBase* pEffect, void* effectBuffer,
+                               size_t effectBufferSize, [[maybe_unused]] OutputDevice device,
+                               int32_t subMixIndex) {
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    switch (pEffect->GetSampleRate()) {
+    default:
+        NN_UNEXPECTED_DEFAULT;
+    case EffectBase::SampleRate_32000:
+    case EffectBase::SampleRate_48000: {
+        detail::DriverCommand& cmdmgr{detail::DriverCommand::GetInstance()};
+        auto* command{cmdmgr.AllocCommand<detail::DriverCommandEffect>()};
+        command->id = detail::DriverCommandId_AppendEffect;
+        command->bus = bus;
+        command->effect = pEffect;
+        command->effectBuffer = effectBuffer;
+        command->effectBufferSize = effectBufferSize;
+        command->device = device;
+        command->subMixIndex = subMixIndex;
+
+        cmdmgr.PushCommand(command);
+        return true;
+    }
+    }
+#else
+    return detail::driver::HardwareManager::GetInstance()
+        .GetSubMix(subMixIndex)
+        .AppendEffect(pEffect, ConvertAuxBusIndexToSubMixBusIndex(bus), effectBuffer,
+                      effectBufferSize);
+#endif
+}
+
+bool SoundSystem::AppendEffect(AuxBus bus, EffectAux* pEffect, void* effectBuffer,
+                               size_t effectBufferSize) {
+    return AppendEffect(bus, pEffect, effectBuffer, effectBufferSize, OutputDevice_Main);
+}
+
+bool SoundSystem::AppendEffect(AuxBus bus, EffectAux* pEffect, void* effectBuffer,
+                               size_t effectBufferSize, OutputDevice device) {
+    return AppendEffect(bus, pEffect, effectBuffer, effectBufferSize, device, 0);
+}
+
+bool SoundSystem::AppendEffect(AuxBus bus, EffectAux* pEffect, void* effectBuffer,
+                               size_t effectBufferSize, [[maybe_unused]] OutputDevice device,
+                               int32_t subMixIndex) {
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    detail::DriverCommand& cmdmgr{detail::DriverCommand::GetInstance()};
+    auto* command{cmdmgr.AllocCommand<detail::DriverCommandEffectAux>()};
+    command->id = detail::DriverCommandId_AppendEffectAux;
+    command->bus = bus;
+    command->effect = pEffect;
+    command->effectBuffer = effectBuffer;
+    command->effectBufferSize = effectBufferSize;
+    command->device = device;
+    command->subMixIndex = subMixIndex;
+
+    cmdmgr.PushCommand(command);
+    return true;
+#else
+    return detail::driver::HardwareManager::GetInstance()
+        .GetSubMix(subMixIndex)
+        .AppendEffect(pEffect, ConvertAuxBusIndexToSubMixBusIndex(bus), effectBuffer,
+                      effectBufferSize);
+#endif
 }
 
 void SoundSystem::SetupHardwareManagerParameterFromCurrentSetting(

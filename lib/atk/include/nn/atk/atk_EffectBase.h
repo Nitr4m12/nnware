@@ -58,7 +58,7 @@ public:
                               SampleFormat format, int sampleRate, OutputMode mode);
 
     SampleRate GetSampleRate() const;
-    bool SetSampleRate(SampleRate sampleRate);
+    bool SetSampleRate(SampleRate rate);
 
     virtual void GetChannelIndex(ChannelIndex* pChannel, int channelCount) const;
     virtual int32_t GetChannelSettingCountMax() const;
@@ -70,7 +70,7 @@ public:
     util::IntrusiveListNode m_Link;
 
 protected:
-    static int ConvertChannelModeToInt(ChannelMode channelMode);
+    static int ConvertChannelModeToInt(ChannelMode mode);
 
     bool m_IsActive{false};
     SampleRate m_SampleRate{SampleRate_48000};
