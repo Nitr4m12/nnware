@@ -1245,6 +1245,18 @@ void SoundSystem::UnregisterSoundThreadInfoRecorder(SoundThreadInfoRecorder& rec
     detail::driver::SoundThread::GetInstance().UnregisterSoundThreadInfoRecorder(recorder);
 }
 
+size_t SoundSystem::ReadCircularBufferSink(void* pOutBuffer, size_t bufferSize) {
+    if (!g_IsCircularBufferSinkEnabled) {
+        if (!g_IsCircularBufferSinkWarningDisplayed)
+            g_IsCircularBufferSinkWarningDisplayed = true;
+
+        return 0;
+    }
+
+    return detail::driver::HardwareManager::GetInstance().ReadUserCircularBufferSink(pOutBuffer,
+                                                                                     bufferSize);
+}
+
 void SoundSystem::SetupHardwareManagerParameterFromCurrentSetting(
     detail::driver::HardwareManager::HardwareManagerParameter* pOutValue) {  // 1570
     pOutValue->SetRendererSampleRate(g_RendererSampleRate);
