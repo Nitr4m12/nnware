@@ -1221,6 +1221,10 @@ size_t SoundSystem::GetPerformanceFrameBufferSize() {
     return g_PerformanceFrameBufferSize / detail::MaxPerformanceBufferCount;
 }
 
+int32_t SoundSystem::GetDroppedLowLevelVoiceCount() {
+    return detail::driver::HardwareManager::GetInstance().GetDroppedLowLevelVoiceCount();
+}
+
 void SoundSystem::SetupHardwareManagerParameterFromCurrentSetting(
     detail::driver::HardwareManager::HardwareManagerParameter* pOutValue) {  // 1570
     pOutValue->SetRendererSampleRate(g_RendererSampleRate);

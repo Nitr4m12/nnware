@@ -316,7 +316,7 @@ public:
 
     void WaitAudioRendererEvent();
 
-    int32_t* GetDroppedLowLevelVoiceCount() const;
+    int32_t GetDroppedLowLevelVoiceCount() const;
 
     size_t
     GetRequiredPerformanceFramesBufferSize(HardwareManagerParameter* hardwareManagerParameter);
