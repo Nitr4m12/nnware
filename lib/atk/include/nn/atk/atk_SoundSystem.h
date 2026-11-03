@@ -132,7 +132,7 @@ struct SoundSystem {
     static bool Initialize(const SoundSystemParam& param, InitializeBufferSet& bufferSet);
 
     static bool Initialize(Result* pOutResult, const SoundSystemParam& param,
-                           const InitializeBufferSet& bufferSet);
+                           InitializeBufferSet& bufferSet);
 
     static size_t GetRequiredMemSize(const SoundSystemParam& param);
 
@@ -448,8 +448,8 @@ private:
                                                       uintptr_t memoryPoolMem,
                                                       size_t memoryPoolMemSize);
 
-    static void SetupInitializeBufferSet(InitializeBufferSet* pOutValue, SoundSystemParam* param,
-                                         InitializeBufferSet* bufferSet);
+    static void SetupInitializeBufferSet(InitializeBufferSet* pOutValue, const SoundSystemParam& param,
+                                         const InitializeBufferSet& bufferSet);
 
     static void SetupHardwareManagerParameterFromCurrentSetting(
         detail::driver::HardwareManager::HardwareManagerParameter* pOutValue);

@@ -508,6 +508,76 @@ void SoundSystem::detail_InitializeDriverCommandManager(const SoundSystemParam& 
     g_IsInitializedDriverCommandManager = true;
 }
 
+bool SoundSystem::Initialize(const SoundSystemParam& param, uintptr_t workMem, size_t workMemSize) {
+    return Initialize(nullptr, param, workMem, workMemSize);
+}
+
+bool SoundSystem::Initialize(nn::Result* pOutResult, const SoundSystemParam& param,
+                             uintptr_t workMem, size_t workMemSize) {
+    InitializeBufferSet bufferSet;
+    bufferSet.workMem = workMem;
+    bufferSet.workMemSize = workMemSize;
+    bufferSet.memoryPoolMem = 0;
+    bufferSet.memoryPoolMemSize = 0;
+    bufferSet.circularBufferSinkMem = 0;
+    bufferSet.circularBufferSinkMemSize = 0;
+
+    InitializeBufferSet setupBufferSet;
+    SetupInitializeBufferSet(&setupBufferSet, param, bufferSet);
+
+    const bool result{detail_InitializeSoundSystem(pOutResult, param, setupBufferSet)};
+    if (result) {
+        detail::driver::HardwareManager::GetInstance().AttachMemoryPool(
+            &g_MemoryPoolForSoundSystem, reinterpret_cast<void*>(setupBufferSet.memoryPoolMem),
+            setupBufferSet.memoryPoolMemSize, true);
+    }
+
+    return result;
+}
+
+bool SoundSystem::Initialize(const SoundSystemParam& param, uintptr_t workMem, size_t workMemSize,
+                             uintptr_t memoryPoolMem, size_t memoryPoolMemSize) {
+    return Initialize(nullptr, param, workMem, workMemSize, memoryPoolMem, memoryPoolMemSize);
+}
+
+bool SoundSystem::Initialize(Result* pOutResult, const SoundSystemParam& param, uintptr_t workMem,
+                             size_t workMemSize, uintptr_t memoryPoolMem,
+                             size_t memoryPoolMemSize) {
+    InitializeBufferSet bufferSet;
+    bufferSet.workMem = workMem;
+    bufferSet.workMemSize = workMemSize;
+    bufferSet.memoryPoolMem = memoryPoolMem;
+    bufferSet.memoryPoolMemSize = memoryPoolMemSize;
+    bufferSet.circularBufferSinkMemSize = 0;
+    bufferSet.circularBufferSinkMem = 0;
+
+    InitializeBufferSet setupBufferSet;
+    SetupInitializeBufferSet(&setupBufferSet, param, bufferSet);
+
+    const bool result{detail_InitializeSoundSystem(pOutResult, param, setupBufferSet)};
+
+    return result;
+}
+
+bool SoundSystem::Initialize(const SoundSystemParam& param, InitializeBufferSet& bufferSet) {
+    return Initialize(nullptr, param, bufferSet);
+}
+
+bool SoundSystem::Initialize(Result* pOutResult, const SoundSystemParam& param,
+                             InitializeBufferSet& bufferSet) {
+    InitializeBufferSet setupBufferSet;
+    SetupInitializeBufferSet(&setupBufferSet, param, bufferSet);
+
+    const bool result{detail_InitializeSoundSystem(pOutResult, param, setupBufferSet)};
+    if (result && param.enableMemoryPoolManagement) {
+        detail::driver::HardwareManager::GetInstance().AttachMemoryPool(
+            &g_MemoryPoolForSoundSystem, reinterpret_cast<void*>(setupBufferSet.memoryPoolMem),
+            setupBufferSet.memoryPoolMemSize, true);
+    }
+
+    return result;
+}
+
 #if NN_WARE_VER >= NN_MAKE_VER(5, 0, 0)
 detail::SoundInstanceConfig SoundSystem::GetSoundInstanceConfig() {
     detail::SoundInstanceConfig config;
