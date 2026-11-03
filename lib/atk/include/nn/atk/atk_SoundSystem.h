@@ -11,8 +11,13 @@ namespace nn::atk {
 struct SoundSystem {
     struct SoundSystemParam {
         static const int32_t DefaultRendererSampleRate{48000};
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+        static const int32_t DefaultSoundThreadPriority{0};
+        static const int32_t DefaultTaskThreadPriority{0};
+#else
         static const int32_t DefaultSoundThreadPriority{4};
         static const int32_t DefaultTaskThreadPriority{3};
+#endif
         static const int32_t DefaultUserEffectCount{10};
         static const int32_t DefaultVoiceCountMax{96};
         static const uint32_t DefaultSoundThreadStackSize{16384};
@@ -45,7 +50,9 @@ struct SoundSystem {
         int32_t voiceCountMax{DefaultVoiceCountMax};
         int32_t voiceCommandWaveBufferPacketCount{512};
         bool enableProfiler{false};
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
         bool enableDetailSoundThreadProfile{false};
+#endif
         bool enableRecordingFinalOutputs{false};
         bool enableCircularBufferSink{false};
         int32_t recordingAudioFrameCount{DefaultRecordingAudioFrameCount};
@@ -64,23 +71,34 @@ struct SoundSystem {
         bool enableCompatibleDownMixSetting{false};
         bool enableCompatibleLowPassFilter{false};
         bool enableUnusedEffectChannelMuting{false};
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
         bool enableCompatibleBusVolume{false};
+#endif
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+        bool enableMemoryPoolAttachCheck{false};
+#endif
         bool enableUserThreadRendering{false};
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
         bool enableCustomSubMix{false};
         int32_t subMixCount{0};
         int32_t subMixTotalChannelCount{0};
+#endif
 #if NN_WARE_VER >= NN_MAKE_VER(5, 0, 0)
         int32_t mixBufferCount{InvalidMixBufferCount};
         int32_t busCountMax{DefaultBusCountMax};
 #endif
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
         bool enableMemoryPoolAttachCheck{false};
         bool enableBusMixVolume{false};
         bool enableVolumeThroughMode{false};
-#if NN_WARE_VER < NN_MAKE_VER(5, 0, 0)
+#endif
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0) && NN_WARE_VER < NN_MAKE_VER(5, 0, 0)
         int32_t busCountMax{DefaultBusCountMax};
 #endif
     };
-#if NN_WARE_VER < NN_MAKE_VER(5, 0, 0)
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    static_assert(sizeof(SoundSystemParam) == 0x70);
+#elif NN_WARE_VER < NN_MAKE_VER(5, 0, 0)
     static_assert(sizeof(SoundSystemParam) == 0x80);
 #else
     static_assert(sizeof(SoundSystemParam) == 0x88);
@@ -216,7 +234,7 @@ struct SoundSystem {
 
     static bool detail_IsSoundThreadEnabled() { return g_IsSoundThreadEnabled; }
 
-#if NN_WARE_VER < NN_MAKE_VER(5, 0, 0)
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0) && NN_WARE_VER < NN_MAKE_VER(5, 0, 0)
     static detail::SoundInstanceConfig GetSoundInstanceConfig() {
         detail::SoundInstanceConfig config;
         config.isBusMixVolumeEnabled = g_IsBusMixVolumeEnabled;
@@ -234,7 +252,7 @@ struct SoundSystem {
 
         return config;
     }
-#else
+#elif NN_WARE_VER >= NN_MAKE_VER(5, 0, 0)
     static detail::SoundInstanceConfig GetSoundInstanceConfig();
     static detail::SoundInstanceConfig GetSoundInstanceConfig(const SoundSystemParam& param);
 #endif
@@ -424,7 +442,7 @@ struct SoundSystem {
 
 private:
     static bool detail_InitializeSoundSystem(Result* pOutResult, const SoundSystemParam& param,
-                                             const InitializeBufferSet& bufferSet);
+                                             InitializeBufferSet& bufferSet);
     static void detail_InitializeDriverCommandManager(const SoundSystemParam& param,
                                                       uintptr_t workMem, size_t workMemSize,
                                                       uintptr_t memoryPoolMem,
@@ -439,7 +457,9 @@ private:
     static void* g_LoadThreadStackPtr;
     static size_t g_LoadThreadStackSize;
 
+#if NN_WARE_VER >= NN_MAKE_VER(5, 0, 0)
     static FsPriority g_TaskThreadFsPriority;
+#endif
 
     static void* g_SoundThreadStackPtr;
     static size_t g_SoundThreadStackSize;
@@ -464,31 +484,44 @@ private:
     static int32_t g_RendererSampleRate;
     static int32_t g_VoiceCountMax;
     static int32_t g_UserEffectCount;
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
     static int32_t g_CustomSubMixSubMixCount;
     static int32_t g_CustomSubMixMixBufferCount;
+#endif
 
     static bool g_IsProfilerEnabled;
+
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
     static bool g_IsDetailSoundThreadProfilerEnabled;
+#endif
+
     static bool g_IsAdditionalEffectBusEnabled;
     static bool g_IsAdditionalSubMixEnabled;
     static bool g_IsEffectEnabled;
     static bool g_IsRecordingEnabled;
     static bool g_IsCircularBufferSinkEnabled;
     static bool g_IsCircularBufferSinkWarningDisplayed;
+
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
     static bool g_IsSubMixEnabled;
     static bool g_IsPresetSubMixEnabled;
     static bool g_IsStereoModeEnabled;
+#endif
+
     static bool g_IsSoundThreadEnabled;
     static bool g_IsVoiceDropEnabled;
     static bool g_IsPreviousSdkVersionLowPassFilterCompatible;
     static bool g_IsUnusedEffectChannelMutingEnabled;
     static bool g_IsUserThreadRenderingEnabled;
+
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
     static bool g_IsCustomSubMixEnabled;
     static bool g_IsMemoryPoolAttachCheckEnabled;
     static bool g_IsBusMixVolumeEnabled;
     static bool g_IsVolumeThroughModeEnabled;
 
     static int32_t g_BusCountMax;
+#endif
 };
 
 }  // namespace nn::atk

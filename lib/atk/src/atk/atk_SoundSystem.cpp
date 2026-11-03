@@ -1,7 +1,10 @@
 #include <nn/atk/atk_SoundSystem.h>
 
+#include <nn/diag.h>
+
 #include <nn/atk/atk_ChannelManager.h>
 #include <nn/atk/atk_DriverCommand.h>
+#include <nn/atk/atk_TaskThread.h>
 #include <nn/atk/fnd/basis/atkfnd_Inlines.h>
 
 NN_MIDDLEWARE(g_MiddlewareInfo, "Nintendo", "NintendoWare_Atk" NN_SDK_BUILD_STR);
@@ -24,7 +27,14 @@ static void SetupHardwareManagerParameter(
     pOutValue->SetUserEffectCount(parameter.effectCount);
     pOutValue->SetProfilerEnabled(parameter.enableProfiler);
     pOutValue->SetVoiceCount(parameter.voiceCountMax);
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    pOutValue->SetAdditionalEffectBusEnabled(parameter.enableAdditionalEffectBus);
+    pOutValue->SetAdditionalSubMixEnabled(parameter.enableAdditionalSubMix);
+#endif
     pOutValue->SetEffectEnabled(parameter.enableEffect);
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    pOutValue->SetPresetSubMixEnabled(parameter.enableSubMix);
+#endif
     pOutValue->SetStereoModeEnabled(parameter.enableStereoMode);
     pOutValue->SetRecordingEnabled(parameter.enableRecordingFinalOutputs);
     pOutValue->SetRecordingAudioFrameCount(parameter.recordingAudioFrameCount);
@@ -35,13 +45,19 @@ static void SetupHardwareManagerParameter(
     pOutValue->SetPreviousSdkVersionLowPassFilterCompatible(
         parameter.enableCompatibleLowPassFilter);
     pOutValue->SetUnusedEffectChannelMutingEnabled(parameter.enableUnusedEffectChannelMuting);
-    pOutValue->SetCompatibleBusVolumeEnabled(parameter.enableCompatibleBusVolume);
-    pOutValue->SetUserThreadRenderingEnabled(parameter.enableUserThreadRendering);
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
     pOutValue->SetMemoryPoolAttachCheckEnabled(parameter.enableMemoryPoolAttachCheck);
-
-#if NN_WARE_VER < NN_MAKE_VER(5, 0, 0)
-    const int32_t subMixTotalChannelCount{parameter.subMixTotalChannelCount};
 #else
+    pOutValue->SetCompatibleBusVolumeEnabled(parameter.enableCompatibleBusVolume);
+#endif
+    pOutValue->SetUserThreadRenderingEnabled(parameter.enableUserThreadRendering);
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+    pOutValue->SetMemoryPoolAttachCheckEnabled(parameter.enableMemoryPoolAttachCheck);
+#endif
+
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0) && NN_WARE_VER < NN_MAKE_VER(5, 0, 0)
+    const int32_t subMixTotalChannelCount{parameter.subMixTotalChannelCount};
+#elif NN_WARE_VER >= NN_MAKE_VER(5, 0, 0)
     const int32_t subMixTotalChannelCount{
         parameter.mixBufferCount != nn::atk::SoundSystem::SoundSystemParam::InvalidMixBufferCount ?
             parameter.mixBufferCount :
@@ -49,10 +65,12 @@ static void SetupHardwareManagerParameter(
     };
 #endif
 
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
     pOutValue->SetSubMixParameter(parameter.enableStereoMode, parameter.enableEffect,
                                   parameter.enableSubMix, parameter.enableAdditionalEffectBus,
                                   parameter.enableAdditionalSubMix, parameter.enableCustomSubMix,
                                   parameter.subMixCount, subMixTotalChannelCount);
+#endif
 }
 
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
@@ -148,13 +166,17 @@ bool SoundSystem::g_IsManagingMemoryPool{true};
 int32_t SoundSystem::g_VoiceCountMax{96};
 int32_t SoundSystem::g_UserEffectCount{10};
 
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
 bool SoundSystem::g_IsSubMixEnabled{true};
 bool SoundSystem::g_IsPresetSubMixEnabled{true};
-
 bool SoundSystem::g_IsStereoModeEnabled{true};
+#endif
+
 bool SoundSystem::g_IsSoundThreadEnabled{true};
 
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
 int32_t SoundSystem::g_BusCountMax{detail::DefaultBusCount};
+#endif
 
 SoundSystem::SoundSystemParam::SoundSystemParam() = default;
 
@@ -201,6 +223,265 @@ size_t SoundSystem::GetRequiredMemSizeForCircularBufferSink(const SoundSystemPar
 
     return nn::atk::detail::driver::HardwareManager::GetInstance()
         .GetRequiredCircularBufferSinkWithMemoryPoolBufferSize(hardwareManagerParameter);
+}
+
+bool SoundSystem::detail_InitializeSoundSystem(Result* pOutResult, const SoundSystemParam& param,
+                                               InitializeBufferSet& bufferSet) {
+    nn::util::ReferSymbol(g_MiddlewareInfo);
+
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+    detail::SoundInstanceConfig config{GetSoundInstanceConfig(param)};
+#endif
+
+    if (g_IsInitialized) {
+        if (pOutResult != nullptr)
+            *pOutResult = nn::ResultSuccess();
+
+        return true;
+    }
+
+    bool result{false};
+
+    uintptr_t ptr{bufferSet.workMem};
+    uintptr_t ptrMemoryPool{bufferSet.memoryPoolMem};
+    uintptr_t ptrCircularBufferSink{bufferSet.circularBufferSinkMem};
+
+    if (!g_IsInitializedDriverCommandManager) {
+        size_t workMemSizeForDriverCommandManager{
+            param.soundThreadCommandBufferSize + param.taskThreadCommandBufferSize,
+        };
+        size_t workMemSizeForDriverCommandManagerForMemoryPool{0};
+
+        detail_InitializeDriverCommandManager(param, ptr, workMemSizeForDriverCommandManager,
+                                              ptrMemoryPool,
+                                              workMemSizeForDriverCommandManagerForMemoryPool);
+        ptr += workMemSizeForDriverCommandManager;
+    }
+
+    ptr = util::align_up(ptr, 4096);
+
+    {
+        detail::driver::HardwareManager::HardwareManagerParameter hardwareManagerParameter;
+        SetupHardwareManagerParameter(&hardwareManagerParameter, param);
+        g_VoiceCountMax = param.voiceCountMax;
+
+        {
+            void* workBuffer{reinterpret_cast<void*>(ptr)};
+            void* memoryPoolBuffer{reinterpret_cast<void*>(ptrMemoryPool)};
+            void* circularBufferSinkBuffer{};
+            size_t workBufferSize{
+                detail::driver::HardwareManager::GetInstance().GetRequiredMemSize(
+                    hardwareManagerParameter),
+            };
+            size_t memoryPoolBufferSize{
+                detail::driver::HardwareManager::GetInstance().GetRequiredMemSizeForMemoryPool(
+                    g_VoiceCountMax),
+            };
+            size_t circularBufferSinkBufferSize{0};
+
+            if (param.enableRecordingFinalOutputs)
+                workBufferSize += detail::driver::HardwareManager::GetInstance()
+                                      .GetRequiredRecorderWorkBufferSize(hardwareManagerParameter);
+
+            if (param.enableCircularBufferSink) {
+                circularBufferSinkBuffer = reinterpret_cast<void*>(ptrCircularBufferSink);
+                circularBufferSinkBufferSize =
+                    detail::driver::HardwareManager::GetInstance()
+                        .GetRequiredCircularBufferSinkBufferSize(hardwareManagerParameter);
+            }
+
+            nn::Result hardwareManagerResult{
+                detail::driver::HardwareManager::GetInstance().Initialize(
+                    workBuffer, workBufferSize, memoryPoolBuffer, memoryPoolBufferSize,
+                    circularBufferSinkBuffer, circularBufferSinkBufferSize,
+                    &hardwareManagerParameter),
+            };
+
+            if (pOutResult != nullptr)
+                *pOutResult = hardwareManagerResult;
+
+            if (hardwareManagerResult.IsFailure()) {
+                if (g_IsInitializedDriverCommandManager) {
+                    detail::DriverCommand::GetInstance().Finalize();
+                    detail::DriverCommand::GetInstanceForTaskThread().Finalize();
+                    g_SoundThreadCommandBufferSize = 0;
+                    g_TaskThreadCommandBufferSize = 0;
+                }
+
+                return false;
+            }
+
+            ptr += workBufferSize;
+            ptrMemoryPool += memoryPoolBufferSize;
+        }
+
+        {
+            uintptr_t performanceFrameBuffer{0};
+            size_t performanceFrameBufferSize{0};
+            if (param.enableProfiler) {
+                ptr = util::align_up(ptr, 64);
+                performanceFrameBuffer = ptr;
+                performanceFrameBufferSize =
+                    detail::driver::HardwareManager::GetInstance()
+                        .GetRequiredPerformanceFramesBufferSize(&hardwareManagerParameter);
+                ptr += performanceFrameBufferSize * 3;
+            }
+
+            g_PerformanceFrameBuffer = reinterpret_cast<void*>(performanceFrameBuffer);
+            g_PerformanceFrameBufferSize = performanceFrameBufferSize * 3;
+        }
+
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0) && NN_WARE_VER < NN_MAKE_VER(5, 0, 0)
+        const int32_t subMixTotalChannelCount{param.subMixTotalChannelCount};
+#elif NN_WARE_VER >= NN_MAKE_VER(5, 0, 0)
+        const int32_t subMixTotalChannelCount{
+            param.mixBufferCount == SoundSystemParam::InvalidMixBufferCount ?
+                param.subMixTotalChannelCount :
+                param.mixBufferCount,
+        };
+#endif
+
+        g_RendererSampleRate = param.rendererSampleRate;
+        g_UserEffectCount = param.effectCount;
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+        g_CustomSubMixSubMixCount = param.subMixCount;
+        g_CustomSubMixMixBufferCount = subMixTotalChannelCount;
+#endif
+        g_IsProfilerEnabled = param.enableProfiler;
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+        g_IsDetailSoundThreadProfilerEnabled = param.enableDetailSoundThreadProfile;
+#endif
+        g_IsAdditionalEffectBusEnabled = param.enableAdditionalEffectBus;
+        g_IsAdditionalSubMixEnabled = param.enableAdditionalSubMix;
+        g_IsEffectEnabled = param.enableEffect;
+        g_IsRecordingEnabled = param.enableRecordingFinalOutputs;
+        g_IsCircularBufferSinkEnabled = param.enableCircularBufferSink;
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+        g_IsSubMixEnabled = param.enableSubMix;
+        g_IsPresetSubMixEnabled = hardwareManagerParameter.IsPresetSubMixEnabled();
+        g_IsStereoModeEnabled = param.enableStereoMode;
+#endif
+        g_IsSoundThreadEnabled = param.enableSoundThread;
+        g_IsVoiceDropEnabled = param.enableVoiceDrop;
+        g_IsPreviousSdkVersionLowPassFilterCompatible = param.enableCompatibleLowPassFilter;
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+        g_IsUnusedEffectChannelMutingEnabled = param.enableUnusedEffectChannelMuting;
+        g_IsUserThreadRenderingEnabled = param.enableUserThreadRendering;
+#else
+        g_IsUserThreadRenderingEnabled = param.enableUserThreadRendering;
+        g_IsUnusedEffectChannelMutingEnabled = param.enableUnusedEffectChannelMuting;
+        g_IsCustomSubMixEnabled = param.enableCustomSubMix;
+        g_IsMemoryPoolAttachCheckEnabled = param.enableMemoryPoolAttachCheck;
+        g_IsBusMixVolumeEnabled = param.enableBusMixVolume;
+        g_IsVolumeThroughModeEnabled = param.enableVolumeThroughMode;
+        g_BusCountMax = ClampBusCountMax(param.busCountMax);
+#endif
+    }
+
+    ptr = util::align_up(ptr, 4096);
+    {
+        uintptr_t soundThreadStackPtr{ptr};
+        ptr += param.soundThreadStackSize;
+
+        g_SoundThreadStackPtr = reinterpret_cast<void*>(soundThreadStackPtr);
+        g_SoundThreadStackSize = param.soundThreadStackSize;
+    }
+
+#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
+    detail::driver::SoundThread::GetInstance().Initialize(
+        g_PerformanceFrameBuffer, g_PerformanceFrameBufferSize, g_IsProfilerEnabled);
+#elif NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    detail::driver::SoundThread::GetInstance().Initialize(
+        g_PerformanceFrameBuffer, g_PerformanceFrameBufferSize, g_IsProfilerEnabled,
+        g_IsUserThreadRenderingEnabled);
+#else
+    detail::driver::SoundThread::GetInstance().Initialize(
+        g_PerformanceFrameBuffer, g_PerformanceFrameBufferSize, g_IsProfilerEnabled,
+        g_IsDetailSoundThreadProfilerEnabled, g_IsUserThreadRenderingEnabled);
+#endif
+
+    {
+        uintptr_t loadThreadStackPtr{ptr};
+        ptr += param.taskThreadStackSize;
+
+        detail::TaskManager::GetInstance().Initialize(param.enableProfiler);
+
+        g_LoadThreadStackPtr = reinterpret_cast<void*>(loadThreadStackPtr);
+        g_LoadThreadStackSize = param.taskThreadStackSize;
+#if NN_WARE_VER >= NN_MAKE_VER(5, 0, 0)
+        g_TaskThreadFsPriority = param.taskThreadFsPriority;
+#endif
+    }
+
+    {
+        uintptr_t voiceWork{ptr};
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+        detail::driver::MultiVoiceManager::GetInstance().GetRequiredMemSize(g_VoiceCountMax);
+        detail::driver::MultiVoiceManager::GetInstance().Initialize(
+            reinterpret_cast<void*>(voiceWork),
+            detail::driver::MultiVoiceManager::GetInstance().GetRequiredMemSize(g_VoiceCountMax));
+#else
+        detail::driver::MultiVoiceManager::GetInstance().GetRequiredMemSize(g_VoiceCountMax,
+                                                                            config);
+        detail::driver::MultiVoiceManager::GetInstance().Initialize(
+            reinterpret_cast<void*>(voiceWork),
+            detail::driver::MultiVoiceManager::GetInstance().GetRequiredMemSize(g_VoiceCountMax,
+                                                                                config),
+            config);
+#endif
+    }
+
+    {
+        void* mem{reinterpret_cast<void*>(ptrMemoryPool)};
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+        const size_t memSize{
+            detail::driver::ChannelManager::GetInstance().GetRequiredMemSize(g_VoiceCountMax),
+        };
+        detail::driver::ChannelManager::GetInstance().Initialize(mem, memSize);
+#else
+        const size_t memSize{
+            detail::driver::ChannelManager::GetInstance().GetRequiredMemSize(
+                GetChannelCount(g_VoiceCountMax), config),
+        };
+        detail::driver::ChannelManager::GetInstance().Initialize(
+            mem, memSize, GetChannelCount(g_VoiceCountMax), config);
+#endif
+    }
+
+    uint16_t attribute{0};
+    detail::driver::SequenceSoundPlayer::InitSequenceSoundPlayer();
+    if (param.enableTaskThread) {
+#if NN_WARE_VER < NN_MAKE_VER(5, 0, 0)
+        detail::TaskThread::GetInstance().Create(param.taskThreadPriority, g_LoadThreadStackPtr,
+                                                 g_LoadThreadStackSize, param.taskThreadCoreNumber,
+                                                 attribute);
+#else
+        detail::TaskThread::GetInstance().Create(param.taskThreadPriority, g_LoadThreadStackPtr,
+                                                 g_LoadThreadStackSize, param.taskThreadCoreNumber,
+                                                 attribute, g_TaskThreadFsPriority);
+#endif
+        g_IsTaskThreadEnabled = true;
+    } else {
+        g_IsTaskThreadEnabled = false;
+    }
+
+#if NN_WARE_VER > +NN_MAKE_VER(4, 0, 0)
+    detail::DriverCommand::GetInstance().FlushCommand(false);
+#endif
+
+    if (g_IsSoundThreadEnabled) {
+        detail::driver::SoundThread::GetInstance().CreateSoundThread(
+            param.soundThreadPriority, g_SoundThreadStackPtr, g_SoundThreadStackSize,
+            param.soundThreadCoreNumber, attribute);
+
+        detail::CurveLfo::InitializeCurveTable();
+        result = true;
+        g_IsInitialized = true;
+
+        return result;
+    }
+
+    diag::detail::AbortImpl("", "", "", 0);
 }
 
 void SoundSystem::detail_InitializeDriverCommandManager(const SoundSystemParam& param,

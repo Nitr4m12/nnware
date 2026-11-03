@@ -121,7 +121,14 @@ public:
         void SetVoiceCount(int32_t voiceCount) { m_VoiceCount = voiceCount; }
 
         bool IsAdditionalEffectBusEnabled() const { return m_IsAdditionalEffectBusEnabled; }
+        void SetAdditionalEffectBusEnabled(bool isAdditionalEffectBusEnabled) {
+            m_IsAdditionalEffectBusEnabled = isAdditionalEffectBusEnabled;
+        }
+
         bool IsAdditionalSubMixEnabled() const { return m_IsAdditionalSubMixEnabled; }
+        void SetAdditionalSubMixEnabled(bool isAdditionalSubMixEnabled) {
+            m_IsAdditionalSubMixEnabled = isAdditionalSubMixEnabled;
+        }
 
         bool IsEffectEnabled() const { return m_IsEffectEnabled; }
         void SetEffectEnabled(bool isEffectEnabled) { m_IsEffectEnabled = isEffectEnabled; }
@@ -142,6 +149,9 @@ public:
         }
 
         bool IsPresetSubMixEnabled() const { return m_IsPresetSubMixEnabled; }
+        void SetPresetSubMixEnabled(bool isPresetSubMixEnabled) {
+            m_IsPresetSubMixEnabled = isPresetSubMixEnabled;
+        }
 
         bool IsStereoModeEnabled() const { return m_IsStereoModeEnabled; }
         void SetStereoModeEnabled(bool isStereoModeEnabled) {
@@ -181,16 +191,19 @@ public:
             m_IsUnusedEffectChannelMutingEnabled = isUnusedEffectChannelMutingEnabled;
         }
 
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
         bool IsCompatibleBusVolumeEnabled() const { return m_IsCompatibleBusVolumeEnabled; }
         void SetCompatibleBusVolumeEnabled(bool isCompatibleBusVolumeEnabled) {
             m_IsCompatibleBusVolumeEnabled = isCompatibleBusVolumeEnabled;
         }
+#endif
 
         bool IsUserThreadRenderingEnabled() const { return m_IsUserThreadRenderingEnabled; }
         void SetUserThreadRenderingEnabled(bool isUserThreadRenderingEnabled) {
             m_IsUserThreadRenderingEnabled = isUserThreadRenderingEnabled;
         }
 
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
         int32_t IsCustomSubMixEnabled() const { return m_IsCustomSubMixEnabled; }
 
         int32_t GetSubMixCount() const { return m_SubMixCount; }
@@ -200,6 +213,7 @@ public:
                                 bool isSubMixEnabled, bool isAdditionalEffectBusEnabled,
                                 bool isAdditionalSubMixEnabled, bool isCustomSubMixEnabled,
                                 int32_t customSubMixCount, int32_t customMixTotalChannelCount);
+#endif
 
         bool IsMemoryPoolAttachCheckEnabled() const { return m_IsMemoryPoolAttachCheckEnabled; }
         void SetMemoryPoolAttachCheckEnabled(bool isMemoryPoolAttachCheckEnabled) {
@@ -209,6 +223,15 @@ public:
     private:
         int32_t m_RendererSampleRate{DefaultRendererSampleRate};
         int32_t m_UserEffectCount{DefaultRendererUserEffectCount};
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+        bool m_IsProfilerEnabled{false};
+        int32_t m_VoiceCount{DefaultRendererVoiceCountMax};
+        bool m_IsAdditionalEffectBusEnabled{false};
+        bool m_IsAdditionalSubMixEnabled{false};
+        bool m_IsEffectEnabled{true};
+        bool m_IsRecordingEnabled{false};
+        int32_t m_RecordingAudioFrameCount{DefaultRecordingAudioFrameCount};
+#else
         int32_t m_VoiceCount{DefaultRendererVoiceCountMax};
         int32_t m_RecordingAudioFrameCount{DefaultRecordingAudioFrameCount};
         int32_t m_SubMixCount{DefaultRendererSubMixCount};
@@ -218,6 +241,7 @@ public:
         bool m_IsAdditionalSubMixEnabled{false};
         bool m_IsEffectEnabled{true};
         bool m_IsRecordingEnabled{false};
+#endif
         bool m_IsUserCircularBufferSinkEnabled{false};
         bool m_IsPresetSubMixEnabled{true};
         bool m_IsStereoModeEnabled{false};
@@ -226,12 +250,21 @@ public:
         bool m_IsCompatibleDownMixSettingEnabled{false};
         bool m_IsPreviousSdkVersionLowPassFilterCompatible{false};
         bool m_IsUnusedEffectChannelMutingEnabled{false};
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+        bool m_IsMemoryPoolAttachCheckEnabled{false};
+        bool m_IsUserThreadRenderingEnabled{false};
+#else
         bool m_IsCompatibleBusVolumeEnabled{false};
         bool m_IsUserThreadRenderingEnabled{false};
         bool m_IsCustomSubMixEnabled{false};
         bool m_IsMemoryPoolAttachCheckEnabled{false};
+#endif
     };
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    static_assert(sizeof(HardwareManagerParameter) == 0x24);
+#else
     static_assert(sizeof(HardwareManagerParameter) == 0x2c);
+#endif
 
     HardwareManager();
     ~HardwareManager();
