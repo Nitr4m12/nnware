@@ -888,6 +888,24 @@ bool SoundSystem::AppendEffectToFinalMix(EffectAux* pEffect, void* effectBuffer,
 #endif
 }
 
+bool SoundSystem::AppendEffectToAdditionalSubMix(EffectAux* pEffect, void* effectBuffer,
+                                                 size_t effectBufferSize) {
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    detail::DriverCommand& cmdmgr{detail::DriverCommand::GetInstance()};
+    auto* command{cmdmgr.AllocCommand<detail::DriverCommandAppendEffectToMix>()};
+    command->id = detail::DriverCommandId_AppendEffectAuxToAdditionalSubMix;
+    command->effect = pEffect;
+    command->effectBuffer = effectBuffer;
+    command->effectBufferSize = effectBufferSize;
+
+    cmdmgr.PushCommand(command);
+    return true;
+#else
+    return detail::driver::HardwareManager::GetInstance().GetAdditionalSubMix().AppendEffect(
+        pEffect, 0, effectBuffer, effectBufferSize);
+#endif
+}
+
 void SoundSystem::SetupHardwareManagerParameterFromCurrentSetting(
     detail::driver::HardwareManager::HardwareManagerParameter* pOutValue) {  // 1570
     pOutValue->SetRendererSampleRate(g_RendererSampleRate);

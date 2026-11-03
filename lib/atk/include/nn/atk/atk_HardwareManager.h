@@ -369,6 +369,9 @@ public:
 
     SubMix& GetSubMix(int32_t subMixNumber);
     const SubMix& GetSubMix(int32_t subMixNumber) const;
+
+    SubMix& GetAdditionalSubMix() { return m_AdditionalSubMix; }
+    const SubMix& GetAdditionalSubMix() const { return m_AdditionalSubMix; }
 #endif
 
     int32_t GetSubMixCount() const;
