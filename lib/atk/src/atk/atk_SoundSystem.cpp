@@ -1043,6 +1043,21 @@ void SoundSystem::ClearEffectFromFinalMix() {
 #endif
 }
 
+void SoundSystem::ClearEffectFromAdditionalSubMix() {
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    detail::DriverCommand& cmdmgr{detail::DriverCommand::GetInstance()};
+    auto* command{cmdmgr.AllocCommand<detail::DriverCommandEffectForMix>()};
+    command->id = detail::DriverCommandId_ClearEffectFromAdditionalSubMix;
+
+    cmdmgr.PushCommand(command);
+    uint32_t tag{cmdmgr.FlushCommand(true)};
+    cmdmgr.WaitCommandReply(tag);
+#else
+    detail::driver::HardwareManager::GetInstance().GetAdditionalSubMix().ClearEffect(
+        AdditionalSubMixBusIndex);
+#endif
+}
+
 void SoundSystem::SetupHardwareManagerParameterFromCurrentSetting(
     detail::driver::HardwareManager::HardwareManagerParameter* pOutValue) {  // 1570
     pOutValue->SetRendererSampleRate(g_RendererSampleRate);
