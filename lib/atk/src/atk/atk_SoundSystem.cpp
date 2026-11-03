@@ -1257,6 +1257,7 @@ size_t SoundSystem::ReadCircularBufferSink(void* pOutBuffer, size_t bufferSize) 
                                                                                      bufferSize);
 }
 
+// NON_MATCHING: reason unknown
 size_t SoundSystem::GetCircularBufferSinkBufferSize() {
     return detail::driver::HardwareManager::GetInstance().GetUserCircularBufferSinkBufferSize();
 }
@@ -1273,6 +1274,12 @@ void SoundSystem::StopCircularBufferSink() {
     detail::driver::HardwareManager& manager{detail::driver::HardwareManager::GetInstance()};
     if (manager.GetUserCircularBufferSinkState() != CircularBufferSinkState_Invalid)
         manager.StopUserCircularBufferSink();
+}
+
+void SoundSystem::StartCircularBufferSink() {
+    detail::driver::HardwareManager& manager{detail::driver::HardwareManager::GetInstance()};
+    if (manager.GetUserCircularBufferSinkState() != CircularBufferSinkState_Invalid)
+        manager.StartUserCircularBufferSink(false);
 }
 
 void SoundSystem::SetupHardwareManagerParameterFromCurrentSetting(
