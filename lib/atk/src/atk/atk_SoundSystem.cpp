@@ -1269,6 +1269,12 @@ int32_t SoundSystem::GetRendererChannelCountMax() {
     return detail::driver::HardwareManager::GetInstance().GetChannelCountMax();
 }
 
+void SoundSystem::StopCircularBufferSink() {
+    detail::driver::HardwareManager& manager{detail::driver::HardwareManager::GetInstance()};
+    if (manager.GetUserCircularBufferSinkState() != CircularBufferSinkState_Invalid)
+        manager.StopUserCircularBufferSink();
+}
+
 void SoundSystem::SetupHardwareManagerParameterFromCurrentSetting(
     detail::driver::HardwareManager::HardwareManagerParameter* pOutValue) {  // 1570
     pOutValue->SetRendererSampleRate(g_RendererSampleRate);

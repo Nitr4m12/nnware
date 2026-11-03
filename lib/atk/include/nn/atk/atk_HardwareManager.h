@@ -443,6 +443,10 @@ public:
         return m_UserCircularBufferSinkBufferSize;
     }
 
+    CircularBufferSinkState GetUserCircularBufferSinkState() const {
+        return m_UserCircularBufferSinkState;
+    }
+
 private:
     bool m_IsInitialized;
 #if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
