@@ -84,11 +84,17 @@ enum DriverCommandId {
     DriverCommandId_UnregistDisposeCallback,
     DriverCommandId_AppendEffect,
     DriverCommandId_AppendEffectAux,
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    DriverCommandId_AppendEffectAuxToFinalMix,
+    DriverCommandId_AppendEffectAuxToAdditionalSubMix,
+#endif
     DriverCommandId_RemoveEffect,
     DriverCommandId_RemoveEffectAux,
     DriverCommandId_ClearEffect,
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
     DriverCommandId_SubMixApplyDestination,
     DriverCommandId_SubMixUpdateMixVolume,
+#endif
     DriverCommandId_AuxBusVolume,
     DriverCommandId_AllVoicesSync,
     DriverCommandId_VoicePlay,
@@ -462,6 +468,13 @@ struct DriverCommandEffectAux : Command {
 #endif
 };
 static_assert(sizeof(DriverCommandEffectAux) == 0x40);
+
+struct DriverCommandAppendEffectToMix : Command {
+    EffectAux* effect;
+    void* effectBuffer;
+    size_t effectBufferSize;
+};
+static_assert(sizeof(DriverCommandAppendEffectToMix) == 0x30);
 
 #if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
 struct DriverCommandSubMixApplyDestination : Command {
