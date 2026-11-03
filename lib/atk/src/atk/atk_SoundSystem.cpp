@@ -578,6 +578,57 @@ bool SoundSystem::Initialize(Result* pOutResult, const SoundSystemParam& param,
     return result;
 }
 
+void SoundSystem::Finalize() {
+    if (!g_IsInitialized)
+        return;
+
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+    if (g_IsPresetSubMixEnabled) {
+        const uint32_t tag{detail::DriverCommand::GetInstance().FlushCommand(true)};
+        if (g_IsUserThreadRenderingEnabled)
+            detail::driver::SoundThread::GetInstance().FrameProcess(UpdateType_AudioFrame);
+        detail::DriverCommand::GetInstance().WaitCommandReply(tag);
+    }
+#endif
+
+    if (g_IsTaskThreadEnabled) {
+        detail::TaskManager::GetInstance().CancelAllTask();
+        detail::TaskThread::GetInstance().Destroy();
+        detail::TaskManager::GetInstance().Finalize();
+    } else {
+        g_IsTaskThreadEnabled = true;
+    }
+
+    if (g_IsSoundThreadEnabled)
+        detail::driver::SoundThread::GetInstance().Destroy();
+    else
+        g_IsSoundThreadEnabled = true;
+
+    detail::driver::ChannelManager::GetInstance().Finalize();
+
+    if (g_IsManagingMemoryPool)
+        detail::driver::HardwareManager::GetInstance().DetachMemoryPool(&g_MemoryPoolForSoundSystem,
+                                                                        false);
+    else
+        g_IsManagingMemoryPool = true;
+
+    detail::driver::MultiVoiceManager::GetInstance().Finalize();
+    detail::driver::HardwareManager::GetInstance().Finalize();
+    detail::driver::SoundThread::GetInstance().Finalize();
+
+    if (g_IsInitializedDriverCommandManager) {
+        detail::DriverCommand::GetInstance().Finalize();
+        detail::DriverCommand::GetInstanceForTaskThread().Finalize();
+        g_SoundThreadCommandBufferSize = 0;
+        g_TaskThreadCommandBufferSize = 0;
+        g_IsInitializedDriverCommandManager = false;
+    }
+
+    g_IsCircularBufferSinkEnabled = false;
+    g_IsCircularBufferSinkWarningDisplayed = false;
+    g_IsInitialized = false;
+}
+
 #if NN_WARE_VER >= NN_MAKE_VER(5, 0, 0)
 detail::SoundInstanceConfig SoundSystem::GetSoundInstanceConfig() {
     detail::SoundInstanceConfig config;
