@@ -657,6 +657,10 @@ void SoundSystem::ResumeAudioRenderer([[maybe_unused]] TimeSpan fadeTimes) {
     detail::driver::HardwareManager::GetInstance().ResumeAudioRenderer();
 }
 
+void SoundSystem::ExecuteRendering() {
+    detail::driver::HardwareManager::GetInstance().ExecuteAudioRendererRendering();
+}
+
 #if NN_WARE_VER >= NN_MAKE_VER(5, 0, 0)
 detail::SoundInstanceConfig SoundSystem::GetSoundInstanceConfig() {
     detail::SoundInstanceConfig config;
