@@ -1117,6 +1117,14 @@ void SoundSystem::SetAuxBusVolume(AuxBus bus, float volume, TimeSpan fadeTimes,
     cmdmgr.PushCommand(command);
 }
 
+float SoundSystem::GetAuxBusVolume(AuxBus bus) {
+    return GetAuxBusVolume(bus, 0);
+}
+
+float SoundSystem::GetAuxBusVolume(AuxBus bus, int32_t subMixIndex) {
+    return detail::driver::HardwareManager::GetInstance().GetAuxBusVolume(bus, subMixIndex);
+}
+
 void SoundSystem::SetupHardwareManagerParameterFromCurrentSetting(
     detail::driver::HardwareManager::HardwareManagerParameter* pOutValue) {  // 1570
     pOutValue->SetRendererSampleRate(g_RendererSampleRate);
