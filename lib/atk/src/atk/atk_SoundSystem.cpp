@@ -6,6 +6,7 @@
 #include <nn/atk/atk_DriverCommand.h>
 #include <nn/atk/atk_TaskThread.h>
 #include <nn/atk/fnd/basis/atkfnd_Inlines.h>
+#include "nn/atk/atk_HardwareManager.h"
 
 NN_MIDDLEWARE(g_MiddlewareInfo, "Nintendo", "NintendoWare_Atk" NN_SDK_BUILD_STR);
 
@@ -647,6 +648,10 @@ void SoundSystem::ClearSoundThreadEndUserCallback() {
 
 bool SoundSystem::IsInitialized() {
     return g_IsInitialized;
+}
+
+void SoundSystem::SuspendAudioRenderer([[maybe_unused]] TimeSpan fadeTimes) {
+    detail::driver::HardwareManager::GetInstance().SuspendAudioRenderer();
 }
 
 #if NN_WARE_VER >= NN_MAKE_VER(5, 0, 0)
