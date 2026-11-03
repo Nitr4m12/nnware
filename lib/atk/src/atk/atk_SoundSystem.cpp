@@ -1003,6 +1003,32 @@ void SoundSystem::RemoveEffectFromAdditionalSubMix(EffectAux* pEffect) {
 #endif
 }
 
+void SoundSystem::ClearEffect(AuxBus bus) {
+    ClearEffect(bus, OutputDevice_Main);
+}
+
+void SoundSystem::ClearEffect(AuxBus bus, OutputDevice device) {
+    ClearEffect(bus, device, 0);
+}
+
+void SoundSystem::ClearEffect(AuxBus bus, [[maybe_unused]] OutputDevice device,
+                              int32_t subMixIndex) {
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    detail::DriverCommand& cmdmgr{detail::DriverCommand::GetInstance()};
+    auto* command{cmdmgr.AllocCommand<detail::DriverCommandEffect>()};
+    command->id = detail::DriverCommandId_ClearEffect;
+    command->bus = bus;
+    command->device = device;
+    command->subMixIndex = subMixIndex;
+
+    cmdmgr.PushCommand(command);
+    uint32_t tag{cmdmgr.FlushCommand(true)};
+    cmdmgr.WaitCommandReply(tag);
+#else
+    detail::driver::HardwareManager::GetInstance().GetSubMix(subMixIndex).ClearEffect(bus);
+#endif
+}
+
 void SoundSystem::SetupHardwareManagerParameterFromCurrentSetting(
     detail::driver::HardwareManager::HardwareManagerParameter* pOutValue) {  // 1570
     pOutValue->SetRendererSampleRate(g_RendererSampleRate);
