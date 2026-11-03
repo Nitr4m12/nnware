@@ -1225,6 +1225,12 @@ int32_t SoundSystem::GetDroppedLowLevelVoiceCount() {
     return detail::driver::HardwareManager::GetInstance().GetDroppedLowLevelVoiceCount();
 }
 
+void SoundSystem::RegisterSoundThreadUpdateProfileReader(
+    SoundThreadUpdateProfileReader profileReader) {
+    detail::driver::SoundThread::GetInstance().RegisterSoundThreadUpdateProfileReader(
+        profileReader);
+}
+
 void SoundSystem::SetupHardwareManagerParameterFromCurrentSetting(
     detail::driver::HardwareManager::HardwareManagerParameter* pOutValue) {  // 1570
     pOutValue->SetRendererSampleRate(g_RendererSampleRate);
