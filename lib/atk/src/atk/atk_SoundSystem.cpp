@@ -1176,10 +1176,17 @@ float SoundSystem::GetAuxBusChannelVolumeForAdditionalEffect(AuxBus bus, int32_t
 void SoundSystem::SetAllAuxBusChannelVolumeForAdditionalEffect(float volume,
                                                                int32_t srcChannelIndex,
                                                                int32_t destChannelIndex) {
+    detail::driver::HardwareManager::GetInstance();
     const int32_t auxBusCountForAdditionalEffect{2};
     for (int i{0}; i < auxBusCountForAdditionalEffect; ++i)
         SetAuxBusChannelVolumeForAdditionalEffect(static_cast<AuxBus>(i), volume, srcChannelIndex,
                                                   destChannelIndex);
+}
+
+void SoundSystem::SetAllBusChannelVolumeForAdditionalEffect(float volume, int32_t srcChannelIndex,
+                                                            int32_t destChannelIndex) {
+    SetMainBusChannelVolumeForAdditionalEffect(volume, srcChannelIndex, destChannelIndex);
+    SetAllAuxBusChannelVolumeForAdditionalEffect(volume, srcChannelIndex, destChannelIndex);
 }
 
 void SoundSystem::SetupHardwareManagerParameterFromCurrentSetting(
