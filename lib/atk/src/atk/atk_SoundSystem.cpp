@@ -1265,6 +1265,10 @@ int32_t SoundSystem::GetRendererSampleCount() {
     return detail::driver::HardwareManager::GetInstance().GetRendererSampleCount();
 }
 
+int32_t SoundSystem::GetRendererChannelCountMax() {
+    return detail::driver::HardwareManager::GetInstance().GetChannelCountMax();
+}
+
 void SoundSystem::SetupHardwareManagerParameterFromCurrentSetting(
     detail::driver::HardwareManager::HardwareManagerParameter* pOutValue) {  // 1570
     pOutValue->SetRendererSampleRate(g_RendererSampleRate);
