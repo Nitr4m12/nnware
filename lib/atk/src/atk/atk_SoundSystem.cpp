@@ -5,8 +5,8 @@
 #include <nn/atk/atk_ChannelManager.h>
 #include <nn/atk/atk_DriverCommand.h>
 #include <nn/atk/atk_TaskThread.h>
+#include <nn/atk/atk_VoiceCommand.h>
 #include <nn/atk/fnd/basis/atkfnd_Inlines.h>
-#include "nn/atk/atk_VoiceCommand.h"
 
 NN_MIDDLEWARE(g_MiddlewareInfo, "Nintendo", "NintendoWare_Atk" NN_SDK_BUILD_STR);
 
@@ -1206,6 +1206,15 @@ void SoundSystem::VoiceCommandProcess(UpdateType updateType, uint32_t frameCount
 
 void SoundSystem::VoiceCommandProcess(uint32_t frameCount) {
     VoiceCommandProcess(UpdateType_AudioFrame, frameCount);
+}
+
+void SoundSystem::VoiceCommandUpdate() {
+    if (g_IsSoundThreadEnabled)
+        return;
+
+    detail::driver::SoundThread::GetInstance().UpdateLowLevelVoices();
+    detail::driver::SoundThread::GetInstance().EffectFrameProcess();
+    detail::driver::HardwareManager::GetInstance().RequestUpdateAudioRenderer();
 }
 
 void SoundSystem::SetupHardwareManagerParameterFromCurrentSetting(
