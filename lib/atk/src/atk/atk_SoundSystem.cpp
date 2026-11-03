@@ -761,6 +761,10 @@ size_t SoundSystem::GetAllocatableDriverCommandSize() {
     return detail::DriverCommand::GetInstance().GetAllocatableCommandSize();
 }
 
+size_t SoundSystem::GetAllocatedDriverCommandBufferSize() {
+    return detail::DriverCommand::GetInstance().GetAllocatedCommandBufferSize();
+}
+
 #if NN_WARE_VER >= NN_MAKE_VER(5, 0, 0)
 detail::SoundInstanceConfig SoundSystem::GetSoundInstanceConfig() {
     detail::SoundInstanceConfig config;
