@@ -684,6 +684,16 @@ void SoundSystem::DetachMemoryPool(audio::MemoryPoolType* pMemoryPool) {
 
 void SoundSystem::DumpMemory() {}
 
+size_t SoundSystem::GetAudioRendererBufferSize() {
+    detail::driver::HardwareManager::HardwareManagerParameter parameter;
+    SetupHardwareManagerParameterFromCurrentSetting(&parameter);
+
+    if (!IsInitialized())
+        return 0;
+
+    return detail::driver::HardwareManager::GetInstance().GetRequiredMemSize(parameter);
+}
+
 #if NN_WARE_VER >= NN_MAKE_VER(5, 0, 0)
 detail::SoundInstanceConfig SoundSystem::GetSoundInstanceConfig() {
     detail::SoundInstanceConfig config;
@@ -731,6 +741,8 @@ void SoundSystem::SetupHardwareManagerParameterFromCurrentSetting(
                                   g_IsAdditionalEffectBusEnabled, g_IsAdditionalSubMixEnabled,
                                   g_IsCustomSubMixEnabled, g_CustomSubMixSubMixCount,
                                   g_CustomSubMixMixBufferCount);
+
+    pOutValue->SetMemoryPoolAttachCheckEnabled(g_IsMemoryPoolAttachCheckEnabled);
 #endif
 }
 
