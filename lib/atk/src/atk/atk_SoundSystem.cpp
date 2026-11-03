@@ -694,6 +694,20 @@ size_t SoundSystem::GetAudioRendererBufferSize() {
     return detail::driver::HardwareManager::GetInstance().GetRequiredMemSize(parameter);
 }
 
+size_t SoundSystem::GetRecorderBufferSize() {
+    detail::driver::HardwareManager::HardwareManagerParameter parameter;
+    SetupHardwareManagerParameterFromCurrentSetting(&parameter);
+
+    size_t bufferSize{0};
+    if (IsInitialized() && g_IsRecordingEnabled) {
+        bufferSize =
+            detail::driver::HardwareManager::GetInstance().GetRequiredRecorderWorkBufferSize(
+                parameter);
+    }
+
+    return bufferSize;
+}
+
 #if NN_WARE_VER >= NN_MAKE_VER(5, 0, 0)
 detail::SoundInstanceConfig SoundSystem::GetSoundInstanceConfig() {
     detail::SoundInstanceConfig config;
@@ -715,7 +729,7 @@ detail::SoundInstanceConfig SoundSystem::GetSoundInstanceConfig(const SoundSyste
 #endif
 
 void SoundSystem::SetupHardwareManagerParameterFromCurrentSetting(
-    detail::driver::HardwareManager::HardwareManagerParameter* pOutValue) {
+    detail::driver::HardwareManager::HardwareManagerParameter* pOutValue) {  // 1570
     pOutValue->SetRendererSampleRate(g_RendererSampleRate);
     pOutValue->SetUserEffectCount(g_UserEffectCount);
     pOutValue->SetProfilerEnabled(g_IsProfilerEnabled);
