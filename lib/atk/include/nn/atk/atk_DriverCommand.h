@@ -517,7 +517,15 @@ struct DriverCommandAuxBusVolume : Command {
 static_assert(sizeof(DriverCommandAuxBusVolume) == 0x28);
 
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+struct DriverCommandMainBusVolumeForAdditionalEffect : Command {
+    float volume;
+    int32_t srcChannelIndex;
+    int32_t destChannelIndex;
+};
+static_assert(sizeof(DriverCommandMainBusVolumeForAdditionalEffect) == 0x28);
+
 struct DriverCommandAuxBusVolumeForAdditionalEffect : Command {
+    AuxBus bus;
     float volume;
     int32_t srcChannelIndex;
     int32_t destChannelIndex;

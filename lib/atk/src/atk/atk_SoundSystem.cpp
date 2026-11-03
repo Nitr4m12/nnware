@@ -1129,7 +1129,7 @@ void SoundSystem::SetMainBusChannelVolumeForAdditionalEffect(float volume, int32
                                                              int32_t destChannelIndex) {
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
     detail::DriverCommand& cmdmgr{detail::DriverCommand::GetInstance()};
-    auto* command{cmdmgr.AllocCommand<detail::DriverCommandAuxBusVolumeForAdditionalEffect>()};
+    auto* command{cmdmgr.AllocCommand<detail::DriverCommandMainBusVolumeForAdditionalEffect>()};
     command->id = detail::DriverCommandId_MainBusVolumeForAdditionalEffect;
     command->volume = volume;
     command->srcChannelIndex = srcChannelIndex;
@@ -1146,6 +1146,25 @@ float SoundSystem::GetMainBusChannelVolumeForAdditionalEffect(int32_t srcChannel
                                                               int32_t destChannelIndex) {
     return detail::driver::HardwareManager::GetInstance()
         .GetMainBusChannelVolumeForAdditionalEffect(srcChannelIndex, destChannelIndex);
+}
+
+void SoundSystem::SetAuxBusChannelVolumeForAdditionalEffect(AuxBus bus, float volume,
+                                                            int32_t srcChannelIndex,
+                                                            int32_t destChannelIndex) {
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    detail::DriverCommand& cmdmgr{detail::DriverCommand::GetInstance()};
+    auto* command{cmdmgr.AllocCommand<detail::DriverCommandAuxBusVolumeForAdditionalEffect>()};
+    command->id = detail::DriverCommandId_AuxBusVolumeForAdditionalEffect;
+    command->bus = bus;
+    command->volume = volume;
+    command->srcChannelIndex = srcChannelIndex;
+    command->destChannelIndex = destChannelIndex;
+
+    cmdmgr.PushCommand(command);
+#else
+    detail::driver::HardwareManager::GetInstance().SetAuxBusChannelVolumeForAdditionalEffect(
+        bus, volume, srcChannelIndex, destChannelIndex);
+#endif
 }
 
 void SoundSystem::SetupHardwareManagerParameterFromCurrentSetting(
