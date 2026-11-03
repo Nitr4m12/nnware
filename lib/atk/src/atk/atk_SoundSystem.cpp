@@ -1142,6 +1142,12 @@ void SoundSystem::SetMainBusChannelVolumeForAdditionalEffect(float volume, int32
 #endif
 }
 
+float SoundSystem::GetMainBusChannelVolumeForAdditionalEffect(int32_t srcChannelIndex,
+                                                              int32_t destChannelIndex) {
+    return detail::driver::HardwareManager::GetInstance()
+        .GetMainBusChannelVolumeForAdditionalEffect(srcChannelIndex, destChannelIndex);
+}
+
 void SoundSystem::SetupHardwareManagerParameterFromCurrentSetting(
     detail::driver::HardwareManager::HardwareManagerParameter* pOutValue) {  // 1570
     pOutValue->SetRendererSampleRate(g_RendererSampleRate);
