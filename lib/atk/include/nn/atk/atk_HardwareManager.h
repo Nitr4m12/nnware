@@ -436,6 +436,13 @@ public:
     bool IsFinishedClearEffectFromFinalMix() const;
     bool IsFinishedClearEffectFromAdditionalSubMix() const;
 
+    size_t GetUserCircularBufferSinkBufferSize() {
+        if (!m_IsInitialized)
+            return 0;
+
+        return m_UserCircularBufferSinkBufferSize;
+    }
+
 private:
     bool m_IsInitialized;
 #if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
