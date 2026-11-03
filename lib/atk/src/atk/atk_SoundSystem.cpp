@@ -1217,6 +1217,10 @@ void SoundSystem::VoiceCommandUpdate() {
     detail::driver::HardwareManager::GetInstance().RequestUpdateAudioRenderer();
 }
 
+size_t SoundSystem::GetPerformanceFrameBufferSize() {
+    return g_PerformanceFrameBufferSize / detail::MaxPerformanceBufferCount;
+}
+
 void SoundSystem::SetupHardwareManagerParameterFromCurrentSetting(
     detail::driver::HardwareManager::HardwareManagerParameter* pOutValue) {  // 1570
     pOutValue->SetRendererSampleRate(g_RendererSampleRate);
