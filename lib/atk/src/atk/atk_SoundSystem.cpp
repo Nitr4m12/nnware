@@ -1237,6 +1237,10 @@ void SoundSystem::UnregisterSoundThreadUpdateProfileReader(
         profileReader);
 }
 
+void SoundSystem::RegisterSoundThreadInfoRecorder(SoundThreadInfoRecorder& recorder) {
+    detail::driver::SoundThread::GetInstance().RegisterSoundThreadInfoRecorder(recorder);
+}
+
 void SoundSystem::SetupHardwareManagerParameterFromCurrentSetting(
     detail::driver::HardwareManager::HardwareManagerParameter* pOutValue) {  // 1570
     pOutValue->SetRendererSampleRate(g_RendererSampleRate);
