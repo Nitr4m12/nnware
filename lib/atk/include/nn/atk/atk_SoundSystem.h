@@ -191,14 +191,8 @@ struct SoundSystem {
 
     static void LeaveSleep() { g_IsEnterSleep = false; }
 
-    static int32_t GetAudioRendererRenderingTimeLimit() {
-        return detail::driver::HardwareManager::GetInstance().GetAudioRendererRenderingTimeLimit();
-    }
-
-    static void SetAudioRendererRenderingTimeLimit(int32_t timeLimit) {
-        detail::driver::HardwareManager::GetInstance().SetAudioRendererRenderingTimeLimit(
-            timeLimit);
-    }
+    static int32_t GetAudioRendererRenderingTimeLimit();
+    static void SetAudioRendererRenderingTimeLimit(int32_t limitPercent);
 
     static void DumpMemory();
 

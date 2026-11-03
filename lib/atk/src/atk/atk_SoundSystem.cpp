@@ -661,6 +661,23 @@ void SoundSystem::ExecuteRendering() {
     detail::driver::HardwareManager::GetInstance().ExecuteAudioRendererRendering();
 }
 
+int32_t SoundSystem::GetAudioRendererRenderingTimeLimit() {
+    return detail::driver::HardwareManager::GetInstance().GetAudioRendererRenderingTimeLimit();
+}
+
+void SoundSystem::SetAudioRendererRenderingTimeLimit(int32_t limitPercent) {
+    detail::driver::HardwareManager::GetInstance().SetAudioRendererRenderingTimeLimit(limitPercent);
+    // TODO: figure out this variable and scope
+    // {
+    //     const nn::Result& nnDetailAssertArgValue_arg1;
+    // }
+}
+
+void SoundSystem::AttachMemoryPool(audio::MemoryPoolType* pMemoryPool, void* address, size_t size) {
+    detail::driver::HardwareManager::GetInstance().AttachMemoryPool(pMemoryPool, address, size,
+                                                                    true);
+}
+
 #if NN_WARE_VER >= NN_MAKE_VER(5, 0, 0)
 detail::SoundInstanceConfig SoundSystem::GetSoundInstanceConfig() {
     detail::SoundInstanceConfig config;
