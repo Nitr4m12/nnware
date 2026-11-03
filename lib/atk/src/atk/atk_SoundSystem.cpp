@@ -1261,6 +1261,10 @@ size_t SoundSystem::GetCircularBufferSinkBufferSize() {
     return detail::driver::HardwareManager::GetInstance().GetUserCircularBufferSinkBufferSize();
 }
 
+int32_t SoundSystem::GetRendererSampleCount() {
+    return detail::driver::HardwareManager::GetInstance().GetRendererSampleCount();
+}
+
 void SoundSystem::SetupHardwareManagerParameterFromCurrentSetting(
     detail::driver::HardwareManager::HardwareManagerParameter* pOutValue) {  // 1570
     pOutValue->SetRendererSampleRate(g_RendererSampleRate);
