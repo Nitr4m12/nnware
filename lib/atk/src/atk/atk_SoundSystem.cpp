@@ -115,9 +115,11 @@ size_t GetRequiredSoundSystemMemSize(const nn::atk::SoundSystem::SoundSystemPara
     return result;
 }
 
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
 int32_t GetChannelCount(int32_t voiceCount) {
     return voiceCount * nn::atk::WaveChannelMax;
 }
+#endif
 
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
 size_t
@@ -132,7 +134,7 @@ GetRequiredSoundSystemMemSizeForMemoryPool(const nn::atk::SoundSystem::SoundSyst
 
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
     result += nn::atk::detail::driver::ChannelManager::GetInstance().GetRequiredMemSize(
-        GetChannelCount(param.voiceCountMax));
+        param.voiceCountMax);
 #else
     result += nn::atk::detail::driver::ChannelManager::GetInstance().GetRequiredMemSize(
         GetChannelCount(param.voiceCountMax), config);
@@ -145,6 +147,7 @@ GetRequiredSoundSystemMemSizeForMemoryPool(const nn::atk::SoundSystem::SoundSyst
     return result;
 }
 
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
 const int32_t AdditionalSubMixBusIndex{0};
 
 int32_t ClampBusCountMax(int32_t busCountMax) {
@@ -154,6 +157,7 @@ int32_t ClampBusCountMax(int32_t busCountMax) {
 int32_t ConvertAuxBusIndexToSubMixBusIndex(nn::atk::AuxBus bus) {
     return static_cast<int32_t>(bus) + nn::atk::OutputDevice_Count;
 }
+#endif
 
 }  // anonymous namespace
 
@@ -902,7 +906,7 @@ bool SoundSystem::AppendEffectToAdditionalSubMix(EffectAux* pEffect, void* effec
     return true;
 #else
     return detail::driver::HardwareManager::GetInstance().GetAdditionalSubMix().AppendEffect(
-        pEffect, 0, effectBuffer, effectBufferSize);
+        pEffect, AdditionalSubMixBusIndex, effectBuffer, effectBufferSize);
 #endif
 }
 
@@ -980,6 +984,22 @@ void SoundSystem::RemoveEffectFromFinalMix(EffectAux* pEffect) {
     cmdmgr.WaitCommandReply(tag);
 #else
     detail::driver::HardwareManager::GetInstance().GetFinalMix().RemoveEffect(pEffect);
+#endif
+}
+
+void SoundSystem::RemoveEffectFromAdditionalSubMix(EffectAux* pEffect) {
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    detail::DriverCommand& cmdmgr{detail::DriverCommand::GetInstance()};
+    auto* command{cmdmgr.AllocCommand<detail::DriverCommandEffectForMix>()};
+    command->id = detail::DriverCommandId_RemoveEffectAuxFromAdditionalSubMix;
+    command->effect = pEffect;
+
+    cmdmgr.PushCommand(command);
+    uint32_t tag{cmdmgr.FlushCommand(true)};
+    cmdmgr.WaitCommandReply(tag);
+#else
+    detail::driver::HardwareManager::GetInstance().GetAdditionalSubMix().RemoveEffect(
+        pEffect, AdditionalSubMixBusIndex);
 #endif
 }
 
