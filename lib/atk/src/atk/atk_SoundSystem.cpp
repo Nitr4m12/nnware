@@ -1086,6 +1086,16 @@ bool SoundSystem::IsClearEffectFromFinalMixFinished() {
 #endif
 }
 
+bool SoundSystem::IsClearEffectFromAdditionalSubMixFinished() {
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    return detail::driver::HardwareManager::GetInstance()
+        .IsFinishedClearEffectFromAdditionalSubMix();
+#else
+    return !detail::driver::HardwareManager::GetInstance().GetAdditionalSubMix().HasEffect(
+        AdditionalSubMixBusIndex);
+#endif
+}
+
 void SoundSystem::SetupHardwareManagerParameterFromCurrentSetting(
     detail::driver::HardwareManager::HardwareManagerParameter* pOutValue) {  // 1570
     pOutValue->SetRendererSampleRate(g_RendererSampleRate);
