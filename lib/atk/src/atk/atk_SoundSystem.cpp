@@ -629,6 +629,10 @@ void SoundSystem::Finalize() {
     g_IsInitialized = false;
 }
 
+void SoundSystem::SetSoundThreadBeginUserCallback(SoundThreadUserCallback callback, uintptr_t arg) {
+    detail::driver::SoundThread::GetInstance().RegisterThreadBeginUserCallback(callback, arg);
+}
+
 #if NN_WARE_VER >= NN_MAKE_VER(5, 0, 0)
 detail::SoundInstanceConfig SoundSystem::GetSoundInstanceConfig() {
     detail::SoundInstanceConfig config;
