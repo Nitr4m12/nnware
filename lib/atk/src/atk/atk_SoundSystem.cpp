@@ -1058,6 +1058,26 @@ void SoundSystem::ClearEffectFromAdditionalSubMix() {
 #endif
 }
 
+bool SoundSystem::IsClearEffectFinished(AuxBus bus) {
+    return IsClearEffectFinished(bus, OutputDevice_Main);
+}
+
+bool SoundSystem::IsClearEffectFinished(AuxBus bus, OutputDevice device) {
+    return IsClearEffectFinished(bus, device, 0);
+}
+
+bool SoundSystem::IsClearEffectFinished(AuxBus bus, [[maybe_unused]] OutputDevice device,
+                                        int32_t subMixIndex) {
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    return detail::driver::HardwareManager::GetInstance().IsFinishedClearEffect(bus, device,
+                                                                                subMixIndex);
+#else
+    return !detail::driver::HardwareManager::GetInstance()
+                .GetSubMix(subMixIndex)
+                .HasEffect(ConvertAuxBusIndexToSubMixBusIndex(bus));
+#endif
+}
+
 void SoundSystem::SetupHardwareManagerParameterFromCurrentSetting(
     detail::driver::HardwareManager::HardwareManagerParameter* pOutValue) {  // 1570
     pOutValue->SetRendererSampleRate(g_RendererSampleRate);

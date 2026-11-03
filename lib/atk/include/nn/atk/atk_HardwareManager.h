@@ -432,6 +432,8 @@ public:
 
     float GetMasterVolume() const { return m_MasterVolume.GetValue(); }
 
+    bool IsFinishedClearEffect(AuxBus bus, OutputDevice device, int32_t subMixIndex) const;
+
 private:
     bool m_IsInitialized;
 #if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
