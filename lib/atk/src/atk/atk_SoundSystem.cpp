@@ -28,8 +28,8 @@ static void SetupHardwareManagerParameter(
     pOutValue->SetProfilerEnabled(parameter.enableProfiler);
     pOutValue->SetVoiceCount(parameter.voiceCountMax);
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
-    pOutValue->SetAdditionalEffectBusEnabled(parameter.enableAdditionalEffectBus);
-    pOutValue->SetAdditionalSubMixEnabled(parameter.enableAdditionalSubMix);
+    pOutValue->SetAdditionalSubMixEnabled(parameter.enableAdditionalEffectBus);
+    pOutValue->SetAdditionalEffectBusEnabled(parameter.enableAdditionalSubMix);
 #endif
     pOutValue->SetEffectEnabled(parameter.enableEffect);
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
@@ -703,5 +703,35 @@ detail::SoundInstanceConfig SoundSystem::GetSoundInstanceConfig(const SoundSyste
     return config;
 }
 #endif
+
+void SoundSystem::SetupHardwareManagerParameterFromCurrentSetting(
+    detail::driver::HardwareManager::HardwareManagerParameter* pOutValue) {
+    pOutValue->SetRendererSampleRate(g_RendererSampleRate);
+    pOutValue->SetUserEffectCount(g_UserEffectCount);
+    pOutValue->SetProfilerEnabled(g_IsProfilerEnabled);
+    pOutValue->SetVoiceCount(g_VoiceCountMax);
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    pOutValue->SetAdditionalSubMixEnabled(g_IsAdditionalSubMixEnabled);
+#endif
+    pOutValue->SetEffectEnabled(g_IsEffectEnabled);
+    pOutValue->SetRecordingEnabled(g_IsRecordingEnabled);
+    pOutValue->SetUserCircularBufferSinkEnabled(g_IsCircularBufferSinkEnabled);
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+    pOutValue->SetStereoModeEnabled(g_IsStereoModeEnabled);
+#endif
+    pOutValue->SetSoundThreadEnabled(g_IsSoundThreadEnabled);
+    pOutValue->SetVoiceDropEnabled(g_IsVoiceDropEnabled);
+    pOutValue->SetPreviousSdkVersionLowPassFilterCompatible(
+        g_IsPreviousSdkVersionLowPassFilterCompatible);
+    pOutValue->SetUnusedEffectChannelMutingEnabled(g_IsUnusedEffectChannelMutingEnabled);
+    pOutValue->SetUserThreadRenderingEnabled(g_IsUserThreadRenderingEnabled);
+
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+    pOutValue->SetSubMixParameter(g_IsStereoModeEnabled, g_IsEffectEnabled, g_IsSubMixEnabled,
+                                  g_IsAdditionalEffectBusEnabled, g_IsAdditionalSubMixEnabled,
+                                  g_IsCustomSubMixEnabled, g_CustomSubMixSubMixCount,
+                                  g_CustomSubMixMixBufferCount);
+#endif
+}
 
 }  // namespace nn::atk

@@ -226,8 +226,8 @@ public:
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
         bool m_IsProfilerEnabled{false};
         int32_t m_VoiceCount{DefaultRendererVoiceCountMax};
-        bool m_IsAdditionalEffectBusEnabled{false};
         bool m_IsAdditionalSubMixEnabled{false};
+        bool m_IsAdditionalEffectBusEnabled{false};
         bool m_IsEffectEnabled{true};
         bool m_IsRecordingEnabled{false};
         int32_t m_RecordingAudioFrameCount{DefaultRecordingAudioFrameCount};
