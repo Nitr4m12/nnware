@@ -906,6 +906,10 @@ bool SoundSystem::AppendEffectToAdditionalSubMix(EffectAux* pEffect, void* effec
 #endif
 }
 
+size_t SoundSystem::GetRequiredEffectAuxBufferSize(const EffectAux* pEffect) {
+    return detail::driver::HardwareManager::GetInstance().GetRequiredEffectAuxBufferSize(pEffect);
+}
+
 void SoundSystem::SetupHardwareManagerParameterFromCurrentSetting(
     detail::driver::HardwareManager::HardwareManagerParameter* pOutValue) {  // 1570
     pOutValue->SetRendererSampleRate(g_RendererSampleRate);
