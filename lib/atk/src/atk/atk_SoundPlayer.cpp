@@ -175,7 +175,7 @@ void SoundPlayer::detail_SortPriorityList(detail::BasicSound* pSound) {
     InsertPriorityList(pSound);
 }
 
-// NON_MATCHING: unknown reason
+// NON_MATCHING: reason unknown
 bool SoundPlayer::detail_AppendSound(detail::BasicSound* pSound) {
     int allocPriority{pSound->CalcCurrentPlayerPriority()};
 

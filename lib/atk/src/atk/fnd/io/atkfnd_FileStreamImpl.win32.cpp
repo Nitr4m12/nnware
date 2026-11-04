@@ -2,6 +2,7 @@
 
 #include <algorithm>
 
+#include <nn/diag.h>
 #include <nn/fs/fs_Files.h>
 #include <nn/nn_Result.h>
 
@@ -96,7 +97,6 @@ bool FileStreamImpl::IsOpened() const {
     return m_IsOpened;
 }
 
-// NON_MATCHING: needs symbol for nn::diag::detail::AbortImpl
 size_t FileStreamImpl::GetSize() const {
     int64_t fileSize;
     Result result{fs::GetFileSize(&fileSize, m_FileHandle)};
@@ -104,8 +104,7 @@ size_t FileStreamImpl::GetSize() const {
     if (result.IsSuccess())
         return fileSize & 0xffffffff;
 
-    // diag::detail::AbortImpl("", "", "", 0);
-    return 0;
+    diag::detail::AbortImpl("", "", "", 0);
 }
 
 int FileStreamImpl::GetIoBufferAlignment() const {

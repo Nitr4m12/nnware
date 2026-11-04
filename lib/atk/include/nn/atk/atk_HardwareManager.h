@@ -34,9 +34,7 @@ public:
 
     constexpr static uint32_t DefaultRecordingAudioFrameCount = 8;
 
-#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
-    constexpr static uint32_t AtkVoiceCountMax = 96;
-#else
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
     constexpr static uint32_t AtkVoiceCountMax = 192;
 #endif
     constexpr static uint32_t MixerCount = 3;

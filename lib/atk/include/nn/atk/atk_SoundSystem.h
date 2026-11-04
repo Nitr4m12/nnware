@@ -114,7 +114,7 @@ struct SoundSystem {
     };
     static_assert(sizeof(InitializeBufferSet) == 0x30);
 
-    static const int32_t VoiceCountMax{detail::driver::HardwareManager::AtkVoiceCountMax};
+    static const int32_t VoiceCountMax{192};
     static const uint32_t WorkMemoryAlignSize{4};
     static const uint32_t VoiceCommandManagerCountMax{2};
 

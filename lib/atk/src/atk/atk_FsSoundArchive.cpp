@@ -95,7 +95,7 @@ void FsSoundArchive::FileAccessEnd() const {
 detail::fnd::FileStream* FsSoundArchive::OpenStream(void* buffer, size_t size, position_t begin,
                                                     size_t length) const {
     detail::fnd::FileStream* stream{};
-    if (sizeof(detail::fnd::FileStreamProxy) <= size && m_IsOpened) {
+    if (size >= sizeof(detail::fnd::FileStreamProxy) && m_IsOpened) {
         stream = new (buffer) detail::fnd::FileStreamProxy(&m_FileStream, begin, length);
     }
 
