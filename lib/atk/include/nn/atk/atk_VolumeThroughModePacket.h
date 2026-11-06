@@ -22,7 +22,7 @@ public:
 
     uint8_t GetVolumeThroughMode(int bus) const { return m_VolumeThroughMode.GetValue(bus); }
 
-    void GetVolumeThroughMode(int bus, uint8_t volumeThroughMode) {
+    void SetVolumeThroughMode(int bus, uint8_t volumeThroughMode) {
         m_VolumeThroughMode.SetValue(bus, volumeThroughMode);
     }
 
