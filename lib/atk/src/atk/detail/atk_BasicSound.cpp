@@ -753,9 +753,23 @@ void BasicSound::SetOutputAdditionalSend(OutputDevice device, int bus, float sen
     if (!m_pOutputAdditionalParam[device]->IsAdditionalSendEnabled())
         return;
 
-    auto* pAdditionalSend{m_pOutputAdditionalParam[device]->GetAdditionalSendAddr()};
-    if (bus >= DefaultBusCount && pAdditionalSend->GetCount() > bus - 4)
-        pAdditionalSend->SetValue(bus - 4, send);
+    SendArray* pAdditionalSend{m_pOutputAdditionalParam[device]->GetAdditionalSendAddr()};
+    if (bus >= DefaultBusCount && pAdditionalSend->GetCount() > Util::GetAdditionalSendIndex(bus))
+        pAdditionalSend->SetValue(Util::GetAdditionalSendIndex(bus), send);
+}
+
+float BasicSound::GetOutputAdditionalSend(OutputDevice device, int bus) const {
+    if (m_pOutputAdditionalParam[device] == nullptr)
+        return 0.0f;
+
+    if (m_pOutputAdditionalParam[device]->IsAdditionalSendEnabled())
+        return 0.0f;
+
+    SendArray* pAdditionalSend{m_pOutputAdditionalParam[device]->GetAdditionalSendAddr()};
+    if (bus < DefaultBusCount || pAdditionalSend->GetCount() <= Util::GetAdditionalSendIndex(bus))
+        return 0.0f;
+
+    return pAdditionalSend->GetValue(Util::GetAdditionalSendIndex(bus));
 }
 #endif
 
