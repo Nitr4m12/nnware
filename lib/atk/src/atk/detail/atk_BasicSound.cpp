@@ -73,7 +73,6 @@ void SetSoundActorCalculationValues(SoundParamCalculationValues::SoundActorParam
 
 BasicSound::BasicSound() = default;
 
-// NON_MATCHING: bad order of instructions
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
 bool BasicSound::Initialize()
 #else
@@ -83,29 +82,25 @@ bool BasicSound::Initialize(OutputReceiver* pOutputReceiver)
     m_InstanceId = g_LastInstanceId++;
 
     m_pPlayerHeap = nullptr;
-
-    m_pExtSoundPlayer = nullptr;
     m_pGeneralHandle = nullptr;
     m_pTempGeneralHandle = nullptr;
     m_pSoundPlayer = nullptr;
     m_pSoundActor = nullptr;
+    m_pExtSoundPlayer = nullptr;
     m_pSoundArchive = nullptr;
 
-    m_AutoStopCounter = 0;
-    m_UpdateCounter = 0;
-    m_Id = 0xffffffff;
-    m_PlayingCounter = 0;
+    m_Id = InvalidSoundId;
 
     m_PlayerState = PlayerState_Init;
     m_PauseState = PauseState_Normal;
     m_MuteState = MuteState_Normal;
     m_PauseMode = PauseMode_Default;
 
-    m_AmbientInfo.paramUpdateCallback = nullptr;
-    m_AmbientInfo.argUpdateCallback = nullptr;
-    m_AmbientInfo.argAllocatorCallback = nullptr;
-    m_AmbientInfo.arg = nullptr;
-    m_AmbientInfo.argSize = 0;
+    m_AutoStopCounter = 0;
+    m_UpdateCounter = 0;
+    m_PlayingCounter = 0;
+
+    m_AmbientInfo = {};
 
     m_StartFlag = false;
     m_StartedFlag = false;
@@ -120,11 +115,10 @@ bool BasicSound::Initialize(OutputReceiver* pOutputReceiver)
 
     m_InitVolume = 1.0f;
     m_Pitch = 1.0f;
-    m_BiquadFilterType = BiquadFilterType_Inherit;
     m_LpfFreq = 0.0f;
+    m_BiquadFilterType = BiquadFilterType_Inherit;
     m_BiquadFilterValue = 0.0f;
     m_OutputLineFlag = OutputLine_Main;
-    // m_Priority = 0;
 
     m_CommonParam.Initialize();
 

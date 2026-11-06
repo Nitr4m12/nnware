@@ -615,8 +615,14 @@ private:
         float send[DefaultBusCount];
 
         void Initialize() {
+            // XXX: This is necessary to match BasicSound::Initialize on multiple versions
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+            mixMode = MixMode_Pan;
+            volume.InitValue(1.0f);
+#else
             volume.InitValue(1.0f);
             mixMode = MixMode_Pan;
+#endif
             pan = 0.0f;
             span = 0.0f;
             for (int i{0}; i < DefaultBusCount; ++i)
