@@ -88,8 +88,8 @@ private:
     float m_BiquadFilterValue{0.0f};
     int m_BiquadFilterType{BiquadFilterType_Inherit};
     int m_Priority{0};
-    uint32_t m_UserData;
-    int m_OutputLineFlag;
+    uint32_t m_UserData{0};
+    int m_OutputLineFlag{OutputLineFlagInherit};
     OutputAmbientParam m_TvParam;
 };
 static_assert(sizeof(SoundAmbientParam) == 0x38);
@@ -285,22 +285,23 @@ class BasicSound {
 
 public:
     struct AmbientParamUpdateCallback {
+        virtual void Impl0();
         virtual void Impl1();
-        virtual void Impl2();
-        virtual void Impl3();
+        virtual void UpdateAmbientParamImpl(void* arg, uint32_t soundId,
+                                            SoundAmbientParam* ambientParam);
         virtual int GetPriority(void* arg, uint32_t soundId);
     };
 
     struct AmbientArgUpdateCallback {
+        virtual void Impl0();
         virtual void Impl1();
-        virtual void Impl2();
+        virtual void UpdateSoundImpl(void* arg, BasicSound* sound);
         virtual void Impl3();
-        virtual void Impl4();
     };
 
     struct AmbientArgAllocatorCallback {
+        virtual void Impl0();
         virtual void Impl1();
-        virtual void Impl2();
         virtual void* AllocateArgImpl(uint64_t argSize);
         virtual void RemoveSoundImpl(void* arg, BasicSound* sound);
     };
@@ -551,7 +552,7 @@ private:
     void CalculateBiquadFilter(int* pOutBiquadType, float* pOutBiquadValue) const;
     uint32_t CalculateOutLineFlag() const;
     void CalculateOutputParam(OutputParam* pOutParam, OutputDevice device) const;
-#if NN_WARE_VER >= NN_MAKE_VER(4, 0 ,0)
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
     void CalculateOutputBusMixVolume(OutputBusMixVolume* pOutParam, OutputDevice device) const;
 #endif
 

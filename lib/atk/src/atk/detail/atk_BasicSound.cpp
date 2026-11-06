@@ -2,6 +2,7 @@
 
 #include <nn/atk/atk_DriverCommand.h>
 #include <nn/atk/atk_ExternalSoundPlayer.h>
+#include <nn/atk/atk_SoundActor.h>
 #include <nn/atk/atk_SoundHandle.h>
 #include <nn/atk/atk_SoundPlayer.h>
 
@@ -189,8 +190,10 @@ void BasicSound::ClearIsFinalizedForCannotAllocatedResourceFlag() {
     DriverCommand& cmdmgr{DriverCommand::GetInstance()};
 
     auto* command{cmdmgr.AllocCommand<DriverCommandPlayerClearResourceFlag>()};
+#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
     if (command == nullptr)
         return;
+#endif
 
     command->id = DriverCommandId_PlayerClearResourceFlag;
     command->player = GetBasicSoundPlayerHandle();
@@ -302,6 +305,182 @@ void BasicSound::Stop(int fadeFrames) {
     m_PauseMode = PauseMode_Default;
     m_FadeOutFlag = true;
     m_MuteState = MuteState_Normal;
+}
+
+void BasicSound::Update() {
+    driver::BasicSoundPlayer* player{GetBasicSoundPlayerHandle()};
+
+    if (m_PlayerAvailableFlag && GetBasicSoundPlayerHandle()->IsPlayFinished()) {
+        Finalize();
+        return;
+    }
+
+    if (player->IsFinalizedForCannotAllocateResource()) {
+        ClearIsFinalizedForCannotAllocatedResourceFlag();
+        Finalize();
+        return;
+    }
+
+    if (!IsPrepared())
+        return;
+
+    if (m_AutoStopFlag) {
+        if (m_AutoStopCounter != 0) {
+            --m_AutoStopCounter;
+        } else {
+            switch (m_PauseState) {
+            case PauseState_Normal:
+            case PauseState_Unpausing:
+                Finalize();
+                return;
+            default:
+                break;
+            }
+        }
+    }
+
+    bool playerStartFlag{false};
+    if (!m_StartedFlag) {
+        if (!m_StartFlag)
+            return;
+
+        if (!IsPrepared())
+            return;
+
+        playerStartFlag = true;
+        m_PlayerState = PlayerState_Play;
+    }
+
+    if (m_PlayerState == PlayerState_Play) {
+        if (m_UpdateCounter != 0xffffffff)
+            ++m_UpdateCounter;
+    }
+
+    if (m_PlayerState == PlayerState_Play && m_PauseState != PauseState_Paused) {
+        if (m_PlayingCounter != 0xffffffff)
+            ++m_PlayingCounter;
+    }
+
+    bool pauseFadeIsFinished{m_PauseFadeVolume.IsFinished()};
+    switch (m_PauseState) {
+    case PauseState_Pausing:
+        m_PauseFadeVolume.Update();
+        break;
+    case PauseState_Unpausing:
+        m_PauseFadeVolume.Update();
+        UpdateMoveValue();
+        break;
+    case PauseState_Normal:
+        UpdateMoveValue();
+        break;
+    default:
+        break;
+    }
+
+    if (m_AmbientInfo.argUpdateCallback != nullptr)
+        m_AmbientInfo.argUpdateCallback->UpdateSoundImpl(m_AmbientInfo.arg, this);
+
+    if (m_AmbientInfo.paramUpdateCallback != nullptr) {
+        SoundAmbientParam ambientParam;
+        if (m_UpdateCounter != 0) {
+            ambientParam.SetVolume(m_AmbientParam.GetVolume());
+            ambientParam.SetPitch(m_AmbientParam.GetPitch());
+            ambientParam.SetLowPassFilter(m_AmbientParam.GetLpf());
+            ambientParam.SetBiquadFilterValue(m_AmbientParam.GetBiquadFilterValue());
+            ambientParam.SetBiquadFilterType(m_AmbientParam.GetBiquadFilterType());
+            ambientParam.SetUserData(m_AmbientParam.GetUserData());
+            ambientParam.SetPriority(m_AmbientParam.GetPriority());
+
+            ambientParam.SetOutputLineFlag(m_AmbientParam.GetOutputLineFlag());
+            ambientParam.SetTvParam(m_AmbientParam.GetTvParam());
+        } else {
+            ambientParam.SetUserData(0);
+        }
+
+        m_AmbientInfo.paramUpdateCallback->UpdateAmbientParamImpl(m_AmbientInfo.arg, m_Id,
+                                                                  &ambientParam);
+
+        m_AmbientParam.SetVolume(ambientParam.GetVolume());
+        m_AmbientParam.SetPitch(ambientParam.GetPitch());
+        m_AmbientParam.SetLpf(ambientParam.GetLowPassFilter());
+        m_AmbientParam.SetBiquadFilterValue(ambientParam.GetBiquadFilterValue());
+        m_AmbientParam.SetBiquadFilterType(ambientParam.GetBiquadFilterType());
+        m_AmbientParam.SetUserData(ambientParam.GetUserData());
+        m_AmbientParam.SetPriority(ambientParam.GetPriority());
+
+        m_AmbientParam.SetOutputLineFlag(ambientParam.GetOutputLineFlag());
+        m_AmbientParam.SetTvParam(ambientParam.GetTvParam());
+    }
+
+    if (m_pSoundActor != nullptr)
+        m_ActorParam = m_pSoundActor->GetActorParam();
+
+    UpdateParam();
+
+    if (m_FadeOutFlag && m_FadeVolume.IsFinished()) {
+        m_FadeOutFlag = false;
+        Finalize();
+        return;
+    }
+
+    DriverCommand& cmdmgr{DriverCommand::GetInstance()};
+    if (playerStartFlag) {
+        auto* command{cmdmgr.AllocCommand<DriverCommandPlayer>()};
+        command->id = DriverCommandId_PlayerStart;
+        command->player = GetBasicSoundPlayerHandle();
+
+        cmdmgr.PushCommand(command);
+        m_StartFlag = false;
+        m_StartedFlag = true;
+    }
+
+    if (m_PauseMode == PauseMode_PauseImmediately)
+        pauseFadeIsFinished = m_PauseFadeVolume.IsFinished();
+
+    switch (m_PauseState) {
+    case PauseState_Pausing: {
+        if (!pauseFadeIsFinished)
+            break;
+
+        auto* command{cmdmgr.AllocCommand<DriverCommandPlayer>()};
+        command->id = DriverCommandId_PlayerPause;
+        command->player = GetBasicSoundPlayerHandle();
+        command->flag = true;
+        cmdmgr.PushCommand(command);
+        m_PauseState = PauseState_Paused;
+        break;
+    }
+    case PauseState_Unpausing:
+        if (!m_PauseFadeVolume.IsFinished())
+            break;
+
+        m_PauseState = PauseState_Normal;
+        break;
+    default:
+        break;
+    }
+
+    if (m_UnPauseFlag) {
+        auto* command{cmdmgr.AllocCommand<DriverCommandPlayer>()};
+        command->id = DriverCommandId_PlayerPause;
+        command->player = GetBasicSoundPlayerHandle();
+        command->flag = false;
+        cmdmgr.PushCommand(command);
+        m_UnPauseFlag = false;
+    }
+
+    switch (m_MuteState) {
+    case MuteState_Muting:
+        if (m_MuteFadeVolume.IsFinished())
+            m_MuteState = MuteState_Muted;
+        break;
+    case MuteState_Unmuting:
+        if (m_MuteFadeVolume.IsFinished())
+            m_MuteState = MuteState_Normal;
+        break;
+    default:
+        break;
+    }
 }
 
 void BasicSound::SetPlayerPriority(int priority) {
