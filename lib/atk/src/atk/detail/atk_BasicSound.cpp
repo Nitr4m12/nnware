@@ -753,6 +753,11 @@ float BasicSound::GetSend(int bus) const {
     return GetOutputAdditionalSend(OutputDevice_Main, bus);
 }
 
+void BasicSound::SetVolumeThroughMode(int bus, uint8_t modeBitFlag) {
+    for (int i{0}; i < OutputDevice_Count; ++i)
+        SetOutputVolumeThroughMode(static_cast<OutputDevice>(i), bus, modeBitFlag);
+}
+
 void BasicSound::SetOutputVolumeThroughMode(OutputDevice device, int bus, uint8_t modeBitFlag) {
     if (m_pOutputAdditionalParam[device] == nullptr)
         return;
