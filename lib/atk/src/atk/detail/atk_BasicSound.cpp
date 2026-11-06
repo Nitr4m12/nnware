@@ -758,6 +758,10 @@ void BasicSound::SetVolumeThroughMode(int bus, uint8_t modeBitFlag) {
         SetOutputVolumeThroughMode(static_cast<OutputDevice>(i), bus, modeBitFlag);
 }
 
+uint8_t BasicSound::GetVolumeThroughMode(int bus) {
+    return GetOutputVolumeThroughMode(OutputDevice_Main, bus);
+}
+
 void BasicSound::SetOutputVolumeThroughMode(OutputDevice device, int bus, uint8_t modeBitFlag) {
     if (m_pOutputAdditionalParam[device] == nullptr)
         return;
