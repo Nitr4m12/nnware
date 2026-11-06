@@ -900,6 +900,19 @@ uint8_t BasicSound::GetOutputVolumeThroughMode(OutputDevice device, int bus) con
 
     return pVolumeThroughMode->GetVolumeThroughMode(bus);
 }
+
+bool BasicSound::IsOutputBusMixVolumeEnabled(OutputDevice device, int subMixBus) const {
+    if (m_pOutputReceiver == nullptr)
+        return false;
+
+    if (m_pOutputAdditionalParam[device] == nullptr)
+        return false;
+
+    if (!m_pOutputAdditionalParam[device]->IsBusMixVolumeEnabled())
+        return false;
+
+    return m_pOutputAdditionalParam[device]->IsBusMixVolumeEnabledForBus(subMixBus);
+}
 #endif
 
 void BasicSound::SetOutputVolume(OutputDevice device, float volume) {
