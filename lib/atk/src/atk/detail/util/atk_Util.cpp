@@ -878,6 +878,11 @@ const void* Util::GetWaveFileOfWaveSound(const void* wsdFile, uint32_t index,
     return waveFile;
 }
 
+int32_t Util::GetOutputReceiverMixBufferIndex(const OutputReceiver* pOutputReceiver, int bus,
+                                              int channel) {
+    return channel + pOutputReceiver->GetChannelCount() * bus;
+}
+
 void Util::WarningLogger::Log(int logId, int arg0, int arg1) {
     if (m_pCurrentBuffer != nullptr)
         m_pCurrentBuffer->Log(logId, arg0, arg1);
