@@ -849,6 +849,28 @@ void BasicSound::SetOutputBusMixVolume(OutputDevice device, int srcChNo, int sub
     }
 }
 
+void BasicSound::SetOutputBusMixVolumeEnabled(OutputDevice device, int subMixBus, bool isEnabled) {
+    if (m_pOutputReceiver == nullptr)
+        return;
+
+    if (m_pOutputAdditionalParam[device] == nullptr)
+        return;
+
+    if (!m_pOutputAdditionalParam[device]->IsBusMixVolumeEnabled())
+        return;
+
+    OutputAdditionalParam* pAdditionalParam{m_pOutputAdditionalParam[device]};
+    pAdditionalParam->SetBusMixVolumeEnabledForBus(subMixBus, isEnabled);
+    pAdditionalParam->SetBusMixVolumeUsed(false);
+
+    for (int i{0}; i < pAdditionalParam->GetBusMixVolumePacketAddr()->GetBusCount(); ++i) {
+        if (pAdditionalParam->IsBusMixVolumeEnabledForBus(subMixBus)) {
+            pAdditionalParam->SetBusMixVolumeUsed(true);
+            break;
+        }
+    }
+}
+
 float BasicSound::GetOutputAdditionalSend(OutputDevice device, int bus) const {
     if (m_pOutputAdditionalParam[device] == nullptr)
         return 0.0f;
