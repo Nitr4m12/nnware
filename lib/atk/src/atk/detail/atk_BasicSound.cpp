@@ -776,6 +776,29 @@ int32_t BasicSound::GetSendChannelCount() {
     return m_pOutputReceiver->GetChannelCount();
 }
 
+bool BasicSound::IsVolumeThroughModeUsed() const {
+    bool isVolumeThroughMode{false};
+
+    for (int i{0}; i < OutputDevice_Count; ++i) {
+        if (m_pOutputAdditionalParam[i] == nullptr)
+            continue;
+
+        if (!m_pOutputAdditionalParam[i]->IsVolumeThroughModeEnabled())
+            continue;
+
+        for (int j{0}; j < m_pOutputReceiver->GetBusCount(); ++j) {
+            if (m_pOutputAdditionalParam[i]
+                    ->GetVolumeThroughModePacketAddr()
+                    ->TryGetVolumeThroughMode(j) != 0) {
+                isVolumeThroughMode = true;
+                return isVolumeThroughMode;
+            }
+        }
+    }
+
+    return isVolumeThroughMode;
+}
+
 void BasicSound::SetOutputVolumeThroughMode(OutputDevice device, int bus, uint8_t modeBitFlag) {
     if (m_pOutputAdditionalParam[device] == nullptr)
         return;
