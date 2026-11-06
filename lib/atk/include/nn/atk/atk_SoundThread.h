@@ -107,8 +107,7 @@ public:
     void UnregisterProfileReader(ProfileReader& profileReader);
 
     void RegisterAudioRendererPerformanceReader(AudioRendererPerformanceReader& performanceReader);
-    void
-    UnregisterAudioRendererPerformanceReader(AudioRendererPerformanceReader& performanceReader);
+    void UnregisterAudioRendererPerformanceReader() { m_pAudioRendererPerformanceReader = nullptr; }
 
     void RegisterSoundThreadUpdateProfileReader(SoundThreadUpdateProfileReader& profileReader);
     void UnregisterSoundThreadUpdateProfileReader(SoundThreadUpdateProfileReader& profileReader);

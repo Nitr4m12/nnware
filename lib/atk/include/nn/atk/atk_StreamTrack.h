@@ -9,7 +9,9 @@ namespace nn::atk::detail::driver {
 
 struct StreamChannel {
     void AppendWaveBuffer(WaveBuffer* pBuffer, bool lastFlag);
-    os::Tick GetProcessTick(const SoundProfile& profile);
+    os::Tick GetProcessTick(const SoundProfile& profile) {
+        return m_pVoice->GetProcessTick(profile);
+    }
 
     void* m_pBufferAddress;
     MultiVoice* m_pVoice;

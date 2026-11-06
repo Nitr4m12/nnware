@@ -25,8 +25,6 @@ private:
 };
 static_assert(sizeof(RuntimeTypeInfo) == 0x8);
 
-// XXX: currently, functions calling GetRuntimeTypeInfoStatic will only match when using
-// __attribute__((noinline))
 #define NN_ATK_RTTI_BASE(CLASS)                                                                    \
 public:                                                                                            \
     __attribute__((noinline)) static const nn::atk::detail::fnd::RuntimeTypeInfo*                  \

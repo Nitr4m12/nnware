@@ -161,7 +161,7 @@ void SequenceSoundPlayer::SetPlayerTrack(int32_t trackNo, SequenceTrack* track) 
     track->SetPlayerTrackNo(trackNo);
 }
 
-// UNCHECKED
+// NOT_CHECKED
 void SequenceSoundPlayer::ForceTrackMute(uint32_t trackMask) {
     for (int trackNo{0}; trackMask != 0; ++trackNo, trackMask >>= 1) {
         if (trackNo >= TrackCountPerPlayer)

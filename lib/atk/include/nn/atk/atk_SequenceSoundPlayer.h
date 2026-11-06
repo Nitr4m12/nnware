@@ -197,7 +197,16 @@ public:
 
     void Setup(const SetupArg& arg);
 
-    bool IsPrepared() const { return m_IsPrepared; }
+    bool IsPrepared() const {
+        switch (m_ResState) {
+        case ResState_Invalid:
+        case ResState_RecvLoadReq:
+        case ResState_AppendLoadTask:
+            return false;
+        default:
+            return true;
+        }
+    }
 
     struct PrepareArg {
         const void* seqFile{};

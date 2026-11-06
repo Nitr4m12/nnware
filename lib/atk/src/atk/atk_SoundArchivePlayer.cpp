@@ -614,13 +614,11 @@ SoundArchivePlayer::GetAddonSoundDataManager(const char* soundArchiveName) const
 }
 
 SoundPlayer& SoundArchivePlayer::GetSoundPlayer(SoundArchive::ItemId playerId) {
-    // XXX: DWARF shows the const version of the function is being called here
     return const_cast<SoundPlayer&>(
         static_cast<const SoundArchivePlayer*>(this)->GetSoundPlayer(playerId));
 }
 
 SoundPlayer& SoundArchivePlayer::GetSoundPlayer(const char* pStr) {
-    // XXX: DWARF shows the const version of the function is being called here
     return const_cast<SoundPlayer&>(
         static_cast<const SoundArchivePlayer*>(this)->GetSoundPlayer(pStr));
 }

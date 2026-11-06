@@ -42,7 +42,7 @@ private:
 
     static const uint8_t SilenceVolumeMax{255};
     static const uint8_t SilenceVolumeMin{0};
-    constexpr static const float SilenceVolumeMaxR{1.0f / SilenceVolumeMax};
+    static const float SilenceVolumeMaxR;
 
 public:
     static Channel* AllocChannel(int voiceChannelCount, int priority, ChannelCallback callback,

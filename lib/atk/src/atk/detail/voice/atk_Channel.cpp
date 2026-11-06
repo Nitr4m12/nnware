@@ -30,6 +30,8 @@ uint8_t GetNwInterpolationTypeFromHardwareManager() {
 
 }  // anonymous namespace
 
+const float Channel::SilenceVolumeMaxR{1.0f / Channel::SilenceVolumeMax};
+
 Channel* Channel::AllocChannel(int voiceChannelCount, int priority, ChannelCallback callback,
                                void* callbackData) {
     Channel* channel{ChannelManager::GetInstance().Alloc()};

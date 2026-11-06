@@ -672,7 +672,8 @@ int32_t SoundSystem::GetAudioRendererRenderingTimeLimit() {
 
 void SoundSystem::SetAudioRendererRenderingTimeLimit(int32_t limitPercent) {
     detail::driver::HardwareManager::GetInstance().SetAudioRendererRenderingTimeLimit(limitPercent);
-    // TODO: figure out this variable and scope
+    // TODO: figure out this variable and scope. The function still matches without it, so it's not
+    // a priority
     // {
     //     const nn::Result& nnDetailAssertArgValue_arg1;
     // }

@@ -423,7 +423,9 @@ struct SoundSystem {
     static void
     RegisterAudioRendererPerformanceReader(AudioRendererPerformanceReader& performanceReader);
 
-    static void UnregisterAudioRendererPerformanceReader();  // TODO
+    static void UnregisterAudioRendererPerformanceReader() {
+        detail::driver::SoundThread::GetInstance().UnregisterAudioRendererPerformanceReader();
+    }
 
     static void VoiceCommandProcess(UpdateType updateType, uint32_t frameCount);
     static void VoiceCommandProcess(uint32_t frameCount);

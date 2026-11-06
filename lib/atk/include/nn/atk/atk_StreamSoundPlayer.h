@@ -248,7 +248,7 @@ private:
         uint32_t prefetchBlockIndex;
         size_t prefetchBlockBytes;
     };
-    // static_assert(sizeof(PrefetchLoadDataParam) == 0xa0);
+    static_assert(sizeof(PrefetchLoadDataParam) == 0xa0);
 
     struct PrefetchIndexInfo {
         uint32_t lastBlockIndex;
@@ -296,15 +296,14 @@ private:
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
     void ApplyTvOutputParamForMultiChannel(const OutputParam& outputParam, MultiVoice* MultiVoice,
                                            int32_t channelIndex, MixMode mixMode);
-    void ApplyDrcOutputParamForMultiChannel(const OutputParam& outputParam, MultiVoice* MultiVoice,
-                                            int32_t channelIndex, MixMode mixMode, uint32_t);
 #else
     void ApplyTvOutputParamForMultiChannel(
         const OutputParam& outputParam, const OutputAdditionalParam* const pOutputAdditionalParam,
         MultiVoice* MultiVoice, int32_t channelIndex, MixMode mixMode);
+#endif
+
     void ApplyDrcOutputParamForMultiChannel(const OutputParam& outputParam, MultiVoice* MultiVoice,
                                             int32_t channelIndex, MixMode mixMode, uint32_t);
-#endif
 
     bool AllocVoices();
     void FreeVoices();

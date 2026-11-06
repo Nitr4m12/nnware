@@ -735,6 +735,20 @@ float BasicSound::GetFxSend(AuxBus bus) const {
     return m_CommonParam.send[1L + bus];
 }
 
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+void BasicSound::SetOutputAdditionalSend(OutputDevice device, int bus, float send) {
+    if (m_pOutputAdditionalParam[device] == nullptr)
+        return;
+
+    if (!m_pOutputAdditionalParam[device]->IsAdditionalSendEnabled())
+        return;
+
+    auto* pAdditionalSend{m_pOutputAdditionalParam[device]->GetAdditionalSendAddr()};
+    if (bus >= DefaultBusCount && pAdditionalSend->GetCount() > bus - 4)
+        pAdditionalSend->SetValue(bus - 4, send);
+}
+#endif
+
 void BasicSound::SetOutputVolume(OutputDevice device, float volume) {
     m_OutputParam[device].volume = volume;
 }

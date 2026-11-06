@@ -50,7 +50,7 @@ static_assert(sizeof(TimeSpan) == 0x8);
 
 class Time {
 public:
-    Time();
+    Time() = default;
 
     static TimeSpan Current();
 };

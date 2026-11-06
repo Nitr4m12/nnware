@@ -28,7 +28,7 @@ public:
     static const uint8_t VelocityRangeMax{127};
 
     explicit SequenceSound(SequenceSoundInstanceManager& manager);
-    ~SequenceSound() override;
+    ~SequenceSound() override = default;
 
     void Setup(driver::SequenceTrackAllocator* trackAllocator, uint32_t allocTracks,
                driver::NoteOnCallback* noteOnCallback, int32_t channelPriority,
