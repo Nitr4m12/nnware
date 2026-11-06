@@ -551,7 +551,9 @@ private:
     void CalculateBiquadFilter(int* pOutBiquadType, float* pOutBiquadValue) const;
     uint32_t CalculateOutLineFlag() const;
     void CalculateOutputParam(OutputParam* pOutParam, OutputDevice device) const;
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0 ,0)
     void CalculateOutputBusMixVolume(OutputBusMixVolume* pOutParam, OutputDevice device) const;
+#endif
 
     void ApplyCommonParam(OutputParam& param) const;
 

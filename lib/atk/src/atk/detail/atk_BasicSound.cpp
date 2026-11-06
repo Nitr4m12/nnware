@@ -527,6 +527,13 @@ void BasicSound::CalculateOutputParam(OutputParam* pOutParam, OutputDevice devic
     }
 }
 
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+void BasicSound::CalculateOutputBusMixVolume(OutputBusMixVolume* pOutParam,
+                                             OutputDevice device) const {
+    *pOutParam = m_pOutputAdditionalParam[device]->GetBusMixVolume();
+}
+#endif
+
 void BasicSound::ApplyCommonParam(OutputParam& param) const {
     param.mixMode = m_CommonParam.mixMode;
     param.pan += m_CommonParam.pan;
