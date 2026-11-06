@@ -901,6 +901,33 @@ uint8_t BasicSound::GetOutputVolumeThroughMode(OutputDevice device, int bus) con
     return pVolumeThroughMode->GetVolumeThroughMode(bus);
 }
 
+ChannelMixVolume BasicSound::GetOutputBusMixVolume(OutputDevice device, int srcChNo,
+                                                   int subMixBus) const {
+    ChannelMixVolume result;
+    if (m_pOutputReceiver == nullptr)
+        return result;
+
+    if (m_pOutputReceiver->GetBusCount() >= subMixBus)
+        return result;
+
+    if (m_pOutputAdditionalParam[device] == nullptr)
+        return result;
+
+    if (m_pOutputAdditionalParam[device]->IsBusMixVolumeEnabled())
+        return result;
+
+    const int ChannelCount{m_pOutputReceiver->GetChannelCount()};
+
+    result.SetChannelCount(ChannelCount);
+
+    for (int i{0}; i < ChannelCount; ++i) {
+        const float volume{m_pOutputAdditionalParam[device]->GetBusMixVolume(srcChNo, subMixBus)};
+        result.SetChannelVolume(i, volume);
+    }
+
+    return result;
+}
+
 bool BasicSound::IsOutputBusMixVolumeEnabled(OutputDevice device, int subMixBus) const {
     if (m_pOutputReceiver == nullptr)
         return false;
