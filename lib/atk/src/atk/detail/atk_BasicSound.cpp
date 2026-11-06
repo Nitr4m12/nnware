@@ -799,6 +799,18 @@ bool BasicSound::IsVolumeThroughModeUsed() const {
     return isVolumeThroughMode;
 }
 
+void BasicSound::SetOutputAdditionalSend(OutputDevice device, int bus, float send) {
+    if (m_pOutputAdditionalParam[device] == nullptr)
+        return;
+
+    if (!m_pOutputAdditionalParam[device]->IsAdditionalSendEnabled())
+        return;
+
+    SendArray* pAdditionalSend{m_pOutputAdditionalParam[device]->GetAdditionalSendAddr()};
+    if (bus >= DefaultBusCount && pAdditionalSend->GetCount() > Util::GetAdditionalSendIndex(bus))
+        pAdditionalSend->SetValue(Util::GetAdditionalSendIndex(bus), send);
+}
+
 void BasicSound::SetOutputVolumeThroughMode(OutputDevice device, int bus, uint8_t modeBitFlag) {
     if (m_pOutputAdditionalParam[device] == nullptr)
         return;
@@ -815,16 +827,26 @@ void BasicSound::SetOutputVolumeThroughMode(OutputDevice device, int bus, uint8_
     pVolumeThroughMode->SetVolumeThroughMode(bus, modeBitFlag);
 }
 
-void BasicSound::SetOutputAdditionalSend(OutputDevice device, int bus, float send) {
+void BasicSound::SetOutputBusMixVolume(OutputDevice device, int srcChNo, int subMixBus,
+                                       ChannelMixVolume param) {
+    if (m_pOutputReceiver == nullptr)
+        return;
+
     if (m_pOutputAdditionalParam[device] == nullptr)
         return;
 
-    if (!m_pOutputAdditionalParam[device]->IsAdditionalSendEnabled())
+    if (!m_pOutputAdditionalParam[device]->IsBusMixVolumeEnabled())
         return;
 
-    SendArray* pAdditionalSend{m_pOutputAdditionalParam[device]->GetAdditionalSendAddr()};
-    if (bus >= DefaultBusCount && pAdditionalSend->GetCount() > Util::GetAdditionalSendIndex(bus))
-        pAdditionalSend->SetValue(Util::GetAdditionalSendIndex(bus), send);
+    const int ChannelCount{std::min(param.GetChannelCount(), m_pOutputReceiver->GetChannelCount())};
+
+    for (int i{0}; i < ChannelCount; ++i) {
+        const float channelVolume{param.GetChannelVolume(i)};
+
+        m_pOutputAdditionalParam[device]->SetBusMixVolume(
+            srcChNo, Util::GetOutputReceiverMixBufferIndex(m_pOutputReceiver, subMixBus, i),
+            channelVolume);
+    }
 }
 
 float BasicSound::GetOutputAdditionalSend(OutputDevice device, int bus) const {
