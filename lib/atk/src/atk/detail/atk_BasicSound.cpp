@@ -746,6 +746,13 @@ void BasicSound::SetSend(int bus, float send) {
         SetOutputAdditionalSend(static_cast<OutputDevice>(device), bus, send);
 }
 
+float BasicSound::GetSend(int bus) const {
+    if (bus < DefaultBusCount)
+        return m_CommonParam.send[bus];
+
+    return GetOutputAdditionalSend(OutputDevice_Main, bus);
+}
+
 void BasicSound::SetOutputAdditionalSend(OutputDevice device, int bus, float send) {
     if (m_pOutputAdditionalParam[device] == nullptr)
         return;
