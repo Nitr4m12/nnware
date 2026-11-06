@@ -102,8 +102,8 @@ public:
         m_Volume = 1.0f;
         m_Pitch = 1.0f;
         m_Lpf = 0.0f;
-        m_BiquadFilterType = BiquadFilterType_Inherit;
         m_BiquadFilterValue = 0.0f;
+        m_BiquadFilterType = BiquadFilterType_Inherit;
         m_Priority = 0;
         m_OutputLineFlag = SoundAmbientParam::OutputLineFlagInherit;
         m_UserData = 0;
@@ -139,14 +139,14 @@ public:
     void SetTvParam(const OutputAmbientParam& tvParam) { m_TvParam = tvParam; }
 
 private:
-    float m_Volume;
-    float m_Pitch;
-    float m_Lpf;
-    float m_BiquadFilterValue;
-    int m_BiquadFilterType;
-    int m_Priority;
-    int m_OutputLineFlag;
-    uint32_t m_UserData;
+    float m_Volume{1.0f};
+    float m_Pitch{1.0f};
+    float m_Lpf{0.0f};
+    float m_BiquadFilterValue{0.0f};
+    int m_BiquadFilterType{BiquadFilterType_Inherit};
+    int m_Priority{0};
+    int m_OutputLineFlag{SoundAmbientParam::OutputLineFlagInherit};
+    uint32_t m_UserData{0};
     OutputAmbientParam m_TvParam;
 };
 static_assert(sizeof(SoundParam) == 0x38);
@@ -260,12 +260,12 @@ struct SoundActorParam {
     float biquadFilterValue;
 #endif
 
-    SoundActorParam() { Reset(); }
+    SoundActorParam() { Reset(); };
 
     void Reset() {
+        tvVolume = 1.0f;
         volume = 1.0f;
         pitch = 1.0f;
-        tvVolume = 1.0f;
         tvPan = 0.0f;
         lpf = 0.0f;
 #if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)

@@ -71,7 +71,6 @@ void SetSoundActorCalculationValues(SoundParamCalculationValues::SoundActorParam
 
 }  // anonymous namespace
 
-// NON_MATCHING on versions lower than 4.0.0
 BasicSound::BasicSound() = default;
 
 // NON_MATCHING: bad order of instructions
@@ -82,30 +81,25 @@ bool BasicSound::Initialize(OutputReceiver* pOutputReceiver)
 #endif
 {
     m_InstanceId = g_LastInstanceId++;
-    // ++g_LastInstanceId;
 
     m_pPlayerHeap = nullptr;
+
     m_pExtSoundPlayer = nullptr;
-    m_pSoundArchive = nullptr;
-
-    m_PlayerState = PlayerState_Init;
-    m_PauseState = PauseState_Normal;
-
-    m_pSoundPlayer = nullptr;
-    m_pSoundActor = nullptr;
-    m_MuteState = MuteState_Normal;
-
     m_pGeneralHandle = nullptr;
     m_pTempGeneralHandle = nullptr;
-
-    m_PauseMode = PauseMode_Default;
-
-    m_BiquadFilterType = BiquadFilterType_Inherit;
+    m_pSoundPlayer = nullptr;
+    m_pSoundActor = nullptr;
+    m_pSoundArchive = nullptr;
 
     m_AutoStopCounter = 0;
     m_UpdateCounter = 0;
-    m_PlayingCounter = 0;
     m_Id = 0xffffffff;
+    m_PlayingCounter = 0;
+
+    m_PlayerState = PlayerState_Init;
+    m_PauseState = PauseState_Normal;
+    m_MuteState = MuteState_Normal;
+    m_PauseMode = PauseMode_Default;
 
     m_AmbientInfo.paramUpdateCallback = nullptr;
     m_AmbientInfo.argUpdateCallback = nullptr;
@@ -126,6 +120,7 @@ bool BasicSound::Initialize(OutputReceiver* pOutputReceiver)
 
     m_InitVolume = 1.0f;
     m_Pitch = 1.0f;
+    m_BiquadFilterType = BiquadFilterType_Inherit;
     m_LpfFreq = 0.0f;
     m_BiquadFilterValue = 0.0f;
     m_OutputLineFlag = OutputLine_Main;
@@ -483,6 +478,135 @@ void BasicSound::Update() {
     }
 }
 
+void BasicSound::UpdateParam() {
+    OnUpdateParam();
+
+    const float volume{CalculateVolume()};
+    const float pitch{CalculatePitch()};
+    const float lpfFreq{CalculateLpfFrequency()};
+    const uint32_t outputLineFlag{CalculateOutLineFlag()};
+
+    int biquadFilterType;
+    float biquadFilterValue;
+    CalculateBiquadFilter(&biquadFilterType, &biquadFilterValue);
+
+    OutputParam main;
+    CalculateOutputParam(&main, OutputDevice_Main);
+
+    DriverCommand& cmdmgr{DriverCommand::GetInstance()};
+
+    auto* command{cmdmgr.AllocCommand<DriverCommandPlayerParam>()};
+    command->id = DriverCommandId_PlayerParam;
+    command->player = GetBasicSoundPlayerHandle();
+    command->volume = volume;
+    command->pitch = pitch;
+    command->lpfFreq = lpfFreq;
+    command->biquadFilterType = biquadFilterType;
+    command->biquadFilterValue = biquadFilterValue;
+    command->outputLineFlag = outputLineFlag;
+    command->tvParam = main;
+
+    cmdmgr.PushCommand(command);
+
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+    if (m_pOutputAdditionalParam[OutputDevice_Main] == nullptr)
+        return;
+
+    if (m_pOutputAdditionalParam[OutputDevice_Main]->IsAdditionalSendEnabled()) {
+        SendArray* pSend{m_pOutputAdditionalParam[OutputDevice_Main]->GetAdditionalSendAddr()};
+        SoundPlayer* pSoundPlayer{m_pSoundPlayer};
+
+        for (int i{0}; i < pSend->GetCount(); ++i) {
+            const int Bus{i + 4};
+            const float PlayerSend{pSoundPlayer != nullptr ? pSoundPlayer->GetSend(Bus) : 0.0f};
+
+            auto* sendCommand{cmdmgr.AllocCommand<DriverCommandPlayerAdditionalSend>()};
+            sendCommand->id = DriverCommandId_PlayerAdditionalSend;
+            sendCommand->player = GetBasicSoundPlayerHandle();
+            sendCommand->bus = Bus;
+            sendCommand->send = PlayerSend + pSend->GetValue(i);
+
+            cmdmgr.PushCommand(sendCommand);
+        }
+    }
+
+    if (m_pOutputAdditionalParam[OutputDevice_Main]->IsBusMixVolumeEnabled()) {
+        const bool IsUsed{m_pOutputAdditionalParam[OutputDevice_Main]->IsBusMixVolumeUsed()};
+
+        auto* busMixUsedCommand{cmdmgr.AllocCommand<DriverCommandPlayerBusMixVolumeUsed>()};
+        busMixUsedCommand->id = DriverCommandId_PlayerBusMixVolumeUsed;
+        busMixUsedCommand->player = GetBasicSoundPlayerHandle();
+        busMixUsedCommand->isUsed = IsUsed;
+
+        cmdmgr.PushCommand(busMixUsedCommand);
+
+        if (IsUsed) {
+            OutputBusMixVolume busMixParam;
+            CalculateOutputBusMixVolume(&busMixParam, OutputDevice_Main);
+            auto* busMixCommand{cmdmgr.AllocCommand<DriverCommandPlayerBusMixVolume>()};
+            busMixCommand->id = DriverCommandId_PlayerBusMixVolume;
+            busMixCommand->player = GetBasicSoundPlayerHandle();
+            busMixCommand->tvBusMixVolume = busMixParam;
+
+            cmdmgr.PushCommand(busMixCommand);
+
+            for (int i{0}; i < m_pOutputAdditionalParam[OutputDevice_Main]
+                                   ->GetBusMixVolumePacketAddr()
+                                   ->GetBusCount();
+                 ++i) {
+                auto* busMixEnabledCommand{
+                    cmdmgr.AllocCommand<DriverCommandPlayerBusMixVolumeEnabled>(),
+                };
+                busMixEnabledCommand->id = DriverCommandId_PlayerBusMixVolumeEnabled;
+                busMixEnabledCommand->player = GetBasicSoundPlayerHandle();
+                busMixEnabledCommand->bus = i;
+                busMixEnabledCommand->isEnabled =
+                    m_pOutputAdditionalParam[OutputDevice_Main]->IsBusMixVolumeEnabledForBus(i);
+
+                cmdmgr.PushCommand(busMixEnabledCommand);
+            }
+        }
+    }
+
+    if (m_pOutputAdditionalParam[OutputDevice_Main]->IsVolumeThroughModeEnabled()) {
+        auto* volumeThroughModeEnabledCommand{
+            cmdmgr.AllocCommand<DriverCommandPlayerVolumeThroughModeUsed>(),
+        };
+        volumeThroughModeEnabledCommand->id = DriverCommandId_PlayerVolumeThroughModeUsed;
+        volumeThroughModeEnabledCommand->player = GetBasicSoundPlayerHandle();
+        volumeThroughModeEnabledCommand->isVolumeThroughModeUsed = IsVolumeThroughModeUsed();
+
+        cmdmgr.PushCommand(volumeThroughModeEnabledCommand);
+
+        if (volumeThroughModeEnabledCommand->isVolumeThroughModeUsed) {
+            const float binaryVolume{m_InitVolume};
+
+            VolumeThroughModePacket* pPacket{
+                m_pOutputAdditionalParam[OutputDevice_Main]->GetVolumeThroughModePacketAddr(),
+            };
+            auto* binaryVolumeCommand{cmdmgr.AllocCommand<DriverCommandPlayerBinaryVolume>()};
+            binaryVolumeCommand->id = DriverCommandId_PlayerBinaryVolume;
+            binaryVolumeCommand->player = GetBasicSoundPlayerHandle();
+            binaryVolumeCommand->volume = binaryVolume;
+
+            cmdmgr.PushCommand(binaryVolumeCommand);
+
+            for (int i{0}; i < pPacket->GetBusCount(); ++i) {
+                auto* volumeThroughModeCommand{
+                    cmdmgr.AllocCommand<DriverCommandPlayerVolumeThroughMode>(),
+                };
+                volumeThroughModeCommand->id = DriverCommandId_PlayerVolumeThroughMode;
+                volumeThroughModeCommand->player = GetBasicSoundPlayerHandle();
+                volumeThroughModeCommand->bus = i;
+                volumeThroughModeCommand->volumeThroughMode = pPacket->GetVolumeThroughMode(i);
+
+                cmdmgr.PushCommand(volumeThroughModeCommand);
+            }
+        }
+    }
+#endif
+}
+
 void BasicSound::SetPlayerPriority(int priority) {
     m_Priority = priority;
 
@@ -663,11 +787,16 @@ void BasicSound::CalculateBiquadFilter(int* pOutBiquadType, float* pOutBiquadVal
 
     if (biquadFilterType == BiquadFilterType_Inherit) {
         biquadFilterType = GetSoundPlayer()->GetBiquadFilterType();
+        biquadFilterValue = GetSoundPlayer()->GetBiquadFilterValue();
         if (biquadFilterType == BiquadFilterType_Inherit) {
-            biquadFilterType = m_AmbientParam.GetBiquadFilterType();
-            biquadFilterValue = m_AmbientParam.GetBiquadFilterValue();
-        } else {
-            biquadFilterValue = GetSoundPlayer()->GetBiquadFilterValue();
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+            biquadFilterType = m_ActorParam.biquadFilterType;
+            biquadFilterValue = m_ActorParam.biquadFilterValue;
+#endif
+            if (biquadFilterType == BiquadFilterType_Inherit) {
+                biquadFilterType = m_AmbientParam.GetBiquadFilterType();
+                biquadFilterValue = m_AmbientParam.GetBiquadFilterValue();
+            }
         }
     }
 
