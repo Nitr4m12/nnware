@@ -762,6 +762,13 @@ uint8_t BasicSound::GetVolumeThroughMode(int bus) {
     return GetOutputVolumeThroughMode(OutputDevice_Main, bus);
 }
 
+int32_t BasicSound::GetSendBusCount() {
+    if (m_pOutputReceiver == nullptr)
+        return 0;
+
+    return m_pOutputReceiver->GetBusCount();
+}
+
 void BasicSound::SetOutputVolumeThroughMode(OutputDevice device, int bus, uint8_t modeBitFlag) {
     if (m_pOutputAdditionalParam[device] == nullptr)
         return;
