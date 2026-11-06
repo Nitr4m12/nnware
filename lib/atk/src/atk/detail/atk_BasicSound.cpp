@@ -799,6 +799,22 @@ float BasicSound::GetOutputAdditionalSend(OutputDevice device, int bus) const {
 
     return pAdditionalSend->GetValue(Util::GetAdditionalSendIndex(bus));
 }
+
+uint8_t BasicSound::GetOutputVolumeThroughMode(OutputDevice device, int bus) const {
+    if (m_pOutputAdditionalParam[device] == nullptr)
+        return 0;
+
+    if (m_pOutputAdditionalParam[device]->IsVolumeThroughModeEnabled())
+        return 0;
+
+    VolumeThroughModePacket* pVolumeThroughMode{
+        m_pOutputAdditionalParam[device]->GetVolumeThroughModePacketAddr(),
+    };
+    if (bus < 0 || pVolumeThroughMode->GetBusCount() <= bus)
+        return 0;
+
+    return pVolumeThroughMode->GetVolumeThroughMode(bus);
+}
 #endif
 
 void BasicSound::SetOutputVolume(OutputDevice device, float volume) {
