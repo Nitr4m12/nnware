@@ -29,20 +29,17 @@ void* FrameHeapImpl::Destroy() {
     return this;
 }
 
-// NON_MATCHING: AllocFromHead and AllocFromTail don't inline properly
+// NON_MATCHING on version 5.3.0
 void* FrameHeapImpl::Alloc(size_t size, int alignment) {
     void* memory{};
 
-    if (size == 0)
-        size = HeapBase::DefaultAlignment;
-    else
-        size = RoundUp(size, HeapBase::DefaultAlignment);
+    size = size != 0 ? RoundUp(size, DefaultAlignment) : DefaultAlignment;
 
     LockHeap();
     if (alignment >= 0)
         memory = AllocFromHead(size, alignment);
     else
-        memory = AllocFromTail(size, alignment);
+        memory = AllocFromTail(size, -alignment);
     UnlockHeap();
 
     return memory;
@@ -76,10 +73,7 @@ void* FrameHeapImpl::AllocFromTail(size_t size, int alignment) {
 }
 
 size_t FrameHeapImpl::ResizeForMBlock(void* memBlock, size_t newSize) {
-    if (newSize == 0)
-        newSize = HeapBase::DefaultAlignment;
-    else
-        newSize = RoundUp(newSize, HeapBase::DefaultAlignment);
+    newSize = newSize != 0 ? RoundUp(newSize, DefaultAlignment) : DefaultAlignment;
 
     {
         HeapBase::LockHeap();

@@ -231,6 +231,8 @@ SequenceTrack::ParseResult MmlParser::Parse(MmlSequenceTrack* track, bool doNote
     return SequenceTrack::ParseResult_Continue;
 }
 
+// TODO: MmlParser::CommandProc
+
 int32_t MmlParser::ReadArg(const uint8_t** ptr, SequenceSoundPlayer* player, SequenceTrack* track,
                            SeqArgType argType) const {
     int32_t var{0};
@@ -284,8 +286,6 @@ uint16_t MmlParser::Read16(const uint8_t** ptr) const {
     ret |= ReadByte(ptr) << 8;
     return ret;
 }
-
-// TODO: MmlParser::CommandProc
 
 volatile int16_t* MmlParser::GetVariablePtr(SequenceSoundPlayer* player, SequenceTrack* track,
                                             int32_t varNo) const {
