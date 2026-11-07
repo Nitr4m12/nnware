@@ -340,6 +340,89 @@ void Channel::InitParam(ChannelCallback callback, void* callbackData) {
 
     m_Velocity = 1.0f;
 }
+
+void Channel::Update(bool doPeriodicProc) {
+    if (!m_ActiveFlag)
+        return;
+
+    doPeriodicProc = m_PauseFlag == 0 && doPeriodicProc;
+
+    m_SilenceVolume.Update();
+
+    float volume{m_Velocity * m_Velocity};
+    volume *= m_InstrumentVolume;
+    volume *= m_UserVolume;
+    volume *= static_cast<float>(m_SilenceVolume.GetValue());
+    volume *= SilenceVolumeMaxR;
+
+    if (m_CurveAdshr.GetStatus() == CurveAdshr::Status_Release && m_CurveAdshr.GetValue() < 90.4f) {
+        Stop();
+        return;
+    }
+
+    float cent{static_cast<float>(m_Key - m_OriginalKey)};
+    cent += m_UserPitch;
+    cent += GetSweepValue();
+    for (int i{0}; i < ModCount; ++i) {
+        if (m_LfoTarget[i] == LfoTarget_Pitch)
+            cent += m_Lfo[i].GetValue();
+    }
+
+    float pitch;
+    if (cent == m_Cent) {
+        pitch = m_CentPitch;
+    } else {
+        pitch = Util::CalcPitchRatio(cent * 256);
+        m_Cent = cent;
+        m_CentPitch = pitch;
+    }
+    pitch = pitch * m_Tune * m_UserPitchRatio;
+
+    OutputParam tvParam{m_TvParam};
+    tvParam.pan += m_InitPan;
+    for (int i{0}; i < ModCount; ++i) {
+        if (m_LfoTarget[i] == LfoTarget_Pan)
+            tvParam.pan += m_Lfo[i].GetValue();
+    }
+    tvParam.span += m_InitSurroundPan;
+
+    if (doPeriodicProc) {
+        if (m_AutoSweep != 0)
+            UpdateSweep(driver::HardwareManager::SoundFrameIntervalMsec);
+
+        for (int i{0}; i < ModCount; ++i) {
+            if (m_LfoTarget[i] != LfoTarget_Invalid)
+                m_Lfo[i].Update(driver::HardwareManager::SoundFrameIntervalMsec);
+        }
+
+        m_CurveAdshr.Update(driver::HardwareManager::SoundFrameIntervalMsec);
+    }
+
+    float lpfFreq{m_UserLpfFreq};
+    lpfFreq += 1.0f;
+
+    volume *= Util::CalcVolumeRatio(m_CurveAdshr.GetValue());
+    for (int i{0}; i < ModCount; ++i) {
+        if (m_LfoTarget[i] == LfoTarget_Volume)
+            volume *= Util::CalcVolumeRatio(m_Lfo[i].GetValue() * (KeyInit / 10.0f));
+    }
+
+    if (m_pVoice != nullptr) {
+        m_pVoice->SetVolume(volume);
+        m_pVoice->SetPitch(pitch);
+        m_pVoice->SetPanMode(m_PanMode);
+        m_pVoice->SetPanCurve(m_PanCurve);
+        m_pVoice->SetLpfFreq(lpfFreq);
+        m_pVoice->SetBiquadFilter(m_BiquadType, m_BiquadValue);
+        m_pVoice->SetOutputLine(m_OutputLineFlag);
+        m_pVoice->SetTvParam(tvParam);
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+        if (m_pTvAdditionalParam != nullptr)
+            m_pVoice->SetTvAdditionalParam(*m_pTvAdditionalParam);
+#endif
+    }
+}
+
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
 void Channel::AppendWaveBuffer(const WaveInfo& waveInfo, position_t startOffsetSamples)
 #else

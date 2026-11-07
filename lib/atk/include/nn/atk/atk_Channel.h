@@ -145,8 +145,8 @@ public:
     void SetTvAdditionalParam(const OutputAdditionalParam& param);
 #endif
 
-    void SetMainSend(float mainSend);
-    void SetUserPan(float pan);
+    void SetMainSend(float mainSend) { m_TvParam.send[OutputDevice_Main] = mainSend; }
+    void SetUserPan(float pan) { m_TvParam.pan = pan; }
 
     Channel* GetNextTrackChannel() const { return m_pNextLink; }
     void SetNextTrackChannel(Channel* channel) { m_pNextLink = channel; }

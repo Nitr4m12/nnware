@@ -163,7 +163,10 @@ public:
             bus, volumeThroughMode);
     }
 
-    void SetTvAdditionalParam(const OutputAdditionalParam& param) { *m_pTvAdditionalParam = param; }
+    void SetTvAdditionalParam(const OutputAdditionalParam& param) {
+        if (m_pTvAdditionalParam != nullptr)
+            *m_pTvAdditionalParam = param;
+    }
 #endif
 
     bool TryWaitInstanceFree() { return m_Event.TryWait(); }
