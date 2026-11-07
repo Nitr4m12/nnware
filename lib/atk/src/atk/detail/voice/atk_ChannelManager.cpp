@@ -39,7 +39,52 @@ size_t ChannelManager::GetRequiredMemSize(int32_t channelCount, const SoundInsta
     return GetObjectSize(config) * channelCount + 0x70;
 }
 
-// TODO: void ChannelManager::Initialize;
+void ChannelManager::Initialize(void* mem, size_t memSize, int32_t channelCount,
+                                const SoundInstanceConfig& config) {
+    if (m_IsInitialized)
+        return;
+
+    m_AdditionalParamBufferSizePerChannel =
+        util::align_up(OutputAdditionalParam::GetRequiredMemSize(config), 4);
+    const bool IsAdditionalParamEnabled{m_AdditionalParamBufferSizePerChannel != 0};
+
+    const size_t AdditionalParamSize{IsAdditionalParamEnabled ? sizeof(OutputAdditionalParam) : 0};
+    const size_t AdditionalParamPoolSize{
+        IsAdditionalParamEnabled ? channelCount * sizeof(OutputAdditionalParam) : 0,
+    };
+    const size_t AdditionalParamBufferPoolSize{AdditionalParamSize * 2};
+    const size_t AdditionalParamBufferSize{m_AdditionalParamBufferSizePerChannel * channelCount};
+    const size_t ChannelPoolSize{
+        memSize - AdditionalParamBufferSize - AdditionalParamPoolSize -
+            AdditionalParamBufferPoolSize,
+    };
+
+    uint8_t* ptr{static_cast<uint8_t*>(mem)};
+    m_ChannelCount = m_Pool.Create(ptr, ChannelPoolSize, 64);
+    ptr += ChannelPoolSize;
+
+    // XXX: Present in DWARF, unknown use at the moment
+    [[maybe_unused]] int32_t count{0};
+
+    if (IsAdditionalParamEnabled) {
+        m_pAdditionalParamPool = reinterpret_cast<InstancePool<OutputAdditionalParam>*>(ptr);
+        new (m_pAdditionalParamPool) InstancePool<OutputAdditionalParam>;
+        ptr += AdditionalParamSize;
+
+        m_pAdditionalParamPool->Create(ptr, AdditionalParamPoolSize);
+        ptr += AdditionalParamPoolSize;
+
+        m_pAdditionalParamBufferPool = reinterpret_cast<BufferPool*>(ptr);
+        new (m_pAdditionalParamBufferPool) BufferPool;
+        ptr += AdditionalParamSize;
+
+        m_pAdditionalParamBufferPool->Create(ptr, AdditionalParamBufferSize,
+                                             OutputAdditionalParam::GetRequiredMemSize(config));
+    }
+
+    m_IsInitialized = true;
+    m_SoundInstanceConfig = config;
+}
 #endif
 
 void ChannelManager::Finalize() {

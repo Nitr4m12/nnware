@@ -35,8 +35,17 @@ public:
 
     BufferPool() = default;
 
-    int Create(void* buffer, size_t size, size_t bufferSizePerAlloc);
-    int Create(void* buffer, size_t size, size_t bufferSizePerAlloc, size_t alignment);
+    int Create(void* buffer, size_t size, size_t bufferSizePerAlloc) {
+        size_t objSize{bufferSizePerAlloc <= sizeof(void*) ? sizeof(void*) : bufferSizePerAlloc};
+
+        return CreateImpl(buffer, size, objSize);
+    }
+
+    int Create(void* buffer, size_t size, size_t bufferSizePerAlloc, size_t alignment) {
+        size_t objSize{bufferSizePerAlloc <= sizeof(void*) ? sizeof(void*) : bufferSizePerAlloc};
+
+        return CreateImpl(buffer, size, objSize, alignment);
+    }
 
     void Destroy() { DestroyImpl(); }
 
