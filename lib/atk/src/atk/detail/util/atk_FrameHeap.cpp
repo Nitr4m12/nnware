@@ -131,6 +131,9 @@ size_t FrameHeap::GetFreeSize() const {
 //     }
 // }
 
+void FrameHeap::Dump([[maybe_unused]] const SoundDataManager& mgr,
+                     [[maybe_unused]] const SoundArchive& arc) const {}
+
 FrameHeap::Section::Section() = default;
 
 FrameHeap::Section::~Section() {
