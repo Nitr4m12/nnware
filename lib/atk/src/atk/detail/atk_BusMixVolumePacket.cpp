@@ -18,4 +18,10 @@ bool BusMixVolumePacket::Initialize(void* buffer, [[maybe_unused]] size_t size, 
     return true;
 }
 
+void BusMixVolumePacket::Finalize() {
+    m_pIsEnabledTable = nullptr;
+    m_IsUsed = false;
+    m_BusCount = 0;
+}
+
 }  // namespace nn::atk::detail
