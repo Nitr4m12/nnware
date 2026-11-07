@@ -21,7 +21,13 @@ public:
             : m_pBuffer{buffer}, m_Size{size}, m_Callback{callback}, m_pCallbackArg{callbackArg},
               m_HeapCallback{heapCallback}, m_pHeapCallbackArg{heapCallbackArg} {}
 
-        ~Block() = default;
+        ~Block() {
+            if (m_Callback != nullptr)
+                m_Callback(m_pBuffer, m_Size, m_pCallbackArg);
+
+            if (m_HeapCallback != nullptr)
+                m_HeapCallback(m_pHeapCallbackArg);
+        }
 
         void* GetBufferAddr() { return m_pBuffer; }
         const void* GetBufferAddr() const { return m_pBuffer; }

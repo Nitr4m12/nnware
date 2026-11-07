@@ -112,24 +112,20 @@ size_t FrameHeap::GetFreeSize() const {
     return size;
 }
 
-// NON_MATCHING: bad implementation
-// Commented out to prevent inlining in other functions
-// void FrameHeap::ClearSection() {
-//     bool alreadyUseCallback{ProcessCallback(0)};
+void FrameHeap::ClearSection() {
+    bool alreadyUseCallback{ProcessCallback(0)};
 
-//     if (!m_SectionList.empty()) {
-//         auto& section{m_SectionList.back()};
+    while (!m_SectionList.empty()) {
+        auto& section{m_SectionList.back()};
 
-//         if (alreadyUseCallback)
-//             section.SetUseCallback(false);
+        if (alreadyUseCallback) {
+            section.SetUseCallback(false);
+        }
 
-//         section.~Section();
-//         for (auto it{m_SectionList.begin()}; it != m_SectionList.end(); ++it) {
-//             m_SectionList.erase(it);
-
-//         }
-//     }
-// }
+        section.~Section();
+        m_SectionList.erase(m_SectionList.iterator_to(section));
+    }
+}
 
 void FrameHeap::Dump([[maybe_unused]] const SoundDataManager& mgr,
                      [[maybe_unused]] const SoundArchive& arc) const {}
@@ -137,6 +133,12 @@ void FrameHeap::Dump([[maybe_unused]] const SoundDataManager& mgr,
 FrameHeap::Section::Section() = default;
 
 FrameHeap::Section::~Section() {
+    if (m_UseCallback) {
+        for (auto itr{m_BlockList.end()}; itr != m_BlockList.begin();) {
+            --itr;
+            itr->~Block();
+        }
+    }
     m_BlockList.clear();
 }
 
