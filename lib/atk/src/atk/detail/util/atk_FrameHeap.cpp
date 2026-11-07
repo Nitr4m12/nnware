@@ -105,6 +105,13 @@ size_t FrameHeap::GetSize() const {
     return fnd::GetOffsetFromPtr(m_pHeap, m_pHeap->GetHeapEndAddress());
 }
 
+size_t FrameHeap::GetFreeSize() const {
+    size_t size{m_pHeap->GetAllocatableSize(HeapAlign)};
+    size = size < HeapAlign ? 0 : size - HeapAlign & ~(HeapAlign - 1);
+
+    return size;
+}
+
 // NON_MATCHING: bad implementation
 // Commented out to prevent inlining in other functions
 // void FrameHeap::ClearSection() {
