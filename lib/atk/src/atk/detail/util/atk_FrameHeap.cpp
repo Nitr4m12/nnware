@@ -67,20 +67,17 @@ void FrameHeap::Clear() {
     [[maybe_unused]] bool result = NewSection();
 }
 
-// NON_MATCHING: incorrect branching
 int FrameHeap::SaveState() {
-    if (m_pHeap->RecordState(m_SectionList.size())) {
-        if (NewSection()) {
-            int result;
+    if (!m_pHeap->RecordState(m_SectionList.size()))
+        return -1;
 
-            result = m_SectionList.size() - 1;
-            return result;
-        }
-
+    if (!NewSection()) {
         m_pHeap->FreeByState(0);
+        return -1;
     }
 
-    return -1;
+    int result{m_SectionList.size() - 1};
+    return result;
 }
 
 bool FrameHeap::NewSection() {
