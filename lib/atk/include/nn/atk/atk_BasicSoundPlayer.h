@@ -85,15 +85,83 @@ public:
 #if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
     void SetTvAdditionalParamAddr(OutputAdditionalParam* pParam) { m_pTvAdditionalParam = pParam; }
 
-    const OutputAdditionalParam* GetTvAdditionalParamAddr() const { return m_pTvAdditionalParam; }
+    const OutputAdditionalParam* const GetTvAdditionalParamAddr() const {
+        return m_pTvAdditionalParam;
+    }
 
-    void SetTvAdditionalSend(int bus, float send);
-    void SetTvBusMixVolumeUsed(bool isUsed);
-    void SetTvBusMixVolume(const OutputBusMixVolume& busMixVolume);
-    void SetTvBusMixVolumeEnabled(int bus, bool isEnabled);
-    void SetTvBinaryVolume(float volume);
-    void SetTvVolumeThroughModeUsed(bool isVolumeThroughModeEnabled);
-    void SetTvVolumeThroughMode(int bus, uint8_t volumeThroughMode);
+    void SetTvAdditionalSend(int bus, float send) {
+        if (m_pTvAdditionalParam == nullptr)
+            return;
+
+        if (!m_pTvAdditionalParam->IsAdditionalSendEnabled())
+            return;
+
+        m_pTvAdditionalParam->TrySetAdditionalSend(bus, send);
+    }
+
+    void SetTvBusMixVolumeUsed(bool isUsed) {
+        if (m_pTvAdditionalParam == nullptr)
+            return;
+
+        if (!m_pTvAdditionalParam->IsBusMixVolumeUsed())
+            return;
+
+        m_pTvAdditionalParam->SetBusMixVolumeUsed(isUsed);
+    }
+
+    void SetTvBusMixVolume(const OutputBusMixVolume& busMixVolume) {
+        if (m_pTvAdditionalParam == nullptr)
+            return;
+
+        if (!m_pTvAdditionalParam->IsBusMixVolumeEnabled())
+            return;
+
+        m_pTvAdditionalParam->SetBusMixVolume(busMixVolume);
+    }
+
+    void SetTvBusMixVolumeEnabled(int bus, bool isEnabled) {
+        if (m_pTvAdditionalParam == nullptr)
+            return;
+
+        if (!m_pTvAdditionalParam->IsBusMixVolumeEnabled())
+            return;
+
+        m_pTvAdditionalParam->SetBusMixVolumeEnabledForBus(bus, isEnabled);
+    }
+
+    void SetTvBinaryVolume(float volume) {
+        if (m_pTvAdditionalParam == nullptr)
+            return;
+
+        if (!m_pTvAdditionalParam->IsVolumeThroughModeEnabled())
+            return;
+
+        m_pTvAdditionalParam->SetBinaryVolume(volume);
+    }
+
+    void SetTvVolumeThroughModeUsed(bool isVolumeThroughModeEnabled) {
+        if (m_pTvAdditionalParam == nullptr)
+            return;
+
+        if (!m_pTvAdditionalParam->IsVolumeThroughModeEnabled())
+            return;
+
+        m_pTvAdditionalParam->SetVolumeThroughModeUsed(isVolumeThroughModeEnabled);
+    }
+
+    void SetTvVolumeThroughMode(int bus, uint8_t volumeThroughMode) {
+        if (m_pTvAdditionalParam == nullptr)
+            return;
+
+        if (!m_pTvAdditionalParam->IsVolumeThroughModeEnabled())
+            return;
+
+        if (bus < 0)
+            return;
+
+        m_pTvAdditionalParam->GetVolumeThroughModePacketAddr()->TrySetVolumeThroughMode(
+            bus, volumeThroughMode);
+    }
 
     void SetTvAdditionalParam(const OutputAdditionalParam& param) { *m_pTvAdditionalParam = param; }
 #endif

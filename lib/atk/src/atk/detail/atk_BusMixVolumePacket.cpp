@@ -9,4 +9,13 @@ size_t BusMixVolumePacket::GetRequiredMemSize(int busCount) {
     return result;
 }
 
+bool BusMixVolumePacket::Initialize(void* buffer, [[maybe_unused]] size_t size, int busCount) {
+    m_pIsEnabledTable = static_cast<bool*>(buffer);
+    for (int i{0}; i < busCount; ++i)
+        m_pIsEnabledTable[i] = false;
+
+    m_BusCount = busCount;
+    return true;
+}
+
 }  // namespace nn::atk::detail
