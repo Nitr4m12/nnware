@@ -24,4 +24,11 @@ void BusMixVolumePacket::Finalize() {
     m_BusCount = 0;
 }
 
+void BusMixVolumePacket::Reset() {
+    m_BusMixVolume.Initialize();
+    m_IsUsed = false;
+    for (int i{0}; i < m_BusCount; ++i)
+        m_pIsEnabledTable[i] = false;
+}
+
 }  // namespace nn::atk::detail

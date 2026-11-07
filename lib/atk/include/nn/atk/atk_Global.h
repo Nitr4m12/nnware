@@ -452,7 +452,12 @@ static_assert(sizeof(OutputParam) == 0x50);
 struct OutputBusMixVolume {
     float volume[WaveChannelMax][OutputMix::ChannelCountMax];
 
-    void Initialize();
+    void Initialize() {
+        for (int i{0}; i < WaveChannelMax; ++i) {
+            for (int j{0}; j < OutputMix::ChannelCountMax; ++j)
+                volume[i][j] = 1.0f;
+        }
+    }
 };
 static_assert(sizeof(OutputBusMixVolume) == 0xc0);
 
