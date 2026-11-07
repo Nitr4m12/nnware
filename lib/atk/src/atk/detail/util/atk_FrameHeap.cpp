@@ -97,6 +97,10 @@ bool FrameHeap::NewSection() {
     return false;
 }
 
+int32_t FrameHeap::GetCurrentLevel() const {
+    return m_SectionList.size() - 1;
+}
+
 size_t FrameHeap::GetSize() const {
     return fnd::GetOffsetFromPtr(m_pHeap, m_pHeap->GetHeapEndAddress());
 }
