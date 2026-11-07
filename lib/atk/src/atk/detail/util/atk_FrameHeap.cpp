@@ -97,6 +97,10 @@ bool FrameHeap::NewSection() {
     return false;
 }
 
+size_t FrameHeap::GetSize() const {
+    return fnd::GetOffsetFromPtr(m_pHeap, m_pHeap->GetHeapEndAddress());
+}
+
 // NON_MATCHING: bad implementation
 // Commented out to prevent inlining in other functions
 // void FrameHeap::ClearSection() {

@@ -40,8 +40,8 @@ public:
     static HeapBase* FindContainHeap(const void* memBlock);
     static HeapBase* FindParentHeap(const HeapBase* pChild);
 
-    void* GetHeapStartAddress();
-    void* GetHeapEndAddress();
+    void* GetHeapStartAddress() { return mHeapStart; }
+    void* GetHeapEndAddress() { return mHeapEnd; }
 
     size_t GetTotalSize();
     size_t GetTotalUsableSize();
