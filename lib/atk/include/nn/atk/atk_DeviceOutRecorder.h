@@ -149,16 +149,16 @@ public:
 
     bool IsInitialized() const { return m_State != State_NotInitialized; }
 
-    State GetState() const;
+    State GetState() const { return m_State; }
 
-    bool IsLeadSilenceTrimming() const;
+    bool IsLeadSilenceTrimming() const { return m_IsLeadSilenceTrimming; }
 
-    uint32_t GetRecordingChannels() const;
+    uint32_t GetRecordingChannels() const { return m_Channels; }
 
     void RecordSamples(const int16_t* sampleBuffer, uint32_t samples);
 
 protected:
-    OutputMode GetOutputMode() const;
+    OutputMode GetOutputMode() const { return m_OutputMode; }
 
     virtual uint32_t GetMaxFrameLength() const = 0;
     virtual uint32_t GetSamplesPerSec() const = 0;

@@ -438,7 +438,6 @@ void DeviceOutRecorder::OnRequestStop() {
 
 void DeviceOutRecorder::OnExit() {}
 
-// NON_MATCHING
 uint32_t DeviceOutRecorder::GetLeadSilenceSamples(const int16_t* sampleBuffer, uint32_t samples,
                                                   uint32_t channels) const {
     if (samples == 0)
@@ -452,8 +451,8 @@ uint32_t DeviceOutRecorder::GetLeadSilenceSamples(const int16_t* sampleBuffer, u
 
     for (uint32_t frameLeadIndex{0}; result < samples; result += channels, ++frameLeadIndex) {
         bool isSilentFrame{true};
-        for (uint32_t sampleOffset{result}; sampleOffset < channels; ++sampleOffset) {
-            isSilentFrame = sampleBuffer[sampleOffset] != 0;
+        for (uint32_t sampleOffset{0}; sampleOffset < channels; ++sampleOffset) {
+            isSilentFrame = sampleBuffer[result + sampleOffset] != 0;
             if (isSilentFrame)
                 return result;
         }
