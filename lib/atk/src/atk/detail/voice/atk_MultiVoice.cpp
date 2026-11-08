@@ -454,8 +454,6 @@ void MultiVoice::SetOutputParamImpl(const OutputParam& in, OutputParam& out) {
 }
 
 #if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
-// NON_MATCHING: requires MultiVoice::SetOutputVolumeThroughModePacketImpl and missing m_SyncFlag
-// set
 void MultiVoice::SetOutputAdditionalParamImpl(
     const SendArray* const pAdditionalSend, const BusMixVolumePacket* const pBusMixVolumePacket,
     const OutputBusMixVolume* const pBusMixVolume,
@@ -463,26 +461,24 @@ void MultiVoice::SetOutputAdditionalParamImpl(
     if (m_pTvAdditionalParam == nullptr)
         return;
 
-    if (pAdditionalSend != nullptr && m_pTvAdditionalParam->IsAdditionalSendEnabled()) {
+    if (m_pTvAdditionalParam->IsAdditionalSendEnabled() && pAdditionalSend != nullptr) {
         const int BusCount{m_pOutputReceiver->GetBusCount()};
-        if (BusCount > DefaultBusCount) {
-            for (int i{DefaultBusCount}; i < BusCount; ++i) {
-                float send{pAdditionalSend->TryGetValue(i - 4)};
-                if (send != m_pTvAdditionalParam->TryGetAdditionalSend(i)) {
-                    m_pTvAdditionalParam->TrySetAdditionalSend(i, send);
-                    m_SyncFlag |= UpdateMix;
-                }
+        for (int i{DefaultBusCount}; i < BusCount; ++i) {
+            float send{pAdditionalSend->TryGetValue(i - 4)};
+            if (send != m_pTvAdditionalParam->TryGetAdditionalSend(i)) {
+                m_pTvAdditionalParam->TrySetAdditionalSend(i, send);
+                m_SyncFlag |= UpdateMix;
             }
         }
     }
 
-    if (pBusMixVolume != nullptr && pBusMixVolumePacket != nullptr &&
-        m_pTvAdditionalParam->IsBusMixVolumeEnabled()) {
+    if (m_pTvAdditionalParam->IsBusMixVolumeEnabled() && pBusMixVolumePacket != nullptr &&
+        pBusMixVolume != nullptr) {
         SetOutputBusMixVolumeImpl(*pBusMixVolumePacket, *pBusMixVolume,
                                   *m_pTvAdditionalParam->GetBusMixVolumePacketAddr());
     }
 
-    if (pVolumeThroughModePacket != nullptr && m_pTvAdditionalParam->IsVolumeThroughModeEnabled()) {
+    if (m_pTvAdditionalParam->IsVolumeThroughModeEnabled() && pVolumeThroughModePacket != nullptr) {
         SetOutputVolumeThroughModePacketImpl(
             *pVolumeThroughModePacket, *m_pTvAdditionalParam->GetVolumeThroughModePacketAddr());
     }
