@@ -139,26 +139,31 @@ detail::fnd::FileStream* FsSoundArchive::OpenStream(void* buffer, size_t size, p
     if (size < sizeof(detail::fnd::FileStreamProxy))
         return nullptr;
 
-    auto* stream{new (buffer) detail::fnd::FileStreamProxy(&m_FileStream, begin, length)};
+    detail::fnd::FileStreamProxy* stream{};
+    stream = new (buffer) detail::fnd::FileStreamProxy(&m_FileStream, begin, length);
+
     return stream;
 }
 
-// NON_MATCHING
 detail::fnd::FileStream* FsSoundArchive::OpenExtStream(void* buffer, size_t size,
                                                        const char* extFilePath, void* cacheBuffer,
                                                        size_t cacheSize) const {
+    if (!m_IsOpened)
+        return nullptr;
+
+    if (size < sizeof(detail::fnd::FileStreamImpl))
+        return nullptr;
+
     detail::fnd::FileStream* fileStream{};
-    if (size >= sizeof(detail::fnd::FileStreamImpl) && m_IsOpened) {
-        fileStream = new (buffer) detail::fnd::FileStreamImpl();
+    fileStream = new (buffer) detail::fnd::FileStreamImpl();
 
-        fileStream->Open(extFilePath, detail::fnd::FileStreamImpl::AccessMode_Read);
+    fileStream->Open(extFilePath, detail::fnd::FileStreamImpl::AccessMode_Read);
 
-        if (!fileStream->IsOpened()) {
-            fileStream = nullptr;
-        } else {
-            if (cacheBuffer != nullptr && cacheSize != 0)
-                fileStream->EnableCache(cacheBuffer, cacheSize);
-        }
+    if (!fileStream->IsOpened()) {
+        fileStream = nullptr;
+    } else {
+        if (cacheBuffer != nullptr && cacheSize != 0)
+            fileStream->EnableCache(cacheBuffer, cacheSize);
     }
 
     return fileStream;
