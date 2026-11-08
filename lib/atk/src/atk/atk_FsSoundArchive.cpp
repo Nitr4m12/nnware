@@ -131,14 +131,15 @@ void FsSoundArchive::FileAccessEnd() const {
     }
 }
 
-// NON_MATCHING
 detail::fnd::FileStream* FsSoundArchive::OpenStream(void* buffer, size_t size, position_t begin,
                                                     size_t length) const {
-    detail::fnd::FileStream* stream{};
-    if (size >= sizeof(detail::fnd::FileStreamProxy) && m_IsOpened) {
-        stream = new (buffer) detail::fnd::FileStreamProxy(&m_FileStream, begin, length);
-    }
+    if (!m_IsOpened)
+        return nullptr;
 
+    if (size < sizeof(detail::fnd::FileStreamProxy))
+        return nullptr;
+
+    auto* stream{new (buffer) detail::fnd::FileStreamProxy(&m_FileStream, begin, length)};
     return stream;
 }
 
