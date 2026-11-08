@@ -255,7 +255,6 @@ int SequenceTrack::GetChannelCount() const {
     return count;
 }
 
-// NON_MATCHING: the logic inside the channel != nullptr loop seems to be missing something
 void SequenceTrack::ChannelCallbackFunc(Channel* dropChannel,
                                         [[maybe_unused]] Channel::ChannelCallbackStatus status,
                                         void* userData) {
@@ -270,13 +269,11 @@ void SequenceTrack::ChannelCallbackFunc(Channel* dropChannel,
         return;
     }
 
-    while (channel != nullptr) {
-        if (channel == dropChannel) {
+    for (; channel->GetNextTrackChannel() != nullptr; channel = channel->GetNextTrackChannel()) {
+        if (channel->GetNextTrackChannel() == dropChannel) {
             channel->SetNextTrackChannel(dropChannel->GetNextTrackChannel());
-            return;
+            break;
         }
-
-        channel = channel->GetNextTrackChannel();
     }
 }
 
