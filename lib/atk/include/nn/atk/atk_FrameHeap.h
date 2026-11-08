@@ -34,9 +34,9 @@ public:
 
         size_t GetBufferSize() const { return m_Size; }
         DisposeCallback GetDisposeCallback() const { return m_Callback; }
-        void* GetDisposeCallbackArg() const { return m_pCallbackArg; }
+        const void* GetDisposeCallbackArg() const { return m_pCallbackArg; }
         HeapCallback GetHeapCallback() const { return m_HeapCallback; }
-        void* GetHeapCallbackArg() const { return m_pHeapCallbackArg; }
+        const void* GetHeapCallbackArg() const { return m_pHeapCallbackArg; }
 
         util::IntrusiveListNode m_Link;
 

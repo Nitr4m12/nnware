@@ -80,6 +80,62 @@ int FrameHeap::SaveState() {
     return result;
 }
 
+bool FrameHeap::ProcessCallback(int level) {
+    void* begin{};
+    void* end{};
+    DisposeCallback callback{};
+    const void* callbackArg{};
+    HeapCallback heapCallback{};
+    const void* heapCallbackArg{};
+    bool isSameCallback{true};
+    bool useCallback{false};
+
+    int sectionCount{m_SectionList.size()};
+    for (auto itr{m_SectionList.end()}; itr != m_SectionList.begin();) {
+        --sectionCount;
+        auto curItr{--itr};
+        begin = &*curItr;
+
+        BlockList& list{curItr->GetBlockList()};
+        if (end == nullptr && list.size() - 1 >= 0) {
+            const Block& last{list.back()};
+            end = const_cast<void*>(
+                util::ConstBytePtr(last.GetBufferAddr(), last.GetBufferSize()).Get());
+            callback = last.GetDisposeCallback();
+            callbackArg = last.GetDisposeCallbackArg();
+            heapCallback = last.GetHeapCallback();
+            heapCallbackArg = last.GetHeapCallbackArg();
+        }
+
+        for (auto blockItr{list.begin()}; blockItr != list.end();) {
+            auto curBlockItr{blockItr++};
+            DisposeCallback cb{curBlockItr->GetDisposeCallback()};
+            const void* cbArg{curBlockItr->GetDisposeCallbackArg()};
+            HeapCallback hcb{curBlockItr->GetHeapCallback()};
+            const void* hcbArg{curBlockItr->GetHeapCallbackArg()};
+
+            if (callback != cb || callbackArg != cbArg || heapCallback != hcb ||
+                heapCallbackArg != hcbArg) {
+                isSameCallback = false;
+                break;
+            }
+        }
+
+        if (sectionCount == level)
+            break;
+        begin = nullptr;
+    }
+
+    useCallback = isSameCallback && end != nullptr;
+    if (!useCallback)
+        return false;
+
+    if (callback != nullptr)
+        callback(begin, util::BytePtr(begin).Distance(end), const_cast<void*>(callbackArg));
+
+    return true;
+}
+
 void FrameHeap::LoadState(int level) {
     if (level == 0) {
         Clear();
