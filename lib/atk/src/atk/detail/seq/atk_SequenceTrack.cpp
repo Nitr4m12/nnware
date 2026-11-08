@@ -163,7 +163,6 @@ void SequenceTrack::UpdateChannelRelease(Channel* channel) {
         channel->NoteOff();
 }
 
-// NON_MATCHING
 int SequenceTrack::ParseNextTick(bool doNoteOn) {
     if (!m_OpenFlag)
         return 0;
@@ -183,26 +182,22 @@ int SequenceTrack::ParseNextTick(bool doNoteOn) {
 
     if (m_ParserTrackParam.wait > 0) {
         --m_ParserTrackParam.wait;
-        if (m_ParserTrackParam.wait != 0)
+        if (m_ParserTrackParam.wait > 0)
             return 1;
     }
 
-    if (m_ParserTrackParam.currentAddr != nullptr && m_ParserTrackParam.wait == 0) {
+    if (m_ParserTrackParam.currentAddr != nullptr) {
         int counter{0};
         const int CounterMax{10000};
 
-        while (m_ParserTrackParam.wait == 0) {
-            if (m_ParserTrackParam.noteFinishWait)
-                return 1;
-
-            if (counter > CounterMax - 1)
-                return 1;
+        while (m_ParserTrackParam.wait == 0 && !m_ParserTrackParam.noteFinishWait) {
+            ++counter;
+            if (counter > CounterMax)
+                break;
 
             ParseResult result{Parse(doNoteOn)};
             if (result == ParseResult_Finish)
                 return -1;
-
-            ++counter;
         }
     }
 
