@@ -519,19 +519,17 @@ void MultiVoice::SetOutputBusMixVolumeImpl(const BusMixVolumePacket& in,
     }
 }
 
-// WIP
 void MultiVoice::SetOutputVolumeThroughModePacketImpl(const VolumeThroughModePacket& in,
                                                       VolumeThroughModePacket& out) {
     bool isChanged{false};
     bool volumeThroughModeUsed{in.IsVolumeThroughModeUsed()};
     if (volumeThroughModeUsed != out.IsVolumeThroughModeUsed()) {
         out.SetVolumeThroughModeUsed(volumeThroughModeUsed);
-        if (!out.IsVolumeThroughModeUsed()) {
-            m_SyncFlag |= (UpdateVe | UpdateMix);
-            return;
-        }
-        isChanged = true;
-    } else {
+        if (!out.IsVolumeThroughModeUsed())
+            isChanged = true;
+    }
+
+    if (isChanged) {
         m_SyncFlag |= (UpdateVe | UpdateMix);
         return;
     }
