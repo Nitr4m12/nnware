@@ -11,21 +11,20 @@ class FsSoundArchive : public SoundArchive {
 public:
     static const int BufferAlignSize{64};
 
-    struct OpenArg {};
+    struct OpenArg {};  // TODO
 
     FsSoundArchive();
     ~FsSoundArchive() override;
 
     bool Open(const char* path);
-    bool Open(const char* path, const OpenArg* arg);
+    bool Open(const char* path, const OpenArg* arg); // TODO
+
     void Close();
 
-    size_t GetHeaderSize() const;
-
+    size_t GetHeaderSize() const { return m_ArchiveReader.GetInfoBlockSize(); }
     bool LoadHeader(void* buffer, size_t size);
 
-    size_t GetLabelStringDataSize() const;
-
+    size_t GetLabelStringDataSize() const { return m_ArchiveReader.GetStringBlockSize(); }
     bool LoadLabelStringData(void* buffer, size_t size);
 
     size_t detail_GetRequiredStreamBufferSize() const override;
@@ -33,8 +32,10 @@ public:
 
     enum FileAccessMode { FileAccessMode_Always, FileAccessMode_InFunction };
 
-    void SetFileAccessMode(FileAccessMode value);
-    FileAccessMode GetFileAccessMode() const;
+    void SetFileAccessMode(FileAccessMode value) { m_FileAccessMode = value; }
+    FileAccessMode GetFileAccessMode() const {
+        return static_cast<FileAccessMode>(m_FileAccessMode);
+    }
 
     void FileAccessBegin() const override;
     void FileAccessEnd() const override;

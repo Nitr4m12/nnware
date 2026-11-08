@@ -2,6 +2,8 @@
 
 #include <new>
 
+#include <nn/util/util_StringUtil.h>
+
 #include <nn/atk/fnd/io/atkfnd_FileStreamProxy.h>
 #include <nn/atk/fnd/os/atkfnd_ScopedLock.h>
 
@@ -11,6 +13,44 @@ FsSoundArchive::FsSoundArchive() = default;
 
 FsSoundArchive::~FsSoundArchive() {
     Close();
+}
+
+bool FsSoundArchive::Open(const char* path) {
+    detail::fnd::FndResult openResult{
+        m_FileStream.Open(path, detail::fnd::FileStream::AccessMode_Read),
+    };
+    if (openResult.IsFailed())
+        return false;
+
+    ++m_FileAccessCount;
+    m_IsOpened = true;
+    bool result{LoadFileHeader()};
+    if (!result)
+        return false;
+
+    FileAccessEnd();
+
+    char pathDir[FilePathMax];
+    pathDir[0] = '\0';
+
+    {
+        int32_t pathLen{static_cast<int32_t>(std::strlen(path))};
+        if (pathLen >= FilePathMax)
+            return false;
+
+        for (int i{pathLen - 1}; i >= 0; --i) {
+            const char ch{path[i]};
+            if (ch == '\\' || ch == '/') {
+                util::Strlcpy(pathDir, path, std::min(FilePathMax, i + 1));
+                pathDir[i] = '\0';
+                break;
+            }
+        }
+    }
+
+    SetExternalFileRoot(pathDir);
+    util::SNPrintf(m_SoundArchiveFullPath, FilePathMax, "%s", path);
+    return true;
 }
 
 void FsSoundArchive::Close() {
