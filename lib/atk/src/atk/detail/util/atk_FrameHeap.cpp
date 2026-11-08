@@ -80,6 +80,28 @@ int FrameHeap::SaveState() {
     return result;
 }
 
+void FrameHeap::LoadState(int level) {
+    if (level == 0) {
+        Clear();
+        return;
+    }
+
+    bool alreadyUseCallback{ProcessCallback(level)};
+    while (m_SectionList.size() > level) {
+        auto& section{m_SectionList.back()};
+
+        if (alreadyUseCallback)
+            section.SetUseCallback(false);
+
+        section.~Section();
+        m_SectionList.erase(m_SectionList.iterator_to(section));
+    }
+
+    [[maybe_unused]] int32_t result{m_pHeap->FreeByState(level)};
+    m_pHeap->RecordState(m_SectionList.size());
+    [[maybe_unused]] bool result2{NewSection()};
+}
+
 bool FrameHeap::NewSection() {
     void* buffer{m_pHeap->Alloc(sizeof(Section), fnd::HeapBase::DefaultAlignment)};
 
