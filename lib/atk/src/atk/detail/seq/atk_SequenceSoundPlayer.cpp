@@ -767,7 +767,78 @@ bool SequenceSoundLoader::IsInUse() {
     return !m_Task.TryWait() || !m_FreePlayerHeapTask.TryWait();
 }
 
-// TODO: SequenceSoundLoader::DataLoadTask::Execute
+void SequenceSoundLoader::DataLoadTask::Execute([[maybe_unused]] TaskProfileLogger& logger) {
+    m_pPlayerHeapDataManager->Initialize(m_Arg.soundArchive);
+    if (m_Arg.loadInfoSeq.address == nullptr) {
+        SoundArchive::ItemId soundId{m_Arg.loadInfoSeq.itemId};
+        if (soundId != SoundArchive::InvalidId) {
+            if (!m_pPlayerHeapDataManager->LoadData(soundId, m_pPlayerHeap,
+                                                    SoundArchiveLoader::LoadFlag_Seq, 0)) {
+                m_pPlayerHeap->SetState(PlayerHeap::State_TaskFinished);
+                m_IsLoadSuccess = false;
+                return;
+            }
+
+            m_Arg.loadInfoSeq.address =
+                m_pPlayerHeapDataManager->detail_GetFileAddressByItemId(soundId);
+        }
+    }
+
+    LoadItemInfo warcInfos[SeqBankMax];
+    bool isLoadIndividuals[SeqBankMax]{};
+
+    for (int i{0}; i < SeqBankMax; ++i) {
+        if (m_Arg.loadInfoBanks[i].address == nullptr) {
+            SoundArchive::ItemId bankId{m_Arg.loadInfoBanks[i].itemId};
+            if (bankId != SoundArchive::InvalidId) {
+                if (!m_pPlayerHeapDataManager->LoadData(bankId, m_pPlayerHeap,
+                                                        SoundArchiveLoader::LoadFlag_Bank, 0)) {
+                    m_pPlayerHeap->SetState(PlayerHeap::State_TaskFinished);
+                    m_IsLoadSuccess = false;
+                    return;
+                }
+
+                m_Arg.loadInfoBanks[i].address =
+                    m_pPlayerHeapDataManager->detail_GetFileAddressByItemId(bankId);
+            }
+        }
+
+        if (m_Arg.loadInfoBanks[i].itemId != SoundArchive::InvalidId &&
+            m_Arg.loadInfoBanks[i].address != nullptr) {
+            Util::WaveArchiveLoadStatus status{
+                Util::GetWaveArchiveOfBank(warcInfos[i], isLoadIndividuals[i],
+                                           m_Arg.loadInfoBanks[i].address, *m_Arg.soundArchive,
+                                           *m_Arg.soundDataManager),
+            };
+            switch (status) {
+            case Util::WaveArchiveLoadStatus_NotYet:
+            case Util::WaveArchiveLoadStatus_Partly:
+                if (!m_pPlayerHeapDataManager->detail_LoadWaveArchiveByBankFile(
+                        m_Arg.loadInfoBanks[i].address, m_pPlayerHeap)) {
+                    m_pPlayerHeap->SetState(PlayerHeap::State_TaskFinished);
+                    m_IsLoadSuccess = false;
+                    return;
+                }
+                Util::GetWaveArchiveOfBank(warcInfos[i], isLoadIndividuals[i],
+                                           m_Arg.loadInfoBanks[i].address, *m_Arg.soundArchive,
+                                           *m_pPlayerHeapDataManager);
+                break;
+            default:
+                break;
+            }
+        }
+    }
+
+    m_Data.seqFile = m_Arg.loadInfoSeq.address;
+    for (int i{0}; i < SeqBankMax; ++i) {
+        m_Data.bankFiles[i] = m_Arg.loadInfoBanks[i].address;
+        m_Data.warcFiles[i] = warcInfos[i].address;
+        m_Data.warcIsIndividuals[i] = isLoadIndividuals[i];
+    }
+
+    m_pPlayerHeap->SetState(PlayerHeap::State_TaskFinished);
+    m_IsLoadSuccess = true;
+}
 
 void SequenceSoundLoader::FreePlayerHeapTask::Execute([[maybe_unused]] TaskProfileLogger& logger) {
     if (m_pPlayerHeap != nullptr) {
