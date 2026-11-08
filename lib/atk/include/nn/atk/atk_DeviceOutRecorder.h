@@ -94,7 +94,7 @@ public:
 
         uint32_t GetWritableCount() const;
         uint32_t GetContiguousReadableCount() const;
-        const char* GetDeviceName() const;
+        const char* GetDeviceName() const; // TODO
 
     private:
         struct WriteState {
@@ -168,7 +168,7 @@ protected:
     virtual void OnStop();
     virtual uint32_t OnProcessSamples(int16_t* sampleBuffer, uint32_t samples);
 
-    int16_t ResolveSampleEndian(int16_t sample);
+    int16_t ResolveSampleEndian(int16_t sample); // TODO
 
     uint32_t Run(void* param) override;
 

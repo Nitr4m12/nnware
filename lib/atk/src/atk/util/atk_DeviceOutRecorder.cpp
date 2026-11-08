@@ -394,36 +394,40 @@ int32_t DeviceOutRecorder::OnPrepare() {
     return 0;
 }
 
-// NON_MATCHING: requires DeviceOutRecorder::GetLeadSilenceSamples
 bool DeviceOutRecorder::OnWriteSamples(bool isForceWriteMode) {
     if (!IsInitialized())
         return false;
 
     while (m_State == State_Recording) {
         uint32_t samples{m_RecordingBuffer.GetContiguousReadableCount()};
-        if (m_RecordingBuffer.GetReadableCount() < m_WriteBlockPerSamples && !isForceWriteMode)
+        if (m_State == State_Recording && samples == m_RecordingBuffer.GetReadableCount() &&
+            samples < m_WriteBlockPerSamples && !isForceWriteMode)
             break;
 
         int16_t* sampleBuffer{m_RecordingBuffer.Peek()};
         if (sampleBuffer == nullptr)
             break;
 
+        uint32_t validSamples{samples};
+
         if (m_IsLeadSilenceTrimming) {
             uint32_t silenceSamples{GetLeadSilenceSamples(sampleBuffer, samples, m_Channels)};
             sampleBuffer += silenceSamples;
+            validSamples -= silenceSamples;
+            if (silenceSamples < samples)
+                m_IsLeadSilenceTrimming = false;
         }
 
-        if (!IsNoMoreSamples()) {
+        if (validSamples != 0 && !IsNoMoreSamples()) {
+            validSamples = GetWritableSamples(OnProcessSamples(sampleBuffer, validSamples));
+
             if (!m_WavOutStream.IsAvailable())
                 return false;
 
-            if (!m_Stream->IsOpened())
-                return false;
+            uint32_t writeLength{validSamples * 2};
+            [[maybe_unused]] size_t result{m_WavOutStream.Write(sampleBuffer, writeLength)};
 
-            uint32_t writeLength{GetWritableSamples(OnProcessSamples(sampleBuffer, samples)) * 2};
-            size_t result{m_WavOutStream.Write(sampleBuffer, writeLength)};
-
-            m_WrittenSamples += result;
+            m_WrittenSamples += validSamples;
         }
 
         m_RecordingBuffer.Pop(samples);
