@@ -6,11 +6,10 @@
 
 namespace nn::atk::detail::fnd {
 
-// NON_MATCHING
 inline size_t strncat(char* dst, size_t dstCount, const char* src, size_t srcCount) {
-    size_t length{strlen(src)};
-    if (length + srcCount + 1 < dstCount)
-        length = srcCount + 1;
+    size_t length{strlen(dst)};
+    if (length + srcCount < dstCount)
+        length = srcCount;
     else
         length = dstCount - 1 - length;
 

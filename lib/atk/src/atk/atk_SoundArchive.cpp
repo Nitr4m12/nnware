@@ -320,23 +320,22 @@ void SoundArchive::FileAccessBegin() const {}
 
 void SoundArchive::FileAccessEnd() const {}
 
-// NON_MATCHING: requires detail::fnd::strncat
 const char* SoundArchive::detail_GetExternalFileFullPath(const char* externalFilePath,
                                                          char* pathBuffer, size_t bufSize) const {
     if (*externalFilePath != '/') {
-        size_t dirLen{strlen(externalFilePath)};
-        size_t fileLen{strlen(m_ExtFileRoot)};
-        if (fileLen + dirLen < bufSize) {
-            if (bufSize > fileLen + 1)
-                bufSize += 1;
+        size_t fileLen{strlen(externalFilePath)};
+        size_t dirLen{strlen(m_ExtFileRoot)};
+        if (dirLen + fileLen >= bufSize)
+            return nullptr;
 
-            util::Strlcpy(pathBuffer, externalFilePath, static_cast<int>(bufSize));
-            detail::fnd::strncat(pathBuffer, bufSize, m_ExtFileRoot, fileLen);
-            pathBuffer[bufSize - 1] = '\0';
-            externalFilePath = pathBuffer;
-        } else {
-            externalFilePath = nullptr;
-        }
+        ++dirLen;
+        if (bufSize <= dirLen)
+            dirLen = bufSize;
+
+        util::Strlcpy(pathBuffer, m_ExtFileRoot, static_cast<int>(dirLen));
+        detail::fnd::strncat(pathBuffer, bufSize, externalFilePath, fileLen + 1);
+        pathBuffer[bufSize - 1] = '\0';
+        externalFilePath = pathBuffer;
     }
 
     return externalFilePath;
