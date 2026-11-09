@@ -312,6 +312,10 @@ public:
 
     const SequenceTrackAllocator* GetTrackAllocator() { return m_pSequenceTrackAllocator; }
 
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    int32_t GetSubMixIndex() const { return m_SubMixIndex; }
+#endif
+
     void Update();
 
     virtual void ChannelCallback(Channel* channel);
@@ -319,6 +323,8 @@ public:
     os::Tick GetProcessTick(const SoundProfile& profile);
 
 protected:
+    friend SequenceTrack;
+
     void PrepareForMidi(const void** banks, const void** warcs, bool* warcIsIndividuals);
 
 private:

@@ -1,6 +1,7 @@
 #include <nn/atk/atk_SequenceTrack.h>
 
 #include <nn/atk/atk_SequenceSoundPlayer.h>
+#include "nn/atk/atk_Bank.h"
 
 namespace nn::atk::detail::driver {
 
@@ -358,6 +359,109 @@ volatile int16_t* SequenceTrack::GetVariablePtr(int varNo) {
     return nullptr;
 }
 
-// TODO: SequenceTrack::NoteOn
+Channel* SequenceTrack::NoteOn(int key, int velocity, int length, bool tieFlag) {
+    const SequenceSoundPlayer::ParserPlayerParam& playerParam{
+        m_pSequenceSoundPlayer->GetParserPlayerParam(),
+    };
+    Channel* channel{};
+    velocity = (m_ParserTrackParam.velocityRange * velocity) / 127;
+    if (tieFlag) {
+        channel = GetLastChannel();
+        if (channel != nullptr) {
+            channel->SetKey(key);
+            channel->SetVelocity(Bank::CalcChannelVelocityVolume(velocity));
+        }
+    }
+
+    if (m_ParserTrackParam.monophonicFlag) {
+        channel = GetLastChannel();
+        if (channel != nullptr) {
+            if (channel->IsRelease()) {
+                channel->Stop();
+                channel->CallChannelCallback(Channel::ChannelCallbackStatus_Stopped);
+                Channel::FreeChannel(channel);
+                channel = nullptr;
+            } else {
+                channel->SetKey(key);
+                channel->SetVelocity(Bank::CalcChannelVelocityVolume(velocity));
+                channel->SetLength(length);
+            }
+        }
+    }
+
+    if (channel == nullptr) {
+        driver::NoteOnInfo noteOnInfo;
+        noteOnInfo.prgNo = m_ParserTrackParam.prgNo;
+        noteOnInfo.key = key;
+        noteOnInfo.velocity = velocity;
+        noteOnInfo.length = tieFlag ? -1 : length;
+        noteOnInfo.initPan = m_ParserTrackParam.initPan;
+        noteOnInfo.priority = playerParam.priority + m_ParserTrackParam.priority;
+        noteOnInfo.channelCallback = ChannelCallbackFunc;
+        noteOnInfo.channelCallbackData = this;
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+        noteOnInfo.pOutputReceiver = m_pSequenceSoundPlayer->GetOutputReceiver();
+#endif
+        noteOnInfo.updateType = m_pSequenceSoundPlayer->GetUpdateType();
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+        noteOnInfo.subMixIndex = m_pSequenceSoundPlayer->GetSubMixIndex();
+#endif
+
+        channel = m_pSequenceSoundPlayer->NoteOn(m_ParserTrackParam.bankIndex, noteOnInfo);
+        if (channel == nullptr)
+            return nullptr;
+
+        if (channel->GetKeyGroupId() > 0) {
+            for (Channel* itr{m_pChannelList}; itr != nullptr; itr = itr->GetNextTrackChannel()) {
+                if (itr->GetKeyGroupId() == channel->GetKeyGroupId()) {
+                    itr->SetRelease(126);
+                    itr->Release();
+                }
+            }
+        }
+
+        AddChannel(channel);
+    }
+
+    if (m_ParserTrackParam.attack <= MaxEnvelopeValue)
+        channel->SetAttack(m_ParserTrackParam.attack);
+
+    if (m_ParserTrackParam.decay <= MaxEnvelopeValue)
+        channel->SetDecay(m_ParserTrackParam.decay);
+
+    if (m_ParserTrackParam.sustain <= MaxEnvelopeValue)
+        channel->SetSustain(m_ParserTrackParam.sustain);
+
+    if (m_ParserTrackParam.release <= MaxEnvelopeValue)
+        channel->SetRelease(m_ParserTrackParam.release);
+
+    if (m_ParserTrackParam.envHold <= MaxEnvelopeValue)
+        channel->SetHold(m_ParserTrackParam.envHold);
+
+    float sweepPitch{m_ParserTrackParam.sweepPitch};
+    if (m_ParserTrackParam.portaFlag)
+        sweepPitch += m_ParserTrackParam.portaKey - key;
+
+    if (m_ParserTrackParam.portaTime != 0) {
+        int32_t sweepTime{m_ParserTrackParam.portaTime};
+        sweepTime *= m_ParserTrackParam.portaTime;
+        sweepTime = sweepTime * (sweepPitch >= 0.0f ? sweepPitch : -sweepPitch);
+        sweepTime >>= 5;
+        sweepTime *= 5;
+
+        channel->SetSweepParam(sweepPitch, sweepTime, true);
+    } else {
+        channel->SetSweepParam(sweepPitch, length, false);
+    }
+
+    m_ParserTrackParam.portaKey = key;
+
+    channel->SetSilence(m_ParserTrackParam.silenceFlag, 0);
+    channel->SetReleasePriorityFix(m_pSequenceSoundPlayer->IsReleasePriorityFix());
+    channel->SetPanMode(m_pSequenceSoundPlayer->GetPanMode());
+    channel->SetPanCurve(m_pSequenceSoundPlayer->GetPanCurve());
+
+    return channel;
+}
 
 }  // namespace nn::atk::detail::driver

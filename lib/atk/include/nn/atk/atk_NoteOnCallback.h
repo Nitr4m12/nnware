@@ -18,13 +18,16 @@ struct NoteOnInfo {
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
     UpdateType updateType;
     int subMixIndex;
-    int finalMixIndex;
 #else
     OutputReceiver* pOutputReceiver;
     UpdateType updateType;
 #endif
 };
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+static_assert(sizeof(NoteOnInfo) == 0x30);
+#else
 static_assert(sizeof(NoteOnInfo) == 0x38);
+#endif
 
 class NoteOnCallback {
 public:
