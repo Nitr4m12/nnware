@@ -1,7 +1,8 @@
 #include <nn/atk/atk_SequenceTrack.h>
 
+#include <nn/atk/atk_Bank.h>
 #include <nn/atk/atk_SequenceSoundPlayer.h>
-#include "nn/atk/atk_Bank.h"
+#include <nn/atk/fnd/basis/atkfnd_Inlines.h>
 
 namespace nn::atk::detail::driver {
 
@@ -221,7 +222,99 @@ void SequenceTrack::StopAllChannel() {
     m_pChannelList = nullptr;
 }
 
-// TODO: SequenceTrack::UpdateChannelParam
+void SequenceTrack::UpdateChannelParam() {
+    if (!m_OpenFlag)
+        return;
+
+    if (m_pChannelList == nullptr)
+        return;
+
+    float volume;
+    volume = m_ParserTrackParam.volume.GetValue() * m_ParserTrackParam.volume2.GetValue() *
+             m_pSequenceSoundPlayer->GetParserPlayerParam().volume.GetValue() / static_cast<float>(PauseReleaseValue * MuteReleaseValue * MaxEnvelopeValue);
+    volume = volume * volume * m_ExtVolume * m_pSequenceSoundPlayer->GetVolume();
+
+    float pitch{(m_ParserTrackParam.pitchBend.GetValue() / 128.0f) * m_ParserTrackParam.bendRange};
+
+    float pitchRatio{m_pSequenceSoundPlayer->GetPitch() * m_ExtPitch};
+
+    float lpfFreq{m_ParserTrackParam.lpfFreq + m_pSequenceSoundPlayer->GetLpfFreq()};
+
+    int32_t biquadType{m_ParserTrackParam.biquadType};
+    float biquadValue{m_ParserTrackParam.biquadValue};
+    if (m_pSequenceSoundPlayer->GetBiquadFilterType() != BiquadFilterType_Inherit) {
+        biquadType = m_pSequenceSoundPlayer->GetBiquadFilterType();
+        biquadValue = m_pSequenceSoundPlayer->GetBiquadFilterValue();
+    }
+
+    uint32_t outputLine{m_pSequenceSoundPlayer->GetOutputLine()};
+    if (m_ParserTrackParam.outputLine != -1)
+        outputLine = m_ParserTrackParam.outputLine;
+
+    float panBase{fnd::Clamp(m_ParserTrackParam.pan.GetValue() / 63.0f, -1.0f, 1.0f) * m_PanRange * m_pSequenceSoundPlayer->GetPanRange()};
+
+    float spanBase{fnd::Clamp(m_ParserTrackParam.surroundPan.GetValue() / 63.0f, 0.0f, 2.0f)};
+
+    float mainSendBase{static_cast<float>(m_ParserTrackParam.mainSend) / 127.0f - 1.0f};
+
+    float fxSendBase[AuxBus_Count];
+    for (int i{0}; i < AuxBus_Count; ++i)
+        fxSendBase[i] = m_ParserTrackParam.fxSend[i] / 127.0f;
+
+    OutputParam tvParam{m_pSequenceSoundPlayer->GetTvParam()};
+    {
+        tvParam.volume *= m_TvParam.volume;
+
+        for (int i{0}; i < WaveChannelMax; ++i) {
+            for (int j{0}; j < ChannelIndex_Count; ++j)
+                tvParam.mixParameter[i].ch[j] *= m_TvParam.mixParameter[i].ch[j];
+        }
+
+        tvParam.pan += panBase;
+        tvParam.pan += m_TvParam.pan;
+        tvParam.span += spanBase;
+        tvParam.span += m_TvParam.span;
+
+        const int BusCount{DefaultBusCount};
+        for (int i{0}; i < BusCount; ++i) {
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+            tvParam.send[i] += i < BusCount - AuxBus_Count ? mainSendBase : fxSendBase[i - 1];
+#endif
+            tvParam.send[i] += m_TvParam.send[i];
+        }
+
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+        for (int i{0}; i < BusCount; ++i) {
+            tvParam.send[i] += i < BusCount - AuxBus_Count ? mainSendBase : fxSendBase[i - 1];
+        }
+#endif
+    }
+
+    Channel* channel{m_pChannelList};
+    while (channel != nullptr) {
+        channel->SetUserVolume(volume);
+        channel->SetUserPitch(pitch);
+        channel->SetUserPitchRatio(pitchRatio);
+        channel->SetUserLpfFreq(lpfFreq);
+        channel->SetBiquadFilter(biquadType, biquadValue);
+        channel->SetOutputLine(outputLine);
+
+        for (int i{0}; i < Channel::ModCount; ++i) {
+            channel->SetLfoParam(m_ParserTrackParam.lfoParam[i], i);
+            channel->SetLfoTarget(static_cast<Channel::LfoTarget>(m_ParserTrackParam.lfoTarget[i]),
+                                  i);
+        }
+
+        channel->SetTvParam(tvParam);
+
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+        if (m_pSequenceSoundPlayer->GetTvAdditionalParamAddr() != nullptr)
+            channel->SetTvAdditionalParam(*m_pSequenceSoundPlayer->GetTvAdditionalParamAddr());
+#endif
+
+        channel = channel->GetNextTrackChannel();
+    }
+}
 
 void SequenceTrack::PauseAllChannel(bool flag) {
     Channel* channel{m_pChannelList};
