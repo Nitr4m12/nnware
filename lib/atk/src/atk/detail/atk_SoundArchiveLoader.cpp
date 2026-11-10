@@ -512,43 +512,45 @@ const void* SoundArchiveLoader::LoadWaveArchiveTable(SoundArchive::ItemId warcId
     return buffer;
 }
 
-// NON_MATCHING: something is wrong with they way ptr and restSize are checked and modified
+// NON_MATCHING: missing check for restSize in restSize > 0 loop
 size_t SoundArchiveLoader::ReadFile(SoundArchive::FileId fileId, void* buffer, size_t size,
                                     int offset, size_t loadBlockSize) {
     FileStreamHandle stream{m_pSoundArchive->detail_OpenFileStream(
         fileId, m_StreamArea, sizeof(m_StreamArea), nullptr, 0)};
 
-    if (stream && stream->CanSeek() && stream->CanRead()) {
-        stream->Seek(offset, fnd::FileStream::SeekOrigin_Begin);
+    if (!stream)
+        return 0;
 
-        if (loadBlockSize != 0) {
-            uint8_t* ptr{static_cast<uint8_t*>(buffer)};
-            size_t restSize{size};
+    if (!stream->CanSeek() || !stream->CanRead())
+        return 0;
 
-            while (restSize != 0) {
-                fnd::FndResult result;
-                size_t curReadingSize{std::min(loadBlockSize, restSize)};
-                size_t readByte{stream->Read(ptr, curReadingSize, &result)};
-                if (result.IsFailed())
-                    return 0;
+    stream->Seek(offset, fnd::FileStream::SeekOrigin_Begin);
 
-                ptr += readByte;
-                restSize -= readByte;
-                if (restSize + readByte <= readByte || restSize - readByte == 0)
-                    return restSize;
-            }
-        } else {
+    if (loadBlockSize == 0) {
+        fnd::FndResult result;
+        stream->Read(buffer, size, &result);
+        if (result.IsFailed())
+            return 0;
+    } else {
+        uint8_t* ptr{static_cast<uint8_t*>(buffer)};
+        size_t restSize{size};
+
+        while (restSize > 0) {
             fnd::FndResult result;
-            stream->Read(buffer, size, &result);
-            if (!result.IsFailed())
-                return size;
+            size_t curReadingSize{std::min(loadBlockSize, restSize)};
+            size_t readByte{stream->Read(ptr, curReadingSize, &result)};
+            if (result.IsFailed())
+                return 0;
+
+            restSize -= readByte;
+            if (restSize + readByte > readByte)
+                ptr += readByte;
         }
     }
 
-    return 0;
+    return size;
 }
 
-// NON_MATCHING: unknown reason
 bool SoundArchiveLoader::PostProcessForLoadedGroupFile(const void* pGroupFile,
                                                        SoundMemoryAllocatable* pAllocator,
                                                        size_t loadBlockSize) {
@@ -566,35 +568,30 @@ bool SoundArchiveLoader::PostProcessForLoadedGroupFile(const void* pGroupFile,
         else
             SetFileAddressToTable(info.fileId, info.address);
 
-        if (isLinkGroup) {
-            uint32_t groupItemInfoExCount{reader.GetGroupItemExCount()};
-            if (groupItemInfoExCount == 0)
-                return true;
+        if (isLinkGroup)
+            break;
+    }
 
-            for (uint32_t i{0}; i < groupItemInfoExCount; ++i) {
-                GroupFile::GroupItemInfoEx infoEx;
-                if (!reader.ReadGroupItemInfoEx(&infoEx, i))
-                    return false;
-
-                if (!LoadData(infoEx.itemId, pAllocator, infoEx.loadFlag, loadBlockSize))
-                    return false;
-            }
-
-            return true;
+    if (isLinkGroup) {
+        uint32_t groupItemInfoExCount{reader.GetGroupItemExCount()};
+        for (uint32_t i{0}; i < groupItemInfoExCount; ++i) {
+            GroupFile::GroupItemInfoEx infoEx;
+            if (reader.ReadGroupItemInfoEx(&infoEx, i) &&
+                !LoadData(infoEx.itemId, pAllocator, infoEx.loadFlag, loadBlockSize))
+                return false;
         }
+
+        return true;
     }
 
     uint32_t groupItemInfoExCount{reader.GetGroupItemExCount()};
-    if (groupItemInfoExCount == 0)
-        return true;
-
-    for (uint32_t i{0}; i != groupItemInfoExCount; ++i) {
+    for (uint32_t i{0}; i < groupItemInfoExCount; ++i) {
         GroupFile::GroupItemInfoEx infoEx;
         if (!reader.ReadGroupItemInfoEx(&infoEx, i))
-            break;
+            continue;
 
         if ((infoEx.loadFlag & LoadFlag_Warc) == 0)
-            break;
+            continue;
 
         switch (Util::GetItemType(infoEx.itemId)) {
         case ItemType_Sound: {
