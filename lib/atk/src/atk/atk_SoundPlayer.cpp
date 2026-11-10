@@ -166,7 +166,6 @@ void SoundPlayer::InsertPriorityList(detail::BasicSound* pSound) {
         if (m_IsFirstComeBased) {
             if (pSound->CalcCurrentPlayerPriority() <= itr->CalcCurrentPlayerPriority())
                 break;
-
         } else if (pSound->CalcCurrentPlayerPriority() < itr->CalcCurrentPlayerPriority()) {
             break;
         }
@@ -186,24 +185,29 @@ void SoundPlayer::detail_SortPriorityList(detail::BasicSound* pSound) {
     InsertPriorityList(pSound);
 }
 
-// NON_MATCHING: reason unknown
 bool SoundPlayer::detail_AppendSound(detail::BasicSound* pSound) {
     int allocPriority{pSound->CalcCurrentPlayerPriority()};
 
     if (GetPlayableSoundCount() == 0)
         return false;
 
-    while (GetPlayingSoundCount() > GetPlayableSoundCount()) {
+    while (GetPlayingSoundCount() >= GetPlayableSoundCount()) {
         detail::BasicSound* dropSound{GetLowestPrioritySound()};
-        if (allocPriority <= dropSound->CalcCurrentPlayerPriority()) {
-            InsertPriorityList(pSound);
-            pSound->AttachSoundPlayer(this);
-            return true;
+
+        if (m_IsFirstComeBased) {
+            if (allocPriority <= dropSound->CalcCurrentPlayerPriority())
+                return false;
+        } else if (allocPriority < dropSound->CalcCurrentPlayerPriority()) {
+            return false;
         }
+
         dropSound->Finalize();
     }
 
-    return false;
+    m_SoundList.push_back(*pSound);
+    InsertPriorityList(pSound);
+    pSound->AttachSoundPlayer(this);
+    return true;
 }
 
 void SoundPlayer::detail_RemoveSound(detail::BasicSound* pSound) {
@@ -234,9 +238,9 @@ bool SoundPlayer::detail_CanPlaySound(int startPriority) {
         if (m_IsFirstComeBased) {
             if (startPriority <= dropSound->CalcCurrentPlayerPriority())
                 return false;
-
-        } else if (startPriority < dropSound->CalcCurrentPlayerPriority())
+        } else if (startPriority < dropSound->CalcCurrentPlayerPriority()) {
             return false;
+        }
     }
 
     return true;
