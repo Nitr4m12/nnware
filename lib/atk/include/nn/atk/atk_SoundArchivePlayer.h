@@ -77,7 +77,9 @@ public:
     const AddonSoundArchive* GetAddonSoundArchive(const char* soundArchiveName) const;
     os::Tick GetAddonSoundArchiveLastAddTick() const { return m_AddonSoundArchiveLastAddTick; }
 
-    int32_t GetAddonSoundArchiveCount() const;
+    int32_t GetAddonSoundArchiveCount() const {
+        return m_SoundArchiveManager.GetAddonSoundArchiveCount();
+    }
 
     const AddonSoundArchive* GetAddonSoundArchive(int32_t index) const;
     const char* GetAddonSoundArchiveName(int32_t index) const;
@@ -214,7 +216,7 @@ public:
     }
 
     bool detail_SetupStreamBufferPool(void* buffer, size_t bufferSize,
-                                      detail::driver::StreamBufferPool* pool);
+                                      detail::driver::StreamBufferPool* pool); // TODO
 
     void AddAddonSoundArchive(const char* name, const AddonSoundArchive* pSoundArchive,
                               const SoundDataManager* pSoundDataManager);

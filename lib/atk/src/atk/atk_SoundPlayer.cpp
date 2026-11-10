@@ -125,6 +125,17 @@ float SoundPlayer::GetEffectSend(AuxBus bus) const {
     return m_TvParam.fxSend[bus];
 }
 
+void SoundPlayer::SetSend(int subMixBus, float send) {
+    if (subMixBus == 0) {
+        SetMainSend(send);
+    } else if (subMixBus < 4) {
+        SetEffectSend(static_cast<AuxBus>(subMixBus - 1), send);
+    } else if (m_pOutputAdditionalParam != nullptr) {
+        if (m_pOutputAdditionalParam->IsAdditionalSendEnabled())
+            m_pOutputAdditionalParam->TrySetAdditionalSend(subMixBus, send);
+    }
+}
+
 float SoundPlayer::GetSend(int subMixBus) {
     if (subMixBus == 0)
         return m_TvParam.mainSend;
