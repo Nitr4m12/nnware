@@ -583,6 +583,49 @@ bool SoundSystem::Initialize(Result* pOutResult, const SoundSystemParam& param,
     return result;
 }
 
+void SoundSystem::SetupInitializeBufferSet(InitializeBufferSet* pOutValue,
+                                           const SoundSystemParam& param,
+                                           const InitializeBufferSet& bufferSet) {
+    g_IsManagingMemoryPool = param.enableMemoryPoolManagement;
+    if (g_IsManagingMemoryPool) {
+        const uintptr_t workMemEnd{bufferSet.workMem + bufferSet.workMemSize};
+
+        const size_t memoryPoolMemSize{
+            util::align_up(GetRequiredMemSizeForMemoryPool(param),
+                           audio::MemoryPoolType::AddressAlignment),
+        };
+        const uintptr_t memoryPoolMem{
+            util::align_up(bufferSet.workMem, audio::MemoryPoolType::AddressAlignment),
+        };
+
+        pOutValue->workMem = memoryPoolMem + memoryPoolMemSize;
+        pOutValue->workMemSize = workMemEnd - pOutValue->workMem;
+        pOutValue->memoryPoolMem = memoryPoolMem;
+        pOutValue->memoryPoolMemSize = memoryPoolMemSize;
+    } else {
+        pOutValue->workMem = bufferSet.workMem;
+        pOutValue->workMemSize = bufferSet.workMemSize;
+        pOutValue->memoryPoolMem = bufferSet.memoryPoolMem;
+        pOutValue->memoryPoolMemSize = bufferSet.memoryPoolMemSize;
+    }
+
+    if (!param.enableCircularBufferSinkBufferManagement) {
+        pOutValue->circularBufferSinkMem = bufferSet.circularBufferSinkMem;
+        pOutValue->circularBufferSinkMemSize = bufferSet.circularBufferSinkMemSize;
+    } else if (!param.enableCircularBufferSink) {
+        pOutValue->circularBufferSinkMem = 0;
+        pOutValue->circularBufferSinkMemSize = 0;
+    } else {
+        const size_t circularBufferSinkMemSize{GetRequiredMemSizeForCircularBufferSink(param)};
+        const uintptr_t circularBufferSinkMem{pOutValue->workMem};
+
+        pOutValue->workMem = circularBufferSinkMem + circularBufferSinkMemSize;
+        pOutValue->workMemSize -= circularBufferSinkMemSize;
+        pOutValue->circularBufferSinkMem = circularBufferSinkMem;
+        pOutValue->circularBufferSinkMemSize = circularBufferSinkMemSize;
+    }
+}
+
 void SoundSystem::Finalize() {
     if (!g_IsInitialized)
         return;
