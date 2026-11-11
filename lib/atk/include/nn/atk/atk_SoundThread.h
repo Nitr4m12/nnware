@@ -69,7 +69,7 @@ public:
 
     void Finalize();
 
-    void Pause(bool flag);
+    void Pause(bool flag) { m_PauseFlag = flag; }
 
     uint32_t GetAxCallbackCounter() const { return m_AxCallbackCounter; }
 
@@ -114,7 +114,7 @@ public:
 
     void ForceWakeup();
 
-    int32_t GetRendererEventWaitTimeMilliSeconds();
+    int32_t GetRendererEventWaitTimeMilliSeconds() { return m_RendererEventWaitTimeMilliSeconds; }
 
 private:
     using SoundFrameCallbackList = util::IntrusiveList<

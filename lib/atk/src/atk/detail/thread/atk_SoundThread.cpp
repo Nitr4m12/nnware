@@ -321,7 +321,121 @@ void SoundThread::FrameProcess(UpdateType updateType) {
     m_LastPerformanceFrameEnd = endTick;
 }
 
-// TODO: SoundThread::RecordPerformanceInfo
+void SoundThread::RecordPerformanceInfo(audio::PerformanceInfo& src, os::Tick beginTick,
+                                        os::Tick endTick, uint32_t nwVoiceCount) {
+    if (m_ProfileReaderList.empty())
+        return;
+
+    SoundProfile dst;
+    int32_t numVoices{0};
+    int32_t totalVoiceProcessingTime{0};
+    int32_t performanceEntryCount{0};
+    const audio::PerformanceEntry* performanceEntries{src.GetEntries(&performanceEntryCount)};
+
+    dst.rendererFrameProcess.begin = 0;
+    dst.rendererFrameProcess.end = TimeSpan::FromMicroSeconds(src.GetTotalProcessingTime());
+
+    dst.voiceProcess.begin = 0;
+    for (int i{0}; i < performanceEntryCount; ++i) {
+        const audio::PerformanceEntry& performanceEntry{performanceEntries[i]};
+
+        TimeRange time;
+        time.begin = TimeSpan::FromMicroSeconds(performanceEntry.startTime);
+        time.end = TimeSpan::FromMicroSeconds(performanceEntry.startTime +
+                                              performanceEntry.processingTime);
+
+        switch (static_cast<uint8_t>(performanceEntry.entryType)) {
+        case audio::PerformanceEntryType_Voice:
+            totalVoiceProcessingTime += performanceEntry.processingTime;
+            dst._voiceIdTable[numVoices] = performanceEntry.id;
+            dst._voiceProcessTable[numVoices] = time;
+            ++numVoices;
+            break;
+        case audio::PerformanceEntryType_SubMix: {
+            const HardwareManager& hardwareManager{HardwareManager::GetInstance()};
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+            if (hardwareManager.IsPresetSubMixEnabled() &&
+                audio::GetSubMixNodeId(&hardwareManager.GetSubMix(0)) == performanceEntry.id) {
+                dst.mainMixProcess = time;
+                break;
+            }
+
+            if (hardwareManager.IsAdditionalEffectEnabled() &&
+                audio::GetSubMixNodeId(&hardwareManager.GetSubMix(1)) == performanceEntry.id) {
+                dst._additionalSubMixProcess = time;
+                break;
+            }
+#else
+            if (hardwareManager.IsPresetSubMixEnabled()) {
+                if (audio::GetSubMixNodeId(hardwareManager.GetSubMix(0).GetAudioSubMixInstance()) ==
+                    performanceEntry.id) {
+                    dst.mainMixProcess = time;
+                    break;
+                }
+
+                if (hardwareManager.IsAdditionalEffectEnabled() &&
+                    audio::GetSubMixNodeId(hardwareManager.GetSubMix(1).GetAudioSubMixInstance()) ==
+                        performanceEntry.id) {
+                    dst._additionalSubMixProcess = time;
+                    break;
+                }
+
+                break;
+            }
+
+            if (audio::GetSubMixNodeId(hardwareManager.GetSubMix(0).GetAudioSubMixInstance()) ==
+                performanceEntry.id) {
+                dst.mainMixProcess = time;
+                break;
+            }
+
+            if (hardwareManager.GetSubMixCount() > 1) {
+                if (audio::GetSubMixNodeId(hardwareManager.GetSubMix(1).GetAudioSubMixInstance()) ==
+                    performanceEntry.id) {
+                    dst._additionalSubMixProcess = time;
+                    break;
+                }
+            }
+#endif
+            break;
+        }
+        case audio::PerformanceEntryType_FinalMix:
+            dst.finalMixProcess = time;
+            break;
+        case audio::PerformanceEntryType_Sink: {
+            const HardwareManager& hardwareManager{HardwareManager::GetInstance()};
+            if (!m_IsUserThreadRenderingEnabled &&
+                audio::GetSinkNodeId(&hardwareManager.GetDeviceSink()) == performanceEntry.id) {
+                dst.sinkProcess = time;
+                break;
+            }
+
+            if (hardwareManager.GetUserCircularBufferSinkState() !=
+                    CircularBufferSinkState_Invalid &&
+                audio::GetSinkNodeId(&hardwareManager.GetUserCircularBufferSink()) ==
+                    performanceEntry.id) {
+                dst.circularBufferSinkProcess = time;
+                break;
+            }
+
+            break;
+        }
+        default:
+            break;
+        }
+    }
+
+    dst.nwFrameProcess.begin = beginTick;
+    dst.nwFrameProcess.end = endTick;
+    dst.voiceProcess.end = TimeSpan::FromMicroSeconds(totalVoiceProcessingTime);
+    dst.rendererVoiceCount = numVoices;
+    dst.nwVoiceCount = nwVoiceCount;
+    dst.totalVoiceCount = numVoices + nwVoiceCount;
+    dst.nwFrameProcessTick = (dst.nwFrameProcess.end - dst.nwFrameProcess.begin).GetInt64Value();
+
+    for (auto it{m_ProfileReaderList.begin()}; it != m_ProfileReaderList.end(); ++it)
+        it->Record(dst);
+}
 
 void SoundThread::EffectFrameProcess() {
     HardwareManager::GetInstance().UpdateEffect();
