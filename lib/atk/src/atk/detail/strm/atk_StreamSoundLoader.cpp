@@ -62,15 +62,22 @@ StreamSoundLoader::StreamSoundLoader() {
 StreamSoundLoader::~StreamSoundLoader() {
     WaitFinalize();
 
+#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
+    if (g_pStreamDataDecoderManager != nullptr) {
+        if (m_pStreamDataDecoder != nullptr) {
+            g_pStreamDataDecoderManager->FreeImpl(m_pStreamDataDecoder);
+            m_pStreamDataDecoder = nullptr;
+        }
+    }
+#else
     if (m_pStreamDataDecoderManager != nullptr) {
         if (m_pStreamDataDecoder != nullptr) {
             m_pStreamDataDecoderManager->FreeImpl(m_pStreamDataDecoder);
             m_pStreamDataDecoder = nullptr;
         }
-#if NN_WARE_VER >= NN_MAKE_VER(3, 0, 0)
         m_pStreamDataDecoderManager = nullptr;
-#endif
     }
+#endif
 
     m_StreamDataLoadTaskPool.Destroy();
 }
@@ -263,16 +270,24 @@ fnd::FndResult StreamSoundLoader::Open() {
     return fnd::FndResult{fnd::FndResultType_True};
 }
 
+void StreamSoundLoader::StreamDataLoadTask::Execute(TaskProfileLogger& logger) {
+    m_pLoader->LoadData(m_BufferAddress, m_BufferBlockIndex, m_StartOffsetSamples,
+                        m_PrefetchOffsetSamples, logger);
+}
+
 void StreamSoundLoader::Close() {
 #if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
-    if (m_pStreamDataDecoderManager != nullptr && m_pStreamDataDecoder != nullptr) {
-        m_pStreamDataDecoderManager->FreeImpl(m_pStreamDataDecoder);
+    if (g_pStreamDataDecoderManager != nullptr && m_pStreamDataDecoder != nullptr) {
+        g_pStreamDataDecoderManager->FreeImpl(m_pStreamDataDecoder);
         m_pStreamDataDecoder = nullptr;
     }
 #else
-    if (m_pStreamDataDecoderManager != nullptr && m_pStreamDataDecoder != nullptr) {
-        m_pStreamDataDecoderManager->FreeImpl(m_pStreamDataDecoder);
-        m_pStreamDataDecoder = nullptr;
+    if (m_pStreamDataDecoderManager != nullptr) {
+        if (m_pStreamDataDecoder != nullptr) {
+            m_pStreamDataDecoderManager->FreeImpl(m_pStreamDataDecoder);
+            m_pStreamDataDecoder = nullptr;
+        }
+        m_pStreamDataDecoderManager = nullptr;
     }
 #endif
 
@@ -284,9 +299,8 @@ void StreamSoundLoader::Close() {
     m_FileLoader.Finalize();
 }
 
-void StreamSoundLoader::StreamDataLoadTask::Execute(TaskProfileLogger& logger) {
-    m_pLoader->LoadData(m_BufferAddress, m_BufferBlockIndex, m_StartOffsetSamples,
-                        m_PrefetchOffsetSamples, logger);
+void StreamSoundLoader::StreamCloseTask::Execute([[maybe_unused]] TaskProfileLogger &logger) {
+    m_pLoader->Close();
 }
 
 void StreamSoundLoader::StreamHeaderLoadTask::Execute([[maybe_unused]] TaskProfileLogger& logger) {
@@ -397,7 +411,7 @@ bool StreamSoundLoader::LoadHeader1(DriverCommandStreamSoundLoadHeader* command)
 bool StreamSoundLoader::LoadHeaderForOpus(DriverCommandStreamSoundLoadHeader* command,
                                           StreamFileType type, DecodeMode decodeMode) {
 #if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
-    if (m_pStreamDataDecoderManager == nullptr)
+    if (g_pStreamDataDecoderManager == nullptr)
         return false;
 #else
     DecodeMode actualDecodeMode{decodeMode == DecodeMode_Default ? DecodeMode_Cpu : decodeMode};
@@ -407,7 +421,11 @@ bool StreamSoundLoader::LoadHeaderForOpus(DriverCommandStreamSoundLoadHeader* co
 #endif
 
     if (m_pStreamDataDecoder == nullptr) {
+#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
+        m_pStreamDataDecoder = g_pStreamDataDecoderManager->AllocImpl();
+#else
         m_pStreamDataDecoder = m_pStreamDataDecoderManager->AllocImpl();
+#endif
         if (m_pStreamDataDecoder == nullptr)
             return false;
     }
@@ -950,19 +968,14 @@ bool StreamSoundLoader::LoadOneBlockDataViaCache(void** bufferAddress, const Blo
 bool StreamSoundLoader::LoadOneBlockData(void** bufferAddress, const BlockInfo& blockInfo,
                                          position_t destAddressOffset, bool firstBlock,
                                          bool updateAdpcmContext) {
-    if (m_ChannelCount <= 0)
-        return true;
-
-    for (int ch{0}; ch < m_ChannelCount;) {
+    int32_t ch{0};
+    while (ch < m_ChannelCount) {
         if (m_PlayerHandle->IsFinalizing())
             return false;
 
         int loadChannelCount{GetLoadChannelCount(ch)};
         if (!LoadStreamBuffer(g_LoadBuffer, blockInfo, loadChannelCount))
             return false;
-
-        if (loadChannelCount <= 0)
-            continue;
 
         for (int i{0}; i < loadChannelCount; ++i) {
             const void* blockBegin{util::BytePtr(g_LoadBuffer, blockInfo.size * i).Get()};
@@ -976,7 +989,7 @@ bool StreamSoundLoader::LoadOneBlockData(void** bufferAddress, const BlockInfo& 
             if (firstBlock && updateAdpcmContext)
                 UpdateAdpcmInfoForStartOffset(blockBegin, ch + i, blockInfo);
         }
-        ch += loadChannelCount;
+        ch += loadChannelCount >= 0 ? loadChannelCount : 0;
     }
 
     return true;
@@ -994,9 +1007,13 @@ bool StreamSoundLoader::MoveNextRegion(int* loopCount) {
 
 bool StreamSoundLoader::DecodeStreamData(void** pOutBufferAddresses,
                                          IStreamDataDecoder::DecodeType decodeType) {
+#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
+    if (g_pStreamDataDecoderManager == nullptr)
+        return false;
+#else
     if (m_pStreamDataDecoderManager == nullptr)
         return false;
-
+#endif
     int16_t* pDecodedBufferAddresses[StreamChannelCount];
 
     for (int i{0}; i < m_ChannelCount; ++i) {
@@ -1015,12 +1032,18 @@ void StreamSoundLoader::UpdateLoadingDataBlockIndexForOpus(void** bufferAddress)
         if (IsLoopStartFilePos(i))
             m_LoopStartFilePos = m_pFileStream->GetCurrentPosition();
 
-        if (i == m_LoadingDataBlockIndex - 1) {
-            if (i != 0 && m_pStreamDataDecoderManager != nullptr)
-                DecodeStreamData(bufferAddress, IStreamDataDecoder::DecodeType_Idling);
-        } else {
+        if (i != m_LoadingDataBlockIndex - 1) {
             m_pStreamDataDecoder->PrepareStreamData(m_pFileStream);
+            continue;
         }
+
+#if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
+        if (i != 0 && g_pStreamDataDecoderManager != nullptr)
+            DecodeStreamData(bufferAddress, IStreamDataDecoder::DecodeType_Idling);
+#else
+        if (i != 0 && m_pStreamDataDecoderManager != nullptr)
+            DecodeStreamData(bufferAddress, IStreamDataDecoder::DecodeType_Idling);
+#endif
     }
 }
 

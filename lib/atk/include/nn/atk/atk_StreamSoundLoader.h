@@ -375,7 +375,7 @@ private:
     uint32_t m_FileStreamBuffer[sizeof(MemoryFileStream) * 4];
     IStreamDataDecoder* m_pStreamDataDecoder{};
 #if NN_WARE_VER < NN_MAKE_VER(3, 0, 0)
-    static IStreamDataDecoderManager* m_pStreamDataDecoderManager;
+    static IStreamDataDecoderManager* g_pStreamDataDecoderManager;
 #else
     IStreamDataDecoderManager* m_pStreamDataDecoderManager{};
 #endif
