@@ -576,19 +576,20 @@ uint16_t Util::CalcLpfFreq(float scale) {
     return freq;
 }
 
-// NON_MATCHING: wrong order of operations
 BiquadFilterCoefficients Util::CalcLowPassFilterCoefficients(int frequency, int sampleRate,
                                                              bool isTableUsed) {
     if (isTableUsed) {
         int index{FindLpfFreqTableIndex(frequency)};
 
-        if (sampleRate == 32000)
+        switch (sampleRate) {
+        case 32000:
             return LowPassFilterCoefficientsTable32000[index];
-
-        if (sampleRate == 48000)
+        case 48000:
             return LowPassFilterCoefficientsTable48000[index];
+        default:
+            NN_UNEXPECTED_DEFAULT;
+        }
 
-        NN_UNEXPECTED_DEFAULT;
     } else {
         float coef;
         float filterParam;
@@ -598,9 +599,11 @@ BiquadFilterCoefficients Util::CalcLowPassFilterCoefficients(int frequency, int 
 
         BiquadFilterCoefficients parameter;
 
-        parameter.b1 = filterParam;
-        parameter.b0 = (filterParam - coef) * -16384.0f;
-        parameter.b2 = coef;
+        parameter.a1 = (filterParam - coef) * -16384.0f;
+        parameter.a2 = 0;
+        parameter.b0 = 16384 - parameter.a1;
+        parameter.b1 = 0;
+        parameter.b2 = 0;
 
         return parameter;
     }
