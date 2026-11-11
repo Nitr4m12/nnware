@@ -284,6 +284,11 @@ void StreamSoundLoader::Close() {
     m_FileLoader.Finalize();
 }
 
+void StreamSoundLoader::StreamDataLoadTask::Execute(TaskProfileLogger& logger) {
+    m_pLoader->LoadData(m_BufferAddress, m_BufferBlockIndex, m_StartOffsetSamples,
+                        m_PrefetchOffsetSamples, logger);
+}
+
 void StreamSoundLoader::StreamHeaderLoadTask::Execute([[maybe_unused]] TaskProfileLogger& logger) {
     fnd::FndResult result{m_pLoader->Open()};
     if (result.IsFailed()) {
