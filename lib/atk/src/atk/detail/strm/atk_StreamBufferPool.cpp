@@ -26,27 +26,29 @@ void StreamBufferPool::Finalize() {
     m_BlockCount = 0;
 }
 
-// WIP
 void* StreamBufferPool::Alloc() {
     if (m_AllocCount >= m_BlockCount)
         return nullptr;
 
-    const int availableByte{util::align_up(m_BlockCount, BitPerByte)};
+    const int32_t availableByte{util::align_up(m_BlockCount, BitPerByte)};
 
-    for (int byteIndex{0}; byteIndex < availableByte / BitPerByte; ++byteIndex) {
-        if (m_AllocFlags[byteIndex] != 0xff) {
-            const uint8_t byte{m_AllocFlags[byteIndex]};
+    for (int32_t byteIndex{0}; byteIndex < availableByte / BitPerByte; ++byteIndex) {
+        const uint8_t byte{m_AllocFlags[byteIndex]};
+        if (byte == 0xff)
+            continue;
 
-            uint8_t mask{1 << 0};
-            for (int bitIndex{0}; bitIndex < BitPerByte; ++bitIndex) {
-                if ((byte & mask) == 0) {
-                    const int totalIndex{bitIndex};
-                    void* buffer{
-                        util::BytePtr(m_Buffer).Advance(m_BlockSize * (totalIndex | byte)).Get(),
-                    };
-                    return buffer;
-                }
-            }
+        uint8_t mask{1 << 0};
+        for (int32_t bitIndex{0}; bitIndex < BitPerByte; ++bitIndex) {
+            mask = 1 << bitIndex;
+            if ((byte & mask) != 0)
+                continue;
+
+            m_AllocFlags[byteIndex] |= mask;
+            ++m_AllocCount;
+
+            const int32_t totalIndex{bitIndex | (byteIndex * 8)};
+            void* buffer{util::BytePtr(m_Buffer).Advance(m_BlockSize * totalIndex).Get()};
+            return buffer;
         }
     }
 
