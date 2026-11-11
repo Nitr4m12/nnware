@@ -17,7 +17,7 @@ const uint32_t LoopRegionSizeMin{nn::atk::DataBlockSizeMarginSamples};
 
 namespace nn::atk::detail::driver {
 
-uint16_t StreamSoundPlayer::g_AssignNumberCount{};
+uint16_t StreamSoundPlayer::g_AssignNumberCount{0};
 
 StreamSoundPlayer::StreamSoundPlayer() = default;
 
@@ -1090,7 +1090,54 @@ void StreamSoundPlayer::SetOutputParam(OutputParam* pOutOutputParam, const Outpu
 }
 
 // TODO: void StreamSoundPlayer::ApplyTvOutputParamForMultiChannel
-// TODO: void StreamSoundPlayer::MixSettingForOutputParam
+
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+void StreamSoundPlayer::MixSettingForOutputParam(OutputParam* pOutOutputParam, int32_t channelIndex,
+                                                 MixMode mixMode)
+#else
+void StreamSoundPlayer::MixSettingForOutputParam(OutputParam* pOutOutputParam,
+                                                 OutputBusMixVolume* pOutOutputBusMixVolume,
+                                                 int32_t channelIndex, MixMode mixMode)
+#endif
+{
+    switch (mixMode) {
+    case MixMode_Pan:
+        switch (channelIndex) {
+        case ChannelIndex_FrontLeft:
+            pOutOutputParam->pan -= 1.0f;
+            break;
+        case ChannelIndex_FrontRight:
+            pOutOutputParam->pan += 1.0f;
+            break;
+        default:
+            break;
+        }
+        break;
+    default:
+        switch (channelIndex) {
+        case ChannelIndex_FrontRight:
+            for (uint32_t i{0}; i < ChannelIndex_Count; ++i) {
+                pOutOutputParam->mixParameter[0].ch[i] =
+                    pOutOutputParam->mixParameter[channelIndex].ch[i];
+                pOutOutputParam->mixParameter[channelIndex].ch[i] = 0;
+            }
+
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+            if (pOutOutputBusMixVolume != nullptr) {
+                for (uint32_t i{0}; i < OutputMix::ChannelCountMax; ++i) {
+                    pOutOutputBusMixVolume->volume[0][i] =
+                        pOutOutputBusMixVolume->volume[channelIndex][i];
+                    pOutOutputBusMixVolume->volume[channelIndex][i] = 0;
+                }
+            }
+#endif
+            break;
+        default:
+            break;
+        }
+        break;
+    }
+}
 
 position_t
 StreamSoundPlayer::GetOriginalPlaySamplePosition(position_t playSamplePosition,
