@@ -1,6 +1,7 @@
 #include <nn/atk/atk_SoundThread.h>
 
 #include <nn/audio.h>
+#include <nn/diag.h>
 
 #include <nn/atk/atk_ChannelManager.h>
 #include <nn/atk/atk_DriverCommand.h>
@@ -457,6 +458,85 @@ void SoundThread::RecordUpdateProfile(const SoundThreadUpdateProfile& updateProf
     }
 }
 
-// TODO: SoundThread::Run
+uint32_t SoundThread::Run([[maybe_unused]] void* param) {
+    while (true) {
+        if (m_PauseFlag) {
+            os::SleepThread(TimeSpan::FromMilliSeconds(HardwareManager::SoundFrameIntervalMsec));
+            continue;
+        }
+
+        if (m_ThreadBeginUserCallback != nullptr)
+            m_ThreadBeginUserCallback(m_ThreadBeginUserCallbackArg);
+
+        m_LastUpdateProfile.soundThreadProcess.begin = os::GetSystemTick();
+
+        uintptr_t msgBuf;
+        bool result{m_BlockingQueue.TryReceive(&msgBuf)};
+        Message msg{result ? static_cast<Message>(msgBuf & 0xf0000000) : static_cast<Message>(0)};
+
+        switch (msg) {
+        case Message_Shutdown:
+            return 0;
+        case Message_ForceWakeup:
+            while (DriverCommand::GetInstance().ProcessCommand()) {
+            }
+            while (DriverCommand::GetInstanceForTaskThread().ProcessCommand()) {
+            }
+            break;
+        default:
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+            m_pSoundThreadProfileFunc(&m_LastUpdateProfile._updateLowLevelVoiceProcess.begin);
+#endif
+            UpdateLowLevelVoices();
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+            m_pSoundThreadProfileFunc(&m_LastUpdateProfile._updateLowLevelVoiceProcess.end);
+#endif
+
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+            m_pSoundThreadProfileFunc(&m_LastUpdateProfile._frameProcess.begin);
+#endif
+            FrameProcess(UpdateType_AudioFrame);
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+            m_pSoundThreadProfileFunc(&m_LastUpdateProfile._frameProcess.end);
+#endif
+
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+            m_pSoundThreadProfileFunc(&m_LastUpdateProfile._userEffectFrameProcess.begin);
+#endif
+            EffectFrameProcess();
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+            m_pSoundThreadProfileFunc(&m_LastUpdateProfile._userEffectFrameProcess.end);
+#endif
+            break;
+        }
+
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+        m_pSoundThreadProfileFunc(&m_LastUpdateProfile._updateRendererProcess.begin);
+#endif
+        NN_DETAIL_ASSERT(HardwareManager::GetInstance().RequestUpdateAudioRenderer())
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+        m_pSoundThreadProfileFunc(&m_LastUpdateProfile._updateRendererProcess.end);
+#endif
+
+        m_LastUpdateProfile.soundThreadProcess.end = os::GetSystemTick();
+
+        if (m_ThreadEndUserCallback != nullptr)
+            m_ThreadEndUserCallback(m_ThreadEndUserCallbackArg);
+
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+        m_pSoundThreadProfileFunc(&m_LastUpdateProfile._waitRendererEventProcess.begin);
+#endif
+        while (!HardwareManager::GetInstance().TimedWaitAudioRendererEvent(
+            TimeSpan::FromMilliSeconds(RendererEventWaitTimeoutMilliSeconds))) {
+            m_RendererEventWaitTimeMilliSeconds += RendererEventWaitTimeoutMilliSeconds;
+        }
+        m_RendererEventWaitTimeMilliSeconds = 0;
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+        m_pSoundThreadProfileFunc(&m_LastUpdateProfile._waitRendererEventProcess.end);
+#endif
+
+        RecordUpdateProfile(m_LastUpdateProfile);
+    }
+}
 
 }  // namespace nn::atk::detail::driver
