@@ -294,15 +294,15 @@ private:
 #endif
 
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
-    void ApplyTvOutputParamForMultiChannel(const OutputParam& outputParam, MultiVoice* MultiVoice,
+    void ApplyTvOutputParamForMultiChannel(OutputParam* outputParam, MultiVoice* pVoice,
                                            int32_t channelIndex, MixMode mixMode);
 #else
     void ApplyTvOutputParamForMultiChannel(
         const OutputParam& outputParam, const OutputAdditionalParam* const pOutputAdditionalParam,
-        MultiVoice* MultiVoice, int32_t channelIndex, MixMode mixMode);
+        MultiVoice* pVoice, int32_t channelIndex, MixMode mixMode);
 #endif
 
-    void ApplyDrcOutputParamForMultiChannel(const OutputParam& outputParam, MultiVoice* MultiVoice,
+    void ApplyDrcOutputParamForMultiChannel(const OutputParam& outputParam, MultiVoice* pVoice,
                                             int32_t channelIndex, MixMode mixMode, uint32_t);
 
     bool AllocVoices();

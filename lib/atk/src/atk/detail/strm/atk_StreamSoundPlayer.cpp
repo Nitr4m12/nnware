@@ -1023,7 +1023,7 @@ void StreamSoundPlayer::UpdateVoiceParams(StreamTrack* track) {
 #endif
             } else if (track->channelCount == 2) {
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
-                ApplyTvOutputParamForMultiChannel(tvParam, voice, ch,
+                ApplyTvOutputParamForMultiChannel(&tvParam, voice, ch,
                                                   static_cast<MixMode>(tvParam.mixMode));
 #else
                 ApplyTvOutputParamForMultiChannel(tvParam, GetTvAdditionalParamAddr(), voice, ch,
@@ -1089,7 +1089,56 @@ void StreamSoundPlayer::SetOutputParam(OutputParam* pOutOutputParam, const Outpu
     }
 }
 
-// TODO: void StreamSoundPlayer::ApplyTvOutputParamForMultiChannel
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+void StreamSoundPlayer::ApplyTvOutputParamForMultiChannel(OutputParam* outputParam,
+                                                          MultiVoice* pVoice, int32_t channelIndex,
+                                                          MixMode mixMode)
+#else
+void StreamSoundPlayer::ApplyTvOutputParamForMultiChannel(
+    const OutputParam& outputParam, const OutputAdditionalParam* const pOutputAdditionalParam,
+    MultiVoice* pVoice, int32_t channelIndex, MixMode mixMode)
+#endif
+{
+#if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
+    float prevPan{outputParam->pan};
+    MixParameter prevParameters[2];
+    for (int i{0}; i < WaveChannelMax; ++i) {
+        for (int j{0}; j < ChannelIndex_Count; ++j)
+            prevParameters[i].ch[j] = outputParam->mixParameter[i].ch[j];
+    }
+
+    MixSettingForOutputParam(outputParam, channelIndex, mixMode);
+    pVoice->SetTvParam(*outputParam);
+
+    outputParam->pan = prevPan;
+    for (int i{0}; i < WaveChannelMax; ++i) {
+        for (int j{0}; j < ChannelIndex_Count; ++j)
+            outputParam->mixParameter[i].ch[j] = prevParameters[i].ch[j];
+    }
+#else
+    OutputParam param{outputParam};
+    if (pOutputAdditionalParam != nullptr &&
+        pOutputAdditionalParam->GetBusMixVolumePacketAddr() != nullptr) {
+        OutputBusMixVolume busMixVolume{pOutputAdditionalParam->GetBusMixVolume()};
+        MixSettingForOutputParam(&param, &busMixVolume, channelIndex, mixMode);
+        pVoice->SetTvParam(param);
+        pVoice->SetTvAdditionalParam(pOutputAdditionalParam->GetAdditionalSendAddr(),
+                                     pOutputAdditionalParam->GetBusMixVolumePacketAddr(),
+                                     &busMixVolume,
+                                     pOutputAdditionalParam->GetVolumeThroughModePacketAddr());
+    } else if (pOutputAdditionalParam != nullptr) {
+        MixSettingForOutputParam(&param, nullptr, channelIndex, mixMode);
+        pVoice->SetTvParam(param);
+        pVoice->SetTvAdditionalParam(pOutputAdditionalParam->GetAdditionalSendAddr(),
+                                     pOutputAdditionalParam->GetBusMixVolumePacketAddr(), nullptr,
+                                     pOutputAdditionalParam->GetVolumeThroughModePacketAddr());
+
+    } else {
+        MixSettingForOutputParam(&param, nullptr, channelIndex, mixMode);
+        pVoice->SetTvParam(param);
+    }
+#endif
+}
 
 #if NN_WARE_VER < NN_MAKE_VER(4, 0, 0)
 void StreamSoundPlayer::MixSettingForOutputParam(OutputParam* pOutOutputParam, int32_t channelIndex,
