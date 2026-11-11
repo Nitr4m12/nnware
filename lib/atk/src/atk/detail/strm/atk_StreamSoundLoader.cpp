@@ -1,5 +1,7 @@
 #include <nn/atk/atk_StreamSoundLoader.h>
 
+#include <nn/diag.h>
+
 #include <nn/atk/atk_DriverCommand.h>
 #include <nn/atk/atk_HardwareManager.h>
 #include <nn/atk/atk_SoundArchiveFilesHook.h>
@@ -280,6 +282,39 @@ void StreamSoundLoader::Close() {
     m_pFileStream->Close();
     m_pFileStream = nullptr;
     m_FileLoader.Finalize();
+}
+
+void StreamSoundLoader::StreamHeaderLoadTask::Execute([[maybe_unused]] TaskProfileLogger& logger) {
+    fnd::FndResult result{m_pLoader->Open()};
+    if (result.IsFailed()) {
+        const int32_t ResultStringLengthMax{32};
+        char resultString[ResultStringLengthMax];
+
+        switch (fnd::FndResultType(result)) {
+        case fnd::FndResultType_IoError:
+            util::SNPrintf(resultString, ResultStringLengthMax, "");
+            break;
+        case fnd::FndResultType_IoFileNotFound:
+            util::SNPrintf(resultString, ResultStringLengthMax, "fs::ResultPathNotFound");
+            break;
+        case fnd::FndResultType_IoInvalidAccess:
+            util::SNPrintf(resultString, ResultStringLengthMax, "fs::ResultDataCorrupted");
+            break;
+        case fnd::FndResultType_IoTargetLocked:
+            util::SNPrintf(resultString, ResultStringLengthMax, "fs::ResultTargetLocked");
+            break;
+        default:
+            NN_UNEXPECTED_DEFAULT;
+        }
+
+        if (m_pLoader->m_IsStreamOpenFailureHalt)
+            NN_DETAIL_ASSERT;
+
+        m_pLoader->ForceFinish();
+        return;
+    }
+
+    m_pLoader->LoadHeader();
 }
 
 void StreamSoundLoader::LoadHeader() {

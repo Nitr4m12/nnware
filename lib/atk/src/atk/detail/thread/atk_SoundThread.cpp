@@ -513,7 +513,7 @@ uint32_t SoundThread::Run([[maybe_unused]] void* param) {
 #if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
         m_pSoundThreadProfileFunc(&m_LastUpdateProfile._updateRendererProcess.begin);
 #endif
-        NN_DETAIL_ASSERT(HardwareManager::GetInstance().RequestUpdateAudioRenderer())
+        NN_DETAIL_ASSERT_ARG_VALUE(HardwareManager::GetInstance().RequestUpdateAudioRenderer())
 #if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
         m_pSoundThreadProfileFunc(&m_LastUpdateProfile._updateRendererProcess.end);
 #endif
