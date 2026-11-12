@@ -23,6 +23,14 @@ bool WavOutFileStream::Open(fnd::FileStream& stream, int channels, size_t sample
     return false;
 }
 
+bool WavOutFileStream::Seek(position_t offset, fnd::FileStream::SeekOrigin origin) {
+    if (!m_pFileStream->CanSeek())
+        return false;
+
+    FlushBuffer();
+    return m_pFileStream->Seek(offset, origin).IsSucceeded();
+}
+
 void WavOutFileStream::SetCacheBuffer(char* buf, size_t length) {
     m_Buffer = buf;
     m_BufferLength = length;
