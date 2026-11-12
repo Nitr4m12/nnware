@@ -168,7 +168,33 @@ void VirtualVoiceManager::Initialize() {
     }
 }
 
-// TODO: uint32_t VirtualVoiceManager::AllocVirtualVoice
+uint32_t VirtualVoiceManager::AllocVirtualVoice() {
+    uint32_t disableBit{0};
+    uint32_t tableIndex{0};
+    while (tableIndex < VirtualVoiceElementCount) {
+        const uint32_t x{(m_VirtualVoiceAllocationTable[tableIndex] ^ disableBit)};
+        if (x == 0) {
+            disableBit = 0;
+            ++tableIndex;
+            continue;
+        }
+
+        const uint32_t allocatableBit{util::isols1b(x)};
+        const uint32_t shift{static_cast<uint32_t>(util::popcount(allocatableBit - 1))};
+
+        const uint32_t voiceId{
+            (tableIndex * (VirtualVoiceCount / VirtualVoiceElementCount)) | shift,
+        };
+        if (m_LowLevelVoiceTable[voiceId] == nullptr) {
+            m_VirtualVoiceAllocationTable[tableIndex] ^= allocatableBit;
+            return voiceId;
+        }
+
+        disableBit |= allocatableBit;
+    }
+
+    return InvalidVoiceId;
+}
 
 void VirtualVoiceManager::FreeVirtualVoice(uint32_t voiceId) {
     uint32_t i{voiceId >> 5};

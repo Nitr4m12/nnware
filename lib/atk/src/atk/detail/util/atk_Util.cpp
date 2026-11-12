@@ -598,7 +598,6 @@ BiquadFilterCoefficients Util::CalcLowPassFilterCoefficients(int frequency, int 
         filterParam = sqrt(coef * coef - 1.0f);
 
         BiquadFilterCoefficients parameter;
-
         parameter.a1 = (filterParam - coef) * -16384.0f;
         parameter.a2 = 0;
         parameter.b0 = 16384 - parameter.a1;
