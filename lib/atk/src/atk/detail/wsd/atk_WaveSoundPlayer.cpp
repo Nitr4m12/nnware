@@ -2,6 +2,7 @@
 
 #include <nn/atk/atk_DisposeCallbackManager.h>
 #include <nn/atk/atk_WaveFileReader.h>
+#include "nn/atk/atk_Global.h"
 
 namespace nn::atk::detail::driver {
 
@@ -338,44 +339,43 @@ bool WaveSoundPlayer::StartChannel() {
     return true;
 }
 
-// NON_MATCHING: operations seem to be fine, but it's where they happen that's the issue
 void WaveSoundPlayer::UpdateChannel() {
     if (m_pChannel == nullptr)
         return;
 
     float volume{1.0f};
-    volume *= GetVolume();
+    volume = GetVolume();
 
     float pitchRatio{1.0f};
-    pitchRatio *= GetPitch();
+    pitchRatio = GetPitch();
     pitchRatio *= m_WaveSoundInfo.pitch;
 
-    float lpfFreq{GetLpfFreq()};
-    lpfFreq += (m_WaveSoundInfo.lpfFreq - DefaultPriority) / 64.0f;
+    float lpfFreq{0.0f};
+    lpfFreq = (m_WaveSoundInfo.lpfFreq - 64) / 64.0f;
+    lpfFreq += GetLpfFreq();
 
-    int biquadType;
-    float biquadValue;
+    int biquadType{m_WaveSoundInfo.biquadType};
+    float biquadValue{m_WaveSoundInfo.biquadValue / 127.0f};
     int handleBiquadType{GetBiquadFilterType()};
-
-    if (handleBiquadType == BiquadFilterType_Inherit) {
-        biquadType = m_WaveSoundInfo.biquadType;
-        biquadValue = m_WaveSoundInfo.biquadValue / 127.0f;
-    } else {
+    if (handleBiquadType != BiquadFilterType_Inherit) {
         biquadType = handleBiquadType;
         biquadValue = GetBiquadFilterValue();
     }
 
     float panBase{0.0f};
-    panBase += m_WaveSoundInfo.pan;
-    panBase += panBase < 2 ? (panBase - 63) / 63.0f : (panBase - 64) / 63.0f;
+    panBase = m_WaveSoundInfo.pan - 64;
+    if (m_WaveSoundInfo.pan < 2)
+        panBase = m_WaveSoundInfo.pan - 63;
+    panBase /= 63.0f;
     panBase *= m_PanRange;
 
     float spanBase{0.0f};
-    spanBase += m_WaveSoundInfo.surroundPan;
-    spanBase += spanBase < 64 ? (spanBase / 63.0f) : ((spanBase + 1) / 64.0f);
+    spanBase = (m_WaveSoundInfo.surroundPan + 1) / 64.0f;
+    if (m_WaveSoundInfo.surroundPan < 64)
+        spanBase = (m_WaveSoundInfo.surroundPan / 63.0f);
 
     float mainSendBase{m_WaveSoundInfo.mainSend / 127.0f - 1.0f};
-    float fxSendBase[3];
+    float fxSendBase[AuxBus_Count];
     for (int i{0}; i < AuxBus_Count; ++i)
         fxSendBase[i] = m_WaveSoundInfo.fxSend[i] / 127.0f;
 
