@@ -146,7 +146,7 @@ WaveSound* WaveSoundRuntime::AllocSound(SoundArchive::ItemId soundId, int32_t pr
 }
 #endif
 
-// NON_MATCHING
+// NON_MATCHING: order of operations?
 SoundStartable::StartResult WaveSoundRuntime::PrepareImpl(const SoundArchive* pSoundArchive,
                                                           const SoundDataManager* pSoundDataManager,
                                                           SoundArchive::ItemId soundId,
@@ -161,7 +161,7 @@ SoundStartable::StartResult WaveSoundRuntime::PrepareImpl(const SoundArchive* pS
 
     bool canUsePlayerHeap{sound->GetSoundPlayer()->detail_CanUsePlayerHeap()};
     bool isRegisterDataLoadTask{false};
-    LoadItemInfo loadWsd{};
+    LoadItemInfo loadWsd;
 
     const void* wsdFile{};
     const void* waveFile{};
@@ -183,6 +183,7 @@ SoundStartable::StartResult WaveSoundRuntime::PrepareImpl(const SoundArchive* pS
                 WaveArchiveFileReader warcReader{warcFile, false};
                 waveFile = warcReader.GetWaveFile(info.index);
                 if (waveFile != nullptr) {
+                    loadWsd.itemId = sound->GetId();
                     loadWsd.address = wsdFile;
                 }
             }
@@ -193,24 +194,23 @@ SoundStartable::StartResult WaveSoundRuntime::PrepareImpl(const SoundArchive* pS
     [[maybe_unused]] bool isContextCalculationSkipMode{false};
     int waveSoundParameterFlag{0};
 
-    loadWsd.itemId = sound->GetId();
     if (wsdFile == nullptr || waveFile == nullptr) {
-        loadWsd.address = pSoundDataManager->detail_GetFileAddress(commonInfo->fileId);
-        if (loadWsd.address != nullptr) {
-            wsdFile = loadWsd.address;
-
+        wsdFile = pSoundDataManager->detail_GetFileAddress(commonInfo->fileId);
+        loadWsd.itemId = sound->GetId();
+        loadWsd.address = wsdFile;
+        if (wsdFile != nullptr) {
             if (externalWsdInfo != nullptr) {
                 waveFile = externalWsdInfo->waveAddress;
                 waveSoundParameterFlag = externalWsdInfo->enableParameterFlag;
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
                 isContextCalculationSkipMode = externalWsdInfo->isContextCalculationSkipMode;
+#endif
                 release = fnd::Clamp(externalWsdInfo->release, 0, 127);
             }
 
-            if (externalWsdInfo == nullptr || waveFile == nullptr) {
+            if (waveFile == nullptr) {
                 waveFile = Util::GetWaveFileOfWaveSound(wsdFile, info.index, *pSoundArchive,
                                                         *pSoundDataManager);
-
-                isContextCalculationSkipMode = isContextCalculationSkipMode != false;
 
                 if (waveFile == nullptr) {
                     if (!canUsePlayerHeap)
@@ -224,9 +224,6 @@ SoundStartable::StartResult WaveSoundRuntime::PrepareImpl(const SoundArchive* pS
                 return SoundStartable::StartResult::ResultCode_ErrorNotWsdLoaded;
 
             isRegisterDataLoadTask = true;
-
-            wsdFile = nullptr;
-            waveFile = nullptr;
         }
     }
 
@@ -237,16 +234,12 @@ SoundStartable::StartResult WaveSoundRuntime::PrepareImpl(const SoundArchive* pS
     case SoundStartable::StartInfo::StartOffsetType_MilliSeconds:
         wsdStartOffsetType = driver::WaveSoundPlayer::StartOffsetType_Millisec;
         break;
-    case SoundStartable::StartInfo::StartOffsetType_Tick:
-        wsdStartOffsetType = driver::WaveSoundPlayer::StartOffsetType_Sample;
-        startOffset = 0;
-        break;
     case SoundStartable::StartInfo::StartOffsetType_Sample:
         wsdStartOffsetType = driver::WaveSoundPlayer::StartOffsetType_Sample;
         break;
     default:
-        wsdStartOffsetType = driver::WaveSoundPlayer::StartOffsetType_Sample;
         startOffset = 0;
+        wsdStartOffsetType = driver::WaveSoundPlayer::StartOffsetType_Sample;
         break;
     }
 

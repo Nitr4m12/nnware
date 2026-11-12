@@ -83,4 +83,8 @@ size_t WavOutFileStream::FlushBuffer() {
     return length;
 }
 
+size_t WavOutFileStream::CalcRiffChunkSize(size_t dataSize) {
+    return dataSize + sizeof(RiffChunk) + sizeof(FmtChunk);
+}
+
 }  // namespace nn::atk::detail
