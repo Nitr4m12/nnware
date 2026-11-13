@@ -2,7 +2,6 @@
 
 #include <algorithm>
 #include <cstring>
-#include <new>
 
 #include <nn/atk/atk_WavBinary.h>
 #include <nn/util/util_BytePtr.h>
@@ -125,11 +124,31 @@ bool WavOutFileStream::UpdateRiffChunkSize() {
     char buffer[5];
     void* alignedBuffer{util::BytePtr(buffer).AlignUp(FileIoBufferAlignment).Get()};
 
-    fnd::PcBinU32& size{*static_cast<fnd::PcBinU32*>(alignedBuffer)};
+    fnd::PcBinU32& size{reinterpret_cast<RiffChunk*>(buffer - 4)->header.size};
     size = CalcRiffChunkSize(m_WaveDataSize);
 
     fnd::FndResult result;
     WriteDirect(alignedBuffer, riffChunkSizePosition, &result);
+
+    return !result.IsFailed();
+}
+
+bool WavOutFileStream::UpdateDataChunkSize() {
+    if (!IsAvailable())
+        return false;
+
+    const int32_t dataChunkSizePosition{offsetof(WaveBinaryHeader, dataChunk) + 4};
+    if (!Seek(dataChunkSizePosition, fnd::FileStream::SeekOrigin_Begin))
+        return false;
+
+    uint8_t buffer[5];
+    void* alignedBuffer{util::BytePtr(buffer).AlignUp(FileIoBufferAlignment).Get()};
+
+    fnd::PcBinU32& size{reinterpret_cast<DataChunk*>(buffer - 4)->header.size};
+    size = m_WaveDataSize;
+
+    fnd::FndResult result;
+    WriteDirect(alignedBuffer, 4, &result);
 
     return !result.IsFailed();
 }
