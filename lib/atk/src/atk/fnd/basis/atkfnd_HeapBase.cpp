@@ -21,29 +21,25 @@ HeapBase::HeapList* HeapBase::FindListContainHeap(HeapBase* pHeapBase) {
     return pList;
 }
 
-// NON_MATCHING
-// Commented out because it needs to not be inlined for other functions to match
-// HeapBase* HeapBase::FindContainHeap(HeapList* pList, const void* memBlock) {
-//     uintptr_t memBlockAddress {reinterpret_cast<uintptr_t>(memBlock)};
+HeapBase* HeapBase::FindContainHeap(HeapList* pList, const void* memBlock) {
+    uintptr_t memBlockAddress{reinterpret_cast<uintptr_t>(memBlock)};
 
-//     for (auto itr {pList->begin()}; pList->end() != itr; ++itr) {
-//         auto curItr {++itr};
+    for (auto itr{pList->begin()}; itr != pList->end();) {
+        auto curItr{itr++};
 
-//         if (&pList->front() == &*curItr)
-//             return nullptr;
+        if (reinterpret_cast<uintptr_t>(curItr->mHeapStart) <= memBlockAddress &&
+            reinterpret_cast<uintptr_t>(curItr->mHeapEnd) > memBlockAddress) {
+            HeapBase* pChildHeapBase{FindContainHeap(&curItr->m_ChildList, memBlock)};
 
-//         if (reinterpret_cast<uint64_t>(curItr->mHeapStart) <= memBlockAddress && memBlockAddress
-//         < reinterpret_cast<uint64_t>(curItr->mHeapEnd)) {
-//             HeapBase* pChildHeapBase {FindContainHeap(&curItr->m_ChildList, &*curItr)};
+            if (pChildHeapBase != nullptr)
+                return pChildHeapBase;
 
-//             if (pChildHeapBase != nullptr)
-//                 return pChildHeapBase;
+            return &*curItr;
+        }
+    }
 
-//         }
-//     }
-
-//     return nullptr;
-// }
+    return nullptr;
+}
 
 HeapBase* HeapBase::FindContainHeap(const void* memBlock) {
     return FindContainHeap(&sRootList, memBlock);
