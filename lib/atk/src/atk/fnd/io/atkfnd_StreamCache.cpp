@@ -186,6 +186,43 @@ void StreamCache::ClearCache() {
 
 // TODO: size_t StreamCache::Write
 // TODO: size_t StreamCache::GetWritableCacheLength
-// TODO: FndResult StreamCache::Seek
+
+FndResult StreamCache::Seek(position_t offset, Stream::SeekOrigin origin) {
+    position_t fileEndPosition{static_cast<position_t>(m_Stream->GetSize())};
+
+    if (!IsInitialized())
+        return m_Stream->Seek(offset, origin);
+
+    if (!m_Stream->CanSeek())
+        return FndResult{FndResultType_Failed};
+
+    switch (origin) {
+    case Stream::SeekOrigin_Begin:
+        if (offset < 0)
+            return FndResult{FndResultType_Failed};
+
+        if (fileEndPosition <= offset)
+            return FndResult{FndResultType_Failed};
+
+        m_CurrentPosition = offset;
+        break;
+    case Stream::SeekOrigin_End:
+        if (fileEndPosition < offset)
+            return FndResult{FndResultType_Failed};
+
+        m_CurrentPosition = fileEndPosition - offset;
+        break;
+    case Stream::SeekOrigin_Current:
+        if (fileEndPosition <= m_CurrentPosition + offset)
+            return FndResult{FndResultType_Failed};
+
+        m_CurrentPosition += offset;
+        break;
+    default:
+        return FndResult{FndResultType_Failed};
+    }
+
+    return FndResult{FndResultType_True};
+}
 
 }  // namespace nn::atk::detail::fnd
