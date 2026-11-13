@@ -97,7 +97,12 @@ public:
         return m_StreamCache.GetCachePosition();
     }
 
-    size_t GetCachedLength() override;
+    size_t GetCachedLength() override {
+        if (!IsCacheEnabled())
+            return 0;
+
+        return m_StreamCache.GetCachedLength();
+    }
 
 private:
     size_t ReadDirect(void* buf, size_t length, FndResult* result);
