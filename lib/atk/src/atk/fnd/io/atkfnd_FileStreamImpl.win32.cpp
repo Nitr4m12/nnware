@@ -14,17 +14,16 @@ namespace {
 
 fs::OpenMode ConvertAccessMode(FileStream::AccessMode accessMode) {
     switch (accessMode) {
-    case FileStream::AccessMode_None:
     case FileStream::AccessMode_Read:
         return fs::OpenMode_Read;
     case FileStream::AccessMode_Write:
         return fs::OpenMode_Write;
     case FileStream::AccessMode_ReadAndWrite:
         return static_cast<fs::OpenMode>(fs::OpenMode_Read | fs::OpenMode_Write);
-    case FileStream::AccessMode_AllowAppend:
-        return fs::OpenMode_Append;
     case FileStream::AccessMode_AllowAppendAndWrite:
         return static_cast<fs::OpenMode>(fs::OpenMode_Append | fs::OpenMode_Write);
+    default:
+        return fs::OpenMode_Read;
     }
 }
 
@@ -64,8 +63,10 @@ FileStreamImpl::FileStreamImpl() {
     m_DirectStream.Initialize(*this);
 };
 
-// NON_MATCHING: requires ConvertAccessMode and more work on nn::Result
 FndResult FileStreamImpl::Open(const char* filePath, AccessMode accessMode) {
+    m_CurrentPosition = 0;
+    m_IsOpened = true;
+
     fs::OpenMode openMode{ConvertAccessMode(accessMode)};
     nn::Result result{fs::OpenFile(&m_FileHandle, filePath, openMode)};
     if (result.IsSuccess())
@@ -77,7 +78,10 @@ FndResult FileStreamImpl::Open(const char* filePath, AccessMode accessMode) {
     if (result::detail::ErrorRange<2, 4000, 5000>::Includes(result))
         return FndResult{FndResultType_IoInvalidAccess};
 
-    return FndResult{FndResultType_IoTargetLocked};
+    if (result::detail::ErrorRange<2, 7, 8>::Includes(result))
+        return FndResult{FndResultType_IoTargetLocked};
+
+    return FndResult{FndResultType_IoError};
 }
 
 void FileStreamImpl::Close() {
