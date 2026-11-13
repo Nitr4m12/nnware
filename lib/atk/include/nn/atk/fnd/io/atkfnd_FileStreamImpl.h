@@ -14,9 +14,7 @@ public:
     public:
         DirectStream() = default;
 
-        void Initialize(FileStreamImpl& fileStream) {
-            m_Owner = &fileStream;
-        }
+        void Initialize(FileStreamImpl& fileStream) { m_Owner = &fileStream; }
 
         void Close() override {}
 
@@ -80,7 +78,8 @@ public:
 
     void EnableCache(void* buffer, size_t length) override;
     void DisableCache() override;
-    bool IsCacheEnabled() const override;
+
+    bool IsCacheEnabled() const override { return m_StreamCache.IsInitialized(); }
 
     int GetIoBufferAlignment() const override;
 
