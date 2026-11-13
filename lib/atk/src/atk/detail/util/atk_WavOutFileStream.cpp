@@ -114,6 +114,30 @@ size_t WavOutFileStream::WriteDirect(const void* buf, size_t length, fnd::FndRes
     return writtenBytes;
 }
 
+bool WavOutFileStream::UpdateRiffChunkSize() {
+    if (!IsAvailable())
+        return false;
+
+    const position_t riffChunkSizePosition{offsetof(WaveBinaryHeader, riffChunk) + 4};
+    if (!Seek(riffChunkSizePosition, fnd::FileStream::SeekOrigin_Begin))
+        return false;
+
+    char buffer[5];
+    void* alignedBuffer{util::BytePtr(buffer).AlignUp(FileIoBufferAlignment).Get()};
+
+    fnd::PcBinU32& size{*static_cast<fnd::PcBinU32*>(alignedBuffer)};
+    size = CalcRiffChunkSize(m_WaveDataSize);
+
+    fnd::FndResult result;
+    WriteDirect(alignedBuffer, riffChunkSizePosition, &result);
+
+    return !result.IsFailed();
+}
+
+size_t WavOutFileStream::CalcRiffChunkSize(size_t dataSize) {
+    return dataSize + sizeof(RiffChunk) + sizeof(FmtChunk);
+}
+
 size_t WavOutFileStream::FlushBuffer() {
     size_t length{m_ValidBufferLength};
     m_ValidBufferLength = 0;
@@ -125,10 +149,6 @@ size_t WavOutFileStream::FlushBuffer() {
     length = WriteDirect(m_Buffer, length, &result);
 
     return length;
-}
-
-size_t WavOutFileStream::CalcRiffChunkSize(size_t dataSize) {
-    return dataSize + sizeof(RiffChunk) + sizeof(FmtChunk);
 }
 
 }  // namespace nn::atk::detail
