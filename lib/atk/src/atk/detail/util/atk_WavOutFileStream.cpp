@@ -24,6 +24,33 @@ bool WavOutFileStream::Open(fnd::FileStream& stream, int channels, size_t sample
     return false;
 }
 
+void WavOutFileStream::Close() {
+    if (!IsAvailable())
+        return;
+
+    FlushBuffer();
+    m_IsWaveDataSizeCalculating = false;
+    FlushBuffer();
+
+    if (m_pFileStream->GetSize() < sizeof(RiffChunk) + sizeof(FmtChunk)) {
+        m_pFileStream = nullptr;
+        return;
+    }
+
+    if (!UpdateRiffChunkSize()) {
+        m_pFileStream = nullptr;
+        return;
+    }
+
+    if (!UpdateDataChunkSize()) {
+        m_pFileStream = nullptr;
+        return;
+    }
+
+    m_pFileStream = nullptr;
+    m_WaveDataSize = 0;
+}
+
 size_t WavOutFileStream::Write(const void* buf, size_t length) {
     if (!IsAvailable())
         return 0;
