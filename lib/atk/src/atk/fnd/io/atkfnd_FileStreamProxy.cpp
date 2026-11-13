@@ -1,8 +1,5 @@
 #include <nn/atk/fnd/io/atkfnd_FileStreamProxy.h>
 
-#include <algorithm>
-#include "nn/atk/fnd/basis/atkfnd_Config.h"
-
 namespace nn::atk::detail::fnd {
 
 FileStreamProxy::FileStreamProxy(FileStream* fileStream, position_t offset, size_t fileSize)
@@ -54,26 +51,28 @@ size_t FileStreamProxy::Write(const void* buffer, size_t length, FndResult* resu
     return m_pFileStream->Write(buffer, length, result);
 }
 
-// NON_MATCHING: wrong csel cond and wrong use of registers
 FndResult FileStreamProxy::Seek(position_t offset, fnd::Stream::SeekOrigin origin) {
-    position_t fileSizeEndPosition = m_FileSize;
+    position_t fileSizeEndPosition{static_cast<position_t>(m_FileSize)};
 
     switch (origin) {
     case SeekOrigin_Begin:
-        offset = m_Offset + offset;
+        offset += m_Offset;
         break;
     case SeekOrigin_End:
-        offset = m_Offset + (fileSizeEndPosition - offset);
+        offset = (fileSizeEndPosition - offset);
+        offset += m_Offset;
         break;
     case SeekOrigin_Current:
-        offset = m_pFileStream->GetCurrentPosition() + offset;
+        offset += m_pFileStream->GetCurrentPosition();
         break;
     default:
         return FndResult{FndResultType_Failed};
     }
 
-    offset = std::min(m_Offset + fileSizeEndPosition, offset);
-    offset = std::min(m_Offset, offset);
+    if (offset < m_Offset)
+        offset = m_Offset;
+    else if (offset > fileSizeEndPosition + m_Offset)
+        offset = fileSizeEndPosition + m_Offset;
 
     return m_pFileStream->Seek(offset, origin);
 }
