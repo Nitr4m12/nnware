@@ -1,5 +1,6 @@
 #include <nn/atk/fnd/io/atkfnd_StreamCache.h>
 
+#include <algorithm>
 #include <cstring>
 
 #include <nn/util/util_BytePtr.h>
@@ -31,7 +32,6 @@ void StreamCache::Finalize() {
     m_CacheState = CacheState_None;
 }
 
-// NON_MATCHING
 size_t StreamCache::Read(void* buf, size_t length, FndResult* result, FsAccessLog* log,
                          void* pFileStream) {
     if (!IsInitialized()) {
@@ -54,11 +54,11 @@ size_t StreamCache::Read(void* buf, size_t length, FndResult* result, FsAccessLo
     }
 
     size_t cacheHitLength{GetReadCacheHitLength(length)};
-    if (cacheHitLength == 0 || length == 0)
-        return 0;
-
-    memcpy(buf, util::BytePtr(m_CacheBuffer, m_CurrentPosition - m_CachePosition).Get(),
-           cacheHitLength);
+    if (cacheHitLength != 0) {
+        memcpy(buf, util::BytePtr(m_CacheBuffer, m_CurrentPosition - m_CachePosition).Get(),
+               cacheHitLength);
+        m_CurrentPosition += cacheHitLength;
+    }
 
     if (length <= cacheHitLength)
         return length;
@@ -73,12 +73,13 @@ size_t StreamCache::Read(void* buf, size_t length, FndResult* result, FsAccessLo
         return 0;
     }
 
-    if (m_CacheBufferLength < restLength) {
+    size_t readLength{0};
+    if (restLength <= m_CacheBufferLength) {
         if (log != nullptr)
             log->Impl0(pFileStream);
 
         FndResult readResult;
-        restLength = m_Stream->Read(buf, restLength, &readResult);
+        readLength = m_Stream->Read(m_CacheBuffer, m_CacheBufferLength, &readResult);
 
         if (log != nullptr)
             log->Impl1(pFileStream);
@@ -88,17 +89,46 @@ size_t StreamCache::Read(void* buf, size_t length, FndResult* result, FsAccessLo
 
         if (readResult.IsFailed()) {
             ClearCache();
-            m_CachePosition = m_CurrentPosition - m_CacheBufferLength;
-            memcpy(m_CacheBuffer, util::BytePtr(buf, -m_CacheBufferLength).Get(),
-                   m_CacheBufferLength);
-            if (result != nullptr)
-                *result = FndResult{FndResultType_True};
-
-            return length;
+            return cacheHitLength;
         }
+
+        m_CachePosition = m_CurrentPosition;
+        m_CachedLength = readLength;
+        m_CacheState = CacheState_ForRead;
+        std::memcpy(util::BytePtr(buf, cacheHitLength).Get(), m_CacheBuffer,
+                    std::min(restLength, readLength));
+    } else {
+        if (log != nullptr)
+            log->Impl0(pFileStream);
+
+        FndResult readResult;
+        readLength = m_Stream->Read(buf, restLength, &readResult);
+
+        if (log != nullptr)
+            log->Impl1(pFileStream);
+
+        if (result != nullptr)
+            *result = readResult;
+
+        if (readResult.IsFailed()) {
+            ClearCache();
+            return cacheHitLength;
+        }
+
+        m_CachedLength = std::min(readLength, m_CacheBufferLength);
+        m_CachePosition = m_CurrentPosition - m_CachedLength;
+        std::memcpy(m_CacheBuffer, util::BytePtr(buf, -static_cast<int16_t>(m_CachedLength)).Get(),
+                    m_CacheBufferLength);
     }
 
-    return cacheHitLength;
+    m_CurrentPosition += restLength;
+    if (readLength + cacheHitLength < length)
+        return readLength + cacheHitLength;
+
+    if (result != nullptr)
+        *result = FndResult{FndResultType_True};
+
+    return length;
 }
 
 FndResult StreamCache::FlushWriteCache() {
