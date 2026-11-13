@@ -1,5 +1,7 @@
 #include <nn/atk/atk_WavOutFileStream.h>
 
+#include <algorithm>
+#include <cstring>
 #include <new>
 
 #include <nn/atk/atk_WavBinary.h>
@@ -21,6 +23,40 @@ bool WavOutFileStream::Open(fnd::FileStream& stream, int channels, size_t sample
     }
 
     return false;
+}
+
+size_t WavOutFileStream::Write(const void* buf, size_t length) {
+    if (!IsAvailable())
+        return 0;
+
+    size_t writtenLength{0};
+    while (writtenLength < length) {
+        size_t restSize{length - writtenLength};
+        if (restSize > m_BufferLength) {
+            fnd::FndResult result;
+            size_t writtenBytes{WriteDirect(buf, restSize, &result)};
+            if (result.IsFailed())
+                return 0;
+
+            writtenLength += writtenBytes;
+            continue;
+        }
+
+        size_t copyLength{m_BufferLength - m_ValidBufferLength};
+        copyLength = std::min(restSize, copyLength);
+
+        std::memcpy(util::BytePtr(m_Buffer, m_ValidBufferLength).Get(),
+                    util::ConstBytePtr(buf, writtenLength).Get(), copyLength);
+        m_ValidBufferLength += copyLength;
+        writtenLength += copyLength;
+        if (m_ValidBufferLength == m_BufferLength)
+            FlushBuffer();
+    }
+
+    if (m_IsWaveDataSizeCalculating)
+        m_WaveDataSize += length;
+
+    return length;
 }
 
 bool WavOutFileStream::Seek(position_t offset, fnd::FileStream::SeekOrigin origin) {

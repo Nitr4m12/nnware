@@ -20,9 +20,9 @@ public:
 
     bool IsAvailable() const { return m_pFileStream != nullptr && m_pFileStream->IsOpened(); }
 
-    size_t GetSize() const;
+    size_t GetSize() const { return m_pFileStream->GetSize(); }
 
-    position_t Tell() const;
+    position_t Tell() const { return m_pFileStream->GetCurrentPosition(); }
 
     void SetCacheBuffer(char* buf, size_t length);
 
