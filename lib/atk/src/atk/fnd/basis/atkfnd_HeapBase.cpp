@@ -104,12 +104,11 @@ void HeapBase::Initialize(uint32_t signature, void* heapStart, void* heapEnd, ui
     pList->push_back(*this);
 }
 
-// NON_MATCHING
 void HeapBase::Finalize() {
     HeapList* pList{FindListContainHeap(this)};
 
     if (pList != nullptr)
-        pList->erase(pList->begin());
+        pList->erase(pList->iterator_to(*this));
 
     m_Signature = 0;
 }
