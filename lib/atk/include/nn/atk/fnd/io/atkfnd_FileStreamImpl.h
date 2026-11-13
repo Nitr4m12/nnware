@@ -90,7 +90,13 @@ public:
         return this;
     }
 
-    position_t GetCachePosition() override;
+    position_t GetCachePosition() override {
+        if (!IsCacheEnabled())
+            return 0;
+
+        return m_StreamCache.GetCachePosition();
+    }
+
     size_t GetCachedLength() override;
 
 private:

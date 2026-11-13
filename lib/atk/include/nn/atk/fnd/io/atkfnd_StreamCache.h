@@ -46,8 +46,8 @@ public:
 
     void ClearCache();
 
-    position_t GetCachePosition();
-    size_t GetCachedLength();
+    position_t GetCachePosition() { return m_CachePosition; }
+    size_t GetCachedLength() { return m_CachedLength; }
 
 private:
     size_t GetReadCacheHitLength(size_t length) const;
