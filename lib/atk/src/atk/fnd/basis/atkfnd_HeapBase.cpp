@@ -95,12 +95,12 @@ void HeapBase::Initialize(uint32_t signature, void* heapStart, void* heapEnd, ui
     mHeapStart = heapStart;
     mHeapEnd = heapEnd;
 
+    m_Attribute = 0;
     SetOptionFlag(optFlag);
-    uint32_t diff = GetOffsetFromPtr(heapStart, heapEnd);
-    FillNoUseMemory(heapStart, diff);
+
+    FillNoUseMemory(heapStart, static_cast<uint32_t>(GetOffsetFromPtr(heapStart, heapEnd)));
 
     HeapList* pList{FindListContainHeap(this)};
-
     pList->push_back(*this);
 }
 
@@ -138,14 +138,15 @@ void HeapBase::FillAllocMemory(void* address, size_t size) {
 }
 
 uint16_t HeapBase::GetOptionFlag() {
-    return m_Attribute & 0xFF;
+    return m_Attribute & 0b11111111;
 }
 
-// NON_MATCHING: matches inlined, but not standalone
 void HeapBase::SetOptionFlag(uint16_t optFlag) {
-    if (optFlag >= 0) {
-        uint32_t maskBits{0xff};
-        uint32_t newVal = optFlag & maskBits;
+    {
+        uint32_t maskBits{0b11111111};
+        uint32_t newVal = m_Attribute;
+        newVal ^= m_Attribute & maskBits;
+        newVal |= optFlag & maskBits;
         m_Attribute = newVal;
     }
 }

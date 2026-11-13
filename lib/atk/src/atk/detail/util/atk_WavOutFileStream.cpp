@@ -144,18 +144,20 @@ bool WavOutFileStream::UpdateRiffChunkSize() {
     if (!IsAvailable())
         return false;
 
-    const position_t riffChunkSizePosition{offsetof(WaveBinaryHeader, riffChunk) + 4};
+    const position_t riffChunkSizePosition{
+        offsetof(WaveBinaryHeader, riffChunk) + offsetof(ChunkHeader, size),
+    };
     if (!Seek(riffChunkSizePosition, fnd::FileStream::SeekOrigin_Begin))
         return false;
 
-    char buffer[5];
+    char buffer[sizeof(fnd::PcBinU32) + 1];
     void* alignedBuffer{util::BytePtr(buffer).AlignUp(FileIoBufferAlignment).Get()};
 
-    fnd::PcBinU32& size{reinterpret_cast<RiffChunk*>(buffer - 4)->header.size};
+    fnd::PcBinU32& size{*static_cast<fnd::PcBinU32*>(alignedBuffer)};
     size = CalcRiffChunkSize(m_WaveDataSize);
 
     fnd::FndResult result;
-    WriteDirect(alignedBuffer, riffChunkSizePosition, &result);
+    WriteDirect(alignedBuffer, sizeof(fnd::PcBinU32), &result);
 
     return !result.IsFailed();
 }
@@ -164,18 +166,20 @@ bool WavOutFileStream::UpdateDataChunkSize() {
     if (!IsAvailable())
         return false;
 
-    const int32_t dataChunkSizePosition{offsetof(WaveBinaryHeader, dataChunk) + 4};
+    const int32_t dataChunkSizePosition{
+        offsetof(WaveBinaryHeader, dataChunk) + offsetof(ChunkHeader, size),
+    };
     if (!Seek(dataChunkSizePosition, fnd::FileStream::SeekOrigin_Begin))
         return false;
 
-    uint8_t buffer[5];
+    uint8_t buffer[sizeof(fnd::PcBinU32) + 1];
     void* alignedBuffer{util::BytePtr(buffer).AlignUp(FileIoBufferAlignment).Get()};
 
-    fnd::PcBinU32& size{reinterpret_cast<DataChunk*>(buffer - 4)->header.size};
+    fnd::PcBinU32& size{*static_cast<fnd::PcBinU32*>(alignedBuffer)};
     size = m_WaveDataSize;
 
     fnd::FndResult result;
-    WriteDirect(alignedBuffer, 4, &result);
+    WriteDirect(alignedBuffer, sizeof(fnd::PcBinU32), &result);
 
     return !result.IsFailed();
 }
