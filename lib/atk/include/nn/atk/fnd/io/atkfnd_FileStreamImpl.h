@@ -84,7 +84,11 @@ public:
     int GetIoBufferAlignment() const override;
 
     bool CanSetFsAccessLog() const override { return true; }
-    void* SetFsAccessLog(FsAccessLog* pFsAccessLog) override;
+
+    void* SetFsAccessLog(FsAccessLog* pFsAccessLog) override {
+        m_pAccessLog = pFsAccessLog;
+        return this;
+    }
 
     position_t GetCachePosition() override;
     size_t GetCachedLength() override;
