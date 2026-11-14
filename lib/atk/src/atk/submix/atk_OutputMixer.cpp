@@ -244,4 +244,39 @@ void OutputMixer::AppendEffectImpl(EffectAux* pEffect, int32_t bus, void* buffer
     m_pEffectAuxList[bus].push_back(*pEffect);
 }
 
+void OutputMixer::RemoveEffectImpl(EffectBase* pEffect, int32_t bus) {
+    audio::AudioRendererConfig& config{
+        detail::driver::HardwareManager::GetInstance().GetAudioRendererConfig(),
+    };
+
+    detail::fnd::ScopedLock<detail::fnd::CriticalSection> lock{m_EffectListLock};
+
+    for (auto itr{m_pEffectList[bus].begin()}; itr != m_pEffectList[bus].end(); ++itr) {
+        if (&*itr == pEffect) {
+            itr->RemoveEffect(&config, this);
+            m_pEffectList[bus].erase(itr);
+            AddReferenceCount(-1);
+            return;
+        }
+    }
+}
+
+void OutputMixer::RemoveEffectImpl(EffectAux* pEffect, int32_t bus) {
+    audio::AudioRendererConfig& config{
+        detail::driver::HardwareManager::GetInstance().GetAudioRendererConfig(),
+    };
+
+    detail::fnd::ScopedLock<detail::fnd::CriticalSection> lock{m_EffectListLock};
+
+    for (auto itr{m_pEffectAuxList[bus].begin()}; itr != m_pEffectAuxList[bus].end(); ++itr) {
+        if (&*itr == pEffect) {
+            itr->RemoveEffect(&config, this);
+            itr->Finalize();
+            m_pEffectAuxList[bus].erase(itr);
+            AddReferenceCount(-1);
+            return;
+        }
+    }
+}
+
 }  // namespace nn::atk
