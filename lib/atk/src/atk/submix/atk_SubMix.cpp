@@ -7,6 +7,10 @@ SubMix::SubMixParam::SubMixParam() {
         m_IsSoundSendClampEnabledArray[i] = true;
 }
 
+void SubMix::SubMixParam::SetSrcBusCount(int32_t count) {
+    m_SrcBusCount = count;
+}
+
 SubMix::VolumeData::VolumeData() {
     m_Volume.InitValue(1.0f);
 }
