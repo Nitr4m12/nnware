@@ -160,4 +160,14 @@ bool OutputMixer::ClearEffect(int32_t bus) {
     return true;
 }
 
+void OutputMixer::UpdateEffectAux() {
+    detail::fnd::ScopedLock<detail::fnd::CriticalSection> lock{m_EffectListLock};
+
+    const int32_t busCount{GetBusCount()};
+    for (int bus{0}; bus < busCount; ++bus) {
+        for (auto itr{m_pEffectAuxList[bus].begin()}; itr != m_pEffectAuxList[bus].end(); ++itr)
+            itr->Update();
+    }
+}
+
 }  // namespace nn::atk
