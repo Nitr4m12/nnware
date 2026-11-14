@@ -35,6 +35,10 @@ void SubMix::SubMixParam::SetDstChannelCount(int32_t count) {
     m_DstChannelCount = count;
 }
 
+int32_t SubMix::SubMixParam::GetDstChannelCount() const {
+    return m_DstChannelCount;
+}
+
 SubMix::VolumeData::VolumeData() {
     m_Volume.InitValue(1.0f);
 }
