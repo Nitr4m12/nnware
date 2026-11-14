@@ -170,4 +170,14 @@ void OutputMixer::UpdateEffectAux() {
     }
 }
 
+void OutputMixer::OnChangeOutputMode() {
+    detail::fnd::ScopedLock<detail::fnd::CriticalSection> lock{m_EffectListLock};
+
+    const int32_t busCount{GetBusCount()};
+    for (int bus{0}; bus < busCount; ++bus) {
+        for (auto itr{m_pEffectAuxList[bus].begin()}; itr != m_pEffectAuxList[bus].end(); ++itr)
+            itr->OnChangeOutputMode();
+    }
+}
+
 }  // namespace nn::atk
