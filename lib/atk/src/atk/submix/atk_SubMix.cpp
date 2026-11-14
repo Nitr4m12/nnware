@@ -47,6 +47,10 @@ const OutputReceiver* SubMix::SubMixParam::GetOutputReceiver() const {
     return m_pOutputReceiver;
 }
 
+void SubMix::SubMixParam::SetEffectEnabled(bool isEnabled) {
+    m_IsEffectEnabled = isEnabled;
+}
+
 SubMix::VolumeData::VolumeData() {
     m_Volume.InitValue(1.0f);
 }
