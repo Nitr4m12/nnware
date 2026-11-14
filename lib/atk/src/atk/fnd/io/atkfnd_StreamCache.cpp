@@ -185,7 +185,16 @@ void StreamCache::ClearCache() {
 }
 
 // TODO: size_t StreamCache::Write
-// TODO: size_t StreamCache::GetWritableCacheLength
+
+size_t StreamCache::GetWritableCacheLength(size_t length) const {
+    if (!IsInitialized())
+        return 0;
+
+    if (m_CacheState != CacheState_ForRead)
+        return std::min(length, m_CacheBufferLength - m_CachedLength);
+
+    return std::min(length, m_CacheBufferLength);
+}
 
 FndResult StreamCache::Seek(position_t offset, Stream::SeekOrigin origin) {
     position_t fileEndPosition{static_cast<position_t>(m_Stream->GetSize())};
