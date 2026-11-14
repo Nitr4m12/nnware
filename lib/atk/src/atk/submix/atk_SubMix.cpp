@@ -87,6 +87,69 @@ bool SubMix::VolumeData::Update() {
 
 SubMix::SubMix() = default;
 
+size_t SubMix::GetRequiredMemorySize(int32_t srcBusCount, int32_t srcChannelCount,
+                                     int32_t dstBusCount, int32_t dstChannelCount) {
+#if NN_WARE_VER < NN_MAKE_VER(5, 0, 0)
+    return GetRequiredMemorySize(srcBusCount, srcChannelCount, dstBusCount, dstChannelCount, true);
+#else
+    return GetRequiredMemorySize(srcBusCount, srcChannelCount, dstBusCount, dstChannelCount, true,
+                                 false);
+#endif
+}
+
+#if NN_WARE_VER < NN_MAKE_VER(5, 0, 0)
+size_t SubMix::GetRequiredMemorySize(int32_t srcBusCount, int32_t srcChannelCount,
+                                     int32_t dstBusCount, int32_t dstChannelCount,
+                                     bool isEffectEnabled)
+#else
+size_t SubMix::GetRequiredMemorySize(int32_t srcBusCount, int32_t srcChannelCount,
+                                     int32_t dstBusCount, int32_t dstChannelCount,
+                                     bool isEffectEnabled, bool isInternalCall)
+#endif
+{
+    SubMixParam param;
+    param.SetSrcBusCount(srcBusCount);
+    param.SetSrcChannelCount(srcChannelCount);
+    param.SetDstBusCount(dstBusCount);
+    param.SetDstChannelCount(dstChannelCount);
+    param.SetEffectEnabled(isEffectEnabled);
+
+#if NN_WARE_VER < NN_MAKE_VER(5, 0, 0)
+    return GetRequiredMemorySizeImpl(param);
+#else
+    return GetRequiredMemorySizeImpl(param, isInternalCall);
+#endif
+}
+
+size_t SubMix::GetRequiredMemorySize(int32_t srcBusCount, int32_t srcChannelCount,
+                                     const OutputReceiver* pDstReceiver) {
+    return GetRequiredMemorySize(srcBusCount, srcChannelCount, pDstReceiver, true);
+}
+
+size_t SubMix::GetRequiredMemorySize(int32_t srcBusCount, int32_t srcChannelCount,
+                                     const OutputReceiver* pDstReceiver, bool isEffectEnabled) {
+    SubMixParam param;
+    param.SetSrcBusCount(srcBusCount);
+    param.SetSrcBusCount(srcBusCount);
+    param.SetSrcChannelCount(srcChannelCount);
+    param.SetOutputReceiver(pDstReceiver);
+    param.SetEffectEnabled(isEffectEnabled);
+
+#if NN_WARE_VER < NN_MAKE_VER(5, 0, 0)
+    return GetRequiredMemorySizeImpl(param);
+#else
+    return GetRequiredMemorySizeImpl(param, false);
+#endif
+}
+
+size_t SubMix::GetRequiredMemorySize(const SubMixParam& param) {
+#if NN_WARE_VER < NN_MAKE_VER(5, 0, 0)
+    return GetRequiredMemorySizeImpl(param);
+#else
+    return GetRequiredMemorySizeImpl(param, false);
+#endif
+}
+
 #if NN_WARE_VER < NN_MAKE_VER(5, 0, 0)
 size_t SubMix::GetRequiredMemorySizeImpl(const SubMixParam& param)
 #else
