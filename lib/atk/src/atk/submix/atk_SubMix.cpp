@@ -43,6 +43,10 @@ void SubMix::SubMixParam::SetOutputReceiver(const OutputReceiver* pOutputReceive
     m_pOutputReceiver = pOutputReceiver;
 }
 
+const OutputReceiver* SubMix::SubMixParam::GetOutputReceiver() const {
+    return m_pOutputReceiver;
+}
+
 SubMix::VolumeData::VolumeData() {
     m_Volume.InitValue(1.0f);
 }
