@@ -39,6 +39,10 @@ int32_t SubMix::SubMixParam::GetDstChannelCount() const {
     return m_DstChannelCount;
 }
 
+void SubMix::SubMixParam::SetOutputReceiver(const OutputReceiver* pOutputReceiver) {
+    m_pOutputReceiver = pOutputReceiver;
+}
+
 SubMix::VolumeData::VolumeData() {
     m_Volume.InitValue(1.0f);
 }

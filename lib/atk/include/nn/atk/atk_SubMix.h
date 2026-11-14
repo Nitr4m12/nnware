@@ -47,7 +47,7 @@ public:
         int32_t m_SrcChannelCount{1};
         int32_t m_DstBusCount{1};
         int32_t m_DstChannelCount{1};
-        OutputReceiver* m_pOutputReceiver{};
+        const OutputReceiver* m_pOutputReceiver{};
         bool m_IsEffectEnabled{true};
         bool m_IsSoundSendClampEnabledArray[BusCountMax];
     };
