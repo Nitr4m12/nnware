@@ -67,6 +67,22 @@ SubMix::VolumeData::VolumeData() {
     m_Volume.InitValue(1.0f);
 }
 
+bool SubMix::VolumeData::Update() {
+    bool result{true};
+    result = m_IsDirtyFlag;
+    m_IsDirtyFlag = false;
+
+    if (m_Volume.IsFinished()) {
+        if (m_IsMute == m_IsPrevMute)
+            return result;
+
+        m_IsPrevMute = m_IsMute;
+    }
+
+    m_Volume.Update();
+    return true;
+}
+
 SubMix::SubMix() = default;
 
 }  // namespace nn::atk
