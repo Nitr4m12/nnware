@@ -1,5 +1,7 @@
 #include <nn/atk/atk_SubMix.h>
 
+#include <nn/util/util_BitUtil.h>
+
 namespace nn::atk {
 
 SubMix::SubMixParam::SubMixParam() {
@@ -84,5 +86,35 @@ bool SubMix::VolumeData::Update() {
 }
 
 SubMix::SubMix() = default;
+
+#if NN_WARE_VER < NN_MAKE_VER(5, 0, 0)
+size_t SubMix::GetRequiredMemorySizeImpl(const SubMixParam& param)
+#else
+size_t SubMix::GetRequiredMemorySizeImpl(const SubMixParam& param,
+                                         [[maybe_unused]] bool isInternalCall)
+#endif
+{
+    size_t result{0};
+    const int SrcBusCount{param.GetSrcBusCount()};
+    const int SrcChannelCount{param.GetSrcChannelCount()};
+    const int DstBusCount{
+        param.GetOutputReceiver() == nullptr ? param.GetDstBusCount() :
+                                               param.GetOutputReceiver()->GetBusCount(),
+    };
+    const int DstChannelCount{
+        param.GetOutputReceiver() == nullptr ? param.GetDstChannelCount() :
+                                               param.GetOutputReceiver()->GetChannelCount(),
+    };
+
+    result += OutputMixer::GetRequiredMemorySize(SrcBusCount, param.IsEffectEnabled());
+    result = util::align_up(result, SubMixAlignment);
+    result += (SrcChannelCount * SrcBusCount) * sizeof(void*);
+    result += DstChannelCount * DstBusCount * (SrcChannelCount * SrcBusCount) * sizeof(float);
+    result += SrcBusCount;
+    result = util::align_up(result, 4);
+    result += (static_cast<size_t>(SrcBusCount) + SrcChannelCount) * sizeof(VolumeData);
+
+    return result;
+}
 
 }  // namespace nn::atk
