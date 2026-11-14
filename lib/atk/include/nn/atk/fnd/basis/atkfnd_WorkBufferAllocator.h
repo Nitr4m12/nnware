@@ -14,6 +14,11 @@ public:
     void* Allocate(size_t size, size_t alignment);
     void* Allocate(size_t size, size_t alignment, int32_t count);
 
+    template <typename T>
+    T* Allocate(int32_t count) {
+        return static_cast<T*>(Allocate(sizeof(T), alignof(T), count));
+    }
+
     size_t GetSize() const { return m_Size; }
     size_t GetAllocSize() const;
     size_t GetFreeSize() const;
