@@ -279,4 +279,26 @@ void OutputMixer::RemoveEffectImpl(EffectAux* pEffect, int32_t bus) {
     }
 }
 
+void OutputMixer::ClearEffectImpl(int32_t bus) {
+    audio::AudioRendererConfig& config{
+        detail::driver::HardwareManager::GetInstance().GetAudioRendererConfig(),
+    };
+    detail::fnd::ScopedLock<detail::fnd::CriticalSection> lock{m_EffectListLock};
+    int count{0};
+
+    for (auto itr{m_pEffectList[bus].begin()}; itr != m_pEffectList[bus].end(); ++itr) {
+        itr->RemoveEffect(&config, this);
+        ++count;
+    }
+    m_pEffectList[bus].clear();
+
+    for (auto itr{m_pEffectAuxList[bus].begin()}; itr != m_pEffectAuxList[bus].end(); ++itr) {
+        itr->RemoveEffect(&config, this);
+        itr->Finalize();
+        ++count;
+    }
+    m_pEffectAuxList[bus].clear();
+    AddReferenceCount(-count);
+}
+
 }  // namespace nn::atk
