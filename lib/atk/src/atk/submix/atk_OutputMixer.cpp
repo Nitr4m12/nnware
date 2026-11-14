@@ -1,6 +1,8 @@
 #include <nn/atk/atk_OutputMixer.h>
 
 #include <nn/atk/fnd/os/atkfnd_ScopedLock.h>
+#include "nn/atk/atk_DriverCommand.h"
+#include "nn/util.h"
 #if NN_WARE_VER >= NN_MAKE_VER(5, 0, 0)
 #include <nn/atk/fnd/basis/atkfnd_WorkBufferAllocator.h>
 #endif
@@ -59,6 +61,51 @@ bool OutputMixer::HasEffect(int32_t bus) const {
     detail::fnd::ScopedLock<detail::fnd::CriticalSection> lock{m_EffectListLock};
     if (m_pEffectList[bus].empty() && m_pEffectAuxList[bus].empty())
         return false;
+
+    return true;
+}
+
+bool OutputMixer::AppendEffect(EffectBase* pEffect, int32_t bus, void* buffer, size_t bufferSize) {
+    int32_t effectSampleRate{pEffect->GetSampleRate()};
+    switch (effectSampleRate) {
+    case EffectBase::SampleRate_32000:
+    case EffectBase::SampleRate_48000:
+        break;
+    default:
+        NN_UNEXPECTED_DEFAULT;
+    }
+
+    detail::DriverCommand& cmdmgr{detail::DriverCommand::GetInstance()};
+    auto* command{cmdmgr.AllocCommand<detail::DriverCommandEffect>()};
+    command->id = detail::DriverCommandId_AppendEffect;
+    command->bus = bus;
+    command->effect = pEffect;
+    command->effectBuffer = buffer;
+    command->effectBufferSize = bufferSize;
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+    command->pOutputMixer = this;
+#endif
+
+    cmdmgr.PushCommand(command);
+    AddReferenceCount(1);
+
+    return true;
+}
+
+bool OutputMixer::AppendEffect(EffectAux* pEffect, int32_t bus, void* buffer, size_t bufferSize) {
+    detail::DriverCommand& cmdmgr{detail::DriverCommand::GetInstance()};
+    auto* command{cmdmgr.AllocCommand<detail::DriverCommandEffectAux>()};
+    command->id = detail::DriverCommandId_AppendEffectAux;
+    command->bus = bus;
+    command->effect = pEffect;
+    command->effectBuffer = buffer;
+    command->effectBufferSize = bufferSize;
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+    command->pOutputMixer = this;
+#endif
+
+    cmdmgr.PushCommand(command);
+    AddReferenceCount(1);
 
     return true;
 }
