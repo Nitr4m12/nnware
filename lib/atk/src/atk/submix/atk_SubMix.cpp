@@ -27,6 +27,10 @@ void SubMix::SubMixParam::SetDstBusCount(int32_t count) {
     m_DstBusCount = count;
 }
 
+int32_t SubMix::SubMixParam::GetDstBusCount() const {
+    return m_DstBusCount;
+}
+
 SubMix::VolumeData::VolumeData() {
     m_Volume.InitValue(1.0f);
 }
