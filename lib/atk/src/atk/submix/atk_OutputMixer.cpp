@@ -45,4 +45,10 @@ void OutputMixer::Initialize(int32_t bus, bool isEffectEnabled, void* buffer,
     m_IsEffectEnabled = isEffectEnabled;
 }
 
+void OutputMixer::Finalize() {
+    m_pEffectList = nullptr;
+    m_pEffectAuxList = nullptr;
+    m_IsEffectEnabled = false;
+}
+
 }  // namespace nn::atk
