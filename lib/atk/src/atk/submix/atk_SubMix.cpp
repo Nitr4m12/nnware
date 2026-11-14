@@ -55,6 +55,10 @@ bool SubMix::SubMixParam::IsEffectEnabled() const {
     return m_IsEffectEnabled;
 }
 
+void SubMix::SubMixParam::SetSoundSendClampEnabled(int32_t bus, bool isEnabled) {
+    m_IsSoundSendClampEnabledArray[bus] = isEnabled;
+}
+
 SubMix::VolumeData::VolumeData() {
     m_Volume.InitValue(1.0f);
 }
