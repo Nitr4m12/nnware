@@ -1,8 +1,8 @@
 #include <nn/atk/atk_OutputMixer.h>
 
+#include <nn/atk/atk_DriverCommand.h>
+#include <nn/atk/atk_HardwareManager.h>
 #include <nn/atk/fnd/os/atkfnd_ScopedLock.h>
-#include "nn/atk/atk_DriverCommand.h"
-#include "nn/util.h"
 #if NN_WARE_VER >= NN_MAKE_VER(5, 0, 0)
 #include <nn/atk/fnd/basis/atkfnd_WorkBufferAllocator.h>
 #endif
@@ -178,6 +178,70 @@ void OutputMixer::OnChangeOutputMode() {
         for (auto itr{m_pEffectAuxList[bus].begin()}; itr != m_pEffectAuxList[bus].end(); ++itr)
             itr->OnChangeOutputMode();
     }
+}
+
+void OutputMixer::AppendEffectImpl(EffectBase* pEffect, int32_t bus, void* buffer,
+                                   size_t bufferSize) {
+    const audio::AudioRendererParameter& param{
+        detail::driver::HardwareManager::GetInstance().GetAudioRendererParameter(),
+    };
+
+    if (param.sampleRate != 32000 || pEffect->GetSampleRate() != EffectBase::SampleRate_32000) {
+        if (param.sampleRate != 48000 || pEffect->GetSampleRate() != EffectBase::SampleRate_48000) {
+            return;
+        }
+    }
+
+    pEffect->SetEffectBuffer(buffer, bufferSize);
+
+    audio::AudioRendererConfig& config{
+        detail::driver::HardwareManager::GetInstance().GetAudioRendererConfig(),
+    };
+    const bool result{pEffect->AddEffect(&config, this)};
+    if (!result)
+        return;
+
+    const int channelCount{GetChannelCount()};
+    const int channelBase{channelCount * bus};
+    int8_t inputOutputChannel[ChannelIndex_Count];
+    for (int i{0}; i < channelCount; ++i)
+        inputOutputChannel[i] = channelBase + i;
+
+    pEffect->SetEffectInputOutput(inputOutputChannel, inputOutputChannel, channelCount,
+                                  channelCount);
+
+    detail::fnd::ScopedLock<detail::fnd::CriticalSection> lock{m_EffectListLock};
+    m_pEffectList[bus].push_back(*pEffect);
+}
+
+void OutputMixer::AppendEffectImpl(EffectAux* pEffect, int32_t bus, void* buffer,
+                                   size_t bufferSize) {
+    if (!pEffect->Initialize())
+        return;
+
+    pEffect->SetEffectBuffer(buffer, bufferSize);
+
+    audio::AudioRendererConfig& config{
+        detail::driver::HardwareManager::GetInstance().GetAudioRendererConfig(),
+    };
+    const audio::AudioRendererParameter& param{
+        detail::driver::HardwareManager::GetInstance().GetAudioRendererParameter(),
+    };
+    const bool result{pEffect->AddEffect(&config, param, this)};
+    if (!result)
+        return;
+
+    const int channelCount{GetChannelCount()};
+    const int channelBase{channelCount * bus};
+    int8_t inputOutputChannel[ChannelIndex_Count];
+    for (int i{0}; i < channelCount; ++i)
+        inputOutputChannel[i] = channelBase + i;
+
+    pEffect->SetEffectInputOutput(inputOutputChannel, inputOutputChannel, channelCount,
+                                  channelCount);
+
+    detail::fnd::ScopedLock<detail::fnd::CriticalSection> lock{m_EffectListLock};
+    m_pEffectAuxList[bus].push_back(*pEffect);
 }
 
 }  // namespace nn::atk
