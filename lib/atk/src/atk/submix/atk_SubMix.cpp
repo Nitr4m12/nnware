@@ -51,6 +51,10 @@ void SubMix::SubMixParam::SetEffectEnabled(bool isEnabled) {
     m_IsEffectEnabled = isEnabled;
 }
 
+bool SubMix::SubMixParam::IsEffectEnabled() const {
+    return m_IsEffectEnabled;
+}
+
 SubMix::VolumeData::VolumeData() {
     m_Volume.InitValue(1.0f);
 }
