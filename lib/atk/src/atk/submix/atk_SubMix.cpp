@@ -11,6 +11,10 @@ void SubMix::SubMixParam::SetSrcBusCount(int32_t count) {
     m_SrcBusCount = count;
 }
 
+int32_t SubMix::SubMixParam::GetSrcBusCount() const {
+    return m_SrcBusCount;
+}
+
 SubMix::VolumeData::VolumeData() {
     m_Volume.InitValue(1.0f);
 }
