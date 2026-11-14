@@ -1,5 +1,6 @@
 #include <nn/atk/atk_OutputMixer.h>
 
+#include <nn/atk/fnd/os/atkfnd_ScopedLock.h>
 #if NN_WARE_VER >= NN_MAKE_VER(5, 0, 0)
 #include <nn/atk/fnd/basis/atkfnd_WorkBufferAllocator.h>
 #endif
@@ -49,6 +50,17 @@ void OutputMixer::Finalize() {
     m_pEffectList = nullptr;
     m_pEffectAuxList = nullptr;
     m_IsEffectEnabled = false;
+}
+
+bool OutputMixer::HasEffect(int32_t bus) const {
+    if (!m_IsEffectEnabled)
+        return false;
+
+    detail::fnd::ScopedLock<detail::fnd::CriticalSection> lock{m_EffectListLock};
+    if (m_pEffectList[bus].empty() && m_pEffectAuxList[bus].empty())
+        return false;
+
+    return true;
 }
 
 }  // namespace nn::atk

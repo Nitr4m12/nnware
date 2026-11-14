@@ -53,7 +53,7 @@ protected:
     bool IsEffectEnabled() const { return m_IsEffectEnabled; }
 
 private:
-    detail::fnd::CriticalSection m_EffectListLock;
+    mutable detail::fnd::CriticalSection m_EffectListLock;
     EffectList* m_pEffectList{};
     EffectAuxList* m_pEffectAuxList{};
     bool m_IsEffectEnabled{false};
