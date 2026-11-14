@@ -19,6 +19,10 @@ void SubMix::SubMixParam::SetSrcChannelCount(int32_t count) {
     m_SrcChannelCount = count;
 }
 
+int32_t SubMix::SubMixParam::GetSrcChannelCount() const {
+    return m_SrcChannelCount;
+}
+
 SubMix::VolumeData::VolumeData() {
     m_Volume.InitValue(1.0f);
 }
