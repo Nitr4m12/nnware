@@ -43,12 +43,12 @@ public:
         bool GetSoundSendClampEnabled(int32_t bus) const;
 
     private:
-        int32_t m_SrcBusCount;
-        int32_t m_SrcChannelCount;
-        int32_t m_DstBusCount;
-        int32_t m_DstChannelCount;
-        OutputReceiver* m_pOutputReceiver;
-        bool m_IsEffectEnabled;
+        int32_t m_SrcBusCount{1};
+        int32_t m_SrcChannelCount{1};
+        int32_t m_DstBusCount{1};
+        int32_t m_DstChannelCount{1};
+        OutputReceiver* m_pOutputReceiver{};
+        bool m_IsEffectEnabled{true};
         bool m_IsSoundSendClampEnabledArray[BusCountMax];
     };
     static_assert(sizeof(SubMixParam) == 0x38);
