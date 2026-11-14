@@ -48,7 +48,7 @@ protected:
     bool RemoveEffect(EffectBase* pEffect, int32_t bus);
     bool RemoveEffect(EffectAux* pEffect, int32_t bus);
 
-    void ClearEffect(int32_t bus);
+    bool ClearEffect(int32_t bus);
 
     bool IsEffectEnabled() const { return m_IsEffectEnabled; }
 

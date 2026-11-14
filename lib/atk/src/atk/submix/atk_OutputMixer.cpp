@@ -144,4 +144,20 @@ bool OutputMixer::RemoveEffect(EffectAux* pEffect, int32_t bus) {
     return true;
 }
 
+bool OutputMixer::ClearEffect(int32_t bus) {
+    detail::DriverCommand& cmdmgr{detail::DriverCommand::GetInstance()};
+    auto* command{cmdmgr.AllocCommand<detail::DriverCommandEffect>()};
+    command->id = detail::DriverCommandId_ClearEffect;
+    command->bus = bus;
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
+    command->pOutputMixer = this;
+#endif
+
+    cmdmgr.PushCommand(command);
+    uint32_t tag{cmdmgr.FlushCommand(true)};
+    cmdmgr.WaitCommandReply(tag);
+
+    return true;
+}
+
 }  // namespace nn::atk
