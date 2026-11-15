@@ -67,6 +67,10 @@ bool FinalMix::IsEffectEnabled() const {
     return OutputMixer::IsEffectEnabled();
 }
 
+OutputReceiver::ReceiverType FinalMix::GetReceiverType() const {
+    return ReceiverType::ReceiverType_FinalMix;
+}
+
 }  // namespace nn::atk
 
 #endif
