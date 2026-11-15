@@ -71,6 +71,10 @@ OutputReceiver::ReceiverType FinalMix::GetReceiverType() const {
     return ReceiverType::ReceiverType_FinalMix;
 }
 
+int32_t FinalMix::GetChannelCount() const {
+    return m_ChannelCount;
+}
+
 }  // namespace nn::atk
 
 #endif
