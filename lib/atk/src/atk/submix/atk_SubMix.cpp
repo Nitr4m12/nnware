@@ -389,6 +389,12 @@ void SubMix::ApplyDestination() {
     }
 }
 
+float SubMix::GetSendImpl(int32_t srcBus, int32_t srcChannel, int32_t dstBus,
+                          int32_t dstChannel) const {
+    return m_ppSendVolume[srcChannel + srcBus * m_ChannelCount]
+                         [dstChannel + dstBus * m_ReceiverChannelCountMax];
+}
+
 #if NN_WARE_VER < NN_MAKE_VER(5, 0, 0)
 size_t SubMix::GetRequiredMemorySizeImpl(const SubMixParam& param)
 #else
