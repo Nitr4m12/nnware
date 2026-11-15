@@ -389,6 +389,10 @@ void SubMix::ApplyDestination() {
     }
 }
 
+float SubMix::GetSend(int32_t srcBus, int32_t dstBus) const {
+    return GetSendImpl(srcBus, 0, dstBus, 0);
+}
+
 float SubMix::GetSendImpl(int32_t srcBus, int32_t srcChannel, int32_t dstBus,
                           int32_t dstChannel) const {
     return m_ppSendVolume[srcChannel + srcBus * m_ChannelCount]
