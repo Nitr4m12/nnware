@@ -643,5 +643,9 @@ bool SubMix::IsSubMixMuted() const {
     return m_SubMixVolume.IsMute();
 }
 
+void SubMix::SetMuteUnusedEffectChannel(bool isUnusedEffectChannelMuted) {
+    m_IsUnusedEffectChannelMuted = isUnusedEffectChannelMuted;
+}
+
 }  // namespace nn::atk
 #endif
