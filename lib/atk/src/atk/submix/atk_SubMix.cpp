@@ -639,5 +639,9 @@ void SubMix::SetSubMixMute(bool isMute) {
     m_SubMixVolume.SetMute(isMute);
 }
 
+bool SubMix::IsSubMixMuted() const {
+    return m_SubMixVolume.IsMute();
+}
+
 }  // namespace nn::atk
 #endif
