@@ -1,4 +1,5 @@
 #include <nn/util.h>
+#include "nn/atk/atk_OutputMixer.h"
 #if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
 
 #include <nn/atk/atk_SubMix.h>
@@ -657,6 +658,14 @@ bool SubMix::AppendEffect(EffectBase* pEffect, int32_t bus, void* buffer, size_t
 
 bool SubMix::AppendEffect(EffectAux* pEffect, int32_t bus, void* buffer, size_t bufferSize) {
     return OutputMixer::AppendEffect(pEffect, bus, buffer, bufferSize);
+}
+
+bool SubMix::RemoveEffect(EffectBase* pEffect, int32_t bus) {
+    return OutputMixer::RemoveEffect(pEffect, bus);
+}
+
+bool SubMix::RemoveEffect(EffectAux* pEffect, int32_t bus) {
+    return OutputMixer::RemoveEffect(pEffect, bus);
 }
 
 }  // namespace nn::atk
