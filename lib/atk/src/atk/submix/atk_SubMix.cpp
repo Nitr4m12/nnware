@@ -651,5 +651,13 @@ bool SubMix::IsUnusedEffectChannelMuted() const {
     return m_IsUnusedEffectChannelMuted;
 }
 
+bool SubMix::AppendEffect(EffectBase* pEffect, int32_t bus, void* buffer, size_t bufferSize) {
+    return OutputMixer::AppendEffect(pEffect, bus, buffer, bufferSize);
+}
+
+bool SubMix::AppendEffect(EffectAux* pEffect, int32_t bus, void* buffer, size_t bufferSize) {
+    return OutputMixer::AppendEffect(pEffect, bus, buffer, bufferSize);
+}
+
 }  // namespace nn::atk
 #endif
