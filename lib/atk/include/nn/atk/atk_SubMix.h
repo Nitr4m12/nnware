@@ -139,7 +139,7 @@ public:
     void SetSend(int32_t srcBus, int32_t dstBus, float send);
 
     void SetSendImpl(int32_t srcBus, int32_t srcChannel, int32_t dstBus, int32_t dstChannel,
-                     float send);
+                     float volume);
     float GetSendImpl(int32_t srcBus, int32_t srcChannel, int32_t dstBus, int32_t dstChannel) const;
 
     void SetBusVolume(int32_t bus, float volume, int32_t fadeFrame);
