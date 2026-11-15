@@ -1,5 +1,4 @@
 #include <nn/util.h>
-#include "nn/atk/atk_OutputMixer.h"
 #if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
 
 #include <nn/atk/atk_SubMix.h>
@@ -703,6 +702,32 @@ bool SubMix::ClearEffect(int32_t bus) {
 
 bool SubMix::IsEffectEnabled() const {
     return OutputMixer::IsEffectEnabled();
+}
+
+void SubMix::AppendEffectImpl(EffectBase* pEffect, int32_t bus, void* buffer, size_t bufferSize) {
+    OutputMixer::AppendEffectImpl(pEffect, bus, buffer, bufferSize);
+
+    if (m_IsUnusedEffectChannelMuted) {
+        ChannelIndex effectChannelIndices[ChannelIndex_Count];
+        for (int channelIndex{0}; channelIndex < ChannelIndex_Count; ++channelIndex)
+            effectChannelIndices[channelIndex] = ChannelIndex_Count;
+
+        pEffect->GetChannelIndex(effectChannelIndices, pEffect->GetChannelSettingCountMax());
+        MuteUnusedEffectChannel(effectChannelIndices, pEffect->GetChannelSettingCountMax(), bus);
+    }
+}
+
+void SubMix::AppendEffectImpl(EffectAux* pEffect, int32_t bus, void* buffer, size_t bufferSize) {
+    OutputMixer::AppendEffectImpl(pEffect, bus, buffer, bufferSize);
+
+    if (m_IsUnusedEffectChannelMuted) {
+        ChannelIndex effectChannelIndices[ChannelIndex_Count];
+        for (int channelIndex{0}; channelIndex < ChannelIndex_Count; ++channelIndex)
+            effectChannelIndices[channelIndex] = ChannelIndex_Count;
+
+        pEffect->GetChannelIndex(effectChannelIndices, pEffect->GetChannelSettingCountMax());
+        MuteUnusedEffectChannel(effectChannelIndices, pEffect->GetChannelSettingCountMax(), bus);
+    }
 }
 
 }  // namespace nn::atk
