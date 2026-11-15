@@ -440,6 +440,11 @@ float SubMix::GetBusVolume(int32_t bus) const {
     return m_pBusVolume[bus].GetVolume();
 }
 
+void SubMix::SetBusMute(int32_t bus, bool isMute) {
+    detail::fnd::ScopedLock<detail::fnd::CriticalSection> lock{m_VolumeLock};
+    m_pBusVolume[bus].SetMute(isMute);
+}
+
 #if NN_WARE_VER < NN_MAKE_VER(5, 0, 0)
 size_t SubMix::GetRequiredMemorySizeImpl(const SubMixParam& param)
 #else
