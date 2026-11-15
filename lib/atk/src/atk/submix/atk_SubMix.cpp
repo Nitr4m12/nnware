@@ -6,7 +6,11 @@
 #include <nn/util/util_BitUtil.h>
 
 #include <nn/atk/atk_HardwareManager.h>
+#include <nn/atk/fnd/basis/atkfnd_Inlines.h>
+#if NN_WARE_VER >= NN_MAKE_VER(5, 0, 0)
 #include <nn/atk/fnd/basis/atkfnd_WorkBufferAllocator.h>
+#endif
+#include <nn/atk/fnd/os/atkfnd_ScopedLock.h>
 
 namespace nn::atk {
 
@@ -251,6 +255,29 @@ bool SubMix::IsRemovable() const {
 
 bool SubMix::IsFinalizable() const {
     return m_ReferenceCount == 0;
+}
+
+void SubMix::Update() {
+    for (int bus{0}; bus < m_BusCount; ++bus) {
+        if (m_pBusVolume[bus].Update())
+            UpdateBusMixVolume(bus);
+    }
+
+    for (int channel{0}; channel < m_ChannelCount; ++channel) {
+        if (m_pChannelVolume[channel].Update())
+            UpdateChannelMixVolume(channel);
+    }
+
+    if (m_SubMixVolume.Update()) {
+        float volume;
+        {
+            detail::fnd::ScopedLock<detail::fnd::CriticalSection> volumeLock{m_VolumeLock};
+            volume = m_SubMixVolume.GetVolume();
+        }
+
+        volume = detail::fnd::Clamp(volume, 0.0f, 128.0f);
+        audio::SetSubMixVolume(&m_SubMix, volume);
+    }
 }
 
 void SubMix::UpdateBusMixVolume(int32_t bus) {

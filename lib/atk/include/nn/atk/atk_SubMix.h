@@ -66,7 +66,12 @@ public:
         bool IsMute() const { return m_IsMute; }
 
         void SetVolume(float volume, int32_t fadeFrame) { m_Volume.SetTarget(volume, fadeFrame); }
-        float GetVolume() const { return m_Volume.GetValue(); }
+        float GetVolume() const {
+            if (m_IsMute)
+                return 0.0f;
+
+            return m_Volume.GetValue();
+        }
 
     private:
         detail::MoveValue<float, int32_t> m_Volume;
