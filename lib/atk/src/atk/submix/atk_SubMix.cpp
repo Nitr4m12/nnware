@@ -652,6 +652,35 @@ bool SubMix::IsUnusedEffectChannelMuted() const {
     return m_IsUnusedEffectChannelMuted;
 }
 
+void SubMix::MuteUnusedEffectChannel(ChannelIndex* effectChannelIndex, int32_t effectChannelCount,
+                                     int32_t bus) {
+    const int32_t dstBusCount{m_pReceiver->GetBusCount()};
+    const int32_t dstChannelCount{m_pReceiver->GetChannelCount()};
+    bool isUpdated{false};
+
+    for (int channelIndex{0}; channelIndex < m_ChannelCount; ++channelIndex) {
+        bool isExist{false};
+        for (int i{0}; i < effectChannelCount; ++i)
+            if (channelIndex == effectChannelIndex[i])
+                isExist = true;
+
+        if (!isExist) {
+            detail::fnd::ScopedLock<detail::fnd::CriticalSection> lock{m_VolumeLock};
+            float* pSendVolume{m_ppSendVolume[channelIndex + bus * m_ChannelCount]};
+            for (int dstBus{0}; dstBus < dstBusCount; ++dstBus)
+                for (int dstChannel{0}; dstChannel < dstChannelCount; ++dstChannel)
+                    pSendVolume[dstChannel + dstBus * m_ReceiverChannelCountMax] = 0.0f;
+
+            isUpdated = true;
+        }
+    }
+
+    if (!isUpdated)
+        return;
+
+    UpdateBusMixVolume(bus);
+}
+
 bool SubMix::AppendEffect(EffectBase* pEffect, int32_t bus, void* buffer, size_t bufferSize) {
     return OutputMixer::AppendEffect(pEffect, bus, buffer, bufferSize);
 }
