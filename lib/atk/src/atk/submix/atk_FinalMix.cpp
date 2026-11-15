@@ -55,8 +55,12 @@ bool FinalMix::RemoveEffect(EffectBase* pEffect) {
     return OutputMixer::RemoveEffect(pEffect, FinalMixBusIndex);
 }
 
-bool FinalMix::RemoveEffect(EffectAux *pEffect) {
+bool FinalMix::RemoveEffect(EffectAux* pEffect) {
     return OutputMixer::RemoveEffect(pEffect, FinalMixBusIndex);
+}
+
+bool FinalMix::ClearEffect() {
+    return OutputMixer::ClearEffect(FinalMixBusIndex);
 }
 
 }  // namespace nn::atk
