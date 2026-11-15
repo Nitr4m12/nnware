@@ -222,6 +222,29 @@ bool SubMix::Initialize(const SubMixParam& param, void* buffer, size_t bufferSiz
 #endif
 }
 
+void SubMix::Finalize() {
+    if (m_IsInitialized) {
+        detail::driver::HardwareManager::GetInstance().RemoveSubMix(this);
+        m_IsInitialized = false;
+
+        detail::driver::HardwareManager::UpdateAudioRendererScopedLock lock;
+        audio::AudioRendererConfig& config{
+            detail::driver::HardwareManager::GetInstance().GetAudioRendererConfig(),
+        };
+        audio::ReleaseSubMix(&config, &m_SubMix);
+    }
+
+    if (m_pReceiver != nullptr)
+        m_pReceiver->AddReferenceCount(-1);
+
+    m_ppSendVolume = nullptr;
+    m_pBusVolume = nullptr;
+    m_pChannelVolume = nullptr;
+    m_pReceiver = nullptr;
+
+    OutputMixer::Finalize();
+}
+
 #if NN_WARE_VER < NN_MAKE_VER(5, 0, 0)
 size_t SubMix::GetRequiredMemorySizeImpl(const SubMixParam& param)
 #else
