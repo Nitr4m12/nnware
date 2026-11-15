@@ -361,6 +361,34 @@ void SubMix::SetDestination(OutputReceiver* pReceiver) {
     AddReferenceCount(1);
 }
 
+void SubMix::ApplyDestination() {
+    audio::AudioRendererConfig& config{
+        detail::driver::HardwareManager::GetInstance().GetAudioRendererConfig(),
+    };
+
+    {
+        detail::fnd::ScopedLock<detail::fnd::CriticalSection> destinationLock{m_DestinationLock};
+        switch (m_pReceiver->GetReceiverType()) {
+        case ReceiverType::ReceiverType_SubMix:
+            audio::SetSubMixDestination(
+                &config, &m_SubMix, static_cast<SubMix*>(m_pReceiver)->GetAudioSubMixInstance());
+            break;
+        case ReceiverType::ReceiverType_FinalMix:
+            audio::SetSubMixDestination(
+                &config, &m_SubMix,
+                static_cast<FinalMix*>(m_pReceiver)->GetAudioFinalMixInstance());
+            break;
+        default:
+            NN_UNEXPECTED_DEFAULT;
+        }
+        m_IsAppliedOutputReceiver = true;
+    }
+
+    for (int bus{0}; bus < m_BusCount; ++bus) {
+        UpdateBusMixVolume(bus);
+    }
+}
+
 #if NN_WARE_VER < NN_MAKE_VER(5, 0, 0)
 size_t SubMix::GetRequiredMemorySizeImpl(const SubMixParam& param)
 #else
