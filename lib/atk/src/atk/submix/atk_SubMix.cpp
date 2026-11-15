@@ -445,6 +445,10 @@ void SubMix::SetBusMute(int32_t bus, bool isMute) {
     m_pBusVolume[bus].SetMute(isMute);
 }
 
+bool SubMix::IsBusMuted(int32_t bus) const {
+    return m_pBusVolume[bus].IsMute();
+}
+
 #if NN_WARE_VER < NN_MAKE_VER(5, 0, 0)
 size_t SubMix::GetRequiredMemorySizeImpl(const SubMixParam& param)
 #else
