@@ -5,6 +5,7 @@
 #include <nn/audio.h>
 #include <nn/util/util_BitUtil.h>
 
+#include <nn/atk/atk_DriverCommand.h>
 #include <nn/atk/atk_HardwareManager.h>
 #include <nn/atk/fnd/basis/atkfnd_Inlines.h>
 #if NN_WARE_VER >= NN_MAKE_VER(5, 0, 0)
@@ -338,6 +339,26 @@ void SubMix::UpdateMixVolume(int32_t srcBus, int32_t srcChannel, int32_t dstBus,
             NN_UNEXPECTED_DEFAULT;
         }
     }
+}
+
+void SubMix::SetDestination(OutputReceiver* pReceiver) {
+    {
+        detail::fnd::ScopedLock<detail::fnd::CriticalSection> lock{m_DestinationLock};
+        m_IsAppliedOutputReceiver = false;
+        if (m_pReceiver != nullptr)
+            m_pReceiver->AddReferenceCount(-1);
+
+        m_pReceiver = pReceiver;
+        m_pReceiver->AddReferenceCount(1);
+    }
+
+    detail::DriverCommand& cmdmgr{detail::DriverCommand::GetInstance()};
+    auto* command{cmdmgr.AllocCommand<detail::DriverCommandSubMixApplyDestination>()};
+    command->id = detail::DriverCommandId_SubMixApplyDestination;
+    command->pReceiver = this;
+
+    cmdmgr.PushCommand(command);
+    AddReferenceCount(1);
 }
 
 #if NN_WARE_VER < NN_MAKE_VER(5, 0, 0)
