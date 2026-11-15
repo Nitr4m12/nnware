@@ -393,6 +393,26 @@ float SubMix::GetSend(int32_t srcBus, int32_t dstBus) const {
     return GetSendImpl(srcBus, 0, dstBus, 0);
 }
 
+void SubMix::SetSendImpl(int32_t srcBus, int32_t srcChannel, int32_t dstBus, int32_t dstChannel,
+                         float send) {
+    {
+        detail::fnd::ScopedLock<detail::fnd::CriticalSection> lock{m_VolumeLock};
+        m_ppSendVolume[srcChannel + srcBus * m_ChannelCount]
+                      [dstChannel + dstBus * m_ReceiverChannelCountMax] = send;
+    }
+    detail::DriverCommand& cmdmgr{detail::DriverCommand::GetInstance()};
+    auto* command{cmdmgr.AllocCommand<detail::DriverCommandSubMixUpdateMixVolume>()};
+    command->id = detail::DriverCommandId_SubMixUpdateMixVolume;
+    command->pReceiver = this;
+    command->srcBus = srcBus;
+    command->srcChannel = srcChannel;
+    command->dstBus = dstBus;
+    command->dstChannel = dstChannel;
+
+    cmdmgr.PushCommand(command);
+    AddReferenceCount(1);
+}
+
 float SubMix::GetSendImpl(int32_t srcBus, int32_t srcChannel, int32_t dstBus,
                           int32_t dstChannel) const {
     return m_ppSendVolume[srcChannel + srcBus * m_ChannelCount]
