@@ -668,5 +668,9 @@ bool SubMix::RemoveEffect(EffectAux* pEffect, int32_t bus) {
     return OutputMixer::RemoveEffect(pEffect, bus);
 }
 
+bool SubMix::ClearEffect(int32_t bus) {
+    return OutputMixer::ClearEffect(bus);
+}
+
 }  // namespace nn::atk
 #endif
