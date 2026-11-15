@@ -21,9 +21,8 @@ size_t FinalMix::GetRequiredMemorySize(bool isEffectEnabled) {
 
 bool FinalMix::Initialize(audio::AudioRendererConfig* pConfig, int32_t channelCount,
                           bool isEffectEnabled, void* buffer, size_t bufferSize) {
-#if NN_WARE_VER < NN_MAKE_VER(5, 0 ,0)
-    OutputMixer::Initialize(FinalMixBusCount, isEffectEnabled, buffer,
-                            bufferSize);
+#if NN_WARE_VER < NN_MAKE_VER(5, 0, 0)
+    OutputMixer::Initialize(FinalMixBusCount, isEffectEnabled, buffer, bufferSize);
 #else
     detail::fnd::WorkBufferAllocator allocator{buffer, bufferSize};
     size_t requiredSize{GetRequiredMemorySize(isEffectEnabled)};
@@ -50,6 +49,14 @@ bool FinalMix::AppendEffect(EffectBase* pEffect, void* buffer, size_t bufferSize
 
 bool FinalMix::AppendEffect(EffectAux* pEffect, void* buffer, size_t bufferSize) {
     return OutputMixer::AppendEffect(pEffect, FinalMixBusIndex, buffer, bufferSize);
+}
+
+bool FinalMix::RemoveEffect(EffectBase* pEffect) {
+    return OutputMixer::RemoveEffect(pEffect, FinalMixBusIndex);
+}
+
+bool FinalMix::RemoveEffect(EffectAux *pEffect) {
+    return OutputMixer::RemoveEffect(pEffect, FinalMixBusIndex);
 }
 
 }  // namespace nn::atk
