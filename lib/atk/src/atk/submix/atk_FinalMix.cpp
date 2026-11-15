@@ -21,12 +21,17 @@ size_t FinalMix::GetRequiredMemorySize(bool isEffectEnabled) {
 
 bool FinalMix::Initialize(audio::AudioRendererConfig* pConfig, int32_t channelCount,
                           bool isEffectEnabled, void* buffer, size_t bufferSize) {
+#if NN_WARE_VER < NN_MAKE_VER(5, 0 ,0)
+    OutputMixer::Initialize(FinalMixBusCount, isEffectEnabled, buffer,
+                            bufferSize);
+#else
     detail::fnd::WorkBufferAllocator allocator{buffer, bufferSize};
     size_t requiredSize{GetRequiredMemorySize(isEffectEnabled)};
     void* mixerBuffer{allocator.Allocate(requiredSize, alignof(OutputMixer))};
 
     OutputMixer::Initialize(FinalMixBusCount, isEffectEnabled, mixerBuffer,
                             GetRequiredMemorySize(isEffectEnabled));
+#endif
 
     m_ChannelCount = channelCount;
     m_ReferenceCount = 0;
@@ -37,6 +42,14 @@ bool FinalMix::Initialize(audio::AudioRendererConfig* pConfig, int32_t channelCo
 void FinalMix::Finalize(audio::AudioRendererConfig* pConfig) {
     audio::ReleaseFinalMix(pConfig, &m_FinalMix);
     OutputMixer::Finalize();
+}
+
+bool FinalMix::AppendEffect(EffectBase* pEffect, void* buffer, size_t bufferSize) {
+    return OutputMixer::AppendEffect(pEffect, FinalMixBusIndex, buffer, bufferSize);
+}
+
+bool FinalMix::AppendEffect(EffectAux* pEffect, void* buffer, size_t bufferSize) {
+    return OutputMixer::AppendEffect(pEffect, FinalMixBusIndex, buffer, bufferSize);
 }
 
 }  // namespace nn::atk
