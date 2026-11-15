@@ -306,6 +306,40 @@ void SubMix::UpdateChannelMixVolume(int32_t channel) {
     }
 }
 
+void SubMix::UpdateMixVolume(int32_t srcBus, int32_t srcChannel, int32_t dstBus,
+                             int32_t dstChannel) {
+    const int32_t srcIdx{srcChannel + srcBus * m_ChannelCount};
+    const int32_t dstIdx{dstChannel + dstBus * m_ReceiverChannelCountMax};
+    float volume{0.0f};
+    {
+        detail::fnd::ScopedLock<detail::fnd::CriticalSection> lock{m_VolumeLock};
+        volume = m_pBusVolume[srcBus].GetVolume() * m_pChannelVolume[srcChannel].GetVolume() *
+                 m_ppSendVolume[srcIdx][dstIdx];
+    }
+    volume = detail::fnd::Clamp(volume, 0.0f, 128.0f);
+
+    {
+        detail::fnd::ScopedLock<detail::fnd::CriticalSection> destinationLock{m_DestinationLock};
+        if (!m_IsAppliedOutputReceiver)
+            return;
+
+        switch (m_pReceiver->GetReceiverType()) {
+        case ReceiverType::ReceiverType_SubMix:
+            audio::SetSubMixMixVolume(&m_SubMix,
+                                      static_cast<SubMix*>(m_pReceiver)->GetAudioSubMixInstance(),
+                                      volume, srcIdx, dstIdx);
+            break;
+        case ReceiverType::ReceiverType_FinalMix:
+            audio::SetSubMixMixVolume(
+                &m_SubMix, static_cast<FinalMix*>(m_pReceiver)->GetAudioFinalMixInstance(), volume,
+                srcIdx, dstIdx);
+            break;
+        default:
+            NN_UNEXPECTED_DEFAULT;
+        }
+    }
+}
+
 #if NN_WARE_VER < NN_MAKE_VER(5, 0, 0)
 size_t SubMix::GetRequiredMemorySizeImpl(const SubMixParam& param)
 #else
