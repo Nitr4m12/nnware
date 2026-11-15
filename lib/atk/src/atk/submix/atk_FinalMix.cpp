@@ -1,7 +1,8 @@
 #include <nn/util.h>
-#include "nn/audio.h"
 #if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
 #include <nn/atk/atk_FinalMix.h>
+
+#include <nn/audio.h>
 
 #include <nn/atk/fnd/basis/atkfnd_WorkBufferAllocator.h>
 
@@ -31,6 +32,11 @@ bool FinalMix::Initialize(audio::AudioRendererConfig* pConfig, int32_t channelCo
     m_ReferenceCount = 0;
 
     return audio::AcquireFinalMix(pConfig, &m_FinalMix, GetBusCount() * GetChannelCount());
+}
+
+void FinalMix::Finalize(audio::AudioRendererConfig* pConfig) {
+    audio::ReleaseFinalMix(pConfig, &m_FinalMix);
+    OutputMixer::Finalize();
 }
 
 }  // namespace nn::atk
