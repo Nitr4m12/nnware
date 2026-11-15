@@ -672,5 +672,9 @@ bool SubMix::ClearEffect(int32_t bus) {
     return OutputMixer::ClearEffect(bus);
 }
 
+bool SubMix::IsEffectEnabled() const {
+    return OutputMixer::IsEffectEnabled();
+}
+
 }  // namespace nn::atk
 #endif
