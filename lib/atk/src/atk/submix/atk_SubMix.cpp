@@ -730,5 +730,9 @@ void SubMix::AppendEffectImpl(EffectAux* pEffect, int32_t bus, void* buffer, siz
     }
 }
 
+OutputReceiver::ReceiverType SubMix::GetReceiverType() const {
+    return ReceiverType::ReceiverType_SubMix;
+}
+
 }  // namespace nn::atk
 #endif
