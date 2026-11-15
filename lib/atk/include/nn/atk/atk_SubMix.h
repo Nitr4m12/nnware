@@ -40,7 +40,7 @@ public:
         bool IsEffectEnabled() const;
 
         void SetSoundSendClampEnabled(int32_t bus, bool isEnabled);
-        bool GetSoundSendClampEnabled(int32_t bus) const;
+        bool IsSoundSendClampEnabled(int32_t bus) const;
 
     private:
         int32_t m_SrcBusCount{1};
@@ -59,7 +59,10 @@ public:
 
         bool Update();
 
-        void SetMute(bool isMute) { m_IsMute = isMute; }
+        void SetMute(bool isMute) {
+            m_IsDirtyFlag = true;
+            m_IsMute = isMute;
+        }
         bool IsMute() const { return m_IsMute; }
 
         void SetVolume(float volume, int32_t fadeFrame) { m_Volume.SetTarget(volume, fadeFrame); }

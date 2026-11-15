@@ -1,6 +1,12 @@
 #include <nn/atk/atk_SubMix.h>
 
+#include <algorithm>
+
+#include <nn/audio.h>
 #include <nn/util/util_BitUtil.h>
+
+#include <nn/atk/atk_HardwareManager.h>
+#include <nn/atk/fnd/basis/atkfnd_WorkBufferAllocator.h>
 
 namespace nn::atk {
 
@@ -61,7 +67,7 @@ void SubMix::SubMixParam::SetSoundSendClampEnabled(int32_t bus, bool isEnabled) 
     m_IsSoundSendClampEnabledArray[bus] = isEnabled;
 }
 
-bool SubMix::SubMixParam::GetSoundSendClampEnabled(int32_t bus) const {
+bool SubMix::SubMixParam::IsSoundSendClampEnabled(int32_t bus) const {
     return m_IsSoundSendClampEnabledArray[bus];
 }
 
@@ -178,6 +184,127 @@ size_t SubMix::GetRequiredMemorySizeImpl(const SubMixParam& param,
     result += (static_cast<size_t>(SrcBusCount) + SrcChannelCount) * sizeof(VolumeData);
 
     return result;
+}
+
+#if NN_WARE_VER < NN_MAKE_VER(5, 0, 0)
+bool SubMix::InitializeImpl(const SubMixParam& param, void* buffer,
+                            [[maybe_unused]] size_t bufferSize)
+#else
+bool SubMix::InitializeImpl(const SubMixParam& param, void* buffer, size_t bufferSize,
+                            [[maybe_unused]] bool isInternalCall)
+#endif
+{
+    const int SrcBusCount{param.GetSrcBusCount()};
+    const int SrcChannelCount{param.GetSrcChannelCount()};
+    const bool IsOutputReceiverUsed{param.GetOutputReceiver() != nullptr};
+    const int DstBusCount{
+        IsOutputReceiverUsed ? param.GetOutputReceiver()->GetBusCount() : param.GetDstBusCount(),
+    };
+    const int DstChannelCount{
+        IsOutputReceiverUsed ? param.GetOutputReceiver()->GetChannelCount() :
+                               param.GetDstChannelCount(),
+    };
+    const bool IsEffectEnabled{param.IsEffectEnabled()};
+
+    audio::AudioRendererConfig& config{
+        detail::driver::HardwareManager::GetInstance().GetAudioRendererConfig(),
+    };
+    int32_t sampleRate{
+        detail::driver::HardwareManager::GetInstance().GetAudioRendererParameter().sampleRate,
+    };
+#if NN_WARE_VER >= NN_MAKE_VER(5, 0, 0)
+    detail::fnd::WorkBufferAllocator allocator{buffer, bufferSize};
+#endif
+
+    m_BusCount = SrcBusCount;
+    m_ChannelCount = SrcChannelCount;
+    m_ReceiverChannelCountMax = DstChannelCount;
+    m_IsAppliedOutputReceiver = false;
+
+    const size_t requiredSize{OutputMixer::GetRequiredMemorySize(SrcBusCount, IsEffectEnabled)};
+#if NN_WARE_VER < NN_MAKE_VER(5, 0, 0)
+    uint8_t* ptr{static_cast<uint8_t*>(buffer)};
+    OutputMixer::Initialize(m_BusCount, IsEffectEnabled, ptr, requiredSize);
+    ptr += requiredSize;
+
+    const int mixBufferCount{m_BusCount * m_ChannelCount};
+    ptr = util::BytePtr(ptr).AlignUp(SubMixAlignment).Get<uint8_t>();
+    m_ppSendVolume = reinterpret_cast<float**>(ptr);
+    ptr += mixBufferCount * sizeof(float*);
+#else
+    OutputMixer::Initialize(m_BusCount, IsEffectEnabled,
+                            allocator.Allocate(requiredSize, SubMixAlignment), requiredSize);
+
+    const int mixBufferCount{m_BusCount * m_ChannelCount};
+
+    m_ppSendVolume = allocator.Allocate<float*>(mixBufferCount);
+#endif
+    for (int srcIdx{0}; srcIdx < mixBufferCount; ++srcIdx) {
+        const int32_t receiverMixBufferCount{m_ReceiverChannelCountMax * DstBusCount};
+#if NN_WARE_VER < NN_MAKE_VER(5, 0, 0)
+        m_ppSendVolume[srcIdx] = reinterpret_cast<float*>(ptr);
+        ptr += receiverMixBufferCount * sizeof(float);
+#else
+        m_ppSendVolume[srcIdx] = allocator.Allocate<float>(receiverMixBufferCount);
+#endif
+        for (int dstIdx{0}; dstIdx < receiverMixBufferCount; ++dstIdx) {
+            m_ppSendVolume[srcIdx][dstIdx] = 0.0f;
+        }
+    }
+
+    const int32_t rootingBusCount{std::min(m_BusCount, DstBusCount)};
+    const int32_t rootingChannelCount{std::min(m_ChannelCount, m_ReceiverChannelCountMax)};
+    for (int32_t bus{0}; bus < rootingBusCount; ++bus) {
+        for (int32_t channel{0}; channel < rootingChannelCount; ++channel) {
+            m_ppSendVolume[channel + bus * m_ChannelCount]
+                          [channel + bus * m_ReceiverChannelCountMax] = 1.0f;
+        }
+    }
+
+    m_SubMixVolume.SetMute(false);
+    m_SubMixVolume.SetVolume(1.0f, 0.0f);
+
+#if NN_WARE_VER < NN_MAKE_VER(5, 0, 0)
+    m_pIsSoundSendClampEnabledArray = reinterpret_cast<bool*>(ptr);
+    ptr += m_BusCount * sizeof(bool);
+#else
+    m_pIsSoundSendClampEnabledArray = allocator.Allocate<bool>(m_BusCount);
+#endif
+    for (int i{0}; i < m_BusCount; ++i) {
+        m_pIsSoundSendClampEnabledArray[i] = param.IsSoundSendClampEnabled(i);
+    }
+
+#if NN_WARE_VER < NN_MAKE_VER(5, 0, 0)
+    ptr = util::BytePtr(ptr).AlignUp(alignof(VolumeData)).Get<uint8_t>();
+    m_pBusVolume = reinterpret_cast<VolumeData*>(ptr);
+    ptr += m_BusCount * sizeof(VolumeData);
+#else
+    m_pBusVolume = allocator.Allocate<VolumeData>(m_BusCount);
+#endif
+    for (int i{0}; i < m_BusCount; ++i) {
+        new (&m_pBusVolume[i]) VolumeData;
+    }
+
+#if NN_WARE_VER < NN_MAKE_VER(5, 0, 0)
+    m_pChannelVolume = reinterpret_cast<VolumeData*>(ptr);
+#else
+    m_pChannelVolume = allocator.Allocate<VolumeData>(m_ChannelCount);
+#endif
+    for (int i{0}; i < m_ChannelCount; ++i) {
+        new (&m_pChannelVolume[i]) VolumeData;
+    }
+
+    bool isSuccess{false};
+    {
+        detail::driver::HardwareManager::UpdateAudioRendererScopedLock lock;
+        isSuccess = audio::AcquireSubMix(&config, &m_SubMix, sampleRate, mixBufferCount);
+    }
+
+    m_IsInitialized = isSuccess;
+    if (isSuccess)
+        detail::driver::HardwareManager::GetInstance().AddSubMix(this);
+
+    return isSuccess;
 }
 
 }  // namespace nn::atk
