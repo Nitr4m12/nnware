@@ -613,4 +613,9 @@ float SubMix::GetChannelVolume(int32_t channel) const {
     return m_pChannelVolume[channel].GetVolume();
 }
 
+void SubMix::SetChannelMute(int32_t channel, bool isMute) {
+    detail::fnd::ScopedLock<detail::fnd::CriticalSection> lock{m_VolumeLock};
+    m_pChannelVolume[channel].SetMute(isMute);
+}
+
 }  // namespace nn::atk
