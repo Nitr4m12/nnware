@@ -609,4 +609,8 @@ void SubMix::SetChannelVolume(int32_t channel, float volume, int32_t fadeFrame) 
     m_pChannelVolume[channel].SetVolume(volume, fadeFrame);
 }
 
+float SubMix::GetChannelVolume(int32_t channel) const {
+    return m_pChannelVolume[channel].GetVolume();
+}
+
 }  // namespace nn::atk
