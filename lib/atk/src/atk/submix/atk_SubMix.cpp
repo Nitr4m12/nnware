@@ -436,6 +436,10 @@ void SubMix::SetBusVolume(int32_t bus, float volume, int32_t fadeFrame) {
     m_pBusVolume[bus].SetVolume(volume, fadeFrame);
 }
 
+float SubMix::GetBusVolume(int32_t bus) const {
+    return m_pBusVolume[bus].GetVolume();
+}
+
 #if NN_WARE_VER < NN_MAKE_VER(5, 0, 0)
 size_t SubMix::GetRequiredMemorySizeImpl(const SubMixParam& param)
 #else
