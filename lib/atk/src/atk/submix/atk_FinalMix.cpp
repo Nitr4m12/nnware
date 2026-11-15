@@ -79,6 +79,10 @@ int32_t FinalMix::GetBusCount() const {
     return FinalMixBusCount;
 }
 
+void FinalMix::AddReferenceCount(int32_t value) {
+    m_ReferenceCount += value;
+}
+
 }  // namespace nn::atk
 
 #endif
