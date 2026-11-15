@@ -738,5 +738,9 @@ int32_t SubMix::GetChannelCount() const {
     return m_ChannelCount;
 }
 
+int32_t SubMix::GetBusCount() const {
+    return m_BusCount;
+}
+
 }  // namespace nn::atk
 #endif
