@@ -1,4 +1,5 @@
 #include <nn/atk/atk_SubMix.h>
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
 
 #include <algorithm>
 
@@ -622,4 +623,10 @@ bool SubMix::IsChannelMuted(int32_t channel) const {
     return m_pChannelVolume[channel].IsMute();
 }
 
+void SubMix::SetSubMixVolume(float volume, int32_t fadeFrame) {
+    detail::fnd::ScopedLock<detail::fnd::CriticalSection> lock{m_VolumeLock};
+    m_SubMixVolume.SetVolume(volume, fadeFrame);
+}
+
 }  // namespace nn::atk
+#endif
