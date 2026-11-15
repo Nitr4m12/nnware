@@ -75,6 +75,10 @@ int32_t FinalMix::GetChannelCount() const {
     return m_ChannelCount;
 }
 
+int32_t FinalMix::GetBusCount() const {
+    return FinalMixBusCount;
+}
+
 }  // namespace nn::atk
 
 #endif
