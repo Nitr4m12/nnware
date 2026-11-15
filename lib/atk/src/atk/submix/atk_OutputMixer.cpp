@@ -1,3 +1,5 @@
+#include <nn/util.h>
+#if NN_WARE_VER >= NN_MAKE_VER(4, 0, 0)
 #include <nn/atk/atk_OutputMixer.h>
 
 #include <nn/atk/atk_DriverCommand.h>
@@ -302,3 +304,4 @@ void OutputMixer::ClearEffectImpl(int32_t bus) {
 }
 
 }  // namespace nn::atk
+#endif

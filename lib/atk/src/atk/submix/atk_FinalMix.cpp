@@ -4,14 +4,16 @@
 
 #include <nn/audio.h>
 
+#if NN_WARE_VER >= NN_MAKE_VER(5, 0, 0)
 #include <nn/atk/fnd/basis/atkfnd_WorkBufferAllocator.h>
+#endif
 
 namespace {
 
 const int32_t FinalMixBusCount{1};
 const int32_t FinalMixBusIndex{0};
 
-}  // namespace
+}  // anonymous namespace
 
 namespace nn::atk {
 
@@ -81,6 +83,10 @@ int32_t FinalMix::GetBusCount() const {
 
 void FinalMix::AddReferenceCount(int32_t value) {
     m_ReferenceCount += value;
+}
+
+bool FinalMix::IsSoundSendClampEnabled([[maybe_unused]] int32_t bus) const {
+    return true;
 }
 
 }  // namespace nn::atk
