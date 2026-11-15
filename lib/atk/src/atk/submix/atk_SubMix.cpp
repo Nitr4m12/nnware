@@ -734,5 +734,9 @@ OutputReceiver::ReceiverType SubMix::GetReceiverType() const {
     return ReceiverType::ReceiverType_SubMix;
 }
 
+int32_t SubMix::GetChannelCount() const {
+    return m_ChannelCount;
+}
+
 }  // namespace nn::atk
 #endif
