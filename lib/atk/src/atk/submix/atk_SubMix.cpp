@@ -604,4 +604,9 @@ bool SubMix::InitializeImpl(const SubMixParam& param, void* buffer, size_t buffe
     return isSuccess;
 }
 
+void SubMix::SetChannelVolume(int32_t channel, float volume, int32_t fadeFrame) {
+    detail::fnd::ScopedLock<detail::fnd::CriticalSection> lock{m_VolumeLock};
+    m_pChannelVolume[channel].SetVolume(volume, fadeFrame);
+}
+
 }  // namespace nn::atk
