@@ -166,7 +166,7 @@ public:
     bool IsSubMixMuted() const;
 
     void SetMuteUnusedEffectChannel(bool isUnusedEffectChannelMuted);
-    void IsUnusedEffectChannelMuted() const;
+    bool IsUnusedEffectChannelMuted() const;
 
     bool AppendEffect(EffectBase* pEffect, int32_t bus, void* buffer, size_t bufferSize);
     bool AppendEffect(EffectAux* pEffect, int32_t bus, void* buffer, size_t bufferSize);
