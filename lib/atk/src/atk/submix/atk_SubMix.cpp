@@ -246,6 +246,10 @@ void SubMix::Finalize() {
 }
 
 bool SubMix::IsRemovable() const {
+    return IsFinalizable();
+}
+
+bool SubMix::IsFinalizable() const {
     return m_ReferenceCount == 0;
 }
 
