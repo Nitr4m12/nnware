@@ -266,6 +266,19 @@ void SubMix::UpdateBusMixVolume(int32_t bus) {
     }
 }
 
+void SubMix::UpdateChannelMixVolume(int32_t channel) {
+    const int32_t dstBusCount{m_pReceiver->GetBusCount()};
+    const int32_t dstChannelCount{m_pReceiver->GetChannelCount()};
+
+    for (int bus{0}; bus < m_BusCount; ++bus) {
+        for (int dstBus{0}; dstBus < dstBusCount; ++dstBus) {
+            for (int dstChannel{0}; dstChannel < dstChannelCount; ++dstChannel) {
+                UpdateMixVolume(bus, channel, dstBus, dstChannel);
+            }
+        }
+    }
+}
+
 #if NN_WARE_VER < NN_MAKE_VER(5, 0, 0)
 size_t SubMix::GetRequiredMemorySizeImpl(const SubMixParam& param)
 #else
