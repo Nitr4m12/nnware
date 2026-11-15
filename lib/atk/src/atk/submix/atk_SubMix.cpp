@@ -449,6 +449,10 @@ bool SubMix::IsBusMuted(int32_t bus) const {
     return m_pBusVolume[bus].IsMute();
 }
 
+bool SubMix::IsSoundSendClampEnabled(int32_t bus) const {
+    return m_pIsSoundSendClampEnabledArray[bus];
+}
+
 #if NN_WARE_VER < NN_MAKE_VER(5, 0, 0)
 size_t SubMix::GetRequiredMemorySizeImpl(const SubMixParam& param)
 #else
