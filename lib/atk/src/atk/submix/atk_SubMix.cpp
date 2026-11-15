@@ -742,5 +742,9 @@ int32_t SubMix::GetBusCount() const {
     return m_BusCount;
 }
 
+void SubMix::AddReferenceCount(int32_t value) {
+    m_ReferenceCount += value;
+}
+
 }  // namespace nn::atk
 #endif
