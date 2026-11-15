@@ -618,4 +618,8 @@ void SubMix::SetChannelMute(int32_t channel, bool isMute) {
     m_pChannelVolume[channel].SetMute(isMute);
 }
 
+bool SubMix::IsChannelMuted(int32_t channel) const {
+    return m_pChannelVolume[channel].IsMute();
+}
+
 }  // namespace nn::atk
