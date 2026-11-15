@@ -63,6 +63,10 @@ bool FinalMix::ClearEffect() {
     return OutputMixer::ClearEffect(FinalMixBusIndex);
 }
 
+bool FinalMix::IsEffectEnabled() const {
+    return OutputMixer::IsEffectEnabled();
+}
+
 }  // namespace nn::atk
 
 #endif
